@@ -63,14 +63,12 @@ class FactualGrader(LLMGrader):
     def __init__(
         self,
         name="factual_grader",
-        evaluation_mode=GraderMode.POINTWISE,
+        mode=GraderMode.POINTWISE,
         template: List[dict] | dict = DEFAULT_TEMPLATE,
         model: dict = DEFAULT_MODEL,
     ):
         """Initialize a FactualGrader with a predefined chat template."""
-        super().__init__(
-            name=name, grader_mode=evaluation_mode, template=template, model=model
-        )
+        super().__init__(name=name, mode=mode, template=template, model=model)
 
 
 def test_factual_grader():

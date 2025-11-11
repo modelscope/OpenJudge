@@ -1,13 +1,12 @@
 import re
 from typing import List, Literal
 
-from rm_gallery.core.grader import FunctionGrader, Grader, GraderMode, GraderScore
+from rm_gallery.core.grader import FunctionGrader, Grader, GraderScore
 from rm_gallery.core.utils.tokenizer import get_tokenizer
 
 
-@FunctionGrader.register("accuracy")
+@FunctionGrader.wrap
 async def compute_accuracy(generated, reference) -> GraderScore:
-    # Calculate accuracy (1.0 for exact match, 0.0 otherwise)
     accuracy = 1.0 if generated == reference else 0.0
 
     return GraderScore(
@@ -25,14 +24,15 @@ class F1ScoreGrader(Grader):
     multilingual content including Chinese and English.
     """
 
-    def __init__(
+    def reset(
         self,
-        name: str = "f1_score",
         tokenizer_type: Literal["tiktoken", "jieba", "simple"] = "tiktoken",
         encoding_name: str = "cl100k_base",
         chinese_only: bool = False,
+        **kwargs,
     ):
-        super().__init__(name=name, grader_mode=GraderMode.POINT_WISE, description="")
+        super().reset(**kwargs)
+
         # Initialize tokenizer
         self.tokenizer_type = tokenizer_type
         self.encoding_name = encoding_name
@@ -48,8 +48,8 @@ class F1ScoreGrader(Grader):
         Calculate F1 score.
 
         Args:
-            sample: Data sample containing generated content and reference answer
-
+            generated: Generated content
+            reference: Reference answer
         Returns:
             RewardResult: Reward result containing F1 score
         """
@@ -95,7 +95,7 @@ class F1ScoreGrader(Grader):
         )
 
 
-@FunctionGrader.register(name="rouge")
+@FunctionGrader.wrap
 async def compute_rouge(generated, reference) -> GraderScore:
     """
     Calculate ROUGE-L score between generated content and reference answer.
@@ -161,8 +161,8 @@ class NumberAccuracyGrader(Grader):
     the numbers in the reference content within a specified tolerance.
     """
 
-    def __init__(self, name: str = "number_accuracy", tolerance: float = 1e-6):
-        super().__init__(name=name, grader_mode=GraderMode.POINTWISE, description="")
+    def reset(self, tolerance: float = 1e-6, **kwargs):
+        super().reset(**kwargs)
         self.tolerance = tolerance
 
     def _extract_numbers(self, text: str) -> List[float]:

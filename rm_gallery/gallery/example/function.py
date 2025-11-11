@@ -58,6 +58,7 @@ async def string_checker_v2(data_sample: DataSample) -> List[GraderScore]:
 
 
 ## 示例三：函数式定义，严格定义词条名，通过FunctionGrader调用
+@FunctionGrader.wrap
 async def string_checker_v3(reference_output, target_output) -> GraderScore:
     """Function for Function Grader.
 
@@ -119,7 +120,7 @@ def test_string_checker_v3():
         samples=[{"target_output": "Hello World"}, {"target_output": "Hello"}],
     )
 
-    grader = FunctionGrader(name="string checker", func=string_checker_v3)
+    grader = string_checker_v3
     result = asyncio.run(
         evaluate(
             grader,

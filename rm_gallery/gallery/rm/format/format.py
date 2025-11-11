@@ -18,7 +18,7 @@ class ReasoningFormatGrader(Grader):
     def __init__(
         self,
         name: str = "format_reward",
-        grader_mode: GraderMode = GraderMode.POINTWISE,
+        mode: GraderMode = GraderMode.POINTWISE,
         think_token: str = "think",
         answer_token: str = "answer",
         description: str = "",
@@ -27,11 +27,11 @@ class ReasoningFormatGrader(Grader):
         Initialize the ReasoningFormatGrader.
         Args:
             name: The name of the grader.
-            grader_mode: The evaluation mode.
+            mode: The evaluation mode.
             description: The description of the grader.
 
         """
-        super().__init__(name, grader_mode, description)
+        super().__init__(name, mode, description)
         self.think_token = think_token
         self.answer_token = answer_token
 
@@ -86,17 +86,17 @@ class ReasoningToolCallFormatGrader(Grader):
     def __init__(
         self,
         name: str = "tool_call_format",
-        grader_mode: GraderMode = GraderMode.POINTWISE,
+        mode: GraderMode = GraderMode.POINTWISE,
         description: str = "",
     ):
         """
         Initialize the ReasoningToolCallFormatGrader.
         Args:
             name: The name of the grader.
-            grader_mode: The evaluation mode.
+            mode: The evaluation mode.
             description: The description of the grader.
         """
-        super().__init__(name, grader_mode, description)
+        super().__init__(name, mode, description)
 
     async def evaluate(self, answer: str, **kwargs) -> GraderScore:
         """
@@ -243,7 +243,7 @@ class LengthPenaltyGrader(Grader):
     def __init__(
         self,
         name: str = "",
-        grader_mode: GraderMode = GraderMode.POINTWISE,
+        mode: GraderMode = GraderMode.POINTWISE,
         min_length: int = 10,
         max_length: int = 1000,
         penalty_rate: float = 0.01,
@@ -253,12 +253,12 @@ class LengthPenaltyGrader(Grader):
         Initialize the LengthPenaltyGrader.
         Args:
             name: Name of the grader
-            grader_mode: Mode of the grader (POINTWISE or LISTWISE)
+            mode: Mode of the grader (POINTWISE or LISTWISE)
             min_length: Minimum length of the content
             max_length: Maximum length of the content
             penalty_rate: Penalty rate for each character beyond the maximum length
         """
-        super().__init__(name, grader_mode, description)
+        super().__init__(name, mode, description)
         self.min_length = min_length
         self.max_length = max_length
         self.penalty_rate = penalty_rate
@@ -304,7 +304,7 @@ class NgramRepetitionPenaltyGrader(Grader):
     def __init__(
         self,
         name: str = "",
-        grader_mode: GraderMode = GraderMode.POINTWISE,
+        mode: GraderMode = GraderMode.POINTWISE,
         n: int = 3,
         penalty_threshold: float = 0.3,
         penalty_rate: float = 1.0,
@@ -322,7 +322,7 @@ class NgramRepetitionPenaltyGrader(Grader):
         Args:
 
             name: Name of the grader
-            grader_mode: Mode of the grader (POINTWISE or LISTWISE)
+            mode: Mode of the grader (POINTWISE or LISTWISE)
             n: N value for N-gram
             penalty_threshold: Threshold for hard threshold penalty
             penalty_rate: Penalty rate for each repetition
@@ -335,7 +335,7 @@ class NgramRepetitionPenaltyGrader(Grader):
             analyze_scope: Analyze scope (thought or full)
             description: Description of the grader
         """
-        super().__init__(name, grader_mode, description=description)
+        super().__init__(name, mode, description=description)
         self.n = n
         self.penalty_threshold = penalty_threshold
         self.penalty_rate = penalty_rate
@@ -492,7 +492,7 @@ class PrivacyLeakageGrader(Grader):
         self,
         name: str = "privacy_leakage",
         penalty_per_leak: float = -0.5,
-        grader_mode: GraderMode = GraderMode.POINTWISE,
+        mode: GraderMode = GraderMode.POINTWISE,
         description: str = "Privacy leakage detection reward",
     ):
         """
@@ -500,10 +500,10 @@ class PrivacyLeakageGrader(Grader):
         Parameters:
         name: Name of the grader.
         penalty_per_leak: Penalty per leak.
-        grader_mode: Grader mode.
+        mode: Grader mode.
         description: Description of the grader.
         """
-        super().__init__(name=name, grader_mode=grader_mode, description=description)
+        super().__init__(name=name, mode=mode, description=description)
         self.penalty_per_leak = penalty_per_leak
 
     def _detect_privacy_leaks(self, text: str) -> List[Dict[str, str]]:

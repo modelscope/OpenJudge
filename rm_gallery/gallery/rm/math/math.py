@@ -2,28 +2,32 @@ from math_verify import parse, verify
 from math_verify.parser import ExprExtractionConfig, LatexExtractionConfig
 
 from rm_gallery.core.grader import Grader, GraderMode, GraderScore
+from rm_gallery.core.model.template import RequiredField
+from rm_gallery.core.registry import GR
 
 
+@GR.register(
+    name="math_verify",
+    mode=GraderMode.POINTWISE,
+    description="Verifies mathematical expressions using the math_verify library, supporting both LaTeX and plain expressions",
+    required_fields=[
+        RequiredField(name="generated", type=str, description="Generated answer"),
+        RequiredField(name="reference", type=str, description="Reference answer"),
+    ],
+)
 class MathVerifyGrader(Grader):
     """
     Verifies mathematical expressions using the math_verify library, supporting both LaTeX and plain expressions
     """
 
-    def __init__(
-        self,
-        name: str = "math_verify",
-        grader_mode: GraderMode = GraderMode.POINTWISE,
-        timeout_score: float = 0.0,
-    ):
+    def reset(self, timeout_score: float = 1.0, **kwargs):
         """
-        Initialize the MathVerifyGrader
+        Reset the grader
 
         Args:
-            name: Name of the grader
-            grader_mode: Grader mode
             timeout_score: Score to assign on timeout
         """
-        super().__init__(name, grader_mode)
+        super().reset(**kwargs)
         self.timeout_score = timeout_score
 
     async def __call__(self, generated, reference) -> GraderScore:

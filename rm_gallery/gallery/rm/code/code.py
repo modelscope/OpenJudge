@@ -3,9 +3,7 @@ import difflib
 import json
 import re
 import traceback
-from typing import Any, Optional
-
-from pydantic import Field
+from typing import Any
 
 from rm_gallery.core.grader import Grader, GraderMode, GraderScore
 
@@ -174,8 +172,6 @@ class PatchSimilarityGrader(Grader):
     providing a similarity score and detailed diff information.
     """
 
-    name: str = Field(default="patch_similarity", description="Patch similarity reward")
-
     async def evaluate(self, generated: str, reference: str) -> GraderScore:
         """
         Calculate patch similarity.
@@ -209,20 +205,6 @@ class CodeExecutionGrader(Grader):
     that supports both call-based and standard input code evaluation methods.
     """
 
-    name: str = Field(default="code_execution", description="Code execution reward")
-    continuous: bool = Field(
-        default=True, description="Use continuous scoring (partial credit)"
-    )
-    timeout: int = Field(
-        default=10, description="Timeout in seconds for code execution"
-    )
-    test_framework_available: bool = Field(
-        default=True, description="Whether testing framework is available"
-    )
-    compute_score: Optional[Any] = Field(
-        default=None, description="Compute score function"
-    )
-
     def __init__(
         self,
         name: str = "code_execution",
@@ -230,10 +212,10 @@ class CodeExecutionGrader(Grader):
         timeout: int = 10,
         test_framework_available: bool = True,
         compute_score: Any = None,
-        grader_mode: GraderMode = GraderMode.POINTWISE,
+        mode: GraderMode = GraderMode.POINTWISE,
         **kwargs,
     ):
-        super().__init__(name, grader_mode=grader_mode, **kwargs)
+        super().__init__(name, mode=mode, **kwargs)
         self.continuous = continuous
         self.timeout = timeout
         self.test_framework_available = test_framework_available

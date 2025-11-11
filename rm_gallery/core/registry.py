@@ -1,12 +1,13 @@
-from typing import Callable, Dict, Optional, Union
+from typing import Callable, Dict, List, Optional, Type, Union
 
 from loguru import logger
 
-from rm_gallery.core.grader import Grader
+from rm_gallery.core.grader import Grader, GraderInfo, GraderMode
+from rm_gallery.core.model.template import RequiredField
 
 
 class GraderRegistry:
-    """Registry for managing grader functions in v2 with hierarchical structure support."""
+    """Registry for managing grader with hierarchical structure support."""
 
     _graders: Dict[str, Union[Grader | Callable, Dict]] = {}
 
@@ -14,40 +15,94 @@ class GraderRegistry:
     def register(
         cls,
         name: str,
-        grader: Grader | Callable | None = None,
+        mode: GraderMode,
+        description: str,
+        required_fields: List[RequiredField] = [],
+        grader: Grader | Callable | Type[Grader] | None = None,
         namespace: str | None = None,
-    ) -> Union[None, Callable]:
+        **kwargs,
+    ) -> Union[None, Callable, Grader]:
         """Register a grader function with a given name, optionally under a namespace.
-        Can be used as a decorator or a direct function call.
+        Can be used as a decorator, direct function call, or to initialize and register a grader.
 
         Args:
-            name: The name to register the grader under
+            name: The name of the grader
+            mode: The grader mode
+            description: The description of the grader
+            required_fields: The required fields for the grader
             grader: The grader function to register (if used as direct function call)
+                   Can be:
+                   - An instance of Grader
+                   - A callable function
+                   - A Grader class to be instantiated
+                   - None (for decorator usage)
             namespace: Optional namespace to group graders (e.g., "math", "code")
+            **kwargs: Parameters for initializing the grader
 
         Returns:
-            None if used as direct function call, decorator function if used as decorator
+            None if used as direct function call, decorator function if used as decorator,
+            or the initialized grader if using initialization mode
         """
-        # If grader is provided, register it directly
+        # Create GraderInfo from individual parameters
+        info = GraderInfo(
+            name=name,
+            mode=mode,
+            description=description,
+            required_fields=required_fields,
+        )
+
+        # If grader is provided, register it directly or initialize it if it's a class
         if grader is not None:
-            cls._register_grader(name, grader, namespace)
+            # Check if grader is a class that needs to be instantiated
+            if isinstance(grader, type) and issubclass(grader, Grader):
+                # Instantiate the grader class with provided info and kwargs
+                initialized_grader = grader(
+                    name=info.name,
+                    mode=info.mode,
+                    description=info.description,
+                    required_fields=info.required_fields,
+                    **kwargs,
+                )
+                cls._register_grader(info, initialized_grader, namespace)
+            else:
+                # Register the already instantiated grader or callable
+                cls._register_grader(info, grader, namespace)
             return None
 
         # If grader is not provided, return a decorator
-        def decorator(grader: Grader | Callable) -> Grader | Callable:
-            cls._register_grader(name, grader, namespace)
-            return grader
+        def decorator(
+            target: Type[Grader] | Grader | Callable,
+        ) -> Type[Grader] | Grader | Callable:
+            # Check if target is a class that needs to be instantiated
+            if isinstance(target, type) and issubclass(target, Grader):
+                # Instantiate the grader class with provided info and kwargs
+                initialized_grader = target(
+                    name=info.name,
+                    mode=info.mode,
+                    description=info.description,
+                    required_fields=info.required_fields,
+                    **kwargs,
+                )
+                cls._register_grader(info, initialized_grader, namespace)
+                return target
+            else:
+                # Register the already instantiated grader or callable
+                cls._register_grader(info, target, namespace)
+                return target
 
         return decorator
 
     @classmethod
     def _register_grader(
-        cls, name: str, grader: Grader | Callable, namespace: Optional[str] = None
+        cls,
+        info: GraderInfo,
+        grader: Grader | Callable,
+        namespace: Optional[str] = None,
     ) -> None:
         """Internal method to register a grader function.
 
         Args:
-            name: The name to register the grader under
+            info: The GraderInfo containing grader metadata
             grader: The grader function to register
             namespace: Optional namespace to group graders (e.g., "math", "code")
         """
@@ -56,10 +111,22 @@ class GraderRegistry:
                 f"grader must be an instance of Evaluationgrader, got {type(grader)}"
             )
 
-        full_name = f"{namespace}.{name}" if namespace else name
+        # Use name from GraderInfo
+        name = info.name
+        full_name = f"{namespace}.{name}" if namespace is not None else name
+
+        # Update grader with info from GraderInfo if it's not already set
+        if not grader.name:
+            grader.name = full_name
+        if grader.mode is None:
+            grader.mode = info.mode
+        if not grader.description:
+            grader.description = info.description
+        if not grader.required_fields:
+            grader.required_fields = info.required_fields
 
         # Handle namespace creation
-        if namespace:
+        if namespace is not None:
             if namespace not in cls._graders:
                 cls._graders[namespace] = {}
             elif not isinstance(cls._graders[namespace], dict):
@@ -76,7 +143,6 @@ class GraderRegistry:
                     f"grader '{full_name}' is already registered. Overwriting."
                 )
 
-            grader.name = full_name
             namespace_dict[name] = grader
         else:
             if name in cls._graders and isinstance(cls._graders[name], dict):
@@ -87,7 +153,6 @@ class GraderRegistry:
             if name in cls._graders:
                 logger.warning(f"grader '{name}' is already registered. Overwriting.")
 
-            grader.name = name
             cls._graders[name] = grader
 
         logger.info(f"Registered grader '{full_name}'")
@@ -198,4 +263,4 @@ class GraderRegistry:
         logger.info("Cleared all registered graders")
 
 
-GR = GraderRegistry()
+GR = GraderRegistry

@@ -7,11 +7,11 @@ class DetoxifyGrader(Grader):
     def __init__(
         self,
         name: str = "",
-        grader_mode: GraderMode = GraderMode.POINTWISE,
+        mode: GraderMode = GraderMode.POINTWISE,
         model_name: str = "unbiased",
         **kwargs,
     ):
-        super().__init__(name, grader_mode)
+        super().__init__(name, mode)
         from detoxify import Detoxify
 
         self._model = Detoxify(model_name)

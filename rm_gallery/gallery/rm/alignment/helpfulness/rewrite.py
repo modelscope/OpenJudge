@@ -14,14 +14,14 @@ class RewriteGrader(BaseHelpfulnessGrader):
     def __init__(
         self,
         name: str = "Rewrite",
-        grader_mode: GraderMode = GraderMode.LISTWISE,
+        mode: GraderMode = GraderMode.LISTWISE,
         task_description=DESC,
         rubrics=RUBRICS,
         **kwargs,
     ):
         super().__init__(
             name=name,
-            grader_mode=grader_mode,
+            mode=mode,
             task_description=task_description,
             rubrics=rubrics,
             **kwargs,

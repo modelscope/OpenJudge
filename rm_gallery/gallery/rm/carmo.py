@@ -111,12 +111,12 @@ class Cramo(LLMGrader):
     def __init__(
         self,
         name: str = "",
-        grader_mode: GraderMode = GraderMode.LISTWISE,
+        mode: GraderMode = GraderMode.LISTWISE,
         template: Template | None = RelativeEvaluationTemplate,
         model: Dict[str, Any] | None = None,
         **kwargs,
     ):
-        super().__init__(name, grader_mode, template, model, **kwargs)
+        super().__init__(name, mode, template, model, **kwargs)
 
     async def __call__(
         self, data_sample: DataSample, *args, **kwargs

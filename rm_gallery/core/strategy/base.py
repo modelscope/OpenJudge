@@ -6,10 +6,10 @@ from rm_gallery.core.grader import GraderScore
 
 
 class GraderStrategy(ABC):
-    """Base grader strategy class for optimizing input reward functions.
+    """Base grader strategy class for optimizing input grader functions.
 
     This class serves as an abstract base class that defines the basic interface
-    for reward strategies. Subclasses should implement the specific optimization logic.
+    for grader strategies. Subclasses should implement the specific optimization logic.
     """
 
     @abstractmethod
@@ -19,7 +19,7 @@ class GraderStrategy(ABC):
     async def __call__(
         self, data_sample: DataSample, *args, **kwargs
     ) -> List[GraderScore]:
-        """Core method for optimizing reward functions.
+        """Core method for optimizing grader functions.
 
         Args:
             data_sample: Data sample containing data and samples
@@ -27,6 +27,6 @@ class GraderStrategy(ABC):
             **kwargs: Additional keyword arguments
 
         Returns:
-            List of optimized reward results
+            List of optimized grader results
         """
         ...

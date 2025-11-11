@@ -34,6 +34,32 @@ DEFAULT_SCORE_TEMPLATE = Template(
 """,
         ),
     ],
+    required_fields=[
+        RequiredField(
+            name="task_description",
+            type="string",
+            position="grader",
+            description="The task description.",
+        ),
+        RequiredField(
+            name="rubrics",
+            type="string",
+            position="grader",
+            description="The rubrics to evaluate.",
+        ),
+        RequiredField(
+            name="query",
+            type="string",
+            position="data",
+            description="The query to evaluate.",
+        ),
+        RequiredField(
+            name="answer",
+            type="string",
+            position="sample",
+            description="The answer to evaluate.",
+        ),
+    ],
 )
 
 DEFAULT_RANK_TEMPLATE = Template(
@@ -133,21 +159,21 @@ class BaseHelpfulnessGrader(LLMGrader):
     def __init__(
         self,
         name: str = "",
-        grader_mode: GraderMode = GraderMode.LISTWISE,
+        mode: GraderMode = GraderMode.LISTWISE,
         model: Dict[str, Any] | None = None,
         task_description: str = DEFAULT_HELPFULNESS_DESC,
         rubrics: str = DEFAULT_HELPFULNESS_RUBRICS,
         **kwargs,
     ):
-        if grader_mode == GraderMode.LISTWISE:
+        if mode == GraderMode.LISTWISE:
             template = DEFAULT_RANK_TEMPLATE
-        elif grader_mode == GraderMode.POINTWISE:
+        elif mode == GraderMode.POINTWISE:
             template = DEFAULT_SCORE_TEMPLATE
         else:
             raise ValueError("Invalid grader mode")
         super().__init__(
             name=name,
-            grader_mode=grader_mode,
+            mode=mode,
             template=template,
             model=model,
             task_description=task_description,
@@ -162,21 +188,21 @@ class BaseHarmlessnessGrader(LLMGrader):
     def __init__(
         self,
         name: str = "",
-        grader_mode: GraderMode = GraderMode.LISTWISE,
+        mode: GraderMode = GraderMode.LISTWISE,
         model: Dict[str, Any] | None = None,
         task_description: str = DEFAULT_HARMLESSNESS_DESC,
         rubrics: str = DEFAULT_HARMLESSNESS_RUBRICS,
         **kwargs,
     ):
-        if grader_mode == GraderMode.LISTWISE:
+        if mode == GraderMode.LISTWISE:
             template = DEFAULT_RANK_TEMPLATE
-        elif grader_mode == GraderMode.POINTWISE:
+        elif mode == GraderMode.POINTWISE:
             template = DEFAULT_SCORE_TEMPLATE
         else:
             raise ValueError("Invalid grader mode")
         super().__init__(
             name=name,
-            grader_mode=grader_mode,
+            mode=mode,
             template=template,
             model=model,
             task_description=task_description,
@@ -191,21 +217,21 @@ class BaseHonestyGrader(LLMGrader):
     def __init__(
         self,
         name: str = "",
-        grader_mode: GraderMode = GraderMode.LISTWISE,
+        mode: GraderMode = GraderMode.LISTWISE,
         model: Dict[str, Any] | None = None,
         task_description: str = DEFAULT_HONESTY_DESC,
         rubrics: str = DEFAULT_HONESTY_RUBRICS,
         **kwargs,
     ):
-        if grader_mode == GraderMode.LISTWISE:
+        if mode == GraderMode.LISTWISE:
             template = DEFAULT_RANK_TEMPLATE
-        elif grader_mode == GraderMode.POINTWISE:
+        elif mode == GraderMode.POINTWISE:
             template = DEFAULT_SCORE_TEMPLATE
         else:
             raise ValueError("Invalid grader mode")
         super().__init__(
             name=name,
-            grader_mode=grader_mode,
+            mode=mode,
             template=template,
             model=model,
             task_description=task_description,

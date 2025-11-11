@@ -27,7 +27,7 @@ class VotingStrategy(GraderStrategy):
         self.grader = grader
 
     def __name__(self) -> str:
-        return f"{self.grader.__name__}_voting_{self.num_repeats}"
+        return self.grader.__name__
 
     async def __call__(
         self, data_sample: DataSample, *args, **kwargs
@@ -90,8 +90,8 @@ if __name__ == "__main__":
     result = asyncio.run(
         evaluate(
             VotingStrategy(FactualGrader()),
-            mapping=None,
             data_sample=data_sample,
+            parser=None,
         )
     )
     logger.info(result)

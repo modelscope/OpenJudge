@@ -2,18 +2,14 @@ import asyncio
 import inspect
 from abc import ABC, abstractmethod
 from enum import Enum
+from functools import partial
 from typing import Any, Callable, Dict, List
 
 from loguru import logger
 from pydantic import BaseModel, Field
 
-from rm_gallery.core.data import DataSample, DataSampleMapping
-from rm_gallery.core.model.template import (
-    ChatTemplate,
-    LanguageEnum,
-    RequiredField,
-    Template,
-)
+from rm_gallery.core.data import DataSample, DataSampleParser
+from rm_gallery.core.model.template import ChatTemplate, RequiredField, Template
 
 
 class GraderMode(str, Enum):
@@ -66,6 +62,20 @@ class GraderError(GraderResult):
     """
 
 
+class GraderInfo(BaseModel):
+    """Grader info.
+
+    Represents meta information about a grader.
+    """
+
+    name: str = Field(default=..., description="The name of the grader")
+    mode: GraderMode = Field(default=..., description="The grader mode")
+    description: str = Field(default=..., description="The description of the grader")
+    required_fields: List[RequiredField] = Field(
+        default_factory=list, description="The required fields for the grader"
+    )
+
+
 class Grader(ABC):
     """Base class for graders.
 
@@ -74,25 +84,41 @@ class Grader(ABC):
 
     Attributes:
         name (str): The name of the grader.
-        grader_mode (GraderMode): The grader mode (pointwise or listwise).
+        mode (GraderMode): The grader mode (pointwise or listwise).
         description: The description of the grader.
+        required_fields (List[RequiredField]): The required fields for the grader.
     """
 
     def __init__(
         self,
         name: str = "",
-        grader_mode: GraderMode = GraderMode.POINTWISE,
+        mode: GraderMode = GraderMode.POINTWISE,
         description: str = "",
+        required_fields: List[RequiredField] = [],
+        **kwargs,
     ):
         """Initialize a Grader.
 
         Args:
             name: The name of the grader.
-            grader_mode: The grader mode. Defaults to POINTWISE.
+            mode: The grader mode. Defaults to POINTWISE.
+            description: The description of the grader.
+            required_fields: The required fields for the grader.
         """
         self.name = name
-        self.grader_mode = grader_mode
+        self.mode = mode
         self.description = description
+        self.required_fields = required_fields
+        self.kwargs = {}
+        self.reset(**kwargs)
+
+    def reset(self, **kwargs):
+        """Reset the grader.
+
+        Args:
+            **kwargs: Additional keyword arguments.
+        """
+        self.kwargs.update(kwargs)
 
     def __name__(self):
         """Get the name of the grader.
@@ -101,6 +127,15 @@ class Grader(ABC):
             str: The name of the grader.
         """
         return self.name
+
+    @property
+    def meta(self) -> GraderInfo:
+        return GraderInfo(
+            name=self.name,
+            mode=self.mode,
+            description=self.description,
+            required_fields=self.required_fields,
+        )
 
     @abstractmethod
     async def evaluate(self, **kwargs) -> GraderScore | GraderRank:
@@ -149,7 +184,7 @@ class Grader(ABC):
         Raises:
             ValueError: If the grader mode is invalid.
         """
-        if self.grader_mode == GraderMode.POINTWISE:
+        if self.mode == GraderMode.POINTWISE:
             # Pointwise: Evaluate each sample individually
             coroutines = [
                 self._safe_evaluate(**data_sample.data, **sample)
@@ -166,7 +201,7 @@ class Grader(ABC):
                     raise ValueError(f"Invalid result type: {type(result)}")
             return results
 
-        elif self.grader_mode == GraderMode.LISTWISE:
+        elif self.mode == GraderMode.LISTWISE:
             # Listwise: Evaluate all samples together in one call
             params = {key: value for key, value in kwargs.items()}
             if len(data_sample.samples) > 1:
@@ -195,7 +230,7 @@ class Grader(ABC):
 
             return results
         else:
-            raise ValueError(f"Invalid grader mode: {self.grader_mode}")
+            raise ValueError(f"Invalid grader mode: {self.mode}")
 
 
 class LLMGrader(Grader):
@@ -205,7 +240,7 @@ class LLMGrader(Grader):
 
     Attributes:
         name (str): The name of the grader.
-        grader_mode (GraderMode): The grader mode.
+        mode (GraderMode): The grader mode.
         chat (ChatTemplate): The chat template for the LLM.
         rubrics (str): The rubrics for the evaluation.
         kwargs (dict): The kwargs for the grader.
@@ -214,36 +249,53 @@ class LLMGrader(Grader):
     def __init__(
         self,
         name: str = "",
-        grader_mode: GraderMode = GraderMode.POINTWISE,
+        mode: GraderMode = GraderMode.POINTWISE,
         template: Template | None = None,
         model: Dict[str, Any] | None = None,
         rubrics: str = "",
+        description: str = "",
+        required_fields: List[RequiredField] = [],
         **kwargs,
     ):
         """Initialize an LLMGrader.
 
         Args:
             name: The name of the grader.
-            grader_mode: The grader mode.
+            mode: The grader mode.
             template: The chat template for the LLM.
             model: The model parameters for the LLM.
             rubrics: The rubrics for the evaluation.
+            description: The description of the grader.
+            required_fields: The required fields for the grader.
             kwargs: The kwargs for the grader.
         """
-        super().__init__(name, grader_mode)
+        super().__init__(
+            name=name,
+            mode=mode,
+            description=description,
+            required_fields=required_fields,
+            model=model,
+            rubrics=rubrics,
+            **kwargs,
+        )
         self.template = template
+
+    def reset(self, model: Dict[str, Any] | None = None, rubrics: str = "", **kwargs):
+        """
+        Reset the grader with new model and rubrics.
+        """
+        super().reset(**kwargs)
         self.model = model
-        if template is not None and model is not None:
-            self.chat = ChatTemplate(template=template, model=model)
-        else:
-            self.chat = None
-        self.kwargs = kwargs
         self.rubrics = rubrics
+        if self.template is not None and self.model is not None:
+            self.chat = ChatTemplate(template=self.template, model=self.model)
+        else:
+            raise ValueError("Chat template or model is not set")
 
     @property
     def required_fields(
         self,
-    ) -> List[RequiredField] | Dict[LanguageEnum, List[RequiredField]]:
+    ) -> List[RequiredField]:
         """Get the required fields for the grader.
 
         Returns:
@@ -265,7 +317,7 @@ class LLMGrader(Grader):
         Raises:
             ValueError: If the grader mode is unsupported.
         """
-        if self.grader_mode == GraderMode.LISTWISE:
+        if self.mode == GraderMode.LISTWISE:
             chat_output = GraderRank
         else:
             chat_output = GraderScore
@@ -277,18 +329,18 @@ class LLMGrader(Grader):
         params.update(kwargs)
 
         response = await self.chat(chat_output=chat_output, **params)
-        if self.grader_mode == GraderMode.LISTWISE:
+        if self.mode == GraderMode.LISTWISE:
             result = GraderRank(
                 rank=response.metadata["rank"],  # type: ignore
                 reason=response.metadata["reason"],  # type: ignore
             )
-        elif self.grader_mode == GraderMode.POINTWISE:
+        elif self.mode == GraderMode.POINTWISE:
             result = GraderScore(
                 score=response.metadata["score"],  # type: ignore
                 reason=response.metadata["reason"],  # type: ignore
             )
         else:
-            raise ValueError(f"Unsupported grader mode: {self.grader_mode}")
+            raise ValueError(f"Unsupported grader mode: {self.mode}")
         return result
 
 
@@ -300,23 +352,29 @@ class FunctionGrader(Grader):
     Attributes:
         func (Callable): The function to use for evaluation.
         name (str): The name of the grader.
-        grader_mode (GraderMode): The grader mode.
+        mode (GraderMode): The grader mode.
     """
 
     def __init__(
         self,
         func: Callable,
         name: str = "",
-        grader_mode: GraderMode = GraderMode.POINTWISE,
+        mode: GraderMode = GraderMode.POINTWISE,
+        description: str = "",
+        required_fields: List[RequiredField] = [],
+        **kwargs,
     ):
         """Initialize a FunctionGrader.
 
         Args:
             func: The function to use for evaluation.
             name: The name of the grader.
-            grader_mode: The grader mode.
+            mode: The grader mode.
+            description: The description of the grader.
         """
-        super().__init__(name, grader_mode)
+        super().__init__(
+            name, mode, description, required_fields=required_fields, **kwargs
+        )
         self.func = func
 
     async def evaluate(self, **kwargs) -> GraderScore | GraderRank:
@@ -334,37 +392,30 @@ class FunctionGrader(Grader):
         result = await self.func(**kwargs)
 
         # Check return type based on grader mode
-        if self.grader_mode == GraderMode.POINTWISE:
+        if self.mode == GraderMode.POINTWISE:
             if not isinstance(result, GraderScore):
                 raise TypeError(
                     f"Expected GraderScore for pointwise mode, got {type(result)}"
                 )
-        elif self.grader_mode == GraderMode.LISTWISE:
+        elif self.mode == GraderMode.LISTWISE:
             if not isinstance(result, GraderRank):
                 raise TypeError(
                     f"Expected GraderRank for listwise mode, got {type(result)}"
                 )
         else:
-            raise ValueError(f"Unsupported grader mode: {self.grader_mode}")
+            raise ValueError(f"Unsupported grader mode: {self.mode}")
 
         return result
 
     @classmethod
-    def register(cls, name: str) -> Callable:
-        """Register a function as a grader.
-
-        Args:
-            name: The name of the grader.
-            func: The function to register.
+    def wrap(cls, func: Callable) -> Callable:
+        """Wrap a function as a grader.
 
         Returns:
             The Callable grader.
         """
 
-        def decorator(func: Callable) -> "FunctionGrader":
-            return FunctionGrader(func, name)
-
-        return decorator
+        return partial(FunctionGrader, func=func)
 
 
 GraderType = Grader | Callable
@@ -372,8 +423,8 @@ GraderType = Grader | Callable
 
 async def evaluate(
     grader: Callable,
-    mapping: DataSampleMapping | Callable | None,
     data_sample: DataSample | List[DataSample],
+    parser: DataSampleParser | Callable | None = None,
     *args,
     **kwargs,
 ) -> List[GraderScore] | List[List[GraderScore]]:
@@ -381,8 +432,8 @@ async def evaluate(
 
     Args:
         grader: The grader function to use.
-        mapping: Data sample mapping function.
         data_sample: The data sample to evaluate.
+        parser: Data sample parser function.
         *args: Additional positional arguments.
         **kwargs: Additional keyword arguments.
 
@@ -395,7 +446,7 @@ async def evaluate(
 
     if isinstance(data_sample, list):
         corutines = [
-            evaluate(grader, mapping, sample, *args, **kwargs) for sample in data_sample
+            evaluate(grader, sample, parser, *args, **kwargs) for sample in data_sample
         ]
         return await asyncio.gather(*corutines)
 

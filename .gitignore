@@ -18,3 +18,4 @@ tests/plt_*
 /site
 poetry.lock.env
 *.cursorrules
+/.env

@@ -5,7 +5,7 @@ from typing import List
 
 from loguru import logger
 
-from rm_gallery.core.data import DataSample, DataSampleMapping
+from rm_gallery.core.data import DataSample, DataSampleParser
 from rm_gallery.core.grader import (
     FunctionGrader,
     Grader,
@@ -88,7 +88,7 @@ def test_string_checker_v1():
     result = asyncio.run(
         evaluate(
             grader,
-            mapping=DataSampleMapping(
+            mapping=DataSampleParser(
                 data_mapping={"reference_output": "reference"},
             ),
             data_sample=data_sample,
@@ -124,7 +124,7 @@ def test_string_checker_v3():
     result = asyncio.run(
         evaluate(
             grader,
-            mapping=DataSampleMapping(
+            mapping=DataSampleParser(
                 data_mapping={"reference_output": "reference"},
             ),
             data_sample=data_sample,

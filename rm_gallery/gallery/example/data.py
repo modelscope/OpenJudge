@@ -2,7 +2,7 @@
 
 import asyncio
 
-from rm_gallery.core.data import DataSample, DataSampleMapping
+from rm_gallery.core.data import DataSample, DataSampleParser
 from rm_gallery.core.grader import evaluate
 from rm_gallery.gallery.example.llm import FactualGrader
 
@@ -80,7 +80,7 @@ async def example_evaluate_with_mapping():
     print(f"   回答选项: {[s['response'] for s in raw_data_sample.samples]}")
 
     # 3. 定义映射规则
-    mapping = DataSampleMapping(
+    mapping = DataSampleParser(
         data_mapping={"query": "question"},  # 将query映射到question
         sample_mapping={"answer": "response"},  # 将answer映射到response
     )

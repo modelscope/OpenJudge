@@ -1,5 +1,6 @@
 import asyncio
-import inspect
+
+# import inspect
 from abc import ABC, abstractmethod
 from enum import Enum
 from functools import partial
@@ -10,6 +11,7 @@ from pydantic import BaseModel, Field
 
 from rm_gallery.core.data import DataSample, DataSampleParser
 from rm_gallery.core.model.template import ChatTemplate, RequiredField, Template
+from rm_gallery.core.utils.concurrency import ConcurrencyManager
 
 
 class GraderMode(str, Enum):
@@ -94,7 +96,7 @@ class Grader(ABC):
         name: str = "",
         mode: GraderMode = GraderMode.POINTWISE,
         description: str = "",
-        required_fields: List[RequiredField] = [],
+        required_fields: List[RequiredField | dict] = [],
         **kwargs,
     ):
         """Initialize a Grader.
@@ -108,7 +110,10 @@ class Grader(ABC):
         self.name = name
         self.mode = mode
         self.description = description
-        self.required_fields = required_fields
+        self.required_fields = [
+            RequiredField(**field) if isinstance(field, dict) else field
+            for field in required_fields
+        ]
         self.kwargs = {}
         self.reset(**kwargs)
 
@@ -150,7 +155,7 @@ class Grader(ABC):
         ...
 
     async def _safe_evaluate(self, **kwargs) -> GraderScore | GraderRank | GraderError:
-        """Safely evaluate, handling exceptions gracefully.
+        """Safely evaluate, handling exceptions gracefully and control concurrency.
 
         Args:
             **kwargs: Arguments for the evaluation.
@@ -158,15 +163,27 @@ class Grader(ABC):
         Returns:
             GraderScore | GraderRank: The grader result or error result.
         """
-        try:
-            result = await self.evaluate(**kwargs)
-        except Exception as e:
-            error_msg = f"Error in {self.name} during  evaluation: {str(e)}"
-            logger.error(error_msg)
-            result = GraderScore(
-                reason=error_msg,
-            )
-        return result
+        concurrency_manager = ConcurrencyManager()
+
+        async def _evaluate_task():
+            try:
+                # Check if self.evaluate is a coroutine function
+                if asyncio.iscoroutinefunction(self.evaluate):
+                    result = await self.evaluate(**kwargs)
+                else:
+                    # If it's a synchronous function, run it in a thread pool
+                    loop = asyncio.get_event_loop()
+                    result = await loop.run_in_executor(
+                        None, lambda: self.evaluate(**kwargs)
+                    )
+                return result
+            except Exception as e:
+                error_msg = f"Error in {self.name} during evaluation: {str(e)}"
+                logger.error(error_msg)
+                return GraderError(reason=error_msg)
+
+        # Use the concurrency manager to control execution
+        return await concurrency_manager.run_with_concurrency_control(_evaluate_task())
 
     async def __call__(
         self, data_sample: DataSample, *args, **kwargs
@@ -204,6 +221,7 @@ class Grader(ABC):
         elif self.mode == GraderMode.LISTWISE:
             # Listwise: Evaluate all samples together in one call
             params = {key: value for key, value in kwargs.items()}
+            params.update(data_sample.data)
             if len(data_sample.samples) > 1:
                 if data_sample.samples:
                     for key in data_sample.samples[0].keys():
@@ -250,11 +268,11 @@ class LLMGrader(Grader):
         self,
         name: str = "",
         mode: GraderMode = GraderMode.POINTWISE,
-        template: Template | None = None,
+        template: Template | dict | None = None,
         model: Dict[str, Any] | None = None,
         rubrics: str = "",
         description: str = "",
-        required_fields: List[RequiredField] = [],
+        required_fields: List[RequiredField] | List[dict] = [],
         **kwargs,
     ):
         """Initialize an LLMGrader.
@@ -269,6 +287,11 @@ class LLMGrader(Grader):
             required_fields: The required fields for the grader.
             kwargs: The kwargs for the grader.
         """
+        if template is None:
+            raise ValueError("Template is not set")
+        self.template = (
+            template if isinstance(template, Template) else Template(**template)
+        )
         super().__init__(
             name=name,
             mode=mode,
@@ -278,7 +301,6 @@ class LLMGrader(Grader):
             rubrics=rubrics,
             **kwargs,
         )
-        self.template = template
 
     def reset(self, model: Dict[str, Any] | None = None, rubrics: str = "", **kwargs):
         """
@@ -291,19 +313,6 @@ class LLMGrader(Grader):
             self.chat = ChatTemplate(template=self.template, model=self.model)
         else:
             raise ValueError("Chat template or model is not set")
-
-    @property
-    def required_fields(
-        self,
-    ) -> List[RequiredField]:
-        """Get the required fields for the grader.
-
-        Returns:
-            List of required fields.
-        """
-        if self.chat is None:
-            return []
-        return self.chat.required_fields
 
     async def evaluate(self, **kwargs) -> GraderScore | GraderRank:
         """Evaluate using LLM.
@@ -389,7 +398,11 @@ class FunctionGrader(Grader):
         Raises:
             TypeError: If result type doesn't match grader mode.
         """
-        result = await self.func(**kwargs)
+        if asyncio.iscoroutinefunction(self.func):
+            result = await self.func(**kwargs)
+        else:
+            loop = asyncio.get_event_loop()
+            result = await loop.run_in_executor(None, self.func, **kwargs)
 
         # Check return type based on grader mode
         if self.mode == GraderMode.POINTWISE:
@@ -443,27 +456,29 @@ async def evaluate(
     Raises:
         ValueError: If grader function signature is invalid.
     """
-
     if isinstance(data_sample, list):
         corutines = [
-            evaluate(grader, sample, parser, *args, **kwargs) for sample in data_sample
+            evaluate(
+                grader=grader, data_sample=_data_sample, parser=parser, *args, **kwargs
+            )
+            for _data_sample in data_sample
         ]
         return await asyncio.gather(*corutines)
 
     # Check that function has at least one parameter and first parameter is data_sample
-    sig = inspect.signature(grader)
-    params = list(sig.parameters.keys())
+    # sig = inspect.signature(grader)
+    # params = list(sig.parameters.keys())
 
-    if not params:
-        raise ValueError(f"Function {grader.__name__} must have at least one parameter")
+    # if not params:
+    #     raise ValueError(f"Function {grader.__name__} must have at least one parameter")
 
-    if "data_sample" not in params:
-        raise ValueError(
-            f"Function {grader.__name__} must have 'data_sample' as its first parameter"
-        )
+    # if "data_sample" not in params:
+    #     raise ValueError(
+    #         f"Function {grader.__name__} must have 'data_sample' as its first parameter"
+    #     )
 
     return await grader(
-        data_sample=mapping(data_sample) if mapping is not None else data_sample,
+        data_sample=parser(data_sample) if parser is not None else data_sample,
         *args,
         **kwargs,
     )

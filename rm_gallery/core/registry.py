@@ -17,7 +17,7 @@ class GraderRegistry:
         name: str,
         mode: GraderMode,
         description: str,
-        required_fields: List[RequiredField] = [],
+        required_fields: List[RequiredField],
         grader: Grader | Callable | Type[Grader] | None = None,
         namespace: str | None = None,
         **kwargs,

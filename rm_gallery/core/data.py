@@ -16,8 +16,8 @@ class DataSample(BaseModel):
     )
 
 
-class DataSampleMapping(BaseModel):
-    """Mapping for transforming data samples."""
+class DataSampleParser(BaseModel):
+    """Parser for transforming data samples."""
 
     data_mapping: dict | None = Field(
         default=None, description="mapping between data variables and values"

@@ -1,11 +1,11 @@
-# Grader 开发示例
+# 自定义LLMGrader
 import asyncio
-from typing import List
 
 from loguru import logger
 
 from rm_gallery.core.data import DataSample
 from rm_gallery.core.grader import GraderMode, LLMGrader, evaluate
+from rm_gallery.core.model.template import Template
 
 DEFAULT_TEMPLATE = {
     "messages": [
@@ -54,27 +54,38 @@ DEFAULT_MODEL = {
 }
 
 
+# 示例1：对于简单的LLM as a judge，可以直接使用LLMGrader
+grader = LLMGrader(
+    name="factual_grader",
+    mode=GraderMode.POINTWISE,
+    description="factual grader",
+    template=Template(**DEFAULT_TEMPLATE),
+    model=DEFAULT_MODEL,
+    rubrics="",
+)
+
+
+# 示例2：对于负责LLM场景，继承LLMGrader/Grader自定义
 class FactualGrader(LLMGrader):
-    """Factual evaluation grader.
+    """Factual grader."""
 
-    A specific implementation of LLMGrader for factual accuracy evaluation.
-    """
+    def __init__(self, **kwargs):
+        super().__init__(
+            name="factual_grader",
+            mode=GraderMode.POINTWISE,
+            description="factual grader",
+            template=DEFAULT_TEMPLATE,
+            model=DEFAULT_MODEL,
+            rubrics="",
+            **kwargs,
+        )
 
-    def __init__(
-        self,
-        name="factual_grader",
-        mode=GraderMode.POINTWISE,
-        template: List[dict] | dict = DEFAULT_TEMPLATE,
-        model: dict = DEFAULT_MODEL,
-    ):
-        """Initialize a FactualGrader with a predefined chat template."""
-        super().__init__(name=name, mode=mode, template=template, model=model)
+
+grader = FactualGrader()
 
 
 def test_factual_grader():
     """Test the factual grader."""
-    grader = FactualGrader()
-
     data_sample = DataSample(
         data={"query": "What is the capital of France?"},
         samples=[{"answer": "Paris"}, {"answer": "London"}],

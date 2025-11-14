@@ -49,7 +49,7 @@ pointwise_sample = DataSample(
     },
     samples=[
         {
-            "response": "2 + 2 = 4",
+            "answer": "2 + 2 = 4",
             "score": 1,  # Annotation score
         }
     ]
@@ -62,15 +62,15 @@ listwise_sample = DataSample(
     },
     samples=[
         {
-            "response": "Response A: Very detailed answer...",
+            "answer": "Response A: Very detailed answer...",
             "rank": 3,  # Highest quality
         },
         {
-            "response": "Response B: Brief answer...",
+            "answer": "Response B: Brief answer...",
             "rank": 1,  # Lowest quality
         },
         {
-            "response": "Response C: Good answer...",
+            "answer": "Response C: Good answer...",
             "rank": 2,  # Medium quality
         }
     ]
@@ -90,11 +90,11 @@ from rm_gallery.core.model.template import LanguageEnum
 
 async def run_single_mode():
     # Initialize LLM
-    llm = OpenAIChatModel(model_name="qwen3-32b", stream=False)
+    model = OpenAIChatModel(model_name="qwen3-32b", stream=False)
 
     # Create AutoRubrics (Single Mode)
     auto_rubrics = AutoRubrics.create(
-        llm=llm,
+        model=model,
         generation_mode=GenerationMode.SINGLE,
         evaluation_mode=GraderMode.POINTWISE,  # or GraderMode.LISTWISE
         language=LanguageEnum.EN,  # or LanguageEnum.ZH
@@ -110,7 +110,7 @@ async def run_single_mode():
     samples = load_your_samples()  # Implement your data loading
 
     # Run generation
-    results = await auto_rubrics.run(samples)
+    results = await auto_rubrics(samples)
 
     # View results
     print(f"Success Rate: {results['success_rate']:.1f}%")
@@ -137,11 +137,11 @@ from rm_gallery.core.model.template import LanguageEnum
 
 async def run_batch_mode():
     # Initialize LLM
-    llm = OpenAIChatModel(model_name="qwen3-32b", stream=False)
+    model = OpenAIChatModel(model_name="qwen3-32b", stream=False)
 
     # Create AutoRubrics (Batch Mode)
     auto_rubrics = AutoRubrics.create(
-        llm=llm,
+        model=model,
         generation_mode=GenerationMode.BATCH,
         evaluation_mode=GraderMode.POINTWISE,
         language=LanguageEnum.EN,
@@ -160,7 +160,7 @@ async def run_batch_mode():
     samples = load_your_samples()  # Implement your data loading
 
     # Run batch generation
-    results = await auto_rubrics.run(samples)
+    results = await auto_rubrics(samples)
 
     # View results
     print(f"Total Samples: {results['total_samples']}")

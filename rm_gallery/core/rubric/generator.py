@@ -305,7 +305,7 @@ class QuerySpecificRubricGenerator:
 
         for item in sample.samples:
             item_query = query or item.get("query", "")
-            response = item.get("response", "")
+            response = item.get("answer", "")
 
             try:
                 # Prepare parameters for pointwise evaluation
@@ -499,7 +499,7 @@ class QuerySpecificRubricGenerator:
         if hasattr(sample, "samples") and sample.samples:
             for i, item in enumerate(sample.samples):
                 item_query = query or item.get("query", "")
-                response = item.get("response", "")
+                response = item.get("answer", "")
 
                 lines.append(f"Sample {i+1}:")
                 if item_query:
@@ -549,5 +549,5 @@ class QuerySpecificRubricGenerator:
         """Format all responses for listwise evaluation"""
         responses = []
         for i, item in enumerate(sample.samples):
-            responses.append(f"Response {i+1}: {item.get('response', '')}")
+            responses.append(f"Response {i+1}: {item.get('answer', '')}")
         return "\n\n".join(responses)

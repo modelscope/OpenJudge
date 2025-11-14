@@ -10,7 +10,6 @@ import numpy as np
 from loguru import logger
 from pydantic import BaseModel, Field
 
-from rm_gallery.core.metrics.base import BaseMetric
 from rm_gallery.core.metrics.registry import get_metric, list_available_metrics
 from rm_gallery.core.metrics.schema import (
     AggregatedMetricResult,

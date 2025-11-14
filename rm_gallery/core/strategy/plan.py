@@ -7,6 +7,7 @@ from rm_gallery.core.grader import Grader, GraderScore
 from rm_gallery.core.model.message import ChatMessage
 from rm_gallery.core.model.template import ChatTemplate, RequiredField, Template
 from rm_gallery.core.strategy.base import GraderStrategy
+from rm_gallery.core.utils.instance import InstDict, init_instance_by_config
 
 
 class Plan(BaseModel):
@@ -22,7 +23,10 @@ class PlanStrategy(GraderStrategy):
     """
 
     def __init__(
-        self, classifier: ChatTemplate | dict, graders: List[Grader], **kwargs
+        self,
+        classifier: ChatTemplate | dict,
+        graders: List[Grader | InstDict],
+        **kwargs,
     ):
         """Initialize PlanStrategy.
 
@@ -36,7 +40,9 @@ class PlanStrategy(GraderStrategy):
             if isinstance(classifier, ChatTemplate)
             else ChatTemplate(**classifier)
         )
-        self.graders = graders
+        self.graders = [
+            init_instance_by_config(grader, accept_type=Grader) for grader in graders
+        ]
 
     def __name__(self) -> str:
         """Get the name of the strategy."""

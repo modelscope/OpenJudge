@@ -22,11 +22,13 @@ from rm_gallery.core.model.openai_llm import OpenAIChatModel
 from rm_gallery.core.runner.auto_rubrics import AggregationMode, AutoRubrics
 
 
-def load_samples(file_path: str, max_samples: int = None) -> List[DataSample]:
-    """Load samples from file"""
-    logger.info(f"Loading samples from {file_path}")
+def load_data_samples(
+    file_path: str, max_samples: int | None = None
+) -> List[DataSample]:
+    """Load data samples from file"""
+    logger.info(f"Loading data samples from {file_path}")
 
-    samples = []
+    data_samples = []
     with open(file_path, "r", encoding="utf-8") as f:
         for i, line in enumerate(f):
             if max_samples and i >= max_samples:
@@ -34,26 +36,26 @@ def load_samples(file_path: str, max_samples: int = None) -> List[DataSample]:
             try:
                 data = json.loads(line.strip())
                 sample = DataSample(**data)
-                samples.append(sample)
+                data_samples.append(sample)
             except Exception as e:
                 logger.error(f"Failed to parse line {i+1}: {e}")
                 continue
 
-    logger.info(f"Successfully loaded {len(samples)} samples")
-    return samples
+    logger.info(f"Successfully loaded {len(data_samples)} data samples")
+    return data_samples
 
 
 async def test_batch_data(
     grader_mode: GraderMode,
     aggregation_mode: AggregationMode,
     llm,
-    samples: List[DataSample],
+    data_samples: List[DataSample],
     max_samples: int = 400,
 ):
     """Test batch mode"""
 
-    test_samples = samples[:max_samples]
-    logger.info(f"Use {len(test_samples)} samples to test batch mode")
+    test_samples = data_samples[:max_samples]
+    logger.info(f"Use {len(test_samples)} data samples to test batch mode")
 
     # auto_rubrics = AutoRubrics.create(
     #     language="en",
@@ -79,7 +81,7 @@ async def test_batch_data(
         max_epochs=3,
     )
 
-    results = await auto_rubrics.run(test_samples)
+    results = await auto_rubrics(test_samples)
 
     logger.info(f"Batch mode results: {results}")
 
@@ -94,9 +96,9 @@ async def main():
         stream=False,
     )
 
-    samples = load_samples(train_file)
-    if not samples:
-        logger.error("No valid samples loaded")
+    data_samples = load_data_samples(train_file)
+    if not data_samples:
+        logger.error("No valid data samples loaded")
         return
 
     try:
@@ -104,7 +106,7 @@ async def main():
             GraderMode.LISTWISE,
             AggregationMode.CATEGORIZE,
             llm,
-            samples,
+            data_samples,
             max_samples=100,
         )
         output_dir = Path("results/auto_rubrics_结论实用_ZH")

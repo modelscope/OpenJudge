@@ -335,7 +335,7 @@ class ImageReferenceMetric(BaseMultimodalMetric):
         return construct_verbose_logs(self, steps)
 
     def run(self, **kwargs) -> float:
-        """Run method for BaseModule interface"""
+        """Run method"""
         test_case = kwargs.get("test_case")
         if not test_case:
             raise ValueError("'test_case' must be provided in kwargs")

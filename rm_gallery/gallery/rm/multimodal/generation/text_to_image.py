@@ -103,8 +103,6 @@ class TextToImageMetric(BaseMultimodalMetric):
 
     def run(self, **kwargs):
         """
-        Run method required by BaseModule
-
         Delegates to measure() for backward compatibility.
         """
         test_case = kwargs.get("test_case")

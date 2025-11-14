@@ -385,8 +385,6 @@ class ImageCoherenceMetric(BaseMultimodalMetric):
 
     def run(self, **kwargs) -> float:
         """
-        Run method for BaseModule interface
-
         Args:
             **kwargs: Should contain 'test_case' key with MLLMTestCase value
 

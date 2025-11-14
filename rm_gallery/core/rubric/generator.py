@@ -42,7 +42,7 @@ class QuerySpecificRubricGenerator:
 
     def __init__(
         self,
-        llm,
+        model,
         evaluation_mode: str,
         generate_number: int = 3,
         max_retries: int = 5,
@@ -57,7 +57,7 @@ class QuerySpecificRubricGenerator:
         Initialize generator
 
         Args:
-            llm: Language model for generation and evaluation
+            model: Language model for generation and evaluation
             evaluation_mode: "pointwise" or "listwise" (pairwise is treated as listwise)
             generate_number: Number of rubrics to generate
             max_retries: Maximum retry attempts for LLM calls
@@ -68,7 +68,7 @@ class QuerySpecificRubricGenerator:
             model_config: Model configuration for ChatTemplate
             mapping: Optional DataSampleMapping for field transformation
         """
-        self.llm = llm
+        self.model = model
         self.evaluation_mode = evaluation_mode
         self.generate_number = generate_number
         self.max_retries = max_retries
@@ -80,7 +80,7 @@ class QuerySpecificRubricGenerator:
 
         # Create model config for ChatTemplate
         self.model_config = model_config or {
-            "model_name": getattr(llm, "model_name", "qwen3-32b"),
+            "model_name": getattr(model, "model_name", "qwen3-32b"),
             "stream": False,
         }
 

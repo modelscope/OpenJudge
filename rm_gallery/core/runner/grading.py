@@ -1,45 +1,56 @@
 import asyncio
-from typing import Any, Callable, Dict, List
+from typing import Callable, Dict, List, Tuple, TypedDict
 
 from loguru import logger
-from pydantic import BaseModel, Field
 
 from rm_gallery.core.data import DataSample, DataSampleParser, validate_data_samples
 from rm_gallery.core.grader import Grader, GraderScore, evaluate
 from rm_gallery.core.registry import GR
 from rm_gallery.core.runner.base import BaseRunner
 from rm_gallery.core.utils.concurrency import ConcurrencyManager
+from rm_gallery.core.utils.instance import init_instance_by_config
 
 
-class GraderConfig(BaseModel):
+class GradingConfig(TypedDict, total=False):
     """Configuration for a grader."""
 
-    grader: str | dict | Any = Field(
-        ...,
-        description="Grader to use for the experiment",
-    )
-    parser: dict | Any = Field(
-        None,
-        description="Parser to use for the experiment",
-    )
-
-    def to_instance(
-        self,
-    ) -> tuple[Grader | Callable, DataSampleParser | Callable | None]:
-        grader = self.grader
-        parser = self.parser
-        if isinstance(self.grader, str):
-            grader = GR.get(self.grader)
-
-        if isinstance(self.parser, dict):
-            parser = DataSampleParser(**parser)
-        return grader, parser
+    grader: str | dict | Callable | Grader
+    parser: dict | Callable
+    weight: float
 
 
-class EvaluationRunner(BaseRunner):
-    """Runner for evaluating graders."""
+class GradingResult(TypedDict):
+    """Result of a grading experiment."""
 
-    def __init__(self, grader_configs: dict, max_concurrent: int = 32):
+    total_score: float
+    dimensions: Dict[str, GraderScore]
+
+
+def parse_grading_config(
+    config: GradingConfig,
+) -> Tuple[Grader | Callable | None, DataSampleParser | Callable | None]:
+    """Parse config into grader and parser."""
+    grader_config = config.get("grader")  # type: ignore
+    grader = None
+    if isinstance(grader_config, str):
+        grader = GR.get(grader_config)
+    elif grader_config is not None:
+        grader = init_instance_by_config(grader_config, accept_type=Grader)
+    else:
+        raise ValueError("Grader config must be a string or a dict")
+
+    parser = config.get("parser", None)
+    if isinstance(parser, dict):
+        parser = DataSampleParser(**parser)
+    return grader, parser
+
+
+class GradingRunner(BaseRunner):
+    """Runner for grading by graders."""
+
+    def __init__(
+        self, grading_configs: Dict[str, GradingConfig], max_concurrent: int = 32
+    ):
         """Initialize the EvaluationRunner.
 
         Args:
@@ -47,30 +58,41 @@ class EvaluationRunner(BaseRunner):
             parsers: Parsers for the graders
             max_concurrent: Maximum number of concurrent evaluations
         """
-        self.grader_configs = grader_configs
+        self.grading_configs = grading_configs
         # Set global concurrency limit using the manager class
         concurrency_manager = ConcurrencyManager()
         concurrency_manager.set_max_concurrent(max_concurrent)
 
-    async def evaluate(self, data_sample: DataSample) -> Dict[str, List[GraderScore]]:
+    async def evaluate(self, data_sample: DataSample) -> GradingResult:
         """Run experiment for a single sample.
 
         Args:
             data_sample: The data sample to evaluate
 
         Returns:
-            List of evaluation results
+            Grading result with scores for each dimension
         """
-        results = []
+        results: Dict[str, GraderScore] = {}
         coroutines = []
-        for key, config in self.grader_configs.items():
-            grader, parser = GraderConfig(**config).to_instance()
-            coro = evaluate(grader=grader, parser=parser, data_sample=data_sample)
-            coroutines.append(coro)
-        results = await asyncio.gather(*coroutines)
-        return {
-            key: results for key, results in zip(self.grader_configs.keys(), results)
-        }
+        keys = []
+
+        for key, config in self.grading_configs.items():
+            grader, parser = parse_grading_config(config)
+            if grader is not None:
+                coro = evaluate(grader=grader, parser=parser, data_sample=data_sample)
+                coroutines.append(coro)
+                keys.append(key)
+
+        scores = await asyncio.gather(*coroutines)
+
+        total_score = 0.0
+        for key, score in zip(keys, scores):
+            results[key] = score
+            config = self.grading_configs[key]
+            weight = config.get("weight", 1.0) if "weight" in config else 1.0
+            total_score += score.score * weight
+
+        return {"total_score": total_score, "dimensions": results}
 
     async def __call__(self, data_samples: List[DataSample], *args, **kwargs) -> dict:
         """Run experiment.
@@ -137,12 +159,8 @@ if __name__ == "__main__":
     data_samples = validate_data_samples(data_samples, data_sample_schema)
     from rm_gallery.gallery.example.llm import FactualGrader
 
-    runner = EvaluationRunner(
-        grader_configs={
-            "factual_grader": {
-                "grader": FactualGrader(),
-            }
-        }
+    runner = GradingRunner(
+        grading_configs={"factual_grader": {"grader": FactualGrader(), "weight": 1.0}}
     )
     # Run using async method
     result = asyncio.run(runner(data_samples=data_samples))

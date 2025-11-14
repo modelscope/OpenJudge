@@ -125,14 +125,6 @@ class Grader(ABC):
         """
         self.kwargs.update(kwargs)
 
-    def __name__(self):
-        """Get the name of the grader.
-
-        Returns:
-            str: The name of the grader.
-        """
-        return self.name
-
     @property
     def meta(self) -> GraderInfo:
         return GraderInfo(
@@ -352,6 +344,22 @@ class LLMGrader(Grader):
             raise ValueError(f"Unsupported grader mode: {self.mode}")
         return result
 
+    def to_dict(self) -> dict:
+        """Convert the grader to a dictionary.
+
+        Returns:
+            A dictionary representation of the LLM grader.
+        """
+        return {
+            "name": self.name,
+            "mode": self.mode,
+            "template": self.template.model_dump(),
+            "model": {},
+            "rubrics": self.rubrics,
+            "description": self.description,
+            "required_fields": [field.model_dump() for field in self.required_fields],
+        }
+
 
 class FunctionGrader(Grader):
     """Function-based grader.
@@ -431,9 +439,6 @@ class FunctionGrader(Grader):
         return partial(FunctionGrader, func=func)
 
 
-GraderType = Grader | Callable
-
-
 async def evaluate(
     grader: Callable,
     data_sample: DataSample | List[DataSample],
@@ -470,11 +475,11 @@ async def evaluate(
     # params = list(sig.parameters.keys())
 
     # if not params:
-    #     raise ValueError(f"Function {grader.__name__} must have at least one parameter")
+    #     raise ValueError(f"Function {grader.name} must have at least one parameter")
 
     # if "data_sample" not in params:
     #     raise ValueError(
-    #         f"Function {grader.__name__} must have 'data_sample' as its first parameter"
+    #         f"Function {grader.name} must have 'data_sample' as its first parameter"
     #     )
 
     return await grader(

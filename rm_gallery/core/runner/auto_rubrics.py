@@ -1,21 +1,3 @@
-# from typing import List
-
-# from rm_gallery.core.data import DataSample, DataSampleParser
-# from rm_gallery.core.grader import LLMGrader, evaluate
-# from rm_gallery.core.runner.base import BaseRunner
-
-
-# class AutoRubrics(BaseRunner):
-#     def __init__(self, grader: LLMGrader, mapping: DataSampleParser | None = None):
-#         self.grader = grader
-#         self.mapping = mapping
-
-#     def evaluate(self, data_samples: List[DataSample], rubrics: str):
-#         return evaluate(
-#             self.grader, mapping=self.mapping, data_sample=data_samples, rubrics=rubrics
-#         )
-# from typing import List
-
 """
 AutoRubrics - Dual Mode Rubric Generation System
 
@@ -111,10 +93,10 @@ class AutoRubricsConfig(BaseModel):
         default=GenerationMode.SINGLE, description="Generation mode: single or batch"
     )
     evaluation_mode: GraderMode = Field(
-        default=GraderMode.LISTWISE, description="Grader mode (POINTWISE or LISTWISE)"
+        default=GraderMode.POINTWISE, description="Grader mode (POINTWISE or LISTWISE)"
     )
     language: LanguageEnum = Field(
-        default=LanguageEnum.ZH, description="Language for prompts (ZH or EN)"
+        default=LanguageEnum.EN, description="Language for prompts (ZH or EN)"
     )
 
     # Generation parameters
@@ -131,7 +113,7 @@ class AutoRubricsConfig(BaseModel):
     # Pointwise specific
     min_score: int = Field(default=0, description="Minimum score for pointwise mode")
     max_score: int = Field(
-        default=4, ge=1, description="Maximum score for pointwise mode"
+        default=1, ge=1, description="Maximum score for pointwise mode"
     )
 
     # Batch processing parameters
@@ -681,7 +663,8 @@ class AutoRubrics(BaseRunner):
     @classmethod
     def create(
         cls,
-        llm,
+        model: OpenAIChatModel,
+        parser: DataSampleParser | Callable | None = None,
         # Core settings
         generation_mode: GenerationMode = GenerationMode.SINGLE,
         evaluation_mode: GraderMode = GraderMode.POINTWISE,
@@ -757,4 +740,4 @@ class AutoRubrics(BaseRunner):
             merge_num_categories=merge_num_categories,
             **kwargs,
         )
-        return cls(llm, config)
+        return cls(model=model, parser=parser, config=config)

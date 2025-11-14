@@ -45,7 +45,7 @@ class AutoGrader(BaseRunner):
                 },
                 {
                     "role": "user",
-                    "content": 'Question: {query}\nAnswer: {answer}\n\nRubrics for evaluation:\n{rubrics}\n\nPlease provide a score from 0 to 1 and a reason for your score in the following JSON format:\n{"score": <score>, "reason": "<reason>"}',
+                    "content": 'Question: {query}\nAnswer: {answer}\n\nRubrics for evaluation:\n{rubrics}\n\nPlease provide a score from 0 to 1 and a reason for your score in the following JSON format:{{"score": <score>, "reason": "<reason>"}}',
                 },
             ],
             "required_fields": [
@@ -70,11 +70,14 @@ class AutoGrader(BaseRunner):
             ],
         }
 
-        # Create and return an LLMGrader with the generated rubrics
+        model_dict = {
+            "model_name": self.auto_rubrics.model.model_name,
+        }
+
         return LLMGrader(
             name="Auto Grader",
             template=default_template,
-            model=getattr(self.auto_rubrics.model, "__dict__", {}),
+            model=model_dict,
             rubrics=rubrics,
         )
 
@@ -82,19 +85,38 @@ class AutoGrader(BaseRunner):
 if __name__ == "__main__":
     from rm_gallery.core.model import OpenAIChatModel
 
-    model = OpenAIChatModel(model_name="qwen-plus")
-    auto_grader = AutoGrader(model, AutoGraderConfig())
-    data_samples = [
+    model = OpenAIChatModel(model_name="qwen3-32b")
+    auto_grader = AutoGrader(model)
+    data_samples_label = [
         DataSample(
-            query="What is the capital of France?",
-            answer="The capital of France is Paris.",
+            data={
+                "query": "What is the capital of France?",
+            },
+            samples=[
+                {
+                    "answer": "The capital of France is Paris.",
+                    "score": 1,
+                }
+            ],
         )
     ]
-    grader = auto_grader(data_samples)
-    result = asyncio.run(
-        evaluate(
+    data_samples_unlabel = [
+        DataSample(
+            data={
+                "query": "What is the capital of Germany?",
+            },
+            samples=[{"answer": "The capital of Germany is not Berlin."}],
+        )
+    ]
+
+    async def main():
+        grader = await auto_grader(data_samples_label)
+        return await evaluate(
             grader,
             parser=None,
-            data_sample=data_samples[0],
+            data_sample=data_samples_unlabel[0],
         )
-    )
+
+    result = asyncio.run(main())
+
+    print(result)

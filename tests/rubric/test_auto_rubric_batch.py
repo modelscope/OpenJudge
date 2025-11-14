@@ -48,7 +48,7 @@ def load_data_samples(
 async def test_batch_data(
     grader_mode: GraderMode,
     aggregation_mode: AggregationMode,
-    llm,
+    model: OpenAIChatModel,
     data_samples: List[DataSample],
     max_samples: int = 400,
 ):
@@ -57,22 +57,8 @@ async def test_batch_data(
     test_samples = data_samples[:max_samples]
     logger.info(f"Use {len(test_samples)} data samples to test batch mode")
 
-    # auto_rubrics = AutoRubrics.create(
-    #     language="en",
-    #     llm=llm,
-    #     evaluation_mode=grader_mode,
-    #     aggregation_mode=aggregation_mode,
-    #     merge_num_categories=5,
-    #     batch_size=5,
-    #     mcr_batch_size=5,
-    #     min_increment_threshold=0.001,
-    #     max_total_rubrics=100,
-    #     generate_number=2,
-    #     max_epochs=3
-    # )
-
     auto_rubrics = AutoRubrics.create(
-        llm=llm,
+        model=model,
         evaluation_mode=grader_mode,
         aggregation_mode=aggregation_mode,
         language="zh",
@@ -91,7 +77,7 @@ async def test_batch_data(
 async def main():
     train_file = "./data/processed_mxc/train_samples_结论实用.jsonl"
 
-    llm = OpenAIChatModel(
+    model = OpenAIChatModel(
         model_name="qwen3-32b",
         stream=False,
     )
@@ -105,7 +91,7 @@ async def main():
         batch_results = await test_batch_data(
             GraderMode.LISTWISE,
             AggregationMode.CATEGORIZE,
-            llm,
+            model,
             data_samples,
             max_samples=100,
         )

@@ -49,7 +49,7 @@ def create_test_samples() -> List[DataSample]:
         },
         samples=[
             {
-                "response": "2 + 2 = 5. This is basic arithmetic where we add two identical numbers.",
+                "answer": "2 + 2 = 4. This is basic arithmetic where we add two identical numbers.",
                 "score": 1,
             }
         ],
@@ -66,10 +66,13 @@ def create_test_samples() -> List[DataSample]:
         },
         samples=[
             {
-                "response": "BEEP-7 was a maintenance robot who discovered paint cans in an abandoned art studio. Curious, it dipped its mechanical fingers in blue paint and made its first mark on canvas. Days passed as BEEP-7 experimented with colors, learning that art wasn't about precision but expression. Its circuits hummed with joy as it created its first masterpiece - a sunset that somehow captured the warmth it had never felt.",
+                "answer": "BEEP-7 was a maintenance robot who discovered paint cans in an abandoned art studio. Curious, it dipped its mechanical fingers in blue paint and made its first mark on canvas. Days passed as BEEP-7 experimented with colors, learning that art wasn't about precision but expression. Its circuits hummed with joy as it created its first masterpiece - a sunset that somehow captured the warmth it had never felt.",
                 "rank": 0,
             },
-            {"response": "There was a robot. It painted. The end.", "rank": 1},
+            {
+                "answer": "There was a robot. It painted. The end.",
+                "rank": 1,
+            },
         ],
     )
     samples.append(sample_pairwise)
@@ -84,19 +87,19 @@ def create_test_samples() -> List[DataSample]:
         },
         samples=[
             {
-                "response": "A for loop is a control structure that repeats a block of code a specific number of times. It consists of three parts: initialization (setting a counter), condition (when to stop), and increment (updating the counter). For example, in Python: 'for i in range(5):' will execute the loop body 5 times, with i taking values 0 through 4.",
+                "answer": "A for loop is a control structure that repeats a block of code a specific number of times. It consists of three parts: initialization (setting a counter), condition (when to stop), and increment (updating the counter). For example, in Python: 'for i in range(5):' will execute the loop body 5 times, with i taking values 0 through 4.",
                 "rank": 4,
             },
             {
-                "response": "A for loop is used to iterate over a sequence (like a list, tuple, or string) or other iterable objects. You use it when you know how many times you want to repeat something. For example, if you want to print 'Hello' 5 times, you can use a for loop to do it.",
+                "answer": "A for loop is used to iterate over a sequence (like a list, tuple, or string) or other iterable objects. You use it when you know how many times you want to repeat something. For example, if you want to print 'Hello' 5 times, you can use a for loop to do it.",
                 "rank": 2,
             },
             {
-                "response": "It does stuff.",
+                "answer": "It does stuff.",
                 "rank": 1,
             },
             {
-                "response": "A for loop repeats code multiple times. ",
+                "answer": "A for loop repeats code multiple times. ",
                 "rank": 3,
             },
         ],
@@ -120,14 +123,15 @@ async def test_single_data(mode: GraderMode, samples: List[DataSample]):
         f"Testing {mode.value.upper()} Mode - Single Mode (Independent Processing)"
     )
 
-    llm = OpenAIChatModel(
+    model = OpenAIChatModel(
         model_name="qwen3-32b",
         stream=False,
     )
 
     # Create AutoRubrics in Single Mode
     auto_rubrics = AutoRubrics.create(
-        llm=llm,
+        model=model,
+        parser=None,
         language="en",
         evaluation_mode=mode,
         generation_mode=GenerationMode.SINGLE,

@@ -1,12 +1,14 @@
 import re
 from typing import List, Literal
 
-from rm_gallery.core.grader import FunctionGrader, Grader, GraderScore
+from rm_gallery.core.grader import Grader, GraderScore
 from rm_gallery.core.utils.tokenizer import get_tokenizer
 
 
-@FunctionGrader.wrap
 async def compute_accuracy(generated, reference) -> GraderScore:
+    """
+    Calculate accuracy between generated content and reference answer.
+    """
     accuracy = 1.0 if generated == reference else 0.0
 
     return GraderScore(
@@ -95,7 +97,6 @@ class F1ScoreGrader(Grader):
         )
 
 
-@FunctionGrader.wrap
 async def compute_rouge(generated, reference) -> GraderScore:
     """
     Calculate ROUGE-L score between generated content and reference answer.

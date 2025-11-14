@@ -1,7 +1,6 @@
 # function grader 开发示例
 
 import asyncio
-from typing import List
 
 from loguru import logger
 
@@ -15,7 +14,7 @@ from rm_gallery.core.grader import (
 )
 
 
-## 示例一：通过继承Grader基类定义evaluate方法
+# 示例一：通过继承Grader基类定义evaluate方法
 class StringCheckerV1(Grader):
     """String checker grader."""
 
@@ -38,27 +37,7 @@ class StringCheckerV1(Grader):
         )
 
 
-## 示例二：函数式定义，直接处理data_sample样本
-async def string_checker_v2(data_sample: DataSample) -> List[GraderScore]:
-    """Directly evaluate the reward.
-
-    Args:
-        data_sample: Data sample containing reference and target outputs
-
-    Returns:
-        List of grader scores
-    """
-    return [
-        GraderScore(
-            score=1 if data_sample.data["reference"] == sample["target_output"] else 0,
-            reason="String checker",
-        )
-        for sample in data_sample.samples
-    ]
-
-
-## 示例三：函数式定义，严格定义词条名，通过FunctionGrader调用
-@FunctionGrader.wrap
+# 示例二：函数式定义，严格定义词条名，通过FunctionGrader调用
 async def string_checker_v3(reference_output, target_output) -> GraderScore:
     """Function for Function Grader.
 
@@ -97,22 +76,6 @@ def test_string_checker_v1():
     logger.info(result)
 
 
-def test_string_checker_v2():
-    """Test string_checker_v2 implementation."""
-    data_sample = DataSample(
-        data={"reference": "Hello World"},
-        samples=[{"target_output": "Hello World"}, {"target_output": "Hello"}],
-    )
-    result = asyncio.run(
-        evaluate(
-            string_checker_v2,
-            mapping=None,
-            data_sample=data_sample,
-        )
-    )
-    logger.info(result)
-
-
 def test_string_checker_v3():
     """Test string_checker_v3 implementation."""
     data_sample = DataSample(
@@ -120,7 +83,7 @@ def test_string_checker_v3():
         samples=[{"target_output": "Hello World"}, {"target_output": "Hello"}],
     )
 
-    grader = string_checker_v3
+    grader = FunctionGrader(name="string checker", func=string_checker_v3)
     result = asyncio.run(
         evaluate(
             grader,
@@ -134,4 +97,4 @@ def test_string_checker_v3():
 
 
 if __name__ == "__main__":
-    test_string_checker_v2()
+    test_string_checker_v3()

@@ -11,7 +11,6 @@ from typing import List, Optional, Tuple, Union
 from loguru import logger
 from pydantic import Field
 
-from rm_gallery.core.base import BaseModule
 from rm_gallery.core.metrics.multimodal.schema import (
     MLLMImage,
     MLLMTestCase,
@@ -20,7 +19,7 @@ from rm_gallery.core.metrics.multimodal.schema import (
 )
 
 
-class BaseMultimodalMetric(BaseModule, ABC):
+class BaseMultimodalMetric(ABC):
     """
     Base class for multimodal evaluation metrics
 
@@ -273,10 +272,6 @@ class BaseMultimodalMetric(BaseModule, ABC):
 
     def run(self, **kwargs) -> MultimodalMetricResult:
         """
-        Implement BaseModule's run method
-
-        Used for compatibility with RM-Gallery's BaseModule interface.
-
         Args:
             **kwargs: Must contain 'test_case' key
 

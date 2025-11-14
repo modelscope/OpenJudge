@@ -13,9 +13,6 @@ class GraderStrategy(ABC):
     """
 
     @abstractmethod
-    def __name__(self) -> str:
-        ...
-
     async def __call__(
         self, data_sample: DataSample, *args, **kwargs
     ) -> List[GraderScore]:

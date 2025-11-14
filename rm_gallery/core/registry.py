@@ -1,4 +1,4 @@
-from typing import Callable, Dict, List, Optional, Type, Union
+from typing import Callable, Dict, List, Type, Union
 
 from loguru import logger
 
@@ -60,7 +60,7 @@ class GraderRegistry:
                     name=info.name,
                     mode=info.mode,
                     description=info.description,
-                    required_fields=info.required_fields,
+                    required_fields=info.required_fields,  # type: ignore
                     **kwargs,
                 )
                 cls._register_grader(info, initialized_grader, namespace)
@@ -80,7 +80,7 @@ class GraderRegistry:
                     name=info.name,
                     mode=info.mode,
                     description=info.description,
-                    required_fields=info.required_fields,
+                    required_fields=info.required_fields,  # type: ignore
                     **kwargs,
                 )
                 cls._register_grader(info, initialized_grader, namespace)
@@ -97,7 +97,7 @@ class GraderRegistry:
         cls,
         info: GraderInfo,
         grader: Grader | Callable,
-        namespace: Optional[str] = None,
+        namespace: str | None = None,
     ) -> None:
         """Internal method to register a grader function.
 
@@ -106,10 +106,20 @@ class GraderRegistry:
             grader: The grader function to register
             namespace: Optional namespace to group graders (e.g., "math", "code")
         """
+        # If the grader is a callable but not a Grader instance, wrap it with FunctionGrader
         if not isinstance(grader, Grader):
-            raise TypeError(
-                f"grader must be an instance of Evaluationgrader, got {type(grader)}"
+            from rm_gallery.core.grader import FunctionGrader
+
+            # Create a new list to ensure type compatibility
+            required_fields = list(info.required_fields)
+            wrapped_grader = FunctionGrader(
+                func=grader,
+                name=info.name,
+                mode=info.mode,
+                description=info.description,
+                required_fields=required_fields,  # type: ignore
             )
+            grader = wrapped_grader
 
         # Use name from GraderInfo
         name = info.name
@@ -158,7 +168,7 @@ class GraderRegistry:
         logger.info(f"Registered grader '{full_name}'")
 
     @classmethod
-    def get(cls, name: str) -> Optional[Grader]:
+    def get(cls, name: str) -> Grader | None:
         """Get a registered grader function by name (supports dot notation for namespaces).
 
         Args:
@@ -214,7 +224,7 @@ class GraderRegistry:
             return False
 
     @classmethod
-    def list_graders(cls, namespace: Optional[str] = None) -> Dict[str, str]:
+    def list_graders(cls, namespace: str | None = None) -> Dict[str, str]:
         """List registered graders, optionally filtered by namespace.
 
         Args:

@@ -1,11 +1,12 @@
 import asyncio
-from typing import Callable, List
+from typing import List
 
 from loguru import logger
 
 from rm_gallery.core.data import DataSample
 from rm_gallery.core.grader import Grader, GraderScore, evaluate
 from rm_gallery.core.strategy.base import GraderStrategy
+from rm_gallery.core.utils.instance import InstDict, init_instance_by_config
 from rm_gallery.gallery.example.llm import FactualGrader
 
 
@@ -14,7 +15,7 @@ class VotingStrategy(GraderStrategy):
     multiple times and averaging the results.
     """
 
-    def __init__(self, grader: Grader | Callable, num_repeats: int = 5, **kwargs):
+    def __init__(self, grader: Grader | InstDict, num_repeats: int = 5, **kwargs):
         """Initialize VotingStrategy.
 
         Args:
@@ -24,10 +25,7 @@ class VotingStrategy(GraderStrategy):
         """
         super().__init__(**kwargs)
         self.num_repeats = num_repeats
-        self.grader = grader
-
-    def __name__(self) -> str:
-        return self.grader.__name__
+        self.grader = init_instance_by_config(grader, accept_type=Grader)
 
     async def __call__(
         self, data_sample: DataSample, *args, **kwargs

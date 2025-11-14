@@ -138,7 +138,7 @@ async def test_single_data(mode: GraderMode, samples: List[DataSample]):
         max_score=1,
     )
 
-    results = await auto_rubrics.run(samples)
+    results = await auto_rubrics(samples)
 
     for i, sample_result in enumerate(results["sample_results"]):
         valid = sample_result.get("rubric_valid", "False")

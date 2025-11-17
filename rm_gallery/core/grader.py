@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import asyncio
 
 # import inspect
@@ -10,7 +11,8 @@ from loguru import logger
 from pydantic import BaseModel, Field
 
 from rm_gallery.core.data import DataSample, DataSampleParser
-from rm_gallery.core.model.template import ChatTemplate, RequiredField, Template
+from rm_gallery.core.model.base import ChatModelBase
+from rm_gallery.core.model.template import Chat, RequiredField, Template
 from rm_gallery.core.utils.concurrency import ConcurrencyManager
 
 
@@ -35,7 +37,8 @@ class GraderResult(BaseModel):
 
     reason: str = Field(default=..., description="The reason for the result")
     metadata: Dict[str, Any] = Field(
-        default_factory=dict, description="The metadata of the grader result"
+        default_factory=dict,
+        description="The metadata of the grader result",
     )
 
 
@@ -72,9 +75,13 @@ class GraderInfo(BaseModel):
 
     name: str = Field(default=..., description="The name of the grader")
     mode: GraderMode = Field(default=..., description="The grader mode")
-    description: str = Field(default=..., description="The description of the grader")
+    description: str = Field(
+        default=...,
+        description="The description of the grader",
+    )
     required_fields: List[RequiredField] = Field(
-        default_factory=list, description="The required fields for the grader"
+        default_factory=list,
+        description="The required fields for the grader",
     )
 
 
@@ -127,6 +134,11 @@ class Grader(ABC):
 
     @property
     def meta(self) -> GraderInfo:
+        """Get the metadata of the grader.
+
+        Returns:
+            GraderInfo: The metadata of the grader.
+        """
         return GraderInfo(
             name=self.name,
             mode=self.mode,
@@ -146,7 +158,10 @@ class Grader(ABC):
         """
         ...
 
-    async def _safe_evaluate(self, **kwargs) -> GraderScore | GraderRank | GraderError:
+    async def _safe_evaluate(
+        self,
+        **kwargs,
+    ) -> GraderScore | GraderRank | GraderError:
         """Safely evaluate, handling exceptions gracefully and control concurrency.
 
         Args:
@@ -166,7 +181,8 @@ class Grader(ABC):
                     # If it's a synchronous function, run it in a thread pool
                     loop = asyncio.get_event_loop()
                     result = await loop.run_in_executor(
-                        None, lambda: self.evaluate(**kwargs)
+                        None,
+                        lambda: self.evaluate(**kwargs),
                     )
                 return result
             except Exception as e:
@@ -175,10 +191,15 @@ class Grader(ABC):
                 return GraderError(reason=error_msg)
 
         # Use the concurrency manager to control execution
-        return await concurrency_manager.run_with_concurrency_control(_evaluate_task())
+        return await concurrency_manager.run_with_concurrency_control(
+            _evaluate_task(),
+        )
 
     async def __call__(
-        self, data_sample: DataSample, *args, **kwargs
+        self,
+        data_sample: DataSample,
+        *args,
+        **kwargs,
     ) -> List[GraderScore]:
         """Evaluate based on the specified grader mode.
 
@@ -205,7 +226,9 @@ class Grader(ABC):
                 if isinstance(result, GraderScore):
                     _results.append(result)
                 elif isinstance(result, GraderError):
-                    _results.append(GraderScore(score=0.0, reason=result.reason))
+                    _results.append(
+                        GraderScore(score=0.0, reason=result.reason),
+                    )
                 else:
                     raise ValueError(f"Invalid result type: {type(result)}")
             return results
@@ -221,7 +244,7 @@ class Grader(ABC):
                             [
                                 f"Sample {i+1}: {sample[key]}"
                                 for i, sample in enumerate(data_sample.samples)
-                            ]
+                            ],
                         )
 
             result = await self._safe_evaluate(**params)
@@ -251,7 +274,7 @@ class LLMGrader(Grader):
     Attributes:
         name (str): The name of the grader.
         mode (GraderMode): The grader mode.
-        chat (ChatTemplate): The chat template for the LLM.
+        chat (Chat): The chat template for the LLM.
         rubrics (str): The rubrics for the evaluation.
         kwargs (dict): The kwargs for the grader.
     """
@@ -261,7 +284,7 @@ class LLMGrader(Grader):
         name: str = "",
         mode: GraderMode = GraderMode.POINTWISE,
         template: Template | dict | None = None,
-        model: Dict[str, Any] | None = None,
+        model: ChatModelBase | None = None,
         rubrics: str = "",
         description: str = "",
         required_fields: List[RequiredField] | List[dict] = [],
@@ -282,7 +305,9 @@ class LLMGrader(Grader):
         if template is None:
             raise ValueError("Template is not set")
         self.template = (
-            template if isinstance(template, Template) else Template(**template)
+            template
+            if isinstance(template, Template)
+            else Template(**template)
         )
         super().__init__(
             name=name,
@@ -294,15 +319,20 @@ class LLMGrader(Grader):
             **kwargs,
         )
 
-    def reset(self, model: Dict[str, Any] | None = None, rubrics: str = "", **kwargs):
+    def reset(
+        self,
+        model: ChatModelBase | None = None,
+        rubrics: str = "",
+        **kwargs,
+    ):
         """
         Reset the grader with new model and rubrics.
         """
         super().reset(**kwargs)
-        self.model = model
+        self.model = model if model is not None else self.model
         self.rubrics = rubrics
         if self.template is not None and self.model is not None:
-            self.chat = ChatTemplate(template=self.template, model=self.model)
+            self.chat = Chat(template=self.template, model=self.model)
         else:
             raise ValueError("Chat template or model is not set")
 
@@ -319,9 +349,9 @@ class LLMGrader(Grader):
             ValueError: If the grader mode is unsupported.
         """
         if self.mode == GraderMode.LISTWISE:
-            chat_output = GraderRank
+            structured_model = GraderRank
         else:
-            chat_output = GraderScore
+            structured_model = GraderScore
 
         # Check if chat is not None before calling it
         if self.chat is None:
@@ -329,7 +359,7 @@ class LLMGrader(Grader):
         params = {"rubrics": self.rubrics, **self.kwargs}
         params.update(kwargs)
 
-        response = await self.chat(chat_output=chat_output, **params)
+        response = await self.chat(structured_model=structured_model, **params)
         if self.mode == GraderMode.LISTWISE:
             result = GraderRank(
                 rank=response.metadata["rank"],  # type: ignore
@@ -353,11 +383,13 @@ class LLMGrader(Grader):
         return {
             "name": self.name,
             "mode": self.mode,
-            "template": self.template.model_dump(),
-            "model": {},
-            "rubrics": self.rubrics,
             "description": self.description,
-            "required_fields": [field.model_dump() for field in self.required_fields],
+            "required_fields": [
+                field.model_dump() for field in self.required_fields
+            ],
+            "template": self.template.model_dump(),
+            "rubrics": self.rubrics,
+            **self.kwargs,
         }
 
 
@@ -390,7 +422,11 @@ class FunctionGrader(Grader):
             description: The description of the grader.
         """
         super().__init__(
-            name, mode, description, required_fields=required_fields, **kwargs
+            name,
+            mode,
+            description,
+            required_fields=required_fields,
+            **kwargs,
         )
         self.func = func
 
@@ -416,12 +452,12 @@ class FunctionGrader(Grader):
         if self.mode == GraderMode.POINTWISE:
             if not isinstance(result, GraderScore):
                 raise TypeError(
-                    f"Expected GraderScore for pointwise mode, got {type(result)}"
+                    f"Expected GraderScore for pointwise mode, got {type(result)}",
                 )
         elif self.mode == GraderMode.LISTWISE:
             if not isinstance(result, GraderRank):
                 raise TypeError(
-                    f"Expected GraderRank for listwise mode, got {type(result)}"
+                    f"Expected GraderRank for listwise mode, got {type(result)}",
                 )
         else:
             raise ValueError(f"Unsupported grader mode: {self.mode}")
@@ -464,7 +500,11 @@ async def evaluate(
     if isinstance(data_sample, list):
         corutines = [
             evaluate(
-                grader=grader, data_sample=_data_sample, parser=parser, *args, **kwargs
+                grader=grader,
+                data_sample=_data_sample,
+                parser=parser,
+                *args,
+                **kwargs,
             )
             for _data_sample in data_sample
         ]

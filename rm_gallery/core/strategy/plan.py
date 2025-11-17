@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from typing import List
 
 from pydantic import BaseModel, Field
@@ -5,13 +6,16 @@ from pydantic import BaseModel, Field
 from rm_gallery.core.data import DataSample
 from rm_gallery.core.grader import Grader, GraderScore
 from rm_gallery.core.model.message import ChatMessage
-from rm_gallery.core.model.template import ChatTemplate, RequiredField, Template
+from rm_gallery.core.model.template import Chat, RequiredField, Template
 from rm_gallery.core.strategy.base import GraderStrategy
 from rm_gallery.core.utils.instance import InstDict, init_instance_by_config
 
 
 class Plan(BaseModel):
-    name: str = Field(..., description="The name of grader to use for evaluation")
+    name: str = Field(
+        ...,
+        description="The name of grader to use for evaluation",
+    )
     reason: str = Field(..., description="The reason for the plan")
 
 
@@ -24,24 +28,23 @@ class PlanStrategy(GraderStrategy):
 
     def __init__(
         self,
-        classifier: ChatTemplate | dict,
+        classifier: Chat | dict,
         graders: List[Grader | InstDict],
         **kwargs,
     ):
         """Initialize PlanStrategy.
 
         Args:
-            classifier (ChatTemplate | dict): The classifier to use for routing.
+            classifier (Chat | dict): The classifier to use for routing.
             graders (List[Grader]): The list of graders to use for evaluation.
         """
         super().__init__(**kwargs)
         self.classifier = (
-            classifier
-            if isinstance(classifier, ChatTemplate)
-            else ChatTemplate(**classifier)
+            classifier if isinstance(classifier, Chat) else Chat(**classifier)
         )
         self.graders = [
-            init_instance_by_config(grader, accept_type=Grader) for grader in graders
+            init_instance_by_config(grader, accept_type=Grader)
+            for grader in graders
         ]
 
     def __name__(self) -> str:
@@ -49,7 +52,10 @@ class PlanStrategy(GraderStrategy):
         return "plan"
 
     async def __call__(
-        self, data_sample: DataSample, *args, **kwargs
+        self,
+        data_sample: DataSample,
+        *args,
+        **kwargs,
     ) -> List[GraderScore]:
         """Evaluate a data sample using the selected grader.
 
@@ -66,7 +72,7 @@ class PlanStrategy(GraderStrategy):
         graders_description = "\n".join(descriptions)
         intent = self.classifier(
             graders_description=graders_description,
-            chat_output=Plan,
+            structured_model=Plan,
             **data_sample.data,
         )
         grader = self.graders[intent]
@@ -75,7 +81,7 @@ class PlanStrategy(GraderStrategy):
 
 def test_plan_strategy():
     """Test the plan strategy."""
-    classifier = ChatTemplate(
+    classifier = Chat(
         model={
             "model_name": "qwen-plus",
             "stream": False,

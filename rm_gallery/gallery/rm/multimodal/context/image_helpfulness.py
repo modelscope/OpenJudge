@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Image Helpfulness Metric
 
@@ -18,7 +19,9 @@ from rm_gallery.core.metrics.multimodal.schema import (
 )
 from rm_gallery.core.metrics.multimodal.utils import construct_verbose_logs
 from rm_gallery.core.model.qwen_vlm_api import QwenVLAPI
-from rm_gallery.gallery.rm.multimodal.context.templates import ImageHelpfulnessTemplate
+from rm_gallery.gallery.rm.multimodal.context.templates import (
+    ImageHelpfulnessTemplate,
+)
 
 
 class ImageHelpfulnessMetric(BaseMultimodalMetric):
@@ -65,7 +68,8 @@ class ImageHelpfulnessMetric(BaseMultimodalMetric):
     name: str = Field(default="Image Helpfulness", description="Metric name")
     model: QwenVLAPI = Field(..., description="Qwen VL API instance")
     max_context_size: Optional[int] = Field(
-        default=500, description="Maximum context size in characters"
+        default=500,
+        description="Maximum context size in characters",
     )
 
     # Internal state
@@ -76,7 +80,7 @@ class ImageHelpfulnessMetric(BaseMultimodalMetric):
 
     def __init__(self, **data):
         super().__init__(**data)
-        self.evaluation_model = self.model.model_name
+        self.grader_model = self.model.model_name
 
     def measure(
         self,
@@ -93,12 +97,16 @@ class ImageHelpfulnessMetric(BaseMultimodalMetric):
                 with concurrent.futures.ThreadPoolExecutor() as pool:
                     future = pool.submit(
                         asyncio.run,
-                        self.a_measure(test_case, _show_indicator, _in_component),
+                        self.a_measure(
+                            test_case,
+                            _show_indicator,
+                            _in_component,
+                        ),
                     )
                     return future.result()
             else:
                 return loop.run_until_complete(
-                    self.a_measure(test_case, _show_indicator, _in_component)
+                    self.a_measure(test_case, _show_indicator, _in_component),
                 )
 
         self._check_test_case_params(test_case)
@@ -121,12 +129,15 @@ class ImageHelpfulnessMetric(BaseMultimodalMetric):
 
         for image_index in image_indices:
             context_above, context_below = self.get_image_context(
-                image_index, actual_output
+                image_index,
+                actual_output,
             )
             image = actual_output[image_index]
 
             raw_score, reason = self._evaluate_image_helpfulness(
-                image, context_above, context_below
+                image,
+                context_above,
+                context_below,
             )
 
             normalized_score = raw_score / 10.0
@@ -136,7 +147,9 @@ class ImageHelpfulnessMetric(BaseMultimodalMetric):
             self.scores.append(normalized_score)
             self.reasons.append(reason)
 
-        self.score = sum(self.scores) / len(self.scores) if self.scores else 0.0
+        self.score = (
+            sum(self.scores) / len(self.scores) if self.scores else 0.0
+        )
 
         if self.strict_mode and self.score < self.threshold:
             self.score = 0.0
@@ -177,7 +190,8 @@ class ImageHelpfulnessMetric(BaseMultimodalMetric):
         tasks = []
         for image_index in image_indices:
             context_above, context_below = self.get_image_context(
-                image_index, actual_output
+                image_index,
+                actual_output,
             )
             image = actual_output[image_index]
 
@@ -185,7 +199,11 @@ class ImageHelpfulnessMetric(BaseMultimodalMetric):
             self.contexts_below.append(context_below)
 
             tasks.append(
-                self._a_evaluate_image_helpfulness(image, context_above, context_below)
+                self._a_evaluate_image_helpfulness(
+                    image,
+                    context_above,
+                    context_below,
+                ),
             )
 
         results = await asyncio.gather(*tasks)
@@ -195,7 +213,9 @@ class ImageHelpfulnessMetric(BaseMultimodalMetric):
             self.scores.append(normalized_score)
             self.reasons.append(reason)
 
-        self.score = sum(self.scores) / len(self.scores) if self.scores else 0.0
+        self.score = (
+            sum(self.scores) / len(self.scores) if self.scores else 0.0
+        )
 
         if self.strict_mode and self.score < self.threshold:
             self.score = 0.0
@@ -216,7 +236,8 @@ class ImageHelpfulnessMetric(BaseMultimodalMetric):
     ) -> Tuple[float, str]:
         """Synchronous evaluation of image helpfulness"""
         prompt = ImageHelpfulnessTemplate.evaluate_image_helpfulness(
-            context_above or "", context_below or ""
+            context_above or "",
+            context_below or "",
         )
 
         try:
@@ -242,7 +263,8 @@ class ImageHelpfulnessMetric(BaseMultimodalMetric):
     ) -> Tuple[float, str]:
         """Async evaluation of image helpfulness"""
         prompt = ImageHelpfulnessTemplate.evaluate_image_helpfulness(
-            context_above or "", context_below or ""
+            context_above or "",
+            context_below or "",
         )
 
         try:
@@ -261,7 +283,9 @@ class ImageHelpfulnessMetric(BaseMultimodalMetric):
             return 0.0, f"Evaluation error: {str(e)}"
 
     def get_image_context(
-        self, image_index: int, output_list: List[Union[str, MLLMImage]]
+        self,
+        image_index: int,
+        output_list: List[Union[str, MLLMImage]],
     ) -> Tuple[Optional[str], Optional[str]]:
         """Extract text context surrounding an image"""
         context_above = None
@@ -270,20 +294,29 @@ class ImageHelpfulnessMetric(BaseMultimodalMetric):
         for i in range(image_index - 1, -1, -1):
             if isinstance(output_list[i], str):
                 context_above = output_list[i]
-                if self.max_context_size and len(context_above) > self.max_context_size:
+                if (
+                    self.max_context_size
+                    and len(context_above) > self.max_context_size
+                ):
                     context_above = context_above[-self.max_context_size :]
                 break
 
         for i in range(image_index + 1, len(output_list)):
             if isinstance(output_list[i], str):
                 context_below = output_list[i]
-                if self.max_context_size and len(context_below) > self.max_context_size:
+                if (
+                    self.max_context_size
+                    and len(context_below) > self.max_context_size
+                ):
                     context_below = context_below[: self.max_context_size]
                 break
 
         return context_above, context_below
 
-    def get_image_indices(self, output_list: List[Union[str, MLLMImage]]) -> List[int]:
+    def get_image_indices(
+        self,
+        output_list: List[Union[str, MLLMImage]],
+    ) -> List[int]:
         """Find indices of all images in output list"""
         return [
             index
@@ -303,7 +336,9 @@ class ImageHelpfulnessMetric(BaseMultimodalMetric):
 
         combined = []
         for i, reason in enumerate(self.reasons, 1):
-            combined.append(f"Image {i} (score: {self.scores[i-1]:.2f}): {reason}")
+            combined.append(
+                f"Image {i} (score: {self.scores[i-1]:.2f}): {reason}",
+            )
 
         return "\n".join(combined)
 
@@ -315,11 +350,11 @@ class ImageHelpfulnessMetric(BaseMultimodalMetric):
             step = []
             if self.contexts_above[i]:
                 step.append(
-                    f"Context Above Image {i+1}: {self.contexts_above[i][:50]}..."
+                    f"Context Above Image {i+1}: {self.contexts_above[i][:50]}...",
                 )
             if self.contexts_below[i]:
                 step.append(
-                    f"Context Below Image {i+1}: {self.contexts_below[i][:50]}..."
+                    f"Context Below Image {i+1}: {self.contexts_below[i][:50]}...",
                 )
             step.append(f"Image {i+1} Score: {self.scores[i]:.2f}")
             step.append(f"Image {i+1} Reason: {self.reasons[i]}")

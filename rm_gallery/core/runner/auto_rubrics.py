@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 AutoRubrics - Dual Mode Rubric Generation System
 
@@ -63,7 +64,7 @@ class AutoRubricsConfig(BaseModel):
 
     Attributes:
         generation_mode: Generation strategy (SINGLE or BATCH)
-        evaluation_mode: Grader evaluation mode (POINTWISE or LISTWISE)
+        grader_mode: Grader evaluation mode (POINTWISE or LISTWISE)
         language: Language for prompts (ZH or EN)
 
         # Generation parameters
@@ -90,40 +91,61 @@ class AutoRubricsConfig(BaseModel):
 
     # Core configuration
     generation_mode: GenerationMode = Field(
-        default=GenerationMode.SINGLE, description="Generation mode: single or batch"
+        default=GenerationMode.SINGLE,
+        description="Generation mode: single or batch",
     )
-    evaluation_mode: GraderMode = Field(
-        default=GraderMode.POINTWISE, description="Grader mode (POINTWISE or LISTWISE)"
+    grader_mode: GraderMode = Field(
+        default=GraderMode.LISTWISE,
+        description="Grader mode (POINTWISE or LISTWISE)",
     )
     language: LanguageEnum = Field(
-        default=LanguageEnum.EN, description="Language for prompts (ZH or EN)"
+        default=LanguageEnum.EN,
+        description="Language for prompts (ZH or EN)",
     )
 
     # Generation parameters
     generate_number: int = Field(
-        default=3, ge=1, le=10, description="Number of rubrics per sample"
+        default=3,
+        ge=1,
+        le=10,
+        description="Number of rubrics per sample",
     )
     max_retries: int = Field(
-        default=5, ge=1, le=20, description="Maximum retry attempts for LLM calls"
+        default=5,
+        ge=1,
+        le=20,
+        description="Maximum retry attempts for LLM calls",
     )
     max_epochs: int = Field(
-        default=3, ge=1, le=10, description="Maximum iteration epochs per sample"
+        default=3,
+        ge=1,
+        le=10,
+        description="Maximum iteration epochs per sample",
     )
 
     # Pointwise specific
-    min_score: int = Field(default=0, description="Minimum score for pointwise mode")
+    min_score: int = Field(
+        default=0,
+        description="Minimum score for pointwise mode",
+    )
     max_score: int = Field(
-        default=1, ge=1, description="Maximum score for pointwise mode"
+        default=1,
+        ge=1,
+        description="Maximum score for pointwise mode",
     )
 
     # Batch processing parameters
     batch_size: int = Field(
-        default=10, ge=1, description="Number of data samples per batch iteration"
+        default=10,
+        ge=1,
+        description="Number of data samples per batch iteration",
     )
 
     # MCR² parameters
     mcr_batch_size: int = Field(
-        default=10, ge=1, description="Rubrics selected by MCR² per iteration"
+        default=10,
+        ge=1,
+        description="Rubrics selected by MCR² per iteration",
     )
     min_increment_threshold: float = Field(
         default=0.002,
@@ -131,21 +153,29 @@ class AutoRubricsConfig(BaseModel):
         description="Minimum information gain threshold for convergence",
     )
     patience: int = Field(
-        default=2, ge=1, description="Consecutive low increments before early stopping"
+        default=2,
+        ge=1,
+        description="Consecutive low increments before early stopping",
     )
     max_iterations: int = Field(
-        default=50, ge=1, description="Maximum batch iterations"
+        default=50,
+        ge=1,
+        description="Maximum batch iterations",
     )
     max_total_rubrics: int = Field(
-        default=200, ge=1, description="Maximum total rubrics in pool"
+        default=200,
+        ge=1,
+        description="Maximum total rubrics in pool",
     )
 
     # Aggregation parameters
     aggregation_mode: AggregationMode = Field(
-        default=AggregationMode.KEEP_ALL, description="Final aggregation strategy"
+        default=AggregationMode.KEEP_ALL,
+        description="Final aggregation strategy",
     )
     merge_num_categories: int = Field(
-        default=5, description="Number of categories for CATEGORIZE mode"
+        default=5,
+        description="Number of categories for CATEGORIZE mode",
     )
 
 
@@ -178,7 +208,7 @@ class AutoRubrics(BaseRunner):
         # Create query-specific generator
         self.generator = QuerySpecificRubricGenerator(
             model=model,
-            evaluation_mode=self.config.evaluation_mode.value,
+            grader_mode=self.config.grader_mode.value,
             generate_number=self.config.generate_number,
             max_retries=self.config.max_retries,
             max_epochs=self.config.max_epochs,
@@ -191,7 +221,7 @@ class AutoRubrics(BaseRunner):
         self.mcr_selector = None
         if self.config.generation_mode == GenerationMode.BATCH:
             self.mcr_selector = SuperFastAdaptiveMCR2(
-                batch_size=self.config.mcr_batch_size
+                batch_size=self.config.mcr_batch_size,
             )
 
         # Initialize categorizer for merge mode
@@ -214,9 +244,9 @@ class AutoRubrics(BaseRunner):
 
         logger.info(
             f"AutoRubrics initialized: generation_mode={self.config.generation_mode.value}, "
-            f"evaluation_mode={self.config.evaluation_mode.value}, "
+            f"grader_mode={self.config.grader_mode.value}, "
             f"language={self.config.language.value}, "
-            f"aggregation_mode={self.config.aggregation_mode.value}"
+            f"aggregation_mode={self.config.aggregation_mode.value}",
         )
 
     async def __call__(self, data_samples: List[DataSample]) -> Dict[str, Any]:
@@ -230,11 +260,13 @@ class AutoRubrics(BaseRunner):
             Dict with final rubrics, statistics, and processing details
         """
         if self.parser is not None:
-            data_samples = [self.parser(data_sample) for data_sample in data_samples]
+            data_samples = [
+                self.parser(data_sample) for data_sample in data_samples
+            ]
 
         logger.info(
             f"Starting AutoRubrics ({self.config.generation_mode.value} mode) "
-            f"with {len(data_samples)} daa samples"
+            f"with {len(data_samples)} daa samples",
         )
 
         if self.config.generation_mode == GenerationMode.SINGLE:
@@ -242,7 +274,10 @@ class AutoRubrics(BaseRunner):
         else:
             return await self._run_batch_mode(data_samples)
 
-    async def _run_single_mode(self, data_samples: List[DataSample]) -> Dict[str, Any]:
+    async def _run_single_mode(
+        self,
+        data_samples: List[DataSample],
+    ) -> Dict[str, Any]:
         """
         Single mode: Generate rubrics for each sample independently
 
@@ -252,18 +287,26 @@ class AutoRubrics(BaseRunner):
         Returns:
             Dict with rubrics for each sample and aggregated statistics
         """
-        logger.info(f"Running single mode for {len(data_samples)} data_samples")
+        logger.info(
+            f"Running single mode for {len(data_samples)} data_samples",
+        )
 
         # Process all data_samples concurrently
         results = await self._process_samples_concurrently(
-            data_samples, "Processing data samples"
+            data_samples,
+            "Processing data samples",
         )
 
         # Extract rubrics and calculate stats
-        all_rubrics, stats = self._extract_rubrics_and_stats(results, len(data_samples))
+        all_rubrics, stats = self._extract_rubrics_and_stats(
+            results,
+            len(data_samples),
+        )
 
         # Apply aggregation and generate final results
-        final_rubrics, aggregation_info = await self._apply_aggregation(all_rubrics)
+        final_rubrics, aggregation_info = await self._apply_aggregation(
+            all_rubrics,
+        )
 
         return self._build_final_results(
             generation_mode="single",
@@ -275,7 +318,10 @@ class AutoRubrics(BaseRunner):
             extra_data={"sample_results": results},
         )
 
-    async def _run_batch_mode(self, data_samples: List[DataSample]) -> Dict[str, Any]:
+    async def _run_batch_mode(
+        self,
+        data_samples: List[DataSample],
+    ) -> Dict[str, Any]:
         """
         Batch mode: Use MCR-based selection and aggregation
 
@@ -286,7 +332,7 @@ class AutoRubrics(BaseRunner):
             Dict with optimal rubric subset and iteration history
         """
         logger.info(
-            f"🔄 Running batch mode with MCR selection for {len(data_samples)} data samples"
+            f"🔄 Running batch mode with MCR selection for {len(data_samples)} data samples",
         )
 
         iteration = 0
@@ -313,7 +359,9 @@ class AutoRubrics(BaseRunner):
 
             # Check stopping conditions
             should_continue, reason = self._should_continue(
-                mcr_results, iteration, gen_stats
+                mcr_results,
+                iteration,
+                gen_stats,
             )
 
             # Update state
@@ -322,7 +370,8 @@ class AutoRubrics(BaseRunner):
             self.iteration_history.append(
                 {
                     "iteration": iteration,
-                    "batch_start": self.current_sample_index - len(batch_samples),
+                    "batch_start": self.current_sample_index
+                    - len(batch_samples),
                     "batch_end": self.current_sample_index - 1,
                     "batch_size": len(batch_samples),
                     "new_generated": len(new_rubrics),
@@ -330,7 +379,7 @@ class AutoRubrics(BaseRunner):
                     "coding_rate": mcr_results["final_coding_rate"],
                     "increment": mcr_results["increment"],
                     "generation_stats": gen_stats,
-                }
+                },
             )
 
             if not should_continue:
@@ -338,7 +387,7 @@ class AutoRubrics(BaseRunner):
 
         # Apply aggregation and generate final results
         final_rubrics, aggregation_info = await self._apply_aggregation(
-            self.all_rubrics
+            self.all_rubrics,
         )
 
         return self._build_final_results(
@@ -359,7 +408,8 @@ class AutoRubrics(BaseRunner):
         )
 
     def _get_next_batch(
-        self, all_data_samples: List[DataSample]
+        self,
+        all_data_samples: List[DataSample],
     ) -> Optional[List[DataSample]]:
         """Get next batch of data_samples for processing.
 
@@ -374,7 +424,10 @@ class AutoRubrics(BaseRunner):
             return None
 
         start_idx = self.current_sample_index
-        end_idx = min(start_idx + self.config.batch_size, len(all_data_samples))
+        end_idx = min(
+            start_idx + self.config.batch_size,
+            len(all_data_samples),
+        )
 
         if start_idx >= len(all_data_samples):
             return None
@@ -384,12 +437,13 @@ class AutoRubrics(BaseRunner):
 
         logger.info(
             f"Processing batch: data samples {start_idx}-{end_idx-1} "
-            f"({len(batch)}/{len(all_data_samples)} data samples)"
+            f"({len(batch)}/{len(all_data_samples)} data samples)",
         )
         return batch
 
     async def _generate_batch(
-        self, batch_samples: List[DataSample]
+        self,
+        batch_samples: List[DataSample],
     ) -> Tuple[List[str], Dict[str, Any]]:
         """Generate rubrics for a batch of data samples concurrently.
 
@@ -403,19 +457,25 @@ class AutoRubrics(BaseRunner):
             logger.warning("Empty batch provided")
             return [], {"error": "Empty batch"}
 
-        logger.info(f"Generating rubrics for {len(batch_samples)} data samples...")
+        logger.info(
+            f"Generating rubrics for {len(batch_samples)} data samples...",
+        )
 
         # Process data samples concurrently
-        results = await self._process_samples_concurrently(batch_samples, "Generating")
+        results = await self._process_samples_concurrently(
+            batch_samples,
+            "Generating",
+        )
 
         # Extract rubrics and stats
         all_rubrics, stats = self._extract_rubrics_and_stats(
-            results, len(batch_samples)
+            results,
+            len(batch_samples),
         )
 
         logger.info(
             f"Generation completed: {stats['successful_samples']}/{len(batch_samples)} successful "
-            f"({stats['success_rate']:.1f}%), {len(all_rubrics)} rubrics"
+            f"({stats['success_rate']:.1f}%), {len(all_rubrics)} rubrics",
         )
 
         return all_rubrics, stats
@@ -438,11 +498,15 @@ class AutoRubrics(BaseRunner):
         combined = self.all_rubrics + new_rubrics
         if not combined:
             logger.warning("No rubrics to evaluate")
-            return {"selected_texts": [], "final_coding_rate": 0.0, "increment": 0.0}
+            return {
+                "selected_texts": [],
+                "final_coding_rate": 0.0,
+                "increment": 0.0,
+            }
 
         logger.info(
             f"📊 MCR² evaluation: {len(self.all_rubrics)} existing + "
-            f"{len(new_rubrics)} new = {len(combined)} total"
+            f"{len(new_rubrics)} new = {len(combined)} total",
         )
 
         # MCR selection
@@ -454,7 +518,8 @@ class AutoRubrics(BaseRunner):
         }
 
         results = self.mcr_selector.ultra_fast_adaptive_selection(
-            combined, **mcr_config
+            combined,
+            **mcr_config,
         )
 
         # Calculate increment
@@ -465,13 +530,16 @@ class AutoRubrics(BaseRunner):
         results["increment"] = increment
         logger.info(
             f"📈 MCR² results: {len(results['selected_texts'])} selected, "
-            f"rate={current_rate:.6f}, increment={increment:.6f}"
+            f"rate={current_rate:.6f}, increment={increment:.6f}",
         )
 
         return results
 
     def _should_continue(
-        self, mcr_results: Dict[str, Any], iteration: int, gen_stats: Dict
+        self,
+        mcr_results: Dict[str, Any],
+        iteration: int,
+        gen_stats: Dict,
     ) -> Tuple[bool, str]:
         """Determine whether to continue iteration"""
 
@@ -482,7 +550,7 @@ class AutoRubrics(BaseRunner):
             self.low_increment_count += 1
             logger.info(
                 f"Low increment: {increment:.6f} < {self.config.min_increment_threshold:.6f} "
-                f"(count: {self.low_increment_count}/{self.config.patience})"
+                f"(count: {self.low_increment_count}/{self.config.patience})",
             )
 
             if self.low_increment_count >= self.config.patience:
@@ -493,23 +561,33 @@ class AutoRubrics(BaseRunner):
                 )
         else:
             if self.low_increment_count > 0:
-                logger.info(f"Increment recovered: {increment:.6f}, resetting counter")
+                logger.info(
+                    f"Increment recovered: {increment:.6f}, resetting counter",
+                )
             self.low_increment_count = 0
 
         # Check rubric count
         if len(self.all_rubrics) >= self.config.max_total_rubrics:
-            return (False, f"Max rubrics reached ({self.config.max_total_rubrics})")
+            return (
+                False,
+                f"Max rubrics reached ({self.config.max_total_rubrics})",
+            )
 
         # Check iteration count
         if iteration >= self.config.max_iterations:
-            return (False, f"Max iterations reached ({self.config.max_iterations})")
+            return (
+                False,
+                f"Max iterations reached ({self.config.max_iterations})",
+            )
 
         return True, ""
 
     # ========== Common Helper Methods ==========
 
     async def _process_samples_concurrently(
-        self, data_samples: List[DataSample], desc: str = "Processing"
+        self,
+        data_samples: List[DataSample],
+        desc: str = "Processing",
     ) -> List[Dict[str, Any]]:
         """Process samples concurrently with progress tracking.
 
@@ -520,7 +598,10 @@ class AutoRubrics(BaseRunner):
         Returns:
             List of generation results
         """
-        tasks = [self.generator.generate_iterative(sample) for sample in data_samples]
+        tasks = [
+            self.generator.generate_iterative(sample)
+            for sample in data_samples
+        ]
 
         results = []
         with tqdm(total=len(data_samples), desc=desc, unit="sample") as pbar:
@@ -538,14 +619,16 @@ class AutoRubrics(BaseRunner):
                             "rubric_epoch": "0",
                             "evaluation_result": {},
                             "error": str(e),
-                        }
+                        },
                     )
                     pbar.update(1)
 
         return results
 
     def _extract_rubrics_and_stats(
-        self, results: List[Dict[str, Any]], total_data_samples: int
+        self,
+        results: List[Dict[str, Any]],
+        total_data_samples: int,
     ) -> Tuple[List[str], Dict[str, Any]]:
         """Extract rubrics and calculate statistics from generation results.
 
@@ -583,7 +666,8 @@ class AutoRubrics(BaseRunner):
         return all_rubrics, stats
 
     async def _apply_aggregation(
-        self, rubrics: List[str]
+        self,
+        rubrics: List[str],
     ) -> Tuple[List[str], Dict[str, Any]]:
         """Apply aggregation based on configuration.
 
@@ -593,10 +677,13 @@ class AutoRubrics(BaseRunner):
         Returns:
             Tuple of (final_rubrics, aggregation_info)
         """
-        if self.config.aggregation_mode == AggregationMode.CATEGORIZE and rubrics:
+        if (
+            self.config.aggregation_mode == AggregationMode.CATEGORIZE
+            and rubrics
+        ):
             if not self.categorizer:
                 logger.warning(
-                    "Categorizer not initialized, returning original rubrics"
+                    "Categorizer not initialized, returning original rubrics",
                 )
                 return rubrics, {"error": "Categorizer not initialized"}
 
@@ -643,7 +730,7 @@ class AutoRubrics(BaseRunner):
         """
         results = {
             "generation_mode": generation_mode,
-            "evaluation_mode": self.config.evaluation_mode.value,
+            "grader_mode": self.config.grader_mode.value,
             "aggregation_mode": self.config.aggregation_mode.value,
             "config": self.config.dict(),
             "total_samples": total_data_samples,
@@ -667,7 +754,7 @@ class AutoRubrics(BaseRunner):
         parser: DataSampleParser | Callable | None = None,
         # Core settings
         generation_mode: GenerationMode = GenerationMode.SINGLE,
-        evaluation_mode: GraderMode = GraderMode.POINTWISE,
+        grader_mode: GraderMode = GraderMode.POINTWISE,
         language: LanguageEnum = LanguageEnum.ZH,
         # Generation parameters
         generate_number: int = 3,
@@ -694,7 +781,7 @@ class AutoRubrics(BaseRunner):
         Args:
             llm: Language model
             generation_mode: SINGLE for independent processing, BATCH for MCR-based selection
-            evaluation_mode: POINTWISE or LISTWISE evaluation
+            grader_mode: POINTWISE or LISTWISE evaluation
             language: Language for prompts (ZH or EN)
 
             # Generation parameters
@@ -723,7 +810,7 @@ class AutoRubrics(BaseRunner):
         """
         config = AutoRubricsConfig(
             generation_mode=generation_mode,
-            evaluation_mode=evaluation_mode,
+            grader_mode=grader_mode,
             language=language,
             generate_number=generate_number,
             max_epochs=max_epochs,

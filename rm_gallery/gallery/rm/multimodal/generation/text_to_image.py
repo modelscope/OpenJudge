@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Text-to-Image Quality Metric
 
@@ -19,7 +20,9 @@ from rm_gallery.core.metrics.multimodal.schema import (
     ReasonScore,
 )
 from rm_gallery.core.model.qwen_vlm_api import QwenVLAPI
-from rm_gallery.gallery.rm.multimodal.generation.templates import TextToImageTemplate
+from rm_gallery.gallery.rm.multimodal.generation.templates import (
+    TextToImageTemplate,
+)
 
 
 class TextToImageMetric(BaseMultimodalMetric):
@@ -56,20 +59,27 @@ class TextToImageMetric(BaseMultimodalMetric):
     """
 
     name: str = "text_to_image"
-    vlm_api: QwenVLAPI = Field(..., description="Qwen VL API client for evaluation")
+    vlm_api: QwenVLAPI = Field(
+        ...,
+        description="Qwen VL API client for evaluation",
+    )
 
     # Evaluation results (populated after measure)
     SC_scores: Optional[List[float]] = Field(
-        None, description="Semantic consistency scores"
+        None,
+        description="Semantic consistency scores",
     )
     SC_reasoning: Optional[str] = Field(
-        None, description="Semantic consistency reasoning"
+        None,
+        description="Semantic consistency reasoning",
     )
     PQ_scores: Optional[List[float]] = Field(
-        None, description="Perceptual quality scores"
+        None,
+        description="Perceptual quality scores",
     )
     PQ_reasoning: Optional[str] = Field(
-        None, description="Perceptual quality reasoning"
+        None,
+        description="Perceptual quality reasoning",
     )
 
     def __init__(
@@ -99,7 +109,7 @@ class TextToImageMetric(BaseMultimodalMetric):
             verbose_mode=verbose_mode,
             **kwargs,
         )
-        self.evaluation_model = vlm_api.get_model_name()
+        self.grader_model = vlm_api.get_model_name()
 
     def run(self, **kwargs):
         """
@@ -132,7 +142,7 @@ class TextToImageMetric(BaseMultimodalMetric):
         if self.async_mode:
             loop = asyncio.get_event_loop()
             return loop.run_until_complete(
-                self.a_measure(test_case, _show_indicator, _in_component)
+                self.a_measure(test_case, _show_indicator, _in_component),
             )
         else:
             return self._sync_measure(test_case)
@@ -158,7 +168,9 @@ class TextToImageMetric(BaseMultimodalMetric):
 
         # Extract text prompt and generated image
         input_texts, _ = self.separate_images_from_text(test_case.input)
-        _, output_images = self.separate_images_from_text(test_case.actual_output)
+        _, output_images = self.separate_images_from_text(
+            test_case.actual_output,
+        )
 
         text_prompt = "\n".join(input_texts)
         generated_image = output_images[0]
@@ -168,7 +180,10 @@ class TextToImageMetric(BaseMultimodalMetric):
             self.PQ_scores,
             self.PQ_reasoning,
         ) = await asyncio.gather(
-            self._a_evaluate_semantic_consistency(text_prompt, generated_image),
+            self._a_evaluate_semantic_consistency(
+                text_prompt,
+                generated_image,
+            ),
             self._a_evaluate_perceptual_quality(generated_image),
         )
 
@@ -198,19 +213,25 @@ class TextToImageMetric(BaseMultimodalMetric):
         """
         # Extract text prompt and generated image
         input_texts, _ = self.separate_images_from_text(test_case.input)
-        _, output_images = self.separate_images_from_text(test_case.actual_output)
+        _, output_images = self.separate_images_from_text(
+            test_case.actual_output,
+        )
 
         text_prompt = "\n".join(input_texts)
         generated_image = output_images[0]
 
         # Evaluate semantic consistency
-        self.SC_scores, self.SC_reasoning = self._evaluate_semantic_consistency(
-            text_prompt, generated_image
+        (
+            self.SC_scores,
+            self.SC_reasoning,
+        ) = self._evaluate_semantic_consistency(
+            text_prompt,
+            generated_image,
         )
 
         # Evaluate perceptual quality
         self.PQ_scores, self.PQ_reasoning = self._evaluate_perceptual_quality(
-            generated_image
+            generated_image,
         )
 
         # Calculate final score
@@ -242,18 +263,26 @@ class TextToImageMetric(BaseMultimodalMetric):
         Returns:
             Tuple of (scores_list, reasoning)
         """
-        prompt = TextToImageTemplate.generate_semantic_consistency_prompt(text_prompt)
+        prompt = TextToImageTemplate.generate_semantic_consistency_prompt(
+            text_prompt,
+        )
         content = [prompt, generated_image]
 
         try:
             result = await self.vlm_api.a_generate(
-                text=prompt, images=[generated_image], response_format=ReasonScore
+                text=prompt,
+                images=[generated_image],
+                response_format=ReasonScore,
             )
 
             # Cost is tracked automatically by vlm_api
 
             # Ensure score is a list
-            scores = result.score if isinstance(result.score, list) else [result.score]
+            scores = (
+                result.score
+                if isinstance(result.score, list)
+                else [result.score]
+            )
             return scores, result.reasoning
 
         except Exception as e:
@@ -275,17 +304,25 @@ class TextToImageMetric(BaseMultimodalMetric):
         Returns:
             Tuple of (scores_list, reasoning)
         """
-        prompt = TextToImageTemplate.generate_semantic_consistency_prompt(text_prompt)
+        prompt = TextToImageTemplate.generate_semantic_consistency_prompt(
+            text_prompt,
+        )
 
         try:
             result = self.vlm_api.generate(
-                text=prompt, images=[generated_image], response_format=ReasonScore
+                text=prompt,
+                images=[generated_image],
+                response_format=ReasonScore,
             )
 
             # Cost is tracked automatically by vlm_api
 
             # Ensure score is a list
-            scores = result.score if isinstance(result.score, list) else [result.score]
+            scores = (
+                result.score
+                if isinstance(result.score, list)
+                else [result.score]
+            )
             return scores, result.reasoning
 
         except Exception as e:
@@ -309,7 +346,9 @@ class TextToImageMetric(BaseMultimodalMetric):
 
         try:
             result = await self.vlm_api.a_generate(
-                text=prompt, images=[generated_image], response_format=ReasonScore
+                text=prompt,
+                images=[generated_image],
+                response_format=ReasonScore,
             )
 
             # Cost is tracked automatically by vlm_api
@@ -346,7 +385,9 @@ class TextToImageMetric(BaseMultimodalMetric):
 
         try:
             result = self.vlm_api.generate(
-                text=prompt, images=[generated_image], response_format=ReasonScore
+                text=prompt,
+                images=[generated_image],
+                response_format=ReasonScore,
             )
 
             # Cost is tracked automatically by vlm_api
@@ -412,7 +453,7 @@ class TextToImageMetric(BaseMultimodalMetric):
 
             The score combines semantic consistency and perceptual quality using geometric mean,
             ensuring both aspects must be strong for a high overall score.
-        """
+        """,
         ).strip()
 
     def _generate_verbose_logs(self) -> str:
@@ -426,7 +467,7 @@ class TextToImageMetric(BaseMultimodalMetric):
             "=" * 80,
             "TEXT-TO-IMAGE METRIC EVALUATION",
             "=" * 80,
-            f"Model: {self.evaluation_model}",
+            f"Model: {self.grader_model}",
             f"Cost: ${self.evaluation_cost:.6f}"
             if self.evaluation_cost
             else "Cost: N/A",
@@ -458,22 +499,30 @@ class TextToImageMetric(BaseMultimodalMetric):
             ValueError: If required parameters are missing
         """
         if not test_case.input:
-            raise ValueError("test_case.input is required (should contain text prompt)")
+            raise ValueError(
+                "test_case.input is required (should contain text prompt)",
+            )
 
         if not test_case.actual_output:
             raise ValueError(
-                "test_case.actual_output is required (should contain generated image)"
+                "test_case.actual_output is required (should contain generated image)",
             )
 
         # Check that input contains text
         input_texts, _ = self.separate_images_from_text(test_case.input)
         if not input_texts:
-            raise ValueError("test_case.input must contain at least one text prompt")
+            raise ValueError(
+                "test_case.input must contain at least one text prompt",
+            )
 
         # Check that output contains at least one image
-        _, output_images = self.separate_images_from_text(test_case.actual_output)
+        _, output_images = self.separate_images_from_text(
+            test_case.actual_output,
+        )
         if not output_images:
-            raise ValueError("test_case.actual_output must contain at least one image")
+            raise ValueError(
+                "test_case.actual_output must contain at least one image",
+            )
 
     def is_successful(self) -> bool:
         """

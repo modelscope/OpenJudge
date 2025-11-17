@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Query-Specific Rubric Generator with Full Iterative Capability
 
@@ -8,7 +9,7 @@ This module contains the complete logic for query-specific rubric generation:
 - Revise rubrics
 - Iterative improvement loop
 
-Prompts are imported from prompts.py (ChatTemplate-based)
+Prompts are imported from prompts.py (Chat-based)
 """
 
 from typing import Any, Dict, List, Optional
@@ -18,7 +19,8 @@ from pydantic import BaseModel, Field
 from tenacity import retry, stop_after_attempt, wait_fixed
 
 from rm_gallery.core.data import DataSample, DataSampleParser
-from rm_gallery.core.grader import GraderRank, GraderScore
+from rm_gallery.core.grader import GraderMode, GraderRank, GraderScore
+from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.model.template import LanguageEnum
 from rm_gallery.core.rubric.prompts import RubricPromptTemplates
 
@@ -42,77 +44,77 @@ class QuerySpecificRubricGenerator:
 
     def __init__(
         self,
-        model,
-        evaluation_mode: str,
+        model: ChatModelBase,
+        grader_mode: GraderMode = GraderMode.POINTWISE,
         generate_number: int = 3,
         max_retries: int = 5,
         max_epochs: int = 3,
         min_score: int = 0,
         max_score: int = 4,
         language: LanguageEnum = LanguageEnum.ZH,
-        model_config: Optional[Dict[str, Any]] = None,
-        mapping: Optional[DataSampleParser] = None,
+        parser: Optional[DataSampleParser] = None,
     ):
         """
         Initialize generator
 
         Args:
             model: Language model for generation and evaluation
-            evaluation_mode: "pointwise" or "listwise" (pairwise is treated as listwise)
+            grader_mode: "pointwise" or "listwise" (pairwise is treated as listwise)
             generate_number: Number of rubrics to generate
             max_retries: Maximum retry attempts for LLM calls
             max_epochs: Maximum iteration epochs for improvement
             min_score: Minimum score for pointwise
             max_score: Maximum score for pointwise
             language: Language for prompts (ZH or EN)
-            model_config: Model configuration for ChatTemplate
-            mapping: Optional DataSampleMapping for field transformation
+            parser: Optional DataSampleParser for field transformation
         """
         self.model = model
-        self.evaluation_mode = evaluation_mode
+        self.grader_mode = grader_mode
         self.generate_number = generate_number
         self.max_retries = max_retries
         self.max_epochs = max_epochs
         self.min_score = min_score
         self.max_score = max_score
         self.language = language
-        self.mapping = mapping
-
-        # Create model config for ChatTemplate
-        self.model_config = model_config or {
-            "model_name": getattr(model, "model_name", "qwen3-32b"),
-            "stream": False,
-        }
+        self.parser = parser
 
         # Initialize templates
         self._init_templates()
 
         logger.info(
-            f"QuerySpecificRubricGenerator initialized: mode={evaluation_mode}, language={language}"
+            f"QuerySpecificRubricGenerator initialized: mode={grader_mode}, language={language}",
         )
 
     def _init_templates(self):
         """Initialize ChatTemplate objects"""
         # Generation templates
-        if self.evaluation_mode == "pointwise":
-            self.generation_template = RubricPromptTemplates.pointwise_generation(
-                self.model_config
+        if self.grader_mode == "pointwise":
+            self.generation_template = (
+                RubricPromptTemplates.pointwise_generation(
+                    self.model,
+                )
             )
-            self.evaluation_template = RubricPromptTemplates.pointwise_evaluation(
-                self.model_config
+            self.evaluation_template = (
+                RubricPromptTemplates.pointwise_evaluation(
+                    self.model,
+                )
             )
             self.revision_template = RubricPromptTemplates.pointwise_revision(
-                self.model_config
+                self.model,
             )
         else:  # listwise (includes former pairwise)
-            self.generation_template = RubricPromptTemplates.listwise_generation(
-                self.model_config
+            self.generation_template = (
+                RubricPromptTemplates.listwise_generation(
+                    self.model,
+                )
             )
-            self.evaluation_template = RubricPromptTemplates.listwise_evaluation(
-                self.model_config
+            self.evaluation_template = (
+                RubricPromptTemplates.listwise_evaluation(
+                    self.model,
+                )
             )
             self.revision_template = RubricPromptTemplates.listwise_revision(
-                self.model_config
+                self.model,
             )
 
     async def generate_iterative(self, sample: DataSample) -> Dict[str, Any]:
@@ -126,8 +128,8 @@ class QuerySpecificRubricGenerator:
             - rubric_epoch: str (convergence epoch)
             - evaluation_result: Dict
         """
-        # Apply mapping transformation
-        mapped_sample = self._apply_mapping(sample)
+        # Apply parser transformation
+        mapped_sample = self._apply_parser(sample)
 
         # Initial generation
         rubrics = await self.generate(mapped_sample)
@@ -158,7 +160,11 @@ class QuerySpecificRubricGenerator:
 
             # Failed, try to revise
             feedback = self.generate_feedback(mapped_sample, evaluation_result)
-            revised_rubrics = await self.revise(mapped_sample, rubrics, feedback)
+            revised_rubrics = await self.revise(
+                mapped_sample,
+                rubrics,
+                feedback,
+            )
 
             if not revised_rubrics:
                 break
@@ -180,7 +186,7 @@ class QuerySpecificRubricGenerator:
         @retry(stop=stop_after_attempt(self.max_retries), wait=wait_fixed(1.0))
         async def generate_rubrics():
             # Prepare parameters for generation
-            if self.evaluation_mode == "pointwise":
+            if self.grader_mode == "pointwise":
                 params = {
                     "language": self.language,
                     "sample_content": sample_content,
@@ -197,7 +203,8 @@ class QuerySpecificRubricGenerator:
 
             # Use ChatTemplate with structured output
             response = await self.generation_template(
-                chat_output=RubricGenerationOutput, **params
+                structured_model=RubricGenerationOutput,
+                **params,
             )
 
             # Get structured data from metadata
@@ -217,11 +224,15 @@ class QuerySpecificRubricGenerator:
             return rubrics
         except Exception as e:
             logger.error(
-                f"Failed to generate rubrics after {self.max_retries} attempts: {str(e)}"
+                f"Failed to generate rubrics after {self.max_retries} attempts: {str(e)}",
             )
         return []
 
-    async def evaluate(self, sample: DataSample, rubrics: List[str]) -> Dict[str, Any]:
+    async def evaluate(
+        self,
+        sample: DataSample,
+        rubrics: List[str],
+    ) -> Dict[str, Any]:
         """
         Evaluate sample using rubrics
 
@@ -229,20 +240,27 @@ class QuerySpecificRubricGenerator:
             - pointwise: {"scores": [int, ...]}
             - listwise: {"rank_values": [int, ...]}
         """
-        if self.evaluation_mode == "pointwise":
+        if self.grader_mode == "pointwise":
             return await self._evaluate_pointwise(sample, rubrics)
         else:  # listwise
             return await self._evaluate_listwise(sample, rubrics)
 
-    def validate(self, sample: DataSample, evaluation_result: Dict[str, Any]) -> bool:
+    def validate(
+        self,
+        sample: DataSample,
+        evaluation_result: Dict[str, Any],
+    ) -> bool:
         """Validate evaluation result against ground truth"""
-        if self.evaluation_mode == "pointwise":
+        if self.grader_mode == "pointwise":
             return self._validate_pointwise(sample, evaluation_result)
         else:  # listwise
             return self._validate_listwise(sample, evaluation_result)
 
     async def revise(
-        self, sample: DataSample, rubrics: List[str], feedback: str
+        self,
+        sample: DataSample,
+        rubrics: List[str],
+        feedback: str,
     ) -> List[str]:
         """Revise rubrics based on feedback using ChatTemplate"""
         sample_content = self._format_sample_context(sample)
@@ -260,7 +278,8 @@ class QuerySpecificRubricGenerator:
             }
 
             response = await self.revision_template(
-                chat_output=RubricGenerationOutput, **params
+                structured_model=RubricGenerationOutput,
+                **params,
             )
 
             # Get structured data from metadata
@@ -280,15 +299,17 @@ class QuerySpecificRubricGenerator:
             return revised_rubrics
         except Exception as e:
             logger.error(
-                f"Failed to revise rubrics after {self.max_retries} attempts: {str(e)}"
+                f"Failed to revise rubrics after {self.max_retries} attempts: {str(e)}",
             )
         return []
 
     def generate_feedback(
-        self, sample: DataSample, evaluation_result: Dict[str, Any]
+        self,
+        sample: DataSample,
+        evaluation_result: Dict[str, Any],
     ) -> str:
         """Generate simple feedback for revision"""
-        if self.evaluation_mode == "pointwise":
+        if self.grader_mode == "pointwise":
             return self._generate_pointwise_feedback(sample, evaluation_result)
         else:  # listwise
             return self._generate_listwise_feedback(sample, evaluation_result)
@@ -296,7 +317,9 @@ class QuerySpecificRubricGenerator:
     # ========== Evaluation Methods ==========
 
     async def _evaluate_pointwise(
-        self, sample: DataSample, rubrics: List[str]
+        self,
+        sample: DataSample,
+        rubrics: List[str],
     ) -> Dict[str, Any]:
         """Evaluate in pointwise mode using ChatTemplate"""
         scores = []
@@ -320,7 +343,8 @@ class QuerySpecificRubricGenerator:
 
                 # Use ChatTemplate with structured output
                 response_obj = await self.evaluation_template(
-                    chat_output=GraderScore, **params
+                    structured_model=GraderScore,
+                    **params,
                 )
                 logger.debug(f"Pointwise evaluation response: {response_obj}")
                 # Get structured data from metadata
@@ -337,7 +361,9 @@ class QuerySpecificRubricGenerator:
         return {"scores": scores}
 
     async def _evaluate_listwise(
-        self, sample: DataSample, rubrics: List[str]
+        self,
+        sample: DataSample,
+        rubrics: List[str],
     ) -> Dict[str, Any]:
         """Evaluate in listwise mode - model gives complete ranking at once"""
         rubrics_text = self._format_rubrics_text(rubrics)
@@ -356,7 +382,8 @@ class QuerySpecificRubricGenerator:
 
             # Use ChatTemplate with structured output
             response_obj = await self.evaluation_template(
-                chat_output=GraderRank, **params
+                structured_model=GraderRank,
+                **params,
             )
             logger.debug(f"Listwise evaluation response: {response_obj}")
             # Get structured data from metadata
@@ -367,12 +394,12 @@ class QuerySpecificRubricGenerator:
                 if len(rank_values) == len(sample.samples):
                     if len(set(rank_values)) != len(rank_values):
                         logger.warning(
-                            f"Duplicate rank values detected (ties not allowed): {rank_values}"
+                            f"Duplicate rank values detected (ties not allowed): {rank_values}",
                         )
                     return {"rank_values": rank_values}
                 else:
                     logger.warning(
-                        f"Invalid rank values from structured output: {rank_values}"
+                        f"Invalid rank values from structured output: {rank_values}",
                     )
 
         except Exception as e:
@@ -381,7 +408,9 @@ class QuerySpecificRubricGenerator:
     # ========== Validation Methods ==========
 
     def _validate_pointwise(
-        self, sample: DataSample, evaluation_result: Dict[str, Any]
+        self,
+        sample: DataSample,
+        evaluation_result: Dict[str, Any],
     ) -> bool:
         """strict score match for each sample"""
         scores = evaluation_result.get("scores", [])
@@ -404,7 +433,9 @@ class QuerySpecificRubricGenerator:
         return False
 
     def _validate_listwise(
-        self, sample: DataSample, evaluation_result: Dict[str, Any]
+        self,
+        sample: DataSample,
+        evaluation_result: Dict[str, Any],
     ) -> bool:
         """Validate listwise results - supports rank value comparison by relative order"""
         rank_values = evaluation_result.get("rank_values", [])
@@ -448,7 +479,9 @@ class QuerySpecificRubricGenerator:
     # ========== Feedback Generation ==========
 
     def _generate_pointwise_feedback(
-        self, sample: DataSample, evaluation_result: Dict[str, Any]
+        self,
+        sample: DataSample,
+        evaluation_result: Dict[str, Any],
     ) -> str:
         """Generate simple pointwise feedback"""
         # Extract expected scores
@@ -468,7 +501,9 @@ class QuerySpecificRubricGenerator:
         return f"Expected scores: {expected_scores_str}\nActual scores: {actual_scores_str}"
 
     def _generate_listwise_feedback(
-        self, sample: DataSample, evaluation_result: Dict[str, Any]
+        self,
+        sample: DataSample,
+        evaluation_result: Dict[str, Any],
     ) -> str:
         """Generate simple listwise feedback"""
         # Extract expected rank values
@@ -521,10 +556,10 @@ class QuerySpecificRubricGenerator:
 
     # ========== Data Processing Methods ==========
 
-    def _apply_mapping(self, sample: DataSample) -> DataSample:
-        """Apply mapping transformation if provided, otherwise return original sample"""
-        if self.mapping is not None:
-            return self.mapping(sample)
+    def _apply_parser(self, sample: DataSample) -> DataSample:
+        """Apply parser transformation if provided, otherwise return original sample"""
+        if self.parser is not None:
+            return self.parser(sample)
         return sample
 
     # ========== Utility Methods ==========
@@ -543,7 +578,9 @@ class QuerySpecificRubricGenerator:
 
     def _format_rubrics_text(self, rubrics: List[str]) -> str:
         """Format rubrics list into numbered text"""
-        return "\n".join([f"{i+1}. {rubric}" for i, rubric in enumerate(rubrics)])
+        return "\n".join(
+            [f"{i+1}. {rubric}" for i, rubric in enumerate(rubrics)],
+        )
 
     def _format_responses_for_listwise(self, sample: DataSample) -> str:
         """Format all responses for listwise evaluation"""

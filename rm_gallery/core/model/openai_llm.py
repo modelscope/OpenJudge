@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os
 from datetime import datetime
 from typing import Any, AsyncGenerator, Dict, List, Literal, OrderedDict, Type
@@ -101,7 +102,9 @@ class OpenAIChatModel(ChatModelBase):
         self,
         messages: list[dict],
         tools: list[dict] | None = None,
-        tool_choice: Literal["auto", "none", "any", "required"] | str | None = None,
+        tool_choice: Literal["auto", "none", "any", "required"]
+        | str
+        | None = None,
         structured_model: Type[BaseModel] | None = None,
         **kwargs: Any,
     ) -> ChatResponse | AsyncGenerator[ChatResponse, None]:
@@ -195,6 +198,10 @@ class OpenAIChatModel(ChatModelBase):
             kwargs.pop("stream", None)
             kwargs.pop("tools", None)
             kwargs.pop("tool_choice", None)
+
+            if "qwen" in self.model_name:
+                structured_model = {"type": "json_object"}
+
             kwargs["response_format"] = structured_model
             if not self.stream:
                 response = await self.client.chat.completions.parse(**kwargs)
@@ -258,7 +265,9 @@ class OpenAIChatModel(ChatModelBase):
         audio = ""
         tool_calls = OrderedDict()
         metadata: dict | None = None
-        contents: List[TextBlock | ToolUseBlock | ThinkingBlock | AudioBlock] = []
+        contents: List[
+            TextBlock | ToolUseBlock | ThinkingBlock | AudioBlock
+        ] = []
 
         async with response as stream:
             async for item in stream:
@@ -288,10 +297,15 @@ class OpenAIChatModel(ChatModelBase):
 
                 choice = chunk.choices[0]
 
-                thinking += getattr(choice.delta, "reasoning_content", None) or ""
+                thinking += (
+                    getattr(choice.delta, "reasoning_content", None) or ""
+                )
                 text += choice.delta.content or ""
 
-                if hasattr(choice.delta, "audio") and "data" in choice.delta.audio:
+                if (
+                    hasattr(choice.delta, "audio")
+                    and "data" in choice.delta.audio
+                ):
                     audio += choice.delta.audio["data"]
                 if (
                     hasattr(choice.delta, "audio")
@@ -399,7 +413,9 @@ class OpenAIChatModel(ChatModelBase):
             If `structured_model` is not `None`, the expected structured output
             will be stored in the metadata of the `ChatResponse`.
         """
-        content_blocks: List[TextBlock | ToolUseBlock | ThinkingBlock | AudioBlock] = []
+        content_blocks: List[
+            TextBlock | ToolUseBlock | ThinkingBlock | AudioBlock
+        ] = []
         metadata: dict | None = None
 
         if response.choices:
@@ -459,7 +475,12 @@ class OpenAIChatModel(ChatModelBase):
                 )
 
             if structured_model:
-                metadata = choice.message.parsed.model_dump()
+                try:
+                    metadata = choice.message.parsed.model_dump()
+                except AttributeError:
+                    metadata = _json_loads_with_repair(
+                        choice.message.content,
+                    )
 
         usage = None
         if response.usage:

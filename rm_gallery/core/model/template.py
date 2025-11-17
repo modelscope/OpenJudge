@@ -1,16 +1,18 @@
+# -*- coding: utf-8 -*-
 import asyncio
 import json
-import re
+from abc import ABC
 from enum import Enum
-from typing import Any, AsyncGenerator, Callable, Dict, List, Literal, Type
+from typing import Any, AsyncGenerator, Dict, List, Literal, Type
 
 import yaml
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field
 
+from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.model.message import ChatMessage
 from rm_gallery.core.model.openai_llm import OpenAIChatModel
 from rm_gallery.core.model.response import ChatResponse
-from rm_gallery.core.model.utils import _json_loads_with_repair
+from rm_gallery.core.utils.instance import init_instance_by_config
 
 
 class LanguageEnum(str, Enum):
@@ -26,74 +28,85 @@ class RequiredField(BaseModel):
     name: str = Field(default=..., description="name of the field")
     type: str = Field(default=..., description="type of the field")
     position: Literal["data", "sample", "grader"] = Field(
-        default="data", description="position of the field"
+        default="data",
+        description="position of the field",
     )
-    description: str = Field(default=..., description="description of the field")
+    description: str = Field(
+        default=...,
+        description="description of the field",
+    )
 
 
 class Template(BaseModel):
     """Template for generating chat messages."""
 
-    messages: List[ChatMessage] | Dict[LanguageEnum, List[ChatMessage]] = Field(
-        default_factory=list, description="messages for generating chat"
+    messages: List[ChatMessage] | Dict[
+        LanguageEnum,
+        List[ChatMessage],
+    ] = Field(
+        default_factory=list,
+        description="messages for generating chat",
     )
     required_fields: List[RequiredField] = Field(
-        default_factory=list, description="required kwargs"
+        default_factory=list,
+        description="required kwargs",
     )
 
-    @model_validator(mode="before")
-    def validate_template(cls, values) -> dict:
-        messages = values.get("messages", [])
-        # Pattern to match placeholders like {word}, {word.word}, {word.word.word}, etc.
-        placeholder_pattern = (
-            r"\{([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*)\}"
-        )
+    # @model_validator(mode="before")
+    # def validate_template(cls, values) -> dict:
+    #     messages = values.get("messages", [])
+    #     # Pattern to match placeholders like {word}, {word.word}, {word.word.word}, etc.
+    #     placeholder_pattern = (
+    #         r"\{([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*)\}"
+    #     )
 
-        # Handle both dict and RequiredField instances
-        required_fields_raw = values.get("required_fields", [])
-        required_fields = []
-        for field in required_fields_raw:
-            if isinstance(field, dict):
-                required_fields.append(field.get("name"))
-            elif isinstance(field, RequiredField):
-                required_fields.append(field.name)
-            elif hasattr(field, "name"):
-                required_fields.append(field.name)
-        required = []
+    #     # Handle both dict and RequiredField instances
+    #     required_fields_raw = values.get("required_fields", [])
+    #     required_fields = []
+    #     for field in required_fields_raw:
+    #         if isinstance(field, dict):
+    #             required_fields.append(field.get("name"))
+    #         elif isinstance(field, RequiredField):
+    #             required_fields.append(field.name)
+    #         elif hasattr(field, "name"):
+    #             required_fields.append(field.name)
+    #     required = []
 
-        all_messages = []
-        if isinstance(messages, list):
-            messages = messages
-        elif isinstance(messages, dict):
-            for language, language_messages in messages.items():
-                if not isinstance(language_messages, list):
-                    raise ValueError("Invalid message format")
-                all_messages.extend(language_messages)
-        else:
-            raise ValueError("Invalid message format")
+    #     all_messages = []
+    #     if isinstance(messages, list):
+    #         messages = messages
+    #     elif isinstance(messages, dict):
+    #         for language, language_messages in messages.items():
+    #             if not isinstance(language_messages, list):
+    #                 raise ValueError("Invalid message format")
+    #             all_messages.extend(language_messages)
+    #     else:
+    #         raise ValueError("Invalid message format")
 
-        for message in all_messages:
-            content = (
-                message.get("content", "")
-                if isinstance(message, dict)
-                else getattr(message, "content", "")
-            )
-            # Find all placeholders in the content
-            placeholders = re.findall(placeholder_pattern, content)
-            for placeholder in placeholders:
-                # Add to required if not already present
-                if placeholder not in required:
-                    required.append(placeholder)
+    #     for message in all_messages:
+    #         content = (
+    #             message.get("content", "")
+    #             if isinstance(message, dict)
+    #             else getattr(message, "content", "")
+    #         )
+    #         # Find all placeholders in the content
+    #         placeholders = re.findall(placeholder_pattern, content)
+    #         for placeholder in placeholders:
+    #             # Add to required if not already present
+    #             if placeholder not in required:
+    #                 required.append(placeholder)
 
-        for name in required:
-            if name not in required_fields:
-                raise ValueError(f"Required field {name} is missing")
-        return values
+    #     for name in required:
+    #         if name not in required_fields:
+    #             raise ValueError(f"Required field {name} is missing")
+    #     return values
 
-    def get(self, language: LanguageEnum = LanguageEnum.EN):
+    def get(self, language: LanguageEnum | None = LanguageEnum.EN):
         if isinstance(self.messages, list):
             messages = self.messages
         elif isinstance(self.messages, dict):
+            if language is None:
+                language = LanguageEnum.EN
             assert language in self.messages
             messages = self.messages.get(language, [])
         else:
@@ -102,13 +115,19 @@ class Template(BaseModel):
         return messages
 
 
-class ChatTemplate(BaseModel):
-    """Chat template for generating chat messages."""
+class Chat(ABC):
+    """Chat for generating response."""
 
-    template: Template = Field(
-        default=..., description="template for generating chat messages"
-    )
-    model: Dict[str, Any] = Field(default=..., description="model parameters")
+    def __init__(self, template: Template | dict, model: dict | ChatModelBase):
+        """
+        Initialize a ChatTemplate.
+        """
+        self.template = (
+            template
+            if isinstance(template, Template)
+            else Template(**template)
+        )
+        self.model = init_instance_by_config(model, accept_type=ChatModelBase)
 
     @property
     def required_fields(
@@ -118,7 +137,9 @@ class ChatTemplate(BaseModel):
         return self.template.required_fields
 
     def format(
-        self, language: LanguageEnum = LanguageEnum.EN, **kwargs
+        self,
+        language: LanguageEnum = LanguageEnum.EN,
+        **kwargs,
     ) -> List[Dict[str, Any]]:
         """Format messages with provided keyword arguments.
 
@@ -136,27 +157,25 @@ class ChatTemplate(BaseModel):
         return messages
 
     async def __call__(
-        self, chat_output: Callable | Type[BaseModel] | None = None, **kwargs
+        self,
+        structured_model: Type[BaseModel] | None = None,
+        language: LanguageEnum = LanguageEnum.EN,
+        **kwargs,
     ) -> ChatResponse:
         """Generate chat response using the template.
 
         Args:
-            chat_output: Optional chat output type or callable
+            structured_model: Optional structured model output
             **kwargs: Keyword arguments for formatting messages
 
         Returns:
             Chat response
         """
-        messages = self.format(**kwargs)
-
-        params = {}
-        if isinstance(chat_output, type) and issubclass(chat_output, BaseModel):
-            if "qwen" in self.model.get("model_name", ""):
-                params["response_format"] = {"type": "json_object"}
-            else:
-                params["structured_model"] = chat_output
-
-        response = await OpenAIChatModel(**self.model)(messages=messages, **params)
+        messages = self.format(language=language, **kwargs)
+        response = await self.model(
+            messages=messages,
+            structured_model=structured_model,
+        )
 
         # Handle case where response might be an AsyncGenerator
         if isinstance(response, AsyncGenerator):
@@ -174,37 +193,10 @@ class ChatTemplate(BaseModel):
 
             # Create a consolidated response
             response = ChatResponse(
-                content=content_parts, metadata=metadata or None, usage=usage
+                content=content_parts,
+                metadata=metadata or None,
+                usage=usage,
             )
-
-        if chat_output is not None:
-            metadata = response.metadata if response.metadata else {}
-            text_content = ""
-
-            # Extract text from content blocks
-            for content_block in response.content:
-                if getattr(content_block, "type", "") == "text":
-                    text_content = getattr(content_block, "text", "{}")
-                    break
-
-            if isinstance(chat_output, type) and issubclass(chat_output, BaseModel):
-                try:
-                    parsed_data = _json_loads_with_repair(text_content)
-                    if isinstance(parsed_data, dict):
-                        metadata.update(parsed_data)
-                except Exception:
-                    # If parsing fails, leave metadata as is
-                    pass
-            elif isinstance(chat_output, Callable):
-                try:
-                    parsed_data = chat_output(text_content)
-                    if isinstance(parsed_data, dict):
-                        metadata.update(parsed_data)
-                except Exception:
-                    # If parsing fails, leave metadata as is
-                    pass
-
-            response.metadata = metadata
 
         return response
 
@@ -222,22 +214,16 @@ class ChatTemplate(BaseModel):
 
 
 if __name__ == "__main__":
-    chat = ChatTemplate(
-        template=[
-            ChatMessage(
-                role="system", content="You are a helpful assistant.", name="System"
-            ),
-            ChatMessage(role="user", content="{question}", name="User"),
+    template = Template(
+        messages=[
+            ChatMessage(role="system", content="You are a helpful assistant."),
+            ChatMessage(role="user", content="{question}"),
         ],
-        model={
-            "model_name": "qwen-plus",
-            "api_key": "sk-qS2yrmvJYAhsJN7xA4lZFJwYoOiQgglD5MukURFzMARrGlLJ",
-            "stream": False,
-            "client_args": {
-                "timeout": 60,
-                "base_url": "http://8.130.177.212:3000/v1",
-            },
-        },
+        required_fields=[
+            RequiredField(name="question", description="The question to ask"),
+        ],
     )
+    model = OpenAIChatModel(model_name="qwen-plus", stream=False)
+    chat = Chat(template=template, model=model)
     result = asyncio.run(chat(question="What is the capital of France?"))
     print(result)

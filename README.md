@@ -175,7 +175,7 @@ async def custom_grader_function(**kwargs) -> GraderScore:
 custom_grader = FunctionGrader(
     name="length_based_grader",
     func=custom_grader_function,
-    evaluation_mode="pointwise"
+    grader_mode="pointwise"
 )
 
 # 注册评估函数
@@ -189,11 +189,11 @@ grader = GraderRegistry.get("custom.length_grader")
 
 ```
 from rm_gallery.core.grader import LLMGrader
-from rm_gallery.core.model.template import ChatTemplate
+from rm_gallery.core.model.template import Chat
 from rm_gallery.core.model.message import ChatMessage
 
 # 定义评估模板
-chat_template = ChatTemplate(
+chat_template = Chat(
     messages=[
         ChatMessage(
             role="system",
@@ -214,7 +214,7 @@ chat_template = ChatTemplate(
 llm_grader = LLMGrader(
     name="gpt_grader",
     chat=chat_template,
-    evaluation_mode="pointwise"
+    grader_mode="pointwise"
 )
 ```
 
@@ -233,7 +233,7 @@ llm_grader = LLMGrader(
 
 #### 属性
 - `name` (str): 评估函数的名称
-- `evaluation_mode` (GraderMode): 评估模式（POINTWISE 或 LISTWISE）
+- `grader_mode` (GraderMode): 评估模式（POINTWISE 或 LISTWISE）
 
 #### 方法
 - `evaluate(**kwargs)`: 执行评估的核心方法，需要子类实现
@@ -249,7 +249,7 @@ llm_grader = LLMGrader(
 #### 方法
 - `__call__(data_sample)`: 执行优化逻辑
 
-### ChatTemplate（聊天模板）
+### Chat（聊天模板）
 
 定义与LLM交互的模板。
 

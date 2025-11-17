@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 AutoRubrics Test Script
 
@@ -51,7 +52,7 @@ def create_test_samples() -> List[DataSample]:
             {
                 "answer": "2 + 2 = 4. This is basic arithmetic where we add two identical numbers.",
                 "score": 1,
-            }
+            },
         ],
     )
     samples.append(sample_pointwise)
@@ -120,7 +121,7 @@ async def test_single_data(mode: GraderMode, samples: List[DataSample]):
     4. Retain detailed results for each sample
     """
     logger.info(
-        f"Testing {mode.value.upper()} Mode - Single Mode (Independent Processing)"
+        f"Testing {mode.value.upper()} Mode - Single Mode (Independent Processing)",
     )
 
     model = OpenAIChatModel(
@@ -133,7 +134,7 @@ async def test_single_data(mode: GraderMode, samples: List[DataSample]):
         model=model,
         parser=None,
         language="en",
-        evaluation_mode=mode,
+        grader_mode=mode,
         generation_mode=GenerationMode.SINGLE,
         aggregation_mode=AggregationMode.KEEP_ALL,
         generate_number=3,

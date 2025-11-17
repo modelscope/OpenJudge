@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Image Editing Quality Metric
 
@@ -19,7 +20,9 @@ from rm_gallery.core.metrics.multimodal.schema import (
     ReasonScore,
 )
 from rm_gallery.core.model.qwen_vlm_api import QwenVLAPI
-from rm_gallery.gallery.rm.multimodal.generation.templates import ImageEditingTemplate
+from rm_gallery.gallery.rm.multimodal.generation.templates import (
+    ImageEditingTemplate,
+)
 
 
 class ImageEditingMetric(BaseMultimodalMetric):
@@ -64,20 +67,27 @@ class ImageEditingMetric(BaseMultimodalMetric):
     """
 
     name: str = "image_editing"
-    vlm_api: QwenVLAPI = Field(..., description="Qwen VL API client for evaluation")
+    vlm_api: QwenVLAPI = Field(
+        ...,
+        description="Qwen VL API client for evaluation",
+    )
 
     # Evaluation results (populated after measure)
     SC_scores: Optional[List[float]] = Field(
-        None, description="Semantic consistency scores"
+        None,
+        description="Semantic consistency scores",
     )
     SC_reasoning: Optional[str] = Field(
-        None, description="Semantic consistency reasoning"
+        None,
+        description="Semantic consistency reasoning",
     )
     PQ_scores: Optional[List[float]] = Field(
-        None, description="Perceptual quality scores"
+        None,
+        description="Perceptual quality scores",
     )
     PQ_reasoning: Optional[str] = Field(
-        None, description="Perceptual quality reasoning"
+        None,
+        description="Perceptual quality reasoning",
     )
 
     def __init__(
@@ -107,7 +117,7 @@ class ImageEditingMetric(BaseMultimodalMetric):
             verbose_mode=verbose_mode,
             **kwargs,
         )
-        self.evaluation_model = vlm_api.get_model_name()
+        self.grader_model = vlm_api.get_model_name()
 
     def run(self, **kwargs):
         """
@@ -142,7 +152,7 @@ class ImageEditingMetric(BaseMultimodalMetric):
         if self.async_mode:
             loop = asyncio.get_event_loop()
             return loop.run_until_complete(
-                self.a_measure(test_case, _show_indicator, _in_component)
+                self.a_measure(test_case, _show_indicator, _in_component),
             )
         else:
             return self._sync_measure(test_case)
@@ -167,8 +177,12 @@ class ImageEditingMetric(BaseMultimodalMetric):
         self._check_test_case_params(test_case)
 
         # Extract original image, edit instruction, and edited image
-        input_texts, input_images = self.separate_images_from_text(test_case.input)
-        _, output_images = self.separate_images_from_text(test_case.actual_output)
+        input_texts, input_images = self.separate_images_from_text(
+            test_case.input,
+        )
+        _, output_images = self.separate_images_from_text(
+            test_case.actual_output,
+        )
 
         original_image = input_images[0]
         edit_instruction = "\n".join(input_texts)
@@ -180,7 +194,9 @@ class ImageEditingMetric(BaseMultimodalMetric):
             self.PQ_reasoning,
         ) = await asyncio.gather(
             self._a_evaluate_semantic_consistency(
-                original_image, edit_instruction, edited_image
+                original_image,
+                edit_instruction,
+                edited_image,
             ),
             self._a_evaluate_perceptual_quality(edited_image),
         )
@@ -210,21 +226,30 @@ class ImageEditingMetric(BaseMultimodalMetric):
             float: Quality score [0, 1]
         """
         # Extract original image, edit instruction, and edited image
-        input_texts, input_images = self.separate_images_from_text(test_case.input)
-        _, output_images = self.separate_images_from_text(test_case.actual_output)
+        input_texts, input_images = self.separate_images_from_text(
+            test_case.input,
+        )
+        _, output_images = self.separate_images_from_text(
+            test_case.actual_output,
+        )
 
         original_image = input_images[0]
         edit_instruction = "\n".join(input_texts)
         edited_image = output_images[0]
 
         # Evaluate semantic consistency
-        self.SC_scores, self.SC_reasoning = self._evaluate_semantic_consistency(
-            original_image, edit_instruction, edited_image
+        (
+            self.SC_scores,
+            self.SC_reasoning,
+        ) = self._evaluate_semantic_consistency(
+            original_image,
+            edit_instruction,
+            edited_image,
         )
 
         # Evaluate perceptual quality
         self.PQ_scores, self.PQ_reasoning = self._evaluate_perceptual_quality(
-            edited_image
+            edited_image,
         )
 
         # Calculate final score
@@ -259,7 +284,7 @@ class ImageEditingMetric(BaseMultimodalMetric):
             Tuple of (scores_list, reasoning)
         """
         prompt = ImageEditingTemplate.generate_semantic_consistency_prompt(
-            edit_instruction
+            edit_instruction,
         )
 
         try:
@@ -272,7 +297,11 @@ class ImageEditingMetric(BaseMultimodalMetric):
             # Cost is tracked automatically by vlm_api
 
             # Ensure score is a list
-            scores = result.score if isinstance(result.score, list) else [result.score]
+            scores = (
+                result.score
+                if isinstance(result.score, list)
+                else [result.score]
+            )
             return scores, result.reasoning
 
         except Exception as e:
@@ -297,7 +326,7 @@ class ImageEditingMetric(BaseMultimodalMetric):
             Tuple of (scores_list, reasoning)
         """
         prompt = ImageEditingTemplate.generate_semantic_consistency_prompt(
-            edit_instruction
+            edit_instruction,
         )
 
         try:
@@ -310,7 +339,11 @@ class ImageEditingMetric(BaseMultimodalMetric):
             # Cost is tracked automatically by vlm_api
 
             # Ensure score is a list
-            scores = result.score if isinstance(result.score, list) else [result.score]
+            scores = (
+                result.score
+                if isinstance(result.score, list)
+                else [result.score]
+            )
             return scores, result.reasoning
 
         except Exception as e:
@@ -334,7 +367,9 @@ class ImageEditingMetric(BaseMultimodalMetric):
 
         try:
             result, cost = await self.vlm_api.a_generate(
-                text=prompt, images=[edited_image], schema=ReasonScore
+                text=prompt,
+                images=[edited_image],
+                schema=ReasonScore,
             )
 
             if self.evaluation_cost is None:
@@ -373,7 +408,9 @@ class ImageEditingMetric(BaseMultimodalMetric):
 
         try:
             result, cost = self.vlm_api.generate(
-                text=prompt, images=[edited_image], schema=ReasonScore
+                text=prompt,
+                images=[edited_image],
+                schema=ReasonScore,
             )
 
             if self.evaluation_cost is None:
@@ -441,7 +478,7 @@ class ImageEditingMetric(BaseMultimodalMetric):
 
             The score combines semantic consistency and perceptual quality using geometric mean,
             ensuring both aspects must be strong for a high overall score.
-        """
+        """,
         ).strip()
 
     def _generate_verbose_logs(self) -> str:
@@ -455,7 +492,7 @@ class ImageEditingMetric(BaseMultimodalMetric):
             "=" * 80,
             "IMAGE EDITING METRIC EVALUATION",
             "=" * 80,
-            f"Model: {self.evaluation_model}",
+            f"Model: {self.grader_model}",
             f"Cost: ${self.evaluation_cost:.6f}"
             if self.evaluation_cost
             else "Cost: N/A",
@@ -488,25 +525,33 @@ class ImageEditingMetric(BaseMultimodalMetric):
         """
         if not test_case.input:
             raise ValueError(
-                "test_case.input is required (should contain original image and edit instruction)"
+                "test_case.input is required (should contain original image and edit instruction)",
             )
 
         if not test_case.actual_output:
             raise ValueError(
-                "test_case.actual_output is required (should contain edited image)"
+                "test_case.actual_output is required (should contain edited image)",
             )
 
         # Check that input contains both text (instruction) and image (original)
-        input_texts, input_images = self.separate_images_from_text(test_case.input)
+        input_texts, input_images = self.separate_images_from_text(
+            test_case.input,
+        )
         if not input_texts:
-            raise ValueError("test_case.input must contain edit instruction (text)")
+            raise ValueError(
+                "test_case.input must contain edit instruction (text)",
+            )
         if not input_images:
             raise ValueError("test_case.input must contain original image")
 
         # Check that output contains edited image
-        _, output_images = self.separate_images_from_text(test_case.actual_output)
+        _, output_images = self.separate_images_from_text(
+            test_case.actual_output,
+        )
         if not output_images:
-            raise ValueError("test_case.actual_output must contain edited image")
+            raise ValueError(
+                "test_case.actual_output must contain edited image",
+            )
 
     def is_successful(self) -> bool:
         """

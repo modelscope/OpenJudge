@@ -96,7 +96,7 @@ async def run_single_mode():
     auto_rubrics = AutoRubrics.create(
         model=model,
         generation_mode=GenerationMode.SINGLE,
-        evaluation_mode=GraderMode.POINTWISE,  # or GraderMode.LISTWISE
+        grader_mode=GraderMode.POINTWISE,  # or GraderMode.LISTWISE
         language=LanguageEnum.EN,  # or LanguageEnum.ZH
         generate_number=3,  # Generate 3 rubrics per sample
         max_epochs=3,  # Maximum 3 iterations
@@ -143,7 +143,7 @@ async def run_batch_mode():
     auto_rubrics = AutoRubrics.create(
         model=model,
         generation_mode=GenerationMode.BATCH,
-        evaluation_mode=GraderMode.POINTWISE,
+        grader_mode=GraderMode.POINTWISE,
         language=LanguageEnum.EN,
         batch_size=10,  # Process 10 samples per batch
         mcr_batch_size=10,  # MCR selects 10 rubrics per iteration
@@ -194,7 +194,7 @@ from rm_gallery.core.model.template import LanguageEnum
 config = AutoRubricsConfig(
     # === Core Configuration ===
     generation_mode=GenerationMode.SINGLE,  # SINGLE or BATCH
-    evaluation_mode=GraderMode.POINTWISE,   # POINTWISE or LISTWISE
+    grader_mode=GraderMode.POINTWISE,   # POINTWISE or LISTWISE
     language=LanguageEnum.ZH,                # ZH (Chinese) or EN (English)
 
     # === Generation Parameters ===
@@ -226,7 +226,7 @@ config = AutoRubricsConfig(
 ```python
 {
     "generation_mode": "single",
-    "evaluation_mode": "pointwise",
+    "grader_mode": "pointwise",
     "aggregation_mode": "categorize",
     "total_samples": 100,
     "successful_samples": 95,
@@ -253,7 +253,7 @@ config = AutoRubricsConfig(
 ```python
 {
     "generation_mode": "batch",
-    "evaluation_mode": "pointwise",
+    "grader_mode": "pointwise",
     "total_samples": 400,
     "final_rubrics": [...],
     "final_rubric_count": 70,

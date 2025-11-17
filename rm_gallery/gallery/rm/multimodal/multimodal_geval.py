@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Multimodal G-Eval Metric
 
@@ -81,19 +82,31 @@ class MultimodalGEval(BaseMultimodalMetric):
         >>> score = metric.measure(test_case)
     """
 
-    name: str = Field(default="multimodal_geval", description="Metric identifier")
+    name: str = Field(
+        default="multimodal_geval",
+        description="Metric identifier",
+    )
     evaluation_name: str = Field(..., description="Name for this evaluation")
     evaluation_params: List[MLLMTestCaseParams] = Field(
-        ..., description="Test case parameters to evaluate"
+        ...,
+        description="Test case parameters to evaluate",
     )
-    criteria: Optional[str] = Field(None, description="Evaluation criteria description")
+    criteria: Optional[str] = Field(
+        None,
+        description="Evaluation criteria description",
+    )
     evaluation_steps: Optional[List[str]] = Field(
-        None, description="Explicit evaluation steps (auto-generated if not provided)"
+        None,
+        description="Explicit evaluation steps (auto-generated if not provided)",
     )
-    rubric: Optional[List[Rubric]] = Field(None, description="Detailed scoring rubric")
+    rubric: Optional[List[Rubric]] = Field(
+        None,
+        description="Detailed scoring rubric",
+    )
     vlm_api: QwenVLAPI = Field(..., description="Qwen VLM API instance")
     score_range: Tuple[int, int] = Field(
-        default=(0, 10), description="Score range (min, max)"
+        default=(0, 10),
+        description="Score range (min, max)",
     )
 
     # Internal state
@@ -103,18 +116,25 @@ class MultimodalGEval(BaseMultimodalMetric):
         """Validate configuration after initialization"""
         super().model_post_init(__context)
 
-        validate_criteria_and_evaluation_steps(self.criteria, self.evaluation_steps)
+        validate_criteria_and_evaluation_steps(
+            self.criteria,
+            self.evaluation_steps,
+        )
 
         if self.rubric:
             self.rubric = validate_and_sort_rubrics(self.rubric)
 
-        self.evaluation_model = self.vlm_api.get_model_name()
+        self.grader_model = self.vlm_api.get_model_name()
 
         if self.strict_mode and self.rubric:
             score_values = [r.score for r in self.rubric]
-            if not (len(score_values) == 2 and 0 in score_values and 1 in score_values):
+            if not (
+                len(score_values) == 2
+                and 0 in score_values
+                and 1 in score_values
+            ):
                 raise ValueError(
-                    "In strict_mode, rubric must have exactly 2 entries with scores 0 and 1"
+                    "In strict_mode, rubric must have exactly 2 entries with scores 0 and 1",
                 )
 
     def measure(
@@ -148,7 +168,7 @@ class MultimodalGEval(BaseMultimodalMetric):
                     _show_indicator=_show_indicator,
                     _in_component=_in_component,
                     _additional_context=_additional_context,
-                )
+                ),
             )
 
         # Generate evaluation steps if not provided
@@ -209,7 +229,10 @@ class MultimodalGEval(BaseMultimodalMetric):
             self._generated_steps = await self._a_generate_evaluation_steps()
 
         # Evaluate
-        g_score, reason = await self._a_evaluate(test_case, _additional_context)
+        g_score, reason = await self._a_evaluate(
+            test_case,
+            _additional_context,
+        )
 
         # Store results
         self.reason = reason
@@ -261,14 +284,19 @@ class MultimodalGEval(BaseMultimodalMetric):
         if self.evaluation_steps:
             return self.evaluation_steps
 
-        g_eval_params_str = construct_g_eval_params_string(self.evaluation_params)
+        g_eval_params_str = construct_g_eval_params_string(
+            self.evaluation_params,
+        )
         prompt = MultimodalGEvalTemplate.generate_evaluation_steps(
-            parameters=g_eval_params_str, criteria=self.criteria
+            parameters=g_eval_params_str,
+            criteria=self.criteria,
         )
 
         try:
             response = self.vlm_api.generate(
-                text=prompt, images=[], response_format=EvaluationSteps
+                text=prompt,
+                images=[],
+                response_format=EvaluationSteps,
             )
 
             if isinstance(response, dict) and "steps" in response:
@@ -278,16 +306,16 @@ class MultimodalGEval(BaseMultimodalMetric):
             else:
                 logger.warning(
                     f"Unexpected response format from VLM: {response}, "
-                    f"using default evaluation steps"
+                    f"using default evaluation steps",
                 )
                 return [
-                    f"Evaluate the {construct_g_eval_params_string(self.evaluation_params)}"
+                    f"Evaluate the {construct_g_eval_params_string(self.evaluation_params)}",
                 ]
 
         except Exception as e:
             logger.error(f"Error generating evaluation steps: {e}")
             return [
-                f"Evaluate the {construct_g_eval_params_string(self.evaluation_params)}"
+                f"Evaluate the {construct_g_eval_params_string(self.evaluation_params)}",
             ]
 
     async def _a_generate_evaluation_steps(self) -> List[str]:
@@ -300,14 +328,19 @@ class MultimodalGEval(BaseMultimodalMetric):
         if self.evaluation_steps:
             return self.evaluation_steps
 
-        g_eval_params_str = construct_g_eval_params_string(self.evaluation_params)
+        g_eval_params_str = construct_g_eval_params_string(
+            self.evaluation_params,
+        )
         prompt = MultimodalGEvalTemplate.generate_evaluation_steps(
-            parameters=g_eval_params_str, criteria=self.criteria
+            parameters=g_eval_params_str,
+            criteria=self.criteria,
         )
 
         try:
             response = await self.vlm_api.a_generate(
-                text=prompt, images=[], response_format=EvaluationSteps
+                text=prompt,
+                images=[],
+                response_format=EvaluationSteps,
             )
 
             if isinstance(response, dict) and "steps" in response:
@@ -317,16 +350,16 @@ class MultimodalGEval(BaseMultimodalMetric):
             else:
                 logger.warning(
                     f"Unexpected response format from VLM: {response}, "
-                    f"using default evaluation steps"
+                    f"using default evaluation steps",
                 )
                 return [
-                    f"Evaluate the {construct_g_eval_params_string(self.evaluation_params)}"
+                    f"Evaluate the {construct_g_eval_params_string(self.evaluation_params)}",
                 ]
 
         except Exception as e:
             logger.error(f"Error generating evaluation steps: {e}")
             return [
-                f"Evaluate the {construct_g_eval_params_string(self.evaluation_params)}"
+                f"Evaluate the {construct_g_eval_params_string(self.evaluation_params)}",
             ]
 
     def _evaluate(
@@ -344,20 +377,29 @@ class MultimodalGEval(BaseMultimodalMetric):
         Returns:
             Tuple of (score, reason)
         """
-        g_eval_params_str = construct_g_eval_params_string(self.evaluation_params)
-        test_case_list = construct_test_case_list(test_case, self.evaluation_params)
+        g_eval_params_str = construct_g_eval_params_string(
+            self.evaluation_params,
+        )
+        test_case_list = construct_test_case_list(
+            test_case,
+            self.evaluation_params,
+        )
 
         evaluation_steps_str = "\n".join(
             f"{i+1}. {step}"
-            for i, step in enumerate(self._generated_steps or self.evaluation_steps)
+            for i, step in enumerate(
+                self._generated_steps or self.evaluation_steps,
+            )
         )
 
         if self.strict_mode:
-            prompt_parts = MultimodalGEvalTemplate.generate_strict_evaluation_results(
-                evaluation_steps=evaluation_steps_str,
-                test_case_list=test_case_list,
-                parameters=g_eval_params_str,
-                _additional_context=_additional_context,
+            prompt_parts = (
+                MultimodalGEvalTemplate.generate_strict_evaluation_results(
+                    evaluation_steps=evaluation_steps_str,
+                    test_case_list=test_case_list,
+                    parameters=g_eval_params_str,
+                    _additional_context=_additional_context,
+                )
             )
         else:
             rubric_str = format_rubrics(self.rubric) if self.rubric else None
@@ -372,13 +414,15 @@ class MultimodalGEval(BaseMultimodalMetric):
 
         try:
             response = self.vlm_api.generate_from_parts(
-                parts=prompt_parts, response_format=ReasonScore
+                parts=prompt_parts,
+                response_format=ReasonScore,
             )
 
             if isinstance(response, dict):
                 score = response.get("score", 0)
                 reason = response.get(
-                    "reasoning", response.get("reason", "No reason provided")
+                    "reasoning",
+                    response.get("reason", "No reason provided"),
                 )
             elif hasattr(response, "score"):
                 score = response.score
@@ -413,20 +457,29 @@ class MultimodalGEval(BaseMultimodalMetric):
         Returns:
             Tuple of (score, reason)
         """
-        g_eval_params_str = construct_g_eval_params_string(self.evaluation_params)
-        test_case_list = construct_test_case_list(test_case, self.evaluation_params)
+        g_eval_params_str = construct_g_eval_params_string(
+            self.evaluation_params,
+        )
+        test_case_list = construct_test_case_list(
+            test_case,
+            self.evaluation_params,
+        )
 
         evaluation_steps_str = "\n".join(
             f"{i+1}. {step}"
-            for i, step in enumerate(self._generated_steps or self.evaluation_steps)
+            for i, step in enumerate(
+                self._generated_steps or self.evaluation_steps,
+            )
         )
 
         if self.strict_mode:
-            prompt_parts = MultimodalGEvalTemplate.generate_strict_evaluation_results(
-                evaluation_steps=evaluation_steps_str,
-                test_case_list=test_case_list,
-                parameters=g_eval_params_str,
-                _additional_context=_additional_context,
+            prompt_parts = (
+                MultimodalGEvalTemplate.generate_strict_evaluation_results(
+                    evaluation_steps=evaluation_steps_str,
+                    test_case_list=test_case_list,
+                    parameters=g_eval_params_str,
+                    _additional_context=_additional_context,
+                )
             )
         else:
             rubric_str = format_rubrics(self.rubric) if self.rubric else None
@@ -441,13 +494,15 @@ class MultimodalGEval(BaseMultimodalMetric):
 
         try:
             response = await self.vlm_api.a_generate_from_parts(
-                parts=prompt_parts, response_format=ReasonScore
+                parts=prompt_parts,
+                response_format=ReasonScore,
             )
 
             if isinstance(response, dict):
                 score = response.get("score", 0)
                 reason = response.get(
-                    "reasoning", response.get("reason", "No reason provided")
+                    "reasoning",
+                    response.get("reason", "No reason provided"),
                 )
             elif hasattr(response, "score"):
                 score = response.score

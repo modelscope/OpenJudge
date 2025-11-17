@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Bilingual Prompt Templates for Rubric Generation using ChatTemplate
 
@@ -13,9 +14,10 @@ Each paradigm has three types of prompts:
 All prompts support both English and Chinese.
 """
 
+from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.model.message import ChatMessage
 from rm_gallery.core.model.template import (
-    ChatTemplate,
+    Chat,
     LanguageEnum,
     RequiredField,
     Template,
@@ -28,9 +30,9 @@ class RubricPromptTemplates:
     # ========== Generation Templates ==========
 
     @staticmethod
-    def pointwise_generation(model_config: dict) -> ChatTemplate:
+    def pointwise_generation(model: ChatModelBase) -> Chat:
         """Template for generating pointwise rubrics"""
-        return ChatTemplate(
+        return Chat(
             template=Template(
                 messages={
                     LanguageEnum.ZH: [
@@ -122,13 +124,13 @@ Please generate evaluation criteria:""",
                     ),
                 ],
             ),
-            model=model_config,
+            model=model,
         )
 
     @staticmethod
-    def listwise_generation(model_config: dict) -> ChatTemplate:
+    def listwise_generation(model: ChatModelBase) -> Chat:
         """Template for generating listwise rubrics"""
-        return ChatTemplate(
+        return Chat(
             template=Template(
                 messages={
                     LanguageEnum.ZH: [
@@ -208,15 +210,15 @@ Please generate ranking criteria""",
                     ),
                 ],
             ),
-            model=model_config,
+            model=model,
         )
 
     # ========== Evaluation Templates ==========
 
     @staticmethod
-    def pointwise_evaluation(model_config: dict) -> ChatTemplate:
+    def pointwise_evaluation(model: ChatModelBase) -> Chat:
         """Template for pointwise evaluation"""
-        return ChatTemplate(
+        return Chat(
             template=Template(
                 messages={
                     LanguageEnum.ZH: [
@@ -242,7 +244,7 @@ Please generate ranking criteria""",
 重要提醒：score 必须是整数，不能是小数或其他格式。
 
 请输出评分结果""",
-                        )
+                        ),
                     ],
                     LanguageEnum.EN: [
                         ChatMessage(
@@ -267,7 +269,7 @@ Please output strictly in the following JSON format:
 Important reminder: The score must be an integer, not a decimal or any other format.
 
 Please output the scoring result""",
-                        )
+                        ),
                     ],
                 },
                 required_fields=[
@@ -303,13 +305,13 @@ Please output the scoring result""",
                     ),
                 ],
             ),
-            model=model_config,
+            model=model,
         )
 
     @staticmethod
-    def listwise_evaluation(model_config: dict) -> ChatTemplate:
+    def listwise_evaluation(model: ChatModelBase) -> Chat:
         """Template for listwise evaluation - complete ranking at once"""
-        return ChatTemplate(
+        return Chat(
             template=Template(
                 messages={
                     LanguageEnum.ZH: [
@@ -350,7 +352,7 @@ Please output the scoring result""",
 重要提醒：
 1. 数组中第i个位置的数值是第i个回答的质量分数，数值越大表示质量越好
 2. 所有分数必须是正整数，不能是小数或其他格式""",
-                        )
+                        ),
                     ],
                     LanguageEnum.EN: [
                         ChatMessage(
@@ -390,7 +392,7 @@ Please output strictly in the following JSON format:
 Important reminders:
 1. The value at position i in the array is the quality score for the i-th response, higher values indicate better quality
 2. All scores must be positive integers, not decimals or other formats""",
-                        )
+                        ),
                     ],
                 },
                 required_fields=[
@@ -420,15 +422,15 @@ Important reminders:
                     ),
                 ],
             ),
-            model=model_config,
+            model=model,
         )
 
     # ========== Revision Templates ==========
 
     @staticmethod
-    def pointwise_revision(model_config: dict) -> ChatTemplate:
+    def pointwise_revision(model: ChatModelBase) -> Chat:
         """Template for pointwise rubric revision"""
-        return ChatTemplate(
+        return Chat(
             template=Template(
                 messages={
                     LanguageEnum.ZH: [
@@ -556,13 +558,13 @@ Please generate improved Pointwise scoring criteria:""",
                     ),
                 ],
             ),
-            model=model_config,
+            model=model,
         )
 
     @staticmethod
-    def listwise_revision(model_config: dict) -> ChatTemplate:
+    def listwise_revision(model: ChatModelBase) -> Chat:
         """Template for listwise rubric revision"""
-        return ChatTemplate(
+        return Chat(
             template=Template(
                 messages={
                     LanguageEnum.ZH: [
@@ -698,7 +700,7 @@ Please generate improved Listwise ranking criteria:""",
                     ),
                 ],
             ),
-            model=model_config,
+            model=model,
         )
 
 
@@ -706,9 +708,9 @@ class RubricCategorizationTemplate:
     """ChatTemplate for LLM semantic categorization of rubrics into Theme-Tips structure"""
 
     @staticmethod
-    def categorization(model_config: dict) -> ChatTemplate:
+    def categorization(model: ChatModelBase) -> Chat:
         """Template for rubric categorization into Theme-Tips structure"""
-        return ChatTemplate(
+        return Chat(
             template=Template(
                 messages={
                     LanguageEnum.ZH: [
@@ -823,5 +825,5 @@ Please generate the aggregated evaluation criteria
                     ),
                 ],
             ),
-            model=model_config,
+            model=model,
         )

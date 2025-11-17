@@ -1,10 +1,16 @@
+# -*- coding: utf-8 -*-
 import asyncio
 from typing import Callable, Dict, List, Tuple, TypedDict
 
 from loguru import logger
 
-from rm_gallery.core.data import DataSample, DataSampleParser, validate_data_samples
+from rm_gallery.core.data import (
+    DataSample,
+    DataSampleParser,
+    validate_data_samples,
+)
 from rm_gallery.core.grader import Grader, GraderScore, evaluate
+from rm_gallery.core.model.openai_llm import OpenAIChatModel
 from rm_gallery.core.registry import GR
 from rm_gallery.core.runner.base import BaseRunner
 from rm_gallery.core.utils.concurrency import ConcurrencyManager
@@ -49,7 +55,9 @@ class GradingRunner(BaseRunner):
     """Runner for grading by graders."""
 
     def __init__(
-        self, grading_configs: Dict[str, GradingConfig], max_concurrent: int = 32
+        self,
+        grading_configs: Dict[str, GradingConfig],
+        max_concurrent: int = 32,
     ):
         """Initialize the EvaluationRunner.
 
@@ -79,7 +87,11 @@ class GradingRunner(BaseRunner):
         for key, config in self.grading_configs.items():
             grader, parser = parse_grading_config(config)
             if grader is not None:
-                coro = evaluate(grader=grader, parser=parser, data_sample=data_sample)
+                coro = evaluate(
+                    grader=grader,
+                    parser=parser,
+                    data_sample=data_sample,
+                )
                 coroutines.append(coro)
                 keys.append(key)
 
@@ -94,7 +106,12 @@ class GradingRunner(BaseRunner):
 
         return {"total_score": total_score, "dimensions": results}
 
-    async def __call__(self, data_samples: List[DataSample], *args, **kwargs) -> dict:
+    async def __call__(
+        self,
+        data_samples: List[DataSample],
+        *args,
+        **kwargs,
+    ) -> dict:
         """Run experiment.
 
         Args:
@@ -159,8 +176,15 @@ if __name__ == "__main__":
     data_samples = validate_data_samples(data_samples, data_sample_schema)
     from rm_gallery.gallery.example.llm import FactualGrader
 
+    model = OpenAIChatModel(model_name="qwen-plus")
+
     runner = GradingRunner(
-        grading_configs={"factual_grader": {"grader": FactualGrader(), "weight": 1.0}}
+        grading_configs={
+            "factual_grader": {
+                "grader": FactualGrader(model=model),
+                "weight": 1.0,
+            },
+        },
     )
     # Run using async method
     result = asyncio.run(runner(data_samples=data_samples))

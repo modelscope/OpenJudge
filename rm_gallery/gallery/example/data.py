@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # DataSample 使用示例：从数据到评估的完整流程
 
 import asyncio
@@ -39,12 +40,14 @@ async def example_evaluate_without_mapping():
     print("3. 执行评估:")
     try:
         results = await evaluate(
-            grader=grader, mapping=None, data_sample=data_sample  # 无需映射
+            grader=grader,
+            parser=None,
+            data_sample=data_sample,  # 无需映射
         )
         print("4. 评估结果:")
         for i, result in enumerate(results):
             print(
-                f"   回答 '{data_sample.samples[i]['answer']}': Score={result.score:.2f}, Reason='{result.reason}'"
+                f"   回答 '{data_sample.samples[i]['answer']}': Score={result.score:.2f}, Reason='{result.reason}'",
             )
     except Exception as e:
         print(f"   评估出错: {e}")
@@ -92,12 +95,14 @@ async def example_evaluate_with_mapping():
     print("4. 执行评估（映射会自动应用）:")
     try:
         results = await evaluate(
-            grader=grader, mapping=mapping, data_sample=raw_data_sample  # 提供映射规则
+            grader=grader,
+            mapping=mapping,
+            data_sample=raw_data_sample,  # 提供映射规则
         )
         print("5. 评估结果:")
         for i, result in enumerate(results):
             print(
-                f"   回答 '{raw_data_sample.samples[i]['response']}': Score={result.score:.2f}, Reason='{result.reason}'"
+                f"   回答 '{raw_data_sample.samples[i]['response']}': Score={result.score:.2f}, Reason='{result.reason}'",
             )
     except Exception as e:
         print(f"   评估出错: {e}")

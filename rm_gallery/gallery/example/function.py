@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # function grader 开发示例
 
 import asyncio
@@ -19,7 +20,7 @@ class StringCheckerV1(Grader):
     """String checker grader."""
 
     name: str = "string_checker"
-    evaluation_mode: GraderMode = GraderMode.POINTWISE
+    grader_mode: GraderMode = GraderMode.POINTWISE
 
     async def evaluate(self, reference_output, target_output) -> GraderScore:
         """Evaluate by comparing reference and target outputs.
@@ -71,7 +72,7 @@ def test_string_checker_v1():
                 data_mapping={"reference_output": "reference"},
             ),
             data_sample=data_sample,
-        )
+        ),
     )
     logger.info(result)
 
@@ -91,7 +92,7 @@ def test_string_checker_v3():
                 data_mapping={"reference_output": "reference"},
             ),
             data_sample=data_sample,
-        )
+        ),
     )
     logger.info(result)
 

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Base Multimodal Metric Classes
 
@@ -36,7 +37,7 @@ class BaseMultimodalMetric(ABC):
         async_mode: Whether to use async evaluation
         strict_mode: If True, score < threshold becomes 0
         verbose_mode: Whether to generate detailed logs
-        evaluation_model: Name of the model used for evaluation
+        grader_model: Name of the model used for evaluation
         evaluation_cost: Estimated cost of evaluation (if tracked)
 
     Example:
@@ -50,31 +51,48 @@ class BaseMultimodalMetric(ABC):
 
     name: str = Field(..., description="Metric name")
     threshold: float = Field(
-        default=0.5, ge=0.0, le=1.0, description="Success threshold"
+        default=0.5,
+        ge=0.0,
+        le=1.0,
+        description="Success threshold",
     )
     async_mode: bool = Field(
-        default=True, description="Whether to use async evaluation"
+        default=True,
+        description="Whether to use async evaluation",
     )
     strict_mode: bool = Field(
-        default=False, description="If True, scores below threshold become 0"
+        default=False,
+        description="If True, scores below threshold become 0",
     )
     verbose_mode: bool = Field(
-        default=False, description="Whether to generate verbose logs"
+        default=False,
+        description="Whether to generate verbose logs",
     )
 
     # Evaluation results (populated after measure)
     score: Optional[float] = Field(None, description="Latest evaluation score")
     reason: Optional[str] = Field(None, description="Reasoning for the score")
-    success: Optional[bool] = Field(None, description="Whether evaluation passed")
-    error: Optional[str] = Field(None, description="Error message if evaluation failed")
-    verbose_logs: Optional[str] = Field(None, description="Verbose evaluation logs")
+    success: Optional[bool] = Field(
+        None,
+        description="Whether evaluation passed",
+    )
+    error: Optional[str] = Field(
+        None,
+        description="Error message if evaluation failed",
+    )
+    verbose_logs: Optional[str] = Field(
+        None,
+        description="Verbose evaluation logs",
+    )
 
     # Model and cost tracking
-    evaluation_model: Optional[str] = Field(
-        None, description="Model used for evaluation"
+    grader_model: Optional[str] = Field(
+        None,
+        description="Model used for evaluation",
     )
     evaluation_cost: Optional[float] = Field(
-        None, description="Estimated evaluation cost"
+        None,
+        description="Estimated evaluation cost",
     )
 
     @abstractmethod
@@ -100,7 +118,9 @@ class BaseMultimodalMetric(ABC):
         Raises:
             NotImplementedError: If subclass doesn't implement this method
         """
-        raise NotImplementedError(f"{self.__class__.__name__} must implement measure()")
+        raise NotImplementedError(
+            f"{self.__class__.__name__} must implement measure()",
+        )
 
     async def a_measure(
         self,
@@ -132,7 +152,8 @@ class BaseMultimodalMetric(ABC):
         )
 
     def separate_images_from_text(
-        self, multimodal_list: List[Union[MLLMImage, str]]
+        self,
+        multimodal_list: List[Union[MLLMImage, str]],
     ) -> Tuple[List[str], List[MLLMImage]]:
         """
         Separate text and images from a multimodal list
@@ -164,7 +185,8 @@ class BaseMultimodalMetric(ABC):
         return texts, images
 
     def get_image_indices(
-        self, multimodal_list: List[Union[str, MLLMImage]]
+        self,
+        multimodal_list: List[Union[str, MLLMImage]],
     ) -> List[int]:
         """
         Get indices of images in a multimodal list
@@ -213,7 +235,9 @@ class BaseMultimodalMetric(ABC):
         for param in required_params:
             value = getattr(test_case, param.value, None)
             if value is None or (isinstance(value, list) and len(value) == 0):
-                raise ValueError(f"{self.name} requires '{param.value}' in test case")
+                raise ValueError(
+                    f"{self.name} requires '{param.value}' in test case",
+                )
 
         # Check minimum images in input
         if min_images_in_input is not None:
@@ -221,16 +245,18 @@ class BaseMultimodalMetric(ABC):
             if len(input_images) < min_images_in_input:
                 raise ValueError(
                     f"{self.name} requires at least {min_images_in_input} "
-                    f"image(s) in input, got {len(input_images)}"
+                    f"image(s) in input, got {len(input_images)}",
                 )
 
         # Check minimum images in output
         if min_images_in_output is not None:
-            _, output_images = self.separate_images_from_text(test_case.actual_output)
+            _, output_images = self.separate_images_from_text(
+                test_case.actual_output,
+            )
             if len(output_images) < min_images_in_output:
                 raise ValueError(
                     f"{self.name} requires at least {min_images_in_output} "
-                    f"image(s) in output, got {len(output_images)}"
+                    f"image(s) in output, got {len(output_images)}",
                 )
 
     def is_successful(self) -> bool:
@@ -263,7 +289,7 @@ class BaseMultimodalMetric(ABC):
             reason=self.reason,
             success=self.is_successful(),
             metadata={
-                "evaluation_model": self.evaluation_model,
+                "grader_model": self.grader_model,
                 "evaluation_cost": self.evaluation_cost,
                 "threshold": self.threshold,
                 "strict_mode": self.strict_mode,

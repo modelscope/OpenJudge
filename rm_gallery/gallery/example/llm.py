@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # 自定义LLMGrader
 import asyncio
 
@@ -6,6 +7,7 @@ from loguru import logger
 from rm_gallery.core.data import DataSample
 from rm_gallery.core.grader import GraderMode, LLMGrader, evaluate
 from rm_gallery.core.model.template import Template
+from rm_gallery.core.model import OpenAIChatModel
 
 DEFAULT_TEMPLATE = {
     "messages": [
@@ -45,13 +47,13 @@ DEFAULT_TEMPLATE = {
     ],
 }
 
-DEFAULT_MODEL = {
-    "model_name": "qwen-plus",
-    "stream": False,
-    "client_args": {
+DEFAULT_MODEL = OpenAIChatModel(
+    model_name="qwen-plus",
+    stream=False,
+    client_args={
         "timeout": 60,
     },
-}
+)
 
 
 # 示例1：对于简单的LLM as a judge，可以直接使用LLMGrader
@@ -59,7 +61,7 @@ grader = LLMGrader(
     name="factual_grader",
     mode=GraderMode.POINTWISE,
     description="factual grader",
-    template=Template(**DEFAULT_TEMPLATE),
+    template=Template.model_validate(DEFAULT_TEMPLATE),
     model=DEFAULT_MODEL,
     rubrics="",
 )
@@ -94,9 +96,9 @@ def test_factual_grader():
     result = asyncio.run(
         evaluate(
             grader,
-            mapping=None,
+            parser=None,
             data_sample=data_sample,
-        )
+        ),
     )
     logger.info(result)
 

@@ -1,5 +1,6 @@
+# -*- coding: utf-8 -*-
 """
-Model integrations module
+Model integrations module from AgentScope
 """
 
 from rm_gallery.core.model.base import ChatModelBase

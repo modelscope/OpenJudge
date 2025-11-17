@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 AutoRubrics Example
 
@@ -23,7 +24,8 @@ from rm_gallery.core.runner.auto_rubrics import AggregationMode, AutoRubrics
 
 
 def load_data_samples(
-    file_path: str, max_samples: int | None = None
+    file_path: str,
+    max_samples: int | None = None,
 ) -> List[DataSample]:
     """Load data samples from file"""
     logger.info(f"Loading data samples from {file_path}")
@@ -59,6 +61,7 @@ async def test_batch_data(
 
     auto_rubrics = AutoRubrics.create(
         model=model,
+        grader_mode=grader_mode,
         evaluation_mode=grader_mode,
         aggregation_mode=aggregation_mode,
         language="zh",
@@ -98,7 +101,11 @@ async def main():
         output_dir = Path("results/auto_rubrics_结论实用_ZH")
         output_dir.mkdir(parents=True, exist_ok=True)
 
-        with open(output_dir / "batch_mode_results.json", "w", encoding="utf-8") as f:
+        with open(
+            output_dir / "batch_mode_results.json",
+            "w",
+            encoding="utf-8",
+        ) as f:
             json.dump(batch_results, f, ensure_ascii=False, indent=2)
 
         logger.info(f"Results saved to: {output_dir}")

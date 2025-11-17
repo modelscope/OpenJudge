@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import asyncio
 from typing import Callable, List
 
@@ -21,16 +22,26 @@ class AutoGrader(BaseRunner):
     ):
         """AutoGrader"""
         self.config = config
-        self.auto_rubrics = AutoRubrics(model=model, parser=parser, config=config)
+        self.auto_rubrics = AutoRubrics(
+            model=model,
+            parser=parser,
+            config=config,
+        )
 
     async def __call__(
-        self, data_samples: List[DataSample], *args, **kwargs
+        self,
+        data_samples: List[DataSample],
+        *args,
+        **kwargs,
     ) -> LLMGrader:
         # Generate rubrics using AutoRubrics
         rubrics_result = await self.auto_rubrics(data_samples)
 
         # Extract the final rubrics from the result
-        if isinstance(rubrics_result, dict) and "final_rubrics" in rubrics_result:
+        if (
+            isinstance(rubrics_result, dict)
+            and "final_rubrics" in rubrics_result
+        ):
             rubrics = "\n".join(rubrics_result["final_rubrics"])
         else:
             # Fallback if the structure is different
@@ -77,7 +88,7 @@ class AutoGrader(BaseRunner):
         return LLMGrader(
             name="Auto Grader",
             template=default_template,
-            model=model_dict,
+            model=self.auto_rubrics.model,
             rubrics=rubrics,
         )
 

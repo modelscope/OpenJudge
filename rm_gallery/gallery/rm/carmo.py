@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # https://arxiv.org/pdf/2410.21545
 
 
@@ -6,7 +7,7 @@ from typing import Any, Dict, List
 from rm_gallery.core.data import DataSample
 from rm_gallery.core.grader import GraderMode, GraderScore, LLMGrader
 from rm_gallery.core.model.message import ChatMessage
-from rm_gallery.core.model.template import ChatTemplate, RequiredField, Template
+from rm_gallery.core.model.template import Chat, RequiredField, Template
 from rm_gallery.core.model.utils import _json_loads_with_repair
 
 CriteriaGenerationTemplate = Template(
@@ -45,7 +46,7 @@ CriteriaGenerationTemplate = Template(
             type="string",
             position="data",
             description="The instruction to evaluate responses for",
-        )
+        ),
     ],
 )
 
@@ -119,15 +120,22 @@ class Cramo(LLMGrader):
         super().__init__(name, mode, template, model, **kwargs)
 
     async def __call__(
-        self, data_sample: DataSample, *args, **kwargs
+        self,
+        data_sample: DataSample,
+        *args,
+        **kwargs,
     ) -> List[GraderScore]:
-        chat = ChatTemplate(
+        chat = Chat(
             template=CriteriaGenerationTemplate,
             model=self.model,
         )
         rubrics = chat(
-            char_output=_json_loads_with_repair, **data_sample.data
+            char_output=_json_loads_with_repair,
+            **data_sample.data,
         ).metadata.get("rubrics", [])
         return await super().__call__(
-            data_sample, rubrics="\n".join(rubrics), *args, **kwargs
+            data_sample,
+            rubrics="\n".join(rubrics),
+            *args,
+            **kwargs,
         )

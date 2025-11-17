@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 LLM-Based Rubric Categorizer
 
@@ -20,6 +21,7 @@ from typing import List
 from loguru import logger
 from pydantic import BaseModel, Field
 
+from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.model.openai_llm import OpenAIChatModel
 from rm_gallery.core.model.template import LanguageEnum
 from rm_gallery.core.rubric.prompts import RubricCategorizationTemplate
@@ -31,7 +33,9 @@ class RubricCategory(BaseModel):
 
 
 class RubricCategorizationOutput(BaseModel):
-    categories: List[RubricCategory] = Field(description="List of categorized rubrics")
+    categories: List[RubricCategory] = Field(
+        description="List of categorized rubrics",
+    )
     reason: str = Field(description="Reasoning for the categorization")
 
 
@@ -41,27 +45,24 @@ class LLMRubricCategorizer:
     def __init__(
         self,
         num_categories: int = 5,
-        model_name: str = "qwen3-32b",
+        model: ChatModelBase | None = None,
         language: str = "zh",
     ):
         self.num_categories = num_categories
         self.language = LanguageEnum(language)
-
-        # Initialize LLM using new architecture
-        self.llm = OpenAIChatModel(model_name=model_name)
-
-        # Create model config for ChatTemplate
-        self.model_config = {
-            "model_name": model_name,
-            "stream": False,
-        }
+        self.model = model
 
         # Initialize categorization template
-        self.categorization_template = RubricCategorizationTemplate.categorization(
-            self.model_config
+        self.categorization_template = (
+            RubricCategorizationTemplate.categorization(
+                self.model,
+            )
         )
 
-    async def categorize_rubrics(self, rubrics: List[str]) -> tuple[List[str], dict]:
+    async def categorize_rubrics(
+        self,
+        rubrics: List[str],
+    ) -> tuple[List[str], dict]:
         """Main method: perform semantic classification of rubrics
 
         Returns:
@@ -70,24 +71,30 @@ class LLMRubricCategorizer:
 
         if len(rubrics) == 0:
             logger.error("Input rubrics list is empty")
-            return [], {"categorization_successful": False, "error": "Empty input"}
+            return [], {
+                "categorization_successful": False,
+                "error": "Empty input",
+            }
 
         try:
             # Format rubrics text
             rubrics_text = "\n".join(
-                [f"{i+1}. {rubric}" for i, rubric in enumerate(rubrics)]
+                [f"{i+1}. {rubric}" for i, rubric in enumerate(rubrics)],
             )
 
-            # Call LLM using ChatTemplate with structured output
+            # Call LLM using Chat with structured output
             response_obj = await self.categorization_template(
-                chat_output=RubricCategorizationOutput,
+                structured_model=RubricCategorizationOutput,
                 rubrics_text=rubrics_text,
                 num_categories=self.num_categories,
                 language=self.language,
             )
 
             # Get structured data from metadata
-            if not response_obj.metadata or "categories" not in response_obj.metadata:
+            if (
+                not response_obj.metadata
+                or "categories" not in response_obj.metadata
+            ):
                 raise ValueError("No categories in structured response")
 
             categories = response_obj.metadata["categories"]
@@ -101,14 +108,19 @@ class LLMRubricCategorizer:
                 # Assemble into single string: Theme + Tips
                 theme_str = f"Theme: {theme}"
                 tips_str = "\n".join(
-                    [f"- Tip{i}: {tip}" for i, tip in enumerate(tips, start=1)]
+                    [
+                        f"- Tip{i}: {tip}"
+                        for i, tip in enumerate(tips, start=1)
+                    ],
                 )
 
                 # Combine into complete evaluation rubric string
                 complete_rubric = f"{theme_str}\n{tips_str}"
                 ready_to_use_list.append(complete_rubric)
 
-            logger.info(f"Generated {len(ready_to_use_list)} categorized rubrics")
+            logger.info(
+                f"Generated {len(ready_to_use_list)} categorized rubrics",
+            )
 
             # Return both rubrics and aggregation info as expected
             aggregation_info = {

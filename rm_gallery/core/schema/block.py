@@ -8,7 +8,8 @@ class TextBlock(BaseModel):
     """The text block."""
 
     type: Literal["text"] = Field(
-        default="text", description="The type of the block"
+        default="text",
+        description="The type of the block",
     )
     text: str = Field(default="", description="The text content")
 
@@ -35,7 +36,8 @@ class Base64Source(BaseModel):
         description="The media type of the data, e.g. `image/jpeg` or `audio/mpeg`",
     )
     data: str = Field(
-        ..., description="The base64 data, in format of RFC 2397"
+        ...,
+        description="The base64 data, in format of RFC 2397",
     )
 
 
@@ -53,10 +55,12 @@ class ImageBlock(BaseModel):
     """The image block"""
 
     type: Literal["image"] = Field(
-        default="image", description="The type of the block"
+        default="image",
+        description="The type of the block, must be `image`",
     )
     source: Base64Source | URLSource = Field(
-        ..., description="The src of the image"
+        ...,
+        description="The source of the image",
     )
 
 
@@ -64,10 +68,12 @@ class AudioBlock(BaseModel):
     """The audio block"""
 
     type: Literal["audio"] = Field(
-        default="audio", description="The type of the block"
+        default="audio",
+        description="The type of the block, must be `audio`",
     )
     source: Base64Source | URLSource = Field(
-        ..., description="The src of the audio"
+        ...,
+        description="The source of the audio",
     )
 
 
@@ -75,31 +81,36 @@ class VideoBlock(BaseModel):
     """The video block"""
 
     type: Literal["video"] = Field(
-        default="video", description="The type of the block"
+        default="video",
+        description="The type of the block, must be `video`",
     )
     source: Base64Source | URLSource = Field(
-        ..., description="The src of the audio"
+        ...,
+        description="The source of the video",
     )
 
 
 class ToolUseBlock(BaseModel):
-    """The tool use block."""
+    """The tool use block"""
 
     type: Literal["tool_use"] = Field(
         default="tool_use",
         description="The type of the block, must be `tool_use`",
     )
     id: str = Field(..., description="The identity of the tool call")
-    name: str = Field(..., description="The name of the tool")
-    input: Dict[str, Any] = Field(..., description="The input of the tool")
+    name: str = Field(..., description="The name of the tool function")
+    input: Dict[str, Any] = Field(
+        default_factory=dict,
+        description="The input arguments of the tool function",
+    )
 
 
 class ToolResultBlock(BaseModel):
-    """The tool result block."""
+    """The tool result block"""
 
     type: Literal["tool_result"] = Field(
         default="tool_result",
-        description="The type of the block",
+        description="The type of the block, must be `tool_result`",
     )
     id: str = Field(..., description="The identity of the tool call result")
     output: str | List[TextBlock | ImageBlock | AudioBlock] = Field(
@@ -109,13 +120,12 @@ class ToolResultBlock(BaseModel):
     name: str = Field(..., description="The name of the tool function")
 
 
-# The content block
 ContentBlock = (
-    ToolUseBlock
-    | ToolResultBlock
-    | TextBlock
+    TextBlock
     | ThinkingBlock
     | ImageBlock
     | AudioBlock
     | VideoBlock
+    | ToolUseBlock
+    | ToolResultBlock
 )

@@ -4,7 +4,6 @@ from typing import Callable, Dict, List, Type, Union
 from loguru import logger
 
 from rm_gallery.core.grader.base import Grader, GraderInfo, GraderMode
-from rm_gallery.core.schema.grader import RequiredField
 
 
 class GraderRegistry:
@@ -18,7 +17,6 @@ class GraderRegistry:
         name: str,
         mode: GraderMode,
         description: str,
-        required_fields: List[RequiredField],
         grader: Grader | Callable | Type[Grader] | None = None,
         namespace: str | None = None,
         **kwargs,
@@ -30,7 +28,6 @@ class GraderRegistry:
             name: The name of the grader
             mode: The grader mode
             description: The description of the grader
-            required_fields: The required fields for the grader
             grader: The grader function to register (if used as direct function call)
                    Can be:
                    - An instance of Grader
@@ -49,7 +46,6 @@ class GraderRegistry:
             name=name,
             mode=mode,
             description=description,
-            required_fields=required_fields,
         )
 
         # If grader is provided, register it directly or initialize it if it's a class
@@ -61,7 +57,6 @@ class GraderRegistry:
                     name=info.name,
                     mode=info.mode,
                     description=info.description,
-                    required_fields=info.required_fields,  # type: ignore
                     **kwargs,
                 )
                 cls._register_grader(info, initialized_grader, namespace)
@@ -81,7 +76,6 @@ class GraderRegistry:
                     name=info.name,
                     mode=info.mode,
                     description=info.description,
-                    required_fields=info.required_fields,  # type: ignore
                     **kwargs,
                 )
                 cls._register_grader(info, initialized_grader, namespace)
@@ -112,13 +106,11 @@ class GraderRegistry:
             from rm_gallery.core.grader.base import FunctionGrader
 
             # Create a new list to ensure type compatibility
-            required_fields = list(info.required_fields)
             wrapped_grader = FunctionGrader(
                 func=grader,
                 name=info.name,
                 mode=info.mode,
                 description=info.description,
-                required_fields=required_fields,  # type: ignore
             )
             grader = wrapped_grader
 
@@ -133,9 +125,6 @@ class GraderRegistry:
             grader.mode = info.mode
         if not grader.description:
             grader.description = info.description
-        if not grader.required_fields:
-            grader.required_fields = info.required_fields
-
         # Handle namespace creation
         if namespace is not None:
             if namespace not in cls._graders:

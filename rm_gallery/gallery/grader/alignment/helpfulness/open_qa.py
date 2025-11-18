@@ -1,9 +1,16 @@
 # -*- coding: utf-8 -*-
 from typing import List
-from rm_gallery.core.grader.base import GraderMode, LLMGrader, GraderScore, GraderRank
+from rm_gallery.core.grader.base import (
+    GraderMode,
+    LLMGrader,
+    GraderScore,
+    GraderRank,
+)
 from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import Template
-from rm_gallery.gallery.grader.alignment.helpfulness import BaseHelpfulnessGrader
+from rm_gallery.gallery.grader.alignment.helpfulness import (
+    BaseHelpfulnessGrader,
+)
 
 
 RUBRICS = """Comprehensive Coverage: Address all aspects of the question thoroughly, providing a well-rounded response that considers multiple angles and relevant factors without omitting significant points.
@@ -13,7 +20,7 @@ Clarity and Organization: Present information in a clear, logically structured f
 
 
 OPEN_QA_SCORE_TEMPLATE = Template(
-    prompt=[
+    messages=[
         ChatMessage(
             role="system",
             content="You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words.",
@@ -43,11 +50,11 @@ Be as objective as possible.
 ```
 """,
         ),
-    ]
+    ],
 )
 
 OPEN_QA_RANK_TEMPLATE = Template(
-    prompt=[
+    messages=[
         ChatMessage(
             role="system",
             content="You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words.",
@@ -77,7 +84,7 @@ You may organize your reasoning as you see fit, but keep your thought process as
 ```
 """,
         ),
-    ]
+    ],
 )
 
 
@@ -88,7 +95,12 @@ class OpenQAGrader(BaseHelpfulnessGrader):
     _list_template = OPEN_QA_RANK_TEMPLATE
     _rubrics = RUBRICS
 
-    async def evaluate(self, query: str, answer: str | List[str], **kwargs) -> GraderScore | GraderRank:
+    async def evaluate(
+        self,
+        query: str,
+        answer: str | List[str],
+        **kwargs,
+    ) -> GraderScore | GraderRank:
         """Evaluate the open QA response based on the query.
 
         Evaluates open QA responses for their ability to provide comprehensive,

@@ -5,21 +5,6 @@ from typing import Any, Dict, List, Literal
 from pydantic import BaseModel, Field
 
 
-class RequiredField(BaseModel):
-    """Required fields for grading."""
-
-    name: str = Field(default=..., description="name of the field")
-    type: str = Field(default=..., description="type of the field")
-    position: Literal["data", "sample", "grader"] = Field(
-        default="data",
-        description="position of the field",
-    )
-    description: str = Field(
-        default=...,
-        description="description of the field",
-    )
-
-
 class GraderMode(str, Enum):
     """Grader modes for grader functions.
 
@@ -98,7 +83,6 @@ class GraderInfo(BaseModel):
         name (str): The name of the grader.
         mode (GraderMode): The grader mode (pointwise or listwise).
         description (str): The description of the grader.
-        required_fields (List[RequiredField]): The required fields for the grader.
     """
 
     name: str = Field(default=..., description="The name of the grader")
@@ -106,8 +90,4 @@ class GraderInfo(BaseModel):
     description: str = Field(
         default=...,
         description="The description of the grader",
-    )
-    required_fields: List[RequiredField] = Field(
-        default_factory=list,
-        description="The required fields for the grader",
     )

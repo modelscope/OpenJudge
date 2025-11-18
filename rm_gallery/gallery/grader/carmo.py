@@ -5,11 +5,11 @@
 from typing import Any, Dict
 from rm_gallery.core.grader.base import GraderMode, GraderRank, LLMGrader
 from rm_gallery.core.schema.message import ChatMessage
-from rm_gallery.core.schema.template import Chat, RequiredField, Template
+from rm_gallery.core.schema.template import Template
 from rm_gallery.core.utils.utils import _json_loads_with_repair
 
 CriteriaGenerationTemplate = Template(
-    prompt=[
+    messages=[
         ChatMessage(
             role="system",
             content="You are an impartial judge tasked with generating rubrics for evaluating responses provided by AI assistants to an instruction.",
@@ -42,7 +42,7 @@ CriteriaGenerationTemplate = Template(
 
 
 RelativeEvaluationTemplate = Template(
-    prompt=[
+    messages=[
         ChatMessage(
             role="system",
             content="Please act as an impartial judge and evaluate the quality of the responses provided by two AI assistants to the user instruction shown below.",

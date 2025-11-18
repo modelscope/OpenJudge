@@ -19,7 +19,6 @@ from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import (
     Chat,
     LanguageEnum,
-    RequiredField,
     Template,
 )
 

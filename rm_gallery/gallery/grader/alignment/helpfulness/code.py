@@ -7,7 +7,7 @@ from rm_gallery.core.grader.base import (
     GraderRank,
 )
 from rm_gallery.core.schema.message import ChatMessage
-from rm_gallery.core.schema.template import RequiredField, Template
+from rm_gallery.core.schema.template import Template
 from rm_gallery.gallery.grader.alignment.helpfulness import (
     BaseHelpfulnessGrader,
 )
@@ -22,7 +22,7 @@ Error Handling: Appropriate error handling should be implemented for edge cases 
 
 
 CODE_SCORE_TEMPLATE = Template(
-    prompt=[
+    messages=[
         ChatMessage(
             role="system",
             content="You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words.",
@@ -56,7 +56,7 @@ Be as objective as possible.
 )
 
 CODE_RANK_TEMPLATE = Template(
-    prompt=[
+    messages=[
         ChatMessage(
             role="system",
             content="You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words.",

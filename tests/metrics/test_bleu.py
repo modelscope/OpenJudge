@@ -16,7 +16,7 @@ class TestBLEUBasic:
     async def test_perfect_match(self):
         """Test perfect match returns score of 1.0"""
         grader = BLEUGrader()
-        result = await grader.evaluate(
+        result = await grader.a_evaluate(
             reference="the cat is on the mat", candidate="the cat is on the mat"
         )
 
@@ -27,7 +27,7 @@ class TestBLEUBasic:
     async def test_complete_mismatch(self):
         """Test completely different sentences"""
         grader = BLEUGrader()
-        result = await grader.evaluate(
+        result = await grader.a_evaluate(
             reference="the cat is on the mat",
             candidate="hello world foo bar baz qux",
         )
@@ -38,7 +38,7 @@ class TestBLEUBasic:
     async def test_partial_match(self):
         """Test partial matching"""
         grader = BLEUGrader()
-        result = await grader.evaluate(
+        result = await grader.a_evaluate(
             reference="the cat is on the mat", candidate="the dog is on the mat"
         )
 
@@ -49,7 +49,7 @@ class TestBLEUBasic:
     async def test_word_order_matters(self):
         """Test that word order affects BLEU score"""
         grader = BLEUGrader()
-        result = await grader.evaluate(
+        result = await grader.a_evaluate(
             reference="the cat is on the mat", candidate="the mat on is cat the"
         )
 
@@ -66,7 +66,7 @@ class TestBLEUParameters:
         # Test with different max n-gram orders
         for n in [1, 2, 3, 4]:
             grader = BLEUGrader(max_ngram_order=n)
-            result = await grader.evaluate(
+            result = await grader.a_evaluate(
                 reference="the quick brown fox jumps over the lazy dog",
                 candidate="the quick brown fox jumps over the lazy dog",
             )
@@ -79,7 +79,7 @@ class TestBLEUParameters:
         # Test different smoothing methods
         for method in ["none", "floor", "add-k", "exp"]:
             grader = BLEUGrader(smooth_method=method)
-            result = await grader.evaluate(
+            result = await grader.a_evaluate(
                 reference="the cat sat on the mat", candidate="the cat"
             )
             assert 0.0 <= result.score <= 1.0
@@ -92,7 +92,7 @@ class TestBLEUEdgeCases:
     async def test_empty_candidate(self):
         """Test handling of empty candidate"""
         grader = BLEUGrader()
-        result = await grader.evaluate(reference="the cat is on the mat", candidate="")
+        result = await grader.a_evaluate(reference="the cat is on the mat", candidate="")
 
         # Empty candidate should give zero score
         assert result.score == 0.0
@@ -101,7 +101,7 @@ class TestBLEUEdgeCases:
     async def test_empty_reference(self):
         """Test handling of empty reference"""
         grader = BLEUGrader()
-        result = await grader.evaluate(reference="", candidate="the cat")
+        result = await grader.a_evaluate(reference="", candidate="the cat")
 
         # Empty reference should give zero score
         assert result.score == 0.0
@@ -110,7 +110,7 @@ class TestBLEUEdgeCases:
     async def test_single_word_sentences(self):
         """Test single word sentences"""
         grader = BLEUGrader()
-        result = await grader.evaluate(reference="cat", candidate="cat")
+        result = await grader.a_evaluate(reference="cat", candidate="cat")
 
         assert result.score == 1.0
 
@@ -119,7 +119,7 @@ class TestBLEUEdgeCases:
         """Test with very long sentences"""
         grader = BLEUGrader()
         long_sentence = " ".join(["word"] * 500)
-        result = await grader.evaluate(reference=long_sentence, candidate=long_sentence)
+        result = await grader.a_evaluate(reference=long_sentence, candidate=long_sentence)
 
         assert result.score == 1.0
 
@@ -131,7 +131,7 @@ class TestBLEUDetails:
     async def test_precision_details(self):
         """Test that precision details are included"""
         grader = BLEUGrader(max_ngram_order=4)
-        result = await grader.evaluate(
+        result = await grader.a_evaluate(
             reference="the cat is on the mat", candidate="the cat is on the mat"
         )
 
@@ -147,7 +147,7 @@ class TestBLEUDetails:
         grader = BLEUGrader()
 
         # Short candidate
-        result = await grader.evaluate(
+        result = await grader.a_evaluate(
             reference="the cat is on the mat", candidate="the cat"
         )
 
@@ -159,7 +159,7 @@ class TestBLEUDetails:
     async def test_length_information(self):
         """Test that length information is included"""
         grader = BLEUGrader()
-        result = await grader.evaluate(
+        result = await grader.a_evaluate(
             reference="the cat is on the mat", candidate="the dog is on the rug"
         )
 
@@ -175,7 +175,7 @@ class TestSentenceBLEU:
     async def test_sentence_bleu_basic(self):
         """Test basic sentence BLEU"""
         grader = SentenceBLEUGrader()
-        result = await grader.evaluate(
+        result = await grader.a_evaluate(
             reference="the cat is on the mat", candidate="the cat is on the mat"
         )
 
@@ -187,10 +187,10 @@ class TestSentenceBLEU:
         sentence_grader = SentenceBLEUGrader()
         corpus_grader = BLEUGrader()
 
-        sentence_result = await sentence_grader.evaluate(
+        sentence_result = await sentence_grader.a_evaluate(
             reference="the cat is on the mat", candidate="the dog is on the mat"
         )
-        corpus_result = await corpus_grader.evaluate(
+        corpus_result = await corpus_grader.a_evaluate(
             reference="the cat is on the mat", candidate="the dog is on the mat"
         )
 

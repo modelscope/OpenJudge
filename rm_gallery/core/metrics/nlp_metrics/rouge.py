@@ -95,7 +95,7 @@ class ROUGEGrader(Grader):
 
         return avg_score, details
 
-    async def evaluate(
+    async def a_evaluate(
         self, reference: str, candidate: str, **kwargs
     ) -> GraderScore:
         """Evaluate ROUGE score"""

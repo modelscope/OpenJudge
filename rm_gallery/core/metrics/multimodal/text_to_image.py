@@ -287,7 +287,7 @@ class TextToImageGrader(Grader):
 
         return final_score, details
 
-    async def evaluate(
+    async def a_evaluate(
         self,
         text_prompt: str,
         generated_image: Union[MLLMImage, List[MLLMImage]],

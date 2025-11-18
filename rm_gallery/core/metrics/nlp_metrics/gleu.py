@@ -86,7 +86,7 @@ class GLEUGrader(Grader):
         except Exception as e:
             return 0.0, {"error": str(e)}
 
-    async def evaluate(
+    async def a_evaluate(
         self, reference: str, candidate: str, **kwargs
     ) -> GraderScore:
         """Evaluate GLEU score"""
@@ -172,7 +172,7 @@ class ChrFGrader(Grader):
         except Exception as e:
             return 0.0, {"error": str(e)}
 
-    async def evaluate(
+    async def a_evaluate(
         self, reference: str, candidate: str, **kwargs
     ) -> GraderScore:
         """Evaluate ChrF score"""

@@ -58,7 +58,7 @@ class TestFuzzyMatchGrader:
     async def test_exact_match(self):
         """Test exact match returns perfect score"""
         grader = FuzzyMatchGrader()
-        result = await grader.evaluate(reference="hello world", candidate="hello world")
+        result = await grader.a_evaluate(reference="hello world", candidate="hello world")
 
         assert result.score == 1.0
         assert result.metadata["matched"] is True
@@ -67,7 +67,7 @@ class TestFuzzyMatchGrader:
     async def test_partial_match(self):
         """Test partial matching"""
         grader = FuzzyMatchGrader()
-        result = await grader.evaluate(
+        result = await grader.a_evaluate(
             reference="hello world", candidate="hello worl"  # Missing 'd'
         )
 
@@ -78,7 +78,7 @@ class TestFuzzyMatchGrader:
         """Test different fuzzy matching methods"""
         # Ratio method
         grader_ratio = FuzzyMatchGrader(method="ratio")
-        result = await grader_ratio.evaluate(
+        result = await grader_ratio.a_evaluate(
             reference="the quick brown fox", candidate="the quick brown fox"
         )
         assert result.score == 1.0
@@ -86,7 +86,7 @@ class TestFuzzyMatchGrader:
 
         # Token sort ratio
         grader_token = FuzzyMatchGrader(method="token_sort_ratio")
-        result = await grader_token.evaluate(
+        result = await grader_token.a_evaluate(
             reference="brown quick the fox", candidate="the quick brown fox"
         )
         assert result.score == 1.0
@@ -99,7 +99,7 @@ class TestEditDistanceGrader:
     async def test_exact_match(self):
         """Test exact match"""
         grader = EditDistanceGrader()
-        result = await grader.evaluate(reference="hello", candidate="hello")
+        result = await grader.a_evaluate(reference="hello", candidate="hello")
 
         assert result.score == 1.0
 
@@ -107,7 +107,7 @@ class TestEditDistanceGrader:
     async def test_one_char_difference(self):
         """Test one character difference"""
         grader = EditDistanceGrader()
-        result = await grader.evaluate(reference="hello", candidate="helo")
+        result = await grader.a_evaluate(reference="hello", candidate="helo")
 
         assert 0.7 < result.score < 1.0
         assert result.metadata["raw_distance"] == 1
@@ -120,7 +120,7 @@ class TestJsonMatchGrader:
     async def test_exact_match_simple(self):
         """Test exact match for simple JSON objects"""
         grader = JsonMatchGrader()
-        result = await grader.evaluate(
+        result = await grader.a_evaluate(
             reference='{"name": "Alice", "age": 30}',
             candidate='{"name": "Alice", "age": 30}',
         )
@@ -132,7 +132,7 @@ class TestJsonMatchGrader:
     async def test_different_key_order(self):
         """Test that dict key order doesn't matter"""
         grader = JsonMatchGrader()
-        result = await grader.evaluate(
+        result = await grader.a_evaluate(
             reference='{"name": "Alice", "age": 30}',
             candidate='{"age": 30, "name": "Alice"}',
         )
@@ -143,7 +143,7 @@ class TestJsonMatchGrader:
     async def test_no_match(self):
         """Test no match when values differ"""
         grader = JsonMatchGrader()
-        result = await grader.evaluate(
+        result = await grader.a_evaluate(
             reference='{"name": "Alice"}', candidate='{"name": "Bob"}'
         )
 
@@ -154,7 +154,7 @@ class TestJsonMatchGrader:
     async def test_invalid_json(self):
         """Test handling of invalid JSON"""
         grader = JsonMatchGrader()
-        result = await grader.evaluate(
+        result = await grader.a_evaluate(
             reference='{"name": "Alice"}', candidate="not valid json"
         )
 
@@ -169,7 +169,7 @@ class TestJsonValidatorGrader:
     async def test_valid_json(self):
         """Test valid JSON object"""
         grader = JsonValidatorGrader()
-        result = await grader.evaluate(candidate='{"name": "Alice", "age": 30}')
+        result = await grader.a_evaluate(candidate='{"name": "Alice", "age": 30}')
 
         assert result.score == 1.0
         assert result.metadata["is_valid"] is True
@@ -178,7 +178,7 @@ class TestJsonValidatorGrader:
     async def test_invalid_json(self):
         """Test invalid JSON (malformed)"""
         grader = JsonValidatorGrader()
-        result = await grader.evaluate(candidate='{"name": "Alice"')  # Missing }
+        result = await grader.a_evaluate(candidate='{"name": "Alice"')  # Missing }
 
         assert result.score == 0.0
         assert result.metadata["is_valid"] is False
@@ -187,7 +187,7 @@ class TestJsonValidatorGrader:
     async def test_valid_json_array(self):
         """Test valid JSON array"""
         grader = JsonValidatorGrader()
-        result = await grader.evaluate(candidate='[1, 2, 3, "test"]')
+        result = await grader.a_evaluate(candidate='[1, 2, 3, "test"]')
 
         assert result.score == 1.0
         assert result.metadata["is_valid"] is True
@@ -200,7 +200,7 @@ class TestExactMatchGrader:
     async def test_exact_match(self):
         """Test exact match"""
         grader = ExactMatchGrader()
-        result = await grader.evaluate(reference="hello", candidate="hello")
+        result = await grader.a_evaluate(reference="hello", candidate="hello")
 
         assert result.score == 1.0
 
@@ -208,7 +208,7 @@ class TestExactMatchGrader:
     async def test_case_insensitive(self):
         """Test case insensitive matching"""
         grader = ExactMatchGrader(case_sensitive=False)
-        result = await grader.evaluate(reference="Hello", candidate="hello")
+        result = await grader.a_evaluate(reference="Hello", candidate="hello")
 
         assert result.score == 1.0
 
@@ -216,7 +216,7 @@ class TestExactMatchGrader:
     async def test_no_match(self):
         """Test no match"""
         grader = ExactMatchGrader()
-        result = await grader.evaluate(reference="hello", candidate="world")
+        result = await grader.a_evaluate(reference="hello", candidate="world")
 
         assert result.score == 0.0
 
@@ -228,7 +228,7 @@ class TestSubstringMatchGrader:
     async def test_substring_found(self):
         """Test substring found"""
         grader = SubstringMatchGrader()
-        result = await grader.evaluate(
+        result = await grader.a_evaluate(
             reference="cat", candidate="The cat sat on the mat"
         )
 
@@ -238,7 +238,7 @@ class TestSubstringMatchGrader:
     async def test_substring_not_found(self):
         """Test substring not found"""
         grader = SubstringMatchGrader()
-        result = await grader.evaluate(
+        result = await grader.a_evaluate(
             reference="dog", candidate="The cat sat on the mat"
         )
 
@@ -252,7 +252,7 @@ class TestCosineSimilarityGrader:
     async def test_identical_texts(self):
         """Test identical texts have similarity 1.0"""
         grader = CosineSimilarityGrader()
-        result = await grader.evaluate(
+        result = await grader.a_evaluate(
             reference="the cat sat on the mat", candidate="the cat sat on the mat"
         )
 
@@ -262,7 +262,7 @@ class TestCosineSimilarityGrader:
     async def test_similar_texts(self):
         """Test similar texts have high similarity"""
         grader = CosineSimilarityGrader()
-        result = await grader.evaluate(
+        result = await grader.a_evaluate(
             reference="the cat sat on the mat", candidate="the dog sat on the mat"
         )
 
@@ -276,7 +276,7 @@ class TestJaccardSimilarityGrader:
     async def test_identical_texts(self):
         """Test identical texts"""
         grader = JaccardSimilarityGrader()
-        result = await grader.evaluate(reference="hello world", candidate="hello world")
+        result = await grader.a_evaluate(reference="hello world", candidate="hello world")
 
         assert result.score == 1.0
 
@@ -284,7 +284,7 @@ class TestJaccardSimilarityGrader:
     async def test_no_overlap(self):
         """Test no overlap"""
         grader = JaccardSimilarityGrader()
-        result = await grader.evaluate(
+        result = await grader.a_evaluate(
             reference="hello world", candidate="goodbye universe"
         )
 

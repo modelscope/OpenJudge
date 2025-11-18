@@ -6,6 +6,7 @@ from rm_gallery.core.grader.base import (
     GraderScore,
     GraderRank,
 )
+from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import Template
 from rm_gallery.gallery.grader.alignment.helpfulness import (
@@ -95,7 +96,18 @@ class FocusGrader(BaseHelpfulnessGrader):
     _list_template = FOCUS_RANK_TEMPLATE
     _rubrics = RUBRICS
 
-    async def evaluate(
+    def __init__(self, model: ChatModelBase | dict, template: Template | None = None, mode: GraderMode = GraderMode.LISTWISE, **kwargs):
+        """Initialize the SafetyGrader."""
+        super().__init__(
+            name="Focus",
+            mode=mode,
+            model=model,
+            template=template,
+            description="Maintains strict adherence to the main topic while filtering out irrelevant information.",
+            **kwargs,
+        )
+
+    async def a_evaluate(
         self,
         query: str,
         answer: str | List[str],
@@ -130,4 +142,4 @@ class FocusGrader(BaseHelpfulnessGrader):
             ...     answer="Photosynthesis is the process by which plants convert light energy into chemical energy."
             ... )
         """
-        return await super().evaluate(query=query, answer=answer, **kwargs)
+        return await super().a_evaluate(query=query, answer=answer, **kwargs)

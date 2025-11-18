@@ -4,6 +4,8 @@ from rm_gallery.core.grader.base import (
     GraderScore,
     GraderRank,
 )
+from rm_gallery.core.model.base import ChatModelBase
+from rm_gallery.core.schema.grader import GraderMode
 from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import Template
 from rm_gallery.gallery.grader.alignment.helpfulness import (
@@ -92,7 +94,18 @@ class RolePlayingGrader(BaseHelpfulnessGrader):
     _list_template = ROLE_PLAYING_RANK_TEMPLATE
     _rubrics = RUBRICS
 
-    async def evaluate(
+    def __init__(self, model: ChatModelBase | dict, template: Template | None = None, mode: GraderMode = GraderMode.LISTWISE, **kwargs):
+        """Initialize the SafetyGrader."""
+        super().__init__(
+            name="Role Playing",
+            mode=mode,
+            model=model,
+            template=template,
+            description="Embodies distinct characters or personas to create immersive, contextually appropriate interactions.",
+            **kwargs,
+        )
+
+    async def a_evaluate(
         self,
         query: str,
         answer: str | List[str],
@@ -127,4 +140,4 @@ class RolePlayingGrader(BaseHelpfulnessGrader):
             ...     answer="Ah, greetings young traveler! What brings you to my tower this eve?"
             ... )
         """
-        return await super().evaluate(query=query, answer=answer, **kwargs)
+        return await super().a_evaluate(query=query, answer=answer, **kwargs)

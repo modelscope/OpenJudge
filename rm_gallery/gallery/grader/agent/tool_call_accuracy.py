@@ -131,26 +131,21 @@ class ToolCallAccuracyGrader(LLMGrader):
 
     def __init__(
         self,
-        name: str = "tool_call_accuracy",
-        mode: GraderMode = GraderMode.POINTWISE,
-        description: str = "Evaluates the accuracy of tool calls made by an agent",
-        model: ChatModelBase | None = None,
+        model: ChatModelBase | dict,
         **kwargs,
     ):
         """Initialize the ToolCallAccuracyGrader.
 
         Args:
-            name: The name of the grader.
-            mode: The grader mode (pointwise or listwise).
-            description: Description of what this grader evaluates.
-            model: Configuration for the model to use for evaluation.
-                         If None, a default configuration will be used.
+            model: The language model used for evaluation. Can be either a ChatModelBase 
+                   instance or a dictionary configuration. If a dict is provided, it will
+                   be used to initialize an OpenAIChatModel.
             **kwargs: Additional keyword arguments.
         """
         super().__init__(
-            name=name,
-            mode=mode,
-            description=description,
+            name="tool_call_accuracy",
+            mode=GraderMode.POINTWISE,
+            description="Evaluates the accuracy of tool calls made by an agent",
             template=Template(
                 messages=[
                     ChatMessage(
@@ -197,7 +192,7 @@ class ToolCallAccuracyGrader(LLMGrader):
 
         return tool_calls
 
-    async def evaluate(
+    async def a_evaluate(
         self,
         query: Union[str, List[Dict[str, Any]]],
         tool_definitions: Union[Dict[str, Any], List[Dict[str, Any]]],
@@ -232,7 +227,9 @@ class ToolCallAccuracyGrader(LLMGrader):
 
         Example:
             >>> import asyncio
-            >>> grader = ToolCallAccuracyGrader()
+            >>> from rm_gallery.core.model.openai_llm import OpenAIChatModel
+            >>> model = OpenAIChatModel(model_name="gpt-3.5-turbo")
+            >>> grader = ToolCallAccuracyGrader(model=model)
             >>> conversation = [
             ...     {"role": "user", "content": "What's the weather like in New York?"}
             ... ]
@@ -250,13 +247,13 @@ class ToolCallAccuracyGrader(LLMGrader):
             ...         "result": {"temperature": 25, "condition": "sunny"}
             ...     }
             ... ]
-            >>> result = asyncio.run(grader.evaluate(
+            >>> result = asyncio.run(grader.a_evaluate(
             ...     query=conversation,
             ...     tool_definitions=tool_defs,
             ...     tool_calls=tool_calls
             ... ))
-            >>> print(f"Score: {result.score}, Details: {result.metadata}")
-            Score: 5.0, Details: {...}
+            >>> print(f"Score: {result.score}")
+            Score: 5.0
         """
         # Handle tool calls extraction from response if needed
         if response and not tool_calls:
@@ -281,7 +278,7 @@ class ToolCallAccuracyGrader(LLMGrader):
             tool_definitions = [tool_definitions] if tool_definitions else []
 
         # Call parent evaluate method with the structured data
-        result = await super().evaluate(
+        result = await super().a_evaluate(
             query=json.dumps(query, indent=2),
             tool_calls=json.dumps(tool_calls, indent=2),
             tool_definitions=json.dumps(tool_definitions, indent=2),
@@ -346,7 +343,7 @@ if __name__ == "__main__":
         ]
 
         # Evaluate the tool calls
-        result = await grader.evaluate(
+        result = await grader.a_evaluate(
             query=conversation,
             tool_definitions=tool_definitions,
             tool_calls=tool_calls,

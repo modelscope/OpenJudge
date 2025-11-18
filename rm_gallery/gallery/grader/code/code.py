@@ -17,7 +17,14 @@ class SyntaxCheckGrader(Grader):
     markdown-style code fences and checks each one for syntax errors.
     """
 
-    async def evaluate(self, answer: str) -> GraderScore:
+    def __init__(self):
+        super().__init__(
+            name="SyntaxCheck",
+            mode=GraderMode.POINTWISE,
+            description="Check code syntax using Abstract Syntax Tree to validate Python code blocks.",
+        )
+
+    async def a_evaluate(self, answer: str) -> GraderScore:
         """Check code syntax in the provided answer.
 
         Extracts Python code blocks from markdown-style code fences and validates
@@ -102,6 +109,13 @@ class SyntaxCheckGrader(Grader):
 class CodeStyleGrader(Grader):
     """Basic code style checking including indentation consistency and naming conventions."""
 
+    def __init__(self):
+        super().__init__(
+            name="CodeStyle",
+            mode=GraderMode.POINTWISE,
+            description="Basic code style checking including indentation consistency and naming conventions.",
+        )
+
     def _check_indentation(self, code: str) -> tuple[bool, str]:
         """Check indentation consistency"""
         lines = code.split("\n")
@@ -163,7 +177,7 @@ class CodeStyleGrader(Grader):
             f"Naming convention: {good_names}/{total_names} names follow snake_case",
         )
 
-    async def evaluate(self, answer: str) -> GraderScore:
+    async def a_evaluate(self, answer: str) -> GraderScore:
         """Evaluate code style in the provided answer.
 
         Performs basic code style checking including indentation consistency and
@@ -246,7 +260,14 @@ class PatchSimilarityGrader(Grader):
     providing a similarity score and detailed diff information.
     """
 
-    async def evaluate(self, generated: str, reference: str) -> GraderScore:
+    def __init__(self):
+        super().__init__(
+            name="PatchSimilarityGrader",
+            mode=GraderMode.POINTWISE,
+            description="Calculate similarity between generated patch and oracle patch using difflib.SequenceMatcher",
+        )
+
+    async def a_evaluate(self, generated: str, reference: str) -> GraderScore:
         """Calculate similarity between generated and reference patches.
 
         Uses difflib.SequenceMatcher to calculate the similarity ratio between
@@ -305,15 +326,19 @@ class CodeExecutionGrader(Grader):
 
     def __init__(
         self,
-        name: str = "code_execution",
         continuous: bool = True,
         timeout: int = 10,
         test_framework_available: bool = True,
         compute_score: Any = None,
-        mode: GraderMode = GraderMode.POINTWISE,
         **kwargs,
     ):
-        super().__init__(name, mode=mode, **kwargs)
+        super().__init__(
+            name="CodeExecutionGrader",
+            mode=GraderMode.POINTWISE,
+            description="Executes code against test cases and evaluates correctness based on test case results",
+            **kwargs,
+        )
+        
         self.continuous = continuous
         self.timeout = timeout
         self.test_framework_available = test_framework_available
@@ -353,7 +378,7 @@ class CodeExecutionGrader(Grader):
         # If no code block markers, assume the entire content is code
         return content
 
-    async def evaluate(self, answer: str) -> GraderScore:
+    async def a_evaluate(self, answer: str) -> GraderScore:
         """Evaluate code by executing it against test cases.
 
         Tests the functional correctness of generated code by executing it

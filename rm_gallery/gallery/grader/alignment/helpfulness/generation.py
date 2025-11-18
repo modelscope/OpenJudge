@@ -6,6 +6,7 @@ from rm_gallery.core.grader.base import (
     GraderScore,
     GraderRank,
 )
+from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import Template
 from rm_gallery.gallery.grader.alignment.helpfulness import (
@@ -91,7 +92,18 @@ class GenerationGrader(BaseHelpfulnessGrader):
     _point_template = GENERATION_SCORE_TEMPLATE
     _list_template = GENERATION_RANK_TEMPLATE
 
-    async def evaluate(
+    def __init__(self, model: ChatModelBase | dict, template: Template | None = None, mode: GraderMode = GraderMode.LISTWISE, **kwargs):
+        """Initialize the SafetyGrader."""
+        super().__init__(
+            name="Generation",
+            mode=mode,
+            model=model,
+            template=template,
+            description="Produces rich, creative content tailored to specific formats and audiences.",
+            **kwargs,
+        )
+        
+    async def a_evaluate(
         self,
         query: str,
         answer: str | List[str],
@@ -126,4 +138,4 @@ class GenerationGrader(BaseHelpfulnessGrader):
             ...     answer="Once upon a time, there was a robot named ART-1 who discovered the joy of painting..."
             ... )
         """
-        return await super().evaluate(query=query, answer=answer, **kwargs)
+        return await super().a_evaluate(query=query, answer=answer, **kwargs)

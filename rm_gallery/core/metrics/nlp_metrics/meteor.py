@@ -104,7 +104,7 @@ class METEORGrader(Grader):
         except Exception as e:
             return 0.0, {"error": str(e)}
 
-    async def evaluate(
+    async def a_evaluate(
         self, reference: str, candidate: str, **kwargs
     ) -> GraderScore:
         """Evaluate METEOR score"""

@@ -99,7 +99,7 @@ class FuzzyMatchGrader(Grader):
 
         return score, details
 
-    async def evaluate(
+    async def a_evaluate(
         self, reference: str, candidate: str, **kwargs
     ) -> GraderScore:
         """Evaluate fuzzy match"""
@@ -167,7 +167,7 @@ class EditDistanceGrader(Grader):
 
         return normalized_score, details
 
-    async def evaluate(
+    async def a_evaluate(
         self, reference: str, candidate: str, **kwargs
     ) -> GraderScore:
         """Evaluate edit distance"""

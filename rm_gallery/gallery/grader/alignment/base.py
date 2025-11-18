@@ -7,6 +7,7 @@ from rm_gallery.core.grader.base import (
     GraderScore,
     LLMGrader,
 )
+from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import Template
 
@@ -95,9 +96,9 @@ class BaseAlignmentGrader(LLMGrader):
 
     def __init__(
         self,
+        model: ChatModelBase | dict,
         name: str = "",
         mode: GraderMode = GraderMode.LISTWISE,
-        model: Dict[str, Any] | None = None,
         template: Template | dict | None = None,
         rubrics: str | None = None,
         **kwargs,
@@ -122,7 +123,7 @@ class BaseAlignmentGrader(LLMGrader):
             **kwargs,
         )
 
-    async def evaluate(
+    async def a_evaluate(
         self,
         query: str,
         answer: str | List[str],
@@ -139,7 +140,7 @@ class BaseAlignmentGrader(LLMGrader):
             formatted_answers = "\n".join(
                 [f"Answer {i+1}: {ans}" for i, ans in enumerate(answer)],
             )
-            return await super().evaluate(
+            return await super().a_evaluate(
                 query=query,
                 answer=formatted_answers,
                 **kwargs,
@@ -150,4 +151,4 @@ class BaseAlignmentGrader(LLMGrader):
                 raise ValueError(
                     "Single answer provided but grader is in listwise mode",
                 )
-            return await super().evaluate(query=query, answer=answer, **kwargs)
+            return await super().a_evaluate(query=query, answer=answer, **kwargs)

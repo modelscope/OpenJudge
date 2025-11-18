@@ -4,6 +4,8 @@ from rm_gallery.core.grader.base import (
     GraderScore,
     GraderRank,
 )
+from rm_gallery.core.model.base import ChatModelBase
+from rm_gallery.core.schema.grader import GraderMode
 from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import Template
 from rm_gallery.gallery.grader.alignment.helpfulness import (
@@ -93,7 +95,18 @@ class SummarizationGrader(BaseHelpfulnessGrader):
     _list_template = SUMMARIZATION_RANK_TEMPLATE
     _rubrics = RUBRICS
 
-    async def evaluate(
+    def __init__(self, model: ChatModelBase | dict, template: Template | None = None, mode: GraderMode = GraderMode.LISTWISE, **kwargs):
+        """Initialize the SafetyGrader."""
+        super().__init__(
+            name="Summarization",
+            mode=mode,
+            model=model,
+            template=template,
+            description="Summarization: Condenses information from longer texts into concise, accurate summaries.",
+            **kwargs,
+        )
+
+    async def a_evaluate(
         self,
         query: str,
         answer: str | List[str],
@@ -127,4 +140,4 @@ class SummarizationGrader(BaseHelpfulnessGrader):
             ...     answer="Einstein was a famous physicist who created the theory of relativity."
             ... )
         """
-        return await super().evaluate(query=query, answer=answer, **kwargs)
+        return await super().a_evaluate(query=query, answer=answer, **kwargs)

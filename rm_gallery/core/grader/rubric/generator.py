@@ -144,7 +144,7 @@ class QuerySpecificRubricGenerator:
         # Iterative improvement
         for epoch in range(self.max_epochs):
             # Evaluate current rubrics
-            evaluation_result = await self.evaluate(mapped_sample, rubrics)
+            evaluation_result = await self.a_evaluate(mapped_sample, rubrics)
 
             # Validate
             is_correct = self.validate(mapped_sample, evaluation_result)
@@ -228,7 +228,7 @@ class QuerySpecificRubricGenerator:
             )
         return []
 
-    async def evaluate(
+    async def a_evaluate(
         self,
         sample: DataSample,
         rubrics: List[str],

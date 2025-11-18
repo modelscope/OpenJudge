@@ -134,7 +134,7 @@ class JsonMatchGrader(Grader):
 
         return matched, details
 
-    async def evaluate(
+    async def a_evaluate(
         self, reference: str, candidate: str, **kwargs
     ) -> GraderScore:
         """Evaluate JSON match"""
@@ -212,7 +212,7 @@ class JsonValidatorGrader(Grader):
                 "candidate_length": len(candidate),
             }
 
-    async def evaluate(
+    async def a_evaluate(
         self,
         reference: str = "",
         candidate: str = "",

@@ -22,7 +22,7 @@ class TestJsonMatchGrader:
         """Test exact match for simple JSON objects"""
         grader = JsonMatchGrader()
 
-        result = await grader.evaluate(
+        result = await grader.a_evaluate(
             reference='{"name": "Alice", "age": 30}',
             candidate='{"name": "Alice", "age": 30}',
         )
@@ -35,7 +35,7 @@ class TestJsonMatchGrader:
         """Test that dict key order doesn't matter"""
         grader = JsonMatchGrader()
 
-        result = await grader.evaluate(
+        result = await grader.a_evaluate(
             reference='{"name": "Alice", "age": 30}',
             candidate='{"age": 30, "name": "Alice"}',
         )
@@ -48,7 +48,7 @@ class TestJsonMatchGrader:
         """Test no match when values differ"""
         grader = JsonMatchGrader()
 
-        result = await grader.evaluate(
+        result = await grader.a_evaluate(
             reference='{"name": "Alice", "age": 30}',
             candidate='{"name": "Bob", "age": 30}',
         )
@@ -61,7 +61,7 @@ class TestJsonMatchGrader:
         """Test no match when key is missing"""
         grader = JsonMatchGrader()
 
-        result = await grader.evaluate(
+        result = await grader.a_evaluate(
             reference='{"name": "Alice", "age": 30}', candidate='{"name": "Alice"}'
         )
 
@@ -73,7 +73,7 @@ class TestJsonMatchGrader:
         """Test ignore_extra_keys option"""
         grader = JsonMatchGrader(ignore_extra_keys=True)
 
-        result = await grader.evaluate(
+        result = await grader.a_evaluate(
             reference='{"name": "Alice"}',
             candidate='{"name": "Alice", "age": 30, "city": "NYC"}',
         )
@@ -86,7 +86,7 @@ class TestJsonMatchGrader:
         """Test list matching with same order"""
         grader = JsonMatchGrader()
 
-        result = await grader.evaluate(reference="[1, 2, 3]", candidate="[1, 2, 3]")
+        result = await grader.a_evaluate(reference="[1, 2, 3]", candidate="[1, 2, 3]")
 
         assert result.score == 1.0
         assert result.metadata["matched"] is True
@@ -96,7 +96,7 @@ class TestJsonMatchGrader:
         """Test list doesn't match with different order (strict_order=True)"""
         grader = JsonMatchGrader(strict_order=True)
 
-        result = await grader.evaluate(reference="[1, 2, 3]", candidate="[3, 2, 1]")
+        result = await grader.a_evaluate(reference="[1, 2, 3]", candidate="[3, 2, 1]")
 
         assert result.score == 0.0
         assert result.metadata["matched"] is False
@@ -106,7 +106,7 @@ class TestJsonMatchGrader:
         """Test list matches with different order when strict_order=False"""
         grader = JsonMatchGrader(strict_order=False)
 
-        result = await grader.evaluate(reference="[1, 2, 3]", candidate="[3, 2, 1]")
+        result = await grader.a_evaluate(reference="[1, 2, 3]", candidate="[3, 2, 1]")
 
         assert result.score == 1.0
         assert result.metadata["matched"] is True
@@ -116,7 +116,7 @@ class TestJsonMatchGrader:
         """Test lists with different lengths don't match"""
         grader = JsonMatchGrader()
 
-        result = await grader.evaluate(reference="[1, 2, 3]", candidate="[1, 2]")
+        result = await grader.a_evaluate(reference="[1, 2, 3]", candidate="[1, 2]")
 
         assert result.score == 0.0
         assert result.metadata["matched"] is False
@@ -146,7 +146,7 @@ class TestJsonMatchGrader:
             }
         )
 
-        result = await grader.evaluate(reference=reference, candidate=candidate)
+        result = await grader.a_evaluate(reference=reference, candidate=candidate)
 
         assert result.score == 1.0
         assert result.metadata["matched"] is True
@@ -156,7 +156,7 @@ class TestJsonMatchGrader:
         """Test nested lists in dict"""
         grader = JsonMatchGrader()
 
-        result = await grader.evaluate(
+        result = await grader.a_evaluate(
             reference='{"items": [1, 2, 3], "name": "test"}',
             candidate='{"items": [1, 2, 3], "name": "test"}',
         )
@@ -169,7 +169,7 @@ class TestJsonMatchGrader:
         """Test handling of invalid candidate JSON"""
         grader = JsonMatchGrader()
 
-        result = await grader.evaluate(
+        result = await grader.a_evaluate(
             reference='{"name": "Alice"}', candidate="not valid json"
         )
 
@@ -182,7 +182,7 @@ class TestJsonMatchGrader:
         """Test handling of invalid reference JSON"""
         grader = JsonMatchGrader()
 
-        result = await grader.evaluate(
+        result = await grader.a_evaluate(
             reference="not valid json", candidate='{"name": "Alice"}'
         )
 
@@ -195,7 +195,7 @@ class TestJsonMatchGrader:
         """Test handling of null values"""
         grader = JsonMatchGrader()
 
-        result = await grader.evaluate(
+        result = await grader.a_evaluate(
             reference='{"name": null}', candidate='{"name": null}'
         )
 
@@ -207,7 +207,7 @@ class TestJsonMatchGrader:
         """Test boolean value matching"""
         grader = JsonMatchGrader()
 
-        result = await grader.evaluate(
+        result = await grader.a_evaluate(
             reference='{"active": true, "deleted": false}',
             candidate='{"active": true, "deleted": false}',
         )
@@ -220,7 +220,7 @@ class TestJsonMatchGrader:
         """Test different number types"""
         grader = JsonMatchGrader()
 
-        result = await grader.evaluate(
+        result = await grader.a_evaluate(
             reference='{"int": 42, "float": 3.14}',
             candidate='{"int": 42, "float": 3.14}',
         )
@@ -234,11 +234,11 @@ class TestJsonMatchGrader:
         grader = JsonMatchGrader()
 
         # Empty dict
-        result = await grader.evaluate(reference="{}", candidate="{}")
+        result = await grader.a_evaluate(reference="{}", candidate="{}")
         assert result.score == 1.0
 
         # Empty list
-        result = await grader.evaluate(reference="[]", candidate="[]")
+        result = await grader.a_evaluate(reference="[]", candidate="[]")
         assert result.score == 1.0
 
 
@@ -250,7 +250,7 @@ class TestJsonValidatorGrader:
         """Test valid JSON object"""
         grader = JsonValidatorGrader()
 
-        result = await grader.evaluate(
+        result = await grader.a_evaluate(
             reference="", candidate='{"name": "Alice", "age": 30}'  # Not used
         )
 
@@ -262,7 +262,7 @@ class TestJsonValidatorGrader:
         """Test valid JSON array"""
         grader = JsonValidatorGrader()
 
-        result = await grader.evaluate(reference="", candidate='[1, 2, 3, "test"]')
+        result = await grader.a_evaluate(reference="", candidate='[1, 2, 3, "test"]')
 
         assert result.score == 1.0
         assert result.metadata["is_valid"] is True
@@ -273,19 +273,19 @@ class TestJsonValidatorGrader:
         grader = JsonValidatorGrader()
 
         # String
-        result = await grader.evaluate(reference="", candidate='"hello"')
+        result = await grader.a_evaluate(reference="", candidate='"hello"')
         assert result.score == 1.0
 
         # Number
-        result = await grader.evaluate(reference="", candidate="42")
+        result = await grader.a_evaluate(reference="", candidate="42")
         assert result.score == 1.0
 
         # Boolean
-        result = await grader.evaluate(reference="", candidate="true")
+        result = await grader.a_evaluate(reference="", candidate="true")
         assert result.score == 1.0
 
         # Null
-        result = await grader.evaluate(reference="", candidate="null")
+        result = await grader.a_evaluate(reference="", candidate="null")
         assert result.score == 1.0
 
     @pytest.mark.asyncio
@@ -293,7 +293,7 @@ class TestJsonValidatorGrader:
         """Test invalid JSON (malformed)"""
         grader = JsonValidatorGrader()
 
-        result = await grader.evaluate(
+        result = await grader.a_evaluate(
             reference="", candidate='{"name": "Alice"'  # Missing closing brace
         )
 
@@ -306,7 +306,7 @@ class TestJsonValidatorGrader:
         """Test invalid JSON (not JSON at all)"""
         grader = JsonValidatorGrader()
 
-        result = await grader.evaluate(
+        result = await grader.a_evaluate(
             reference="", candidate="This is just plain text"
         )
 
@@ -318,7 +318,7 @@ class TestJsonValidatorGrader:
         """Test empty string is invalid JSON"""
         grader = JsonValidatorGrader()
 
-        result = await grader.evaluate(reference="", candidate="")
+        result = await grader.a_evaluate(reference="", candidate="")
 
         assert result.score == 0.0
         assert result.metadata["is_valid"] is False

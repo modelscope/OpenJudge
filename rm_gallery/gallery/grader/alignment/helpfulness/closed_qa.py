@@ -6,6 +6,7 @@ from rm_gallery.core.grader.base import (
     GraderScore,
     GraderRank,
 )
+from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import Template
 from rm_gallery.gallery.grader.alignment.helpfulness import (
@@ -93,7 +94,27 @@ class ClosedQAGrader(BaseHelpfulnessGrader):
     _list_template = CLOSED_QA_RANK_TEMPLATE
     _rubrics = RUBRICS
 
-    async def evaluate(
+    def __init__(self, model: ChatModelBase | dict, template: Template | None = None, mode: GraderMode = GraderMode.LISTWISE, **kwargs):
+        """Initialize the ClosedQAGrader.
+
+        Args:
+            model: The language model used for evaluation. Can be either a ChatModelBase 
+                   instance or a dictionary configuration. If a dict is provided, it will
+                   be used to initialize an OpenAIChatModel.
+            template: The template for generating prompts. If None, a default template will be used.
+            mode: The grader mode. Defaults to LISTWISE.
+            **kwargs: Additional keyword arguments.
+        """
+        super().__init__(
+            name="Closed QA",
+            mode=mode,
+            model=model,
+            template=template,
+            description="Provides precise, fact-based answers to questions with definitive correct responses.",
+            **kwargs,
+        )
+
+    async def a_evaluate(
         self,
         query: str,
         answer: str | List[str],
@@ -130,19 +151,25 @@ class ClosedQAGrader(BaseHelpfulnessGrader):
 
         Example:
             >>> # Example for pointwise closed QA grader
-            >>> grader = ClosedQAGrader(mode=GraderMode.POINTWISE)
-            >>> result = await grader.evaluate(
+            >>> import asyncio
+            >>> from rm_gallery.core.model.openai_llm import OpenAIChatModel
+            >>> from rm_gallery.core.grader.base import GraderMode
+            >>> model = OpenAIChatModel(model_name="gpt-3.5-turbo")
+            >>> grader = ClosedQAGrader(mode=GraderMode.POINTWISE, model=model)
+            >>> result = asyncio.run(grader.a_evaluate(
             ...     query="What is the capital of France?",
             ...     answer="The capital of France is Paris."
-            ... )
+            ... ))
             >>> print(result.score, result.reason)
+            1.0 The answer correctly identifies Paris as the capital of France.
 
             >>> # Example for listwise closed QA grader
-            >>> ranking_grader = ClosedQAGrader(mode=GraderMode.LISTWISE)
-            >>> result = await ranking_grader.evaluate(
+            >>> ranking_grader = ClosedQAGrader(mode=GraderMode.LISTWISE, model=model)
+            >>> result = asyncio.run(ranking_grader.a_evaluate(
             ...     query="What is the capital of France?",
             ...     answer=["The capital of France is Paris.", "The capital of France is London."]
-            ... )
+            ... ))
             >>> print(result.rank, result.reason)
+            [1, 2] First answer correctly identifies Paris as the capital while second answer is incorrect.
         """
-        return await super().evaluate(query=query, answer=answer, **kwargs)
+        return await super().a_evaluate(query=query, answer=answer, **kwargs)

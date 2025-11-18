@@ -85,7 +85,7 @@ class GradingRunner(BaseRunner):
         for key, config in self.grading_configs.items():
             grader, parser = parse_grading_config(config)
             if grader is not None:
-                coro = grader.evaluate_data_sample(
+                coro = grader.a_evaluate_data_samples(
                     parser=parser,
                     data_sample=data_sample,
                 )

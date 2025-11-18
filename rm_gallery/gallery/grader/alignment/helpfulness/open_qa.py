@@ -6,6 +6,7 @@ from rm_gallery.core.grader.base import (
     GraderScore,
     GraderRank,
 )
+from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import Template
 from rm_gallery.gallery.grader.alignment.helpfulness import (
@@ -95,7 +96,18 @@ class OpenQAGrader(BaseHelpfulnessGrader):
     _list_template = OPEN_QA_RANK_TEMPLATE
     _rubrics = RUBRICS
 
-    async def evaluate(
+    def __init__(self, model: ChatModelBase | dict, template: Template | None = None, mode: GraderMode = GraderMode.LISTWISE, **kwargs):
+        """Initialize the SafetyGrader."""
+        super().__init__(
+            name="Open QA",
+            mode=mode,
+            model=model,
+            template=template,
+            description="Evaluate open QA responses for their ability to provide comprehensive, well-researched answers to open-ended questions.",
+            **kwargs,
+        )
+    
+    async def a_evaluate(
         self,
         query: str,
         answer: str | List[str],
@@ -129,4 +141,4 @@ class OpenQAGrader(BaseHelpfulnessGrader):
             ...     answer="Climate change can affect agriculture through..."
             ... )
         """
-        return await super().evaluate(query=query, answer=answer, **kwargs)
+        return await super().a_evaluate(query=query, answer=answer, **kwargs)

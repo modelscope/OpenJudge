@@ -117,7 +117,7 @@ class CosineSimilarityGrader(Grader):
 
         return score, details
 
-    async def evaluate(
+    async def a_evaluate(
         self, reference: str, candidate: str, **kwargs
     ) -> GraderScore:
         """Evaluate cosine similarity"""
@@ -200,7 +200,7 @@ class JaccardSimilarityGrader(Grader):
 
         return score, details
 
-    async def evaluate(
+    async def a_evaluate(
         self, reference: str, candidate: str, **kwargs
     ) -> GraderScore:
         """Evaluate Jaccard similarity"""

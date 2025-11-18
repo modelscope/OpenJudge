@@ -117,7 +117,7 @@ class ROUGENGramGrader(Grader):
 
         return score, details
 
-    async def evaluate(
+    async def a_evaluate(
         self, reference: str, candidate: str, **kwargs
     ) -> GraderScore:
         """Evaluate ROUGE N-gram score"""

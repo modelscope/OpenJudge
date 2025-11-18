@@ -70,7 +70,7 @@ class SubstringMatchGrader(Grader):
 
         return matched, details
 
-    async def evaluate(
+    async def a_evaluate(
         self, reference: str, candidate: str, **kwargs
     ) -> GraderScore:
         """Evaluate substring match"""
@@ -151,7 +151,7 @@ class ContainsAllGrader(Grader):
 
         return score, details
 
-    async def evaluate(
+    async def a_evaluate(
         self,
         reference: str = "",
         candidate: str = "",
@@ -227,7 +227,7 @@ class ContainsAnyGrader(Grader):
 
         return matched, details
 
-    async def evaluate(
+    async def a_evaluate(
         self,
         reference: str = "",
         candidate: str = "",
@@ -300,7 +300,7 @@ class WordOverlapGrader(Grader):
 
         return score, details
 
-    async def evaluate(
+    async def a_evaluate(
         self, reference: str, candidate: str, **kwargs
     ) -> GraderScore:
         """Evaluate word overlap"""
@@ -370,7 +370,7 @@ class CharacterOverlapGrader(Grader):
 
         return score, details
 
-    async def evaluate(
+    async def a_evaluate(
         self, reference: str, candidate: str, **kwargs
     ) -> GraderScore:
         """Evaluate character overlap"""

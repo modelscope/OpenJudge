@@ -1,10 +1,23 @@
 # -*- coding: utf-8 -*-
 
 from enum import Enum
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Literal
 from pydantic import BaseModel, Field
 
-from rm_gallery.core.schema.template import RequiredField
+
+class RequiredField(BaseModel):
+    """Required fields for grading."""
+
+    name: str = Field(default=..., description="name of the field")
+    type: str = Field(default=..., description="type of the field")
+    position: Literal["data", "sample", "grader"] = Field(
+        default="data",
+        description="position of the field",
+    )
+    description: str = Field(
+        default=...,
+        description="description of the field",
+    )
 
 
 class GraderMode(str, Enum):

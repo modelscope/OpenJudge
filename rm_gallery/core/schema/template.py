@@ -3,10 +3,19 @@ import asyncio
 import json
 from abc import ABC
 from enum import Enum
-from typing import Any, AsyncGenerator, Dict, List, Literal, Type
+from typing import (
+    Any,
+    AsyncGenerator,
+    Dict,
+    List,
+    Type,
+    TypedDict,
+    Union,
+    Optional,
+)
 
 import yaml
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.schema.message import ChatMessage
@@ -22,93 +31,204 @@ class LanguageEnum(str, Enum):
     ZH = "zh"
 
 
-class RequiredField(BaseModel):
-    """Required fields for grading."""
+class PromptDict(TypedDict, total=False):
+    system: str | ChatMessage
+    """"""
+    user: str | ChatMessage
+    """"""
 
-    name: str = Field(default=..., description="name of the field")
-    type: str = Field(default=..., description="type of the field")
-    position: Literal["data", "sample", "grader"] = Field(
-        default="data",
-        description="position of the field",
-    )
-    description: str = Field(
-        default=...,
-        description="description of the field",
-    )
+
+Prompt = Union[str, PromptDict, List[ChatMessage]]
+
+
+def _convert_prompt_to_messages(prompt: Prompt) -> List[ChatMessage]:
+    """Convert various prompt formats to List[ChatMessage]."""
+    if isinstance(prompt, str):
+        return [ChatMessage(role="user", content=prompt)]
+    elif isinstance(prompt, list):
+        # Already in the correct format
+        return prompt
+    elif isinstance(prompt, dict):
+        messages = []
+        if "system" in prompt:
+            system_content = prompt["system"]
+            if isinstance(system_content, str):
+                messages.append(
+                    ChatMessage(role="system", content=system_content)
+                )
+            else:
+                messages.append(system_content)
+        if "user" in prompt:
+            user_content = prompt["user"]
+            if isinstance(user_content, str):
+                messages.append(ChatMessage(role="user", content=user_content))
+            else:
+                messages.append(user_content)
+        return messages
+    else:
+        raise ValueError(f"Unsupported prompt type: {type(prompt)}")
 
 
 class Template(BaseModel):
-    """Template for generating chat messages."""
+    """Template for generating chat messages.
 
-    messages: List[ChatMessage] | Dict[
-        LanguageEnum,
-        List[ChatMessage],
-    ] = Field(
-        default_factory=list,
-        description="messages for generating chat",
+    The Template class supports different types of prompts:
+    1. Simple prompts: str or List[ChatMessage]
+    2. PromptDict: structured prompt with "system" and/or "user" keys
+    3. LanguageDict: multilingual prompts mapping LanguageEnum to any of the above prompt types
+
+    Attributes:
+        prompt: Prompt for generating messages, can be a string, dict, or list of ChatMessage objects.
+                Can also be a dictionary mapping language codes to prompts.
+
+    Examples:
+        >>> from rm_gallery.core.schema.template import Template, LanguageEnum
+        >>> from rm_gallery.core.schema.message import ChatMessage
+        >>>
+        >>> # Simple string prompt (single user prompt)
+        >>> template = Template(prompt="Hello, how are you?")
+        >>>
+        >>> # List of ChatMessage objects
+        >>> messages = [
+        ...     ChatMessage(role="system", content="You are a helpful assistant."),
+        ...     ChatMessage(role="user", content="What is the weather like today?")
+        ... ]
+        >>> template = Template(prompt=messages)
+        >>>
+        >>> # PromptDict with system and user messages
+        >>> prompt_dict = {
+        ...     "system": "You are a helpful assistant.",
+        ...     "user": "What is the weather like today?"
+        ... }
+        >>> template = Template(prompt=prompt_dict)
+        >>>
+        >>> # LanguageDict for multilingual support
+        >>> multilingual_prompt = {
+        ...     LanguageEnum.EN: "Hello, how are you?",
+        ...     LanguageEnum.ZH: "你好，你怎么样？"
+        ... }
+        >>> template = Template(prompt=multilingual_prompt)
+    """
+
+    prompt: Prompt = Field(
+        default=...,
+        description="Prompt for generating messages, can be a string, dict, or list of ChatMessage objects.",
     )
 
-    # @model_validator(mode="before")
-    # def validate_template(cls, values) -> dict:
-    #     messages = values.get("messages", [])
-    #     # Pattern to match placeholders like {word}, {word.word}, {word.word.word}, etc.
-    #     placeholder_pattern = (
-    #         r"\{([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*)\}"
-    #     )
+    # 存储多语言模板的私有属性
+    _multilingual_prompts: Optional[Dict[str, Prompt]] = None
 
-    #     # Handle both dict and RequiredField instances
-    #     required_fields_raw = values.get("required_fields", [])
-    #     required_fields = []
-    #     for field in required_fields_raw:
-    #         if isinstance(field, dict):
-    #             required_fields.append(field.get("name"))
-    #         elif isinstance(field, RequiredField):
-    #             required_fields.append(field.name)
-    #         elif hasattr(field, "name"):
-    #             required_fields.append(field.name)
-    #     required = []
+    @field_validator("prompt", mode="before")
+    @classmethod
+    def validate_prompt(cls, v):
+        """Validate prompt value."""
+        if isinstance(v, dict):
+            # Check if this looks like a LanguageDict (keys are language codes)
+            if all(isinstance(k, (str, LanguageEnum)) for k in v.keys()):
+                # If all keys are language codes, this should be handled via multilingual method
+                # We'll allow it for backward compatibility but warn users
+                pass
+        return v
 
-    #     all_messages = []
-    #     if isinstance(messages, list):
-    #         messages = messages
-    #     elif isinstance(messages, dict):
-    #         for language, language_messages in messages.items():
-    #             if not isinstance(language_messages, list):
-    #                 raise ValueError("Invalid message format")
-    #             all_messages.extend(language_messages)
-    #     else:
-    #         raise ValueError("Invalid message format")
+    def to_messages(self, language: Optional[str] = None) -> List[ChatMessage]:
+        """Get messages for the specified language.
 
-    #     for message in all_messages:
-    #         content = (
-    #             message.get("content", "")
-    #             if isinstance(message, dict)
-    #             else getattr(message, "content", "")
-    #         )
-    #         # Find all placeholders in the content
-    #         placeholders = re.findall(placeholder_pattern, content)
-    #         for placeholder in placeholders:
-    #             # Add to required if not already present
-    #             if placeholder not in required:
-    #                 required.append(placeholder)
+        This method handles different types of prompts:
+        1. Single prompt (str or List[ChatMessage]) - directly converted to messages
+        2. PromptDict - structured prompt with system/user keys
+        3. Multilingual prompts - when language is specified and template was created with multilingual method
 
-    #     for name in required:
-    #         if name not in required_fields:
-    #             raise ValueError(f"Required field {name} is missing")
-    #     return values
+        Args:
+            language: The language to retrieve messages for. Only used for multilingual templates.
+                      If None or not found, will use the default prompt.
 
-    def get(self, language: LanguageEnum | None = LanguageEnum.EN):
-        if isinstance(self.messages, list):
-            messages = self.messages
-        elif isinstance(self.messages, dict):
-            if language is None:
-                language = LanguageEnum.EN
-            assert language in self.messages
-            messages = self.messages.get(language, [])
-        else:
-            raise ValueError("Invalid messages")
+        Returns:
+            List of ChatMessage objects for the specified language or prompt.
 
-        return messages
+        Examples:
+            >>> from rm_gallery.core.schema.template import Template
+            >>> from rm_gallery.core.schema.message import ChatMessage
+            >>>
+            >>> # Single string prompt
+            >>> template = Template(prompt="Hello, how are you?")
+            >>> messages = template.to_messages()
+            >>> len(messages)
+            1
+            >>> messages[0].role
+            'user'
+            >>>
+            >>> # PromptDict with system and user messages
+            >>> prompt_dict = {
+            ...     "system": "You are a helpful assistant.",
+            ...     "user": "What is the weather like today?"
+            ... }
+            >>> template = Template(prompt=prompt_dict)
+            >>> messages = template.to_messages()
+            >>> len(messages)
+            2
+            >>> messages[0].role
+            'system'
+            >>> messages[1].role
+            'user'
+            >>>
+            >>> # Multilingual template
+            >>> template = Template.multilingual({
+            ...     "en": "Hello, how are you?",
+            ...     "zh": "你好，你怎么样？"
+            ... })
+            >>> english_messages = template.to_messages("en")
+            >>> len(english_messages)
+            1
+            >>> english_messages[0].content
+            'Hello, how are you?'
+            >>> chinese_messages = template.to_messages("zh")
+            >>> chinese_messages[0].content
+            '你好，你怎么样？'
+        """
+        # Handle multilingual prompts
+        if self._multilingual_prompts is not None and language is not None:
+            if language in self._multilingual_prompts:
+                return _convert_prompt_to_messages(
+                    self._multilingual_prompts[language]
+                )
+            elif "en" in self._multilingual_prompts:
+                return _convert_prompt_to_messages(
+                    self._multilingual_prompts["en"]
+                )
+            else:
+                # Return first available language
+                first_lang = next(iter(self._multilingual_prompts))
+                return _convert_prompt_to_messages(
+                    self._multilingual_prompts[first_lang]
+                )
+
+        # Handle regular prompt
+        return _convert_prompt_to_messages(self.prompt)
+
+    @classmethod
+    def multilingual(cls, prompts: Dict[str, Prompt]) -> "Template":
+        """Create a Template with multilingual support.
+
+        Args:
+            prompts: Dictionary mapping language codes to prompts
+
+        Returns:
+            Template instance with multilingual support
+
+        Examples:
+            >>> template = Template.multilingual({
+            ...     "en": [{"role": "user", "content": "Hello!"}],
+            ...     "zh": [{"role": "user", "content": "你好!"}]
+            ... })
+            >>> en_messages = template.to_messages("en")
+            >>> zh_messages = template.to_messages("zh")
+        """
+        # Use English as default if available, otherwise use first language
+        default_prompt = prompts.get("en", next(iter(prompts.values())))
+
+        template = cls(prompt=default_prompt)
+        template._multilingual_prompts = prompts
+        return template
 
 
 class Chat(ABC):
@@ -127,18 +247,19 @@ class Chat(ABC):
 
     def format(
         self,
-        language: LanguageEnum = LanguageEnum.EN,
+        language: Optional[str] = None,
         **kwargs,
     ) -> List[Dict[str, Any]]:
         """Format messages with provided keyword arguments.
 
         Args:
+            language: Language code for multilingual templates
             **kwargs: Keyword arguments to format with
 
         Returns:
             List of formatted message dictionaries
         """
-        messages = self.template.get(language)
+        messages = self.template.to_messages(language)
         messages = [message.to_dict() for message in messages]
 
         for message in messages:
@@ -148,13 +269,14 @@ class Chat(ABC):
     async def __call__(
         self,
         structured_model: Type[BaseModel] | None = None,
-        language: LanguageEnum = LanguageEnum.EN,
+        language: Optional[str] = None,
         **kwargs,
     ) -> ChatResponse:
         """Generate chat response using the template.
 
         Args:
             structured_model: Optional structured model output
+            language: Language code for multilingual templates
             **kwargs: Keyword arguments for formatting messages
 
         Returns:
@@ -203,11 +325,13 @@ class Chat(ABC):
 
 
 if __name__ == "__main__":
-    template = Template(
-        messages=[
-            ChatMessage(role="system", content="You are a helpful assistant."),
-            ChatMessage(role="user", content="{question}"),
-        ],
+    template = Template.multilingual(
+        {
+            "en": [
+                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": "{question}"},
+            ],
+        }
     )
     model = OpenAIChatModel(model_name="qwen-plus", stream=False)
     chat = Chat(template=template, model=model)

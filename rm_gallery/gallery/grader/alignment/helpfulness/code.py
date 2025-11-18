@@ -22,7 +22,7 @@ Error Handling: Appropriate error handling should be implemented for edge cases 
 
 
 CODE_SCORE_TEMPLATE = Template(
-    messages=[
+    prompt=[
         ChatMessage(
             role="system",
             content="You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words.",
@@ -56,7 +56,7 @@ Be as objective as possible.
 )
 
 CODE_RANK_TEMPLATE = Template(
-    messages=[
+    prompt=[
         ChatMessage(
             role="system",
             content="You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words.",

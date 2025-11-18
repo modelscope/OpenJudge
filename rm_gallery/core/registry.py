@@ -4,7 +4,7 @@ from typing import Callable, Dict, List, Type, Union
 from loguru import logger
 
 from rm_gallery.core.grader.base import Grader, GraderInfo, GraderMode
-from rm_gallery.core.schema.template import RequiredField
+from rm_gallery.core.schema.grader import RequiredField
 
 
 class GraderRegistry:
@@ -148,7 +148,7 @@ class GraderRegistry:
             namespace_dict = cls._graders[namespace]
             if not isinstance(namespace_dict, dict):
                 raise ValueError(
-                    f"Namespace '{namespace}' is not a valid namespace"
+                    f"Namespace '{namespace}' is not a valid namespace",
                 )
 
             if name in namespace_dict:
@@ -165,7 +165,7 @@ class GraderRegistry:
 
             if name in cls._graders:
                 logger.warning(
-                    f"grader '{name}' is already registered. Overwriting."
+                    f"grader '{name}' is already registered. Overwriting.",
                 )
 
             cls._graders[name] = grader
@@ -186,7 +186,8 @@ class GraderRegistry:
             # Handle namespaced graders
             namespace, sub_name = name.split(".", 1)
             if namespace in cls._graders and isinstance(
-                cls._graders[namespace], dict
+                cls._graders[namespace],
+                dict,
             ):
                 namespace_dict = cls._graders[namespace]
                 if (
@@ -216,7 +217,8 @@ class GraderRegistry:
             # Handle namespaced graders
             namespace, sub_name = name.split(".", 1)
             if namespace in cls._graders and isinstance(
-                cls._graders[namespace], dict
+                cls._graders[namespace],
+                dict,
             ):
                 namespace_dict = cls._graders[namespace]
                 if (
@@ -253,14 +255,15 @@ class GraderRegistry:
         if namespace:
             # List graders in a specific namespace
             if namespace in cls._graders and isinstance(
-                cls._graders[namespace], dict
+                cls._graders[namespace],
+                dict,
             ):
                 namespace_dict = cls._graders[namespace]
                 if isinstance(namespace_dict, dict):
                     for name, grader in namespace_dict.items():
                         if isinstance(grader, Grader):
                             result[f"{namespace}.{name}"] = type(
-                                grader
+                                grader,
                             ).__name__
             return result
         else:
@@ -274,7 +277,7 @@ class GraderRegistry:
                     for sub_key, sub_value in value.items():
                         if isinstance(sub_value, Grader):
                             result[f"{key}.{sub_key}"] = type(
-                                sub_value
+                                sub_value,
                             ).__name__
             return result
 

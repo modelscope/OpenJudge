@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Fuzzy Match Metric
 
@@ -7,7 +8,7 @@ Restructured to work with Grader framework.
 
 import Levenshtein
 
-from rm_gallery.core.grader import Grader, GraderMode, GraderScore
+from rm_gallery.core.grader.base import Grader, GraderMode, GraderScore
 
 
 class FuzzyMatchGrader(Grader):
@@ -42,7 +43,9 @@ class FuzzyMatchGrader(Grader):
         description: str = "Fuzzy matching based on Levenshtein distance",
     ):
         super().__init__(
-            name=name, grader_mode=GraderMode.POINTWISE, description=description
+            name=name,
+            grader_mode=GraderMode.POINTWISE,
+            description=description,
         )
         self.method = method
         self.threshold = threshold
@@ -83,7 +86,7 @@ class FuzzyMatchGrader(Grader):
             score = self._token_sort_ratio(candidate, reference)
         else:
             raise ValueError(
-                f"Unknown method: {self.method}. Use 'ratio', 'partial_ratio', or 'token_sort_ratio'"
+                f"Unknown method: {self.method}. Use 'ratio', 'partial_ratio', or 'token_sort_ratio'",
             )
 
         matched = score >= self.threshold
@@ -96,7 +99,9 @@ class FuzzyMatchGrader(Grader):
 
         return score, details
 
-    async def evaluate(self, reference: str, candidate: str, **kwargs) -> GraderScore:
+    async def evaluate(
+        self, reference: str, candidate: str, **kwargs
+    ) -> GraderScore:
         """Evaluate fuzzy match"""
         score, details = self._compute(reference, candidate)
 
@@ -134,7 +139,9 @@ class EditDistanceGrader(Grader):
         description: str = "Edit distance based similarity metric",
     ):
         super().__init__(
-            name=name, grader_mode=GraderMode.POINTWISE, description=description
+            name=name,
+            grader_mode=GraderMode.POINTWISE,
+            description=description,
         )
         self.normalize_by_length = normalize_by_length
 
@@ -160,7 +167,9 @@ class EditDistanceGrader(Grader):
 
         return normalized_score, details
 
-    async def evaluate(self, reference: str, candidate: str, **kwargs) -> GraderScore:
+    async def evaluate(
+        self, reference: str, candidate: str, **kwargs
+    ) -> GraderScore:
         """Evaluate edit distance"""
         score, details = self._compute(reference, candidate)
 

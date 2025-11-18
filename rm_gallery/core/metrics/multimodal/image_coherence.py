@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Image Coherence Grader
 
@@ -10,10 +11,12 @@ from typing import List, Optional, Tuple, Union
 
 from loguru import logger
 
-from rm_gallery.core.grader import Grader, GraderMode, GraderScore
+from rm_gallery.core.grader.base import Grader, GraderMode, GraderScore
 from rm_gallery.core.metrics.multimodal.schema import MLLMImage, ReasonScore
 from rm_gallery.core.model.qwen_vlm_api import QwenVLAPI
-from rm_gallery.gallery.rm.multimodal.context.templates import ImageCoherenceTemplate
+from rm_gallery.gallery.grader.multimodal.context.templates import (
+    ImageCoherenceTemplate,
+)
 
 
 class ImageCoherenceGrader(Grader):
@@ -66,7 +69,10 @@ class ImageCoherenceGrader(Grader):
         self.threshold = threshold
         self.evaluation_cost = 0.0
 
-    def _get_image_indices(self, output_list: List[Union[str, MLLMImage]]) -> List[int]:
+    def _get_image_indices(
+        self,
+        output_list: List[Union[str, MLLMImage]],
+    ) -> List[int]:
         """Find indices of all images in output list"""
         return [
             index
@@ -75,7 +81,9 @@ class ImageCoherenceGrader(Grader):
         ]
 
     def _get_image_context(
-        self, image_index: int, output_list: List[Union[str, MLLMImage]]
+        self,
+        image_index: int,
+        output_list: List[Union[str, MLLMImage]],
     ) -> Tuple[Optional[str], Optional[str]]:
         """
         Extract text context surrounding an image
@@ -94,7 +102,10 @@ class ImageCoherenceGrader(Grader):
         for i in range(image_index - 1, -1, -1):
             if isinstance(output_list[i], str):
                 context_above = output_list[i]
-                if self.max_context_size and len(context_above) > self.max_context_size:
+                if (
+                    self.max_context_size
+                    and len(context_above) > self.max_context_size
+                ):
                     context_above = context_above[-self.max_context_size :]
                 break
 
@@ -102,7 +113,10 @@ class ImageCoherenceGrader(Grader):
         for i in range(image_index + 1, len(output_list)):
             if isinstance(output_list[i], str):
                 context_below = output_list[i]
-                if self.max_context_size and len(context_below) > self.max_context_size:
+                if (
+                    self.max_context_size
+                    and len(context_below) > self.max_context_size
+                ):
                     context_below = context_below[: self.max_context_size]
                 break
 
@@ -116,7 +130,8 @@ class ImageCoherenceGrader(Grader):
     ) -> Tuple[float, str]:
         """Synchronous evaluation of single image coherence"""
         prompt = ImageCoherenceTemplate.evaluate_image_coherence(
-            context_above or "", context_below or ""
+            context_above or "",
+            context_below or "",
         )
 
         try:
@@ -143,7 +158,8 @@ class ImageCoherenceGrader(Grader):
     ) -> Tuple[float, str]:
         """Async evaluation of single image coherence"""
         prompt = ImageCoherenceTemplate.evaluate_image_coherence(
-            context_above or "", context_below or ""
+            context_above or "",
+            context_below or "",
         )
 
         try:
@@ -162,7 +178,9 @@ class ImageCoherenceGrader(Grader):
             return 0.0, f"Evaluation error: {str(e)}"
 
     def _compute(
-        self, actual_output: List[Union[str, MLLMImage]], **kwargs
+        self,
+        actual_output: List[Union[str, MLLMImage]],
+        **kwargs,
     ) -> Tuple[float, dict]:
         """
         Compute image coherence score (synchronous)
@@ -190,12 +208,15 @@ class ImageCoherenceGrader(Grader):
 
         for image_index in image_indices:
             context_above, context_below = self._get_image_context(
-                image_index, actual_output
+                image_index,
+                actual_output,
             )
             image = actual_output[image_index]
 
             raw_score, reason = self._evaluate_single_image(
-                image, context_above, context_below
+                image,
+                context_above,
+                context_below,
             )
 
             # Normalize score to [0, 1] (assuming raw score is 0-10)
@@ -217,7 +238,9 @@ class ImageCoherenceGrader(Grader):
         return final_score, details
 
     async def _a_compute(
-        self, actual_output: List[Union[str, MLLMImage]], **kwargs
+        self,
+        actual_output: List[Union[str, MLLMImage]],
+        **kwargs,
     ) -> Tuple[float, dict]:
         """
         Compute image coherence score (asynchronous)
@@ -243,11 +266,16 @@ class ImageCoherenceGrader(Grader):
         tasks = []
         for image_index in image_indices:
             context_above, context_below = self._get_image_context(
-                image_index, actual_output
+                image_index,
+                actual_output,
             )
             image = actual_output[image_index]
             tasks.append(
-                self._a_evaluate_single_image(image, context_above, context_below)
+                self._a_evaluate_single_image(
+                    image,
+                    context_above,
+                    context_below,
+                ),
             )
 
         # Evaluate all images in parallel
@@ -318,7 +346,11 @@ class ImageCoherenceGrader(Grader):
         else:
             reason_parts = []
             for i, (s, r) in enumerate(
-                zip(details["individual_scores"], details["individual_reasons"]), 1
+                zip(
+                    details["individual_scores"],
+                    details["individual_reasons"],
+                ),
+                1,
             ):
                 reason_parts.append(f"Image {i} (score: {s:.2f}): {r}")
             reason = "\n".join(reason_parts)

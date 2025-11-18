@@ -1,21 +1,38 @@
+# IDE and Editor Files
 /.idea
-*.pyc
-.DS_Store
 /.vscode
-/data
-__pycache__
-*.jsonl
-*.json
-*.parquet
+/.cursorrules
+/.poetry
+/.mypy_cache
+.DS_Store
+
+# Python Compiled and Cache Files
+__pycache__/
+*.pyc
+
+# Virtual Environment and Local Configuration
+.env
+.python-version
+poetry.lock
+/site
+uv*/
+
+# Build and Distribution Files
+/dist
+
+# Log Files
 /log
 *.log
-/dist
-uv*
-_del
-docs/log
-.python-version
+/docs/log
+
+# Data Files
+/data
+*.json
+*.jsonl
+*.parquet
+
+# Test Artifacts
 tests/plt_*
-/site
-poetry.lock.env
-*.cursorrules
-/.env
+
+# Temporary and Backup Files
+_del

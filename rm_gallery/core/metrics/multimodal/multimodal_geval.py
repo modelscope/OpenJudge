@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Multimodal G-Eval Grader
 
@@ -9,16 +10,18 @@ from typing import List, Optional, Tuple
 
 from loguru import logger
 
-from rm_gallery.core.grader import Grader, GraderMode, GraderScore
+from rm_gallery.core.grader.base import Grader, GraderMode, GraderScore
 from rm_gallery.core.metrics.multimodal.schema import (
     MLLMImage,
     MLLMTestCaseParams,
     ReasonScore,
 )
 from rm_gallery.core.model.qwen_vlm_api import QwenVLAPI
-from rm_gallery.gallery.rm.multimodal.schema import EvaluationSteps, Rubric
-from rm_gallery.gallery.rm.multimodal.template import MultimodalGEvalTemplate
-from rm_gallery.gallery.rm.multimodal.utils import (
+from rm_gallery.gallery.grader.multimodal.schema import EvaluationSteps, Rubric
+from rm_gallery.gallery.grader.multimodal.template import (
+    MultimodalGEvalTemplate,
+)
+from rm_gallery.gallery.grader.multimodal.utils import (
     construct_g_eval_params_string,
     format_rubrics,
     validate_and_sort_rubrics,
@@ -111,14 +114,17 @@ class MultimodalGEvalGrader(Grader):
             return self._generated_steps
 
         if self.criteria is None:
-            raise ValueError("Cannot generate evaluation steps without criteria")
+            raise ValueError(
+                "Cannot generate evaluation steps without criteria",
+            )
 
         # Build parameters string for context
         params_str = construct_g_eval_params_string(self.evaluation_params)
 
         # Generate steps using VLM
         prompt = MultimodalGEvalTemplate.generate_evaluation_steps(
-            parameters=params_str, criteria=self.criteria
+            parameters=params_str,
+            criteria=self.criteria,
         )
 
         try:
@@ -135,7 +141,8 @@ class MultimodalGEvalGrader(Grader):
             logger.error(f"Error generating evaluation steps: {e}")
             # Fallback to default steps
             return [
-                f"Analyze the {param.value}" for param in self.evaluation_params
+                f"Analyze the {param.value}"
+                for param in self.evaluation_params
             ] + ["Evaluate based on the given criteria"]
 
     def _evaluate_with_geval(
@@ -151,7 +158,9 @@ class MultimodalGEvalGrader(Grader):
         )
 
         # Format evaluation steps as string
-        steps_str = "\n".join([f"{i+1}. {step}" for i, step in enumerate(steps)])
+        steps_str = "\n".join(
+            [f"{i+1}. {step}" for i, step in enumerate(steps)],
+        )
 
         # Build parameters string
         params_str = construct_g_eval_params_string(self.evaluation_params)
@@ -179,8 +188,12 @@ class MultimodalGEvalGrader(Grader):
 
         try:
             # Extract text and images from prompt parts
-            prompt_text = "".join([p for p in prompt_parts if isinstance(p, str)])
-            prompt_images = [p for p in prompt_parts if isinstance(p, MLLMImage)]
+            prompt_text = "".join(
+                [p for p in prompt_parts if isinstance(p, str)],
+            )
+            prompt_images = [
+                p for p in prompt_parts if isinstance(p, MLLMImage)
+            ]
 
             result = self.model.generate(
                 text=prompt_text,
@@ -212,7 +225,9 @@ class MultimodalGEvalGrader(Grader):
         )
 
         # Format evaluation steps as string
-        steps_str = "\n".join([f"{i+1}. {step}" for i, step in enumerate(steps)])
+        steps_str = "\n".join(
+            [f"{i+1}. {step}" for i, step in enumerate(steps)],
+        )
 
         # Build parameters string
         params_str = construct_g_eval_params_string(self.evaluation_params)
@@ -240,8 +255,12 @@ class MultimodalGEvalGrader(Grader):
 
         try:
             # Extract text and images from prompt parts
-            prompt_text = "".join([p for p in prompt_parts if isinstance(p, str)])
-            prompt_images = [p for p in prompt_parts if isinstance(p, MLLMImage)]
+            prompt_text = "".join(
+                [p for p in prompt_parts if isinstance(p, str)],
+            )
+            prompt_images = [
+                p for p in prompt_parts if isinstance(p, MLLMImage)
+            ]
 
             result = await self.model.a_generate(
                 text=prompt_text,
@@ -297,7 +316,9 @@ class MultimodalGEvalGrader(Grader):
             "reasoning": reasoning,
             "evaluation_name": self.evaluation_name,
             "evaluation_params": [p.value for p in self.evaluation_params],
-            "evaluation_steps": (self.evaluation_steps or self._generated_steps),
+            "evaluation_steps": (
+                self.evaluation_steps or self._generated_steps
+            ),
             "evaluation_cost": self.evaluation_cost,
             "threshold": self.threshold,
         }
@@ -340,7 +361,9 @@ class MultimodalGEvalGrader(Grader):
             "reasoning": reasoning,
             "evaluation_name": self.evaluation_name,
             "evaluation_params": [p.value for p in self.evaluation_params],
-            "evaluation_steps": (self.evaluation_steps or self._generated_steps),
+            "evaluation_steps": (
+                self.evaluation_steps or self._generated_steps
+            ),
             "evaluation_cost": self.evaluation_cost,
             "threshold": self.threshold,
         }

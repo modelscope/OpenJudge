@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 RM-Gallery Metrics Module
 
@@ -12,7 +13,7 @@ This module provides a comprehensive collection of evaluation metrics as Graders
 
 Quick Start:
     >>> from rm_gallery.core.metrics import get_grader, list_available_graders
-    >>> from rm_gallery.core.data import DataSample
+    >>> from rm_gallery.core.schema.data import DataSample
     >>>
     >>> # List all available graders
     >>> graders = list_available_graders()
@@ -41,7 +42,10 @@ from rm_gallery.core.metrics.format_check.json_match import (
 )
 
 # NLP Graders
-from rm_gallery.core.metrics.nlp_metrics.bleu import BLEUGrader, SentenceBLEUGrader
+from rm_gallery.core.metrics.nlp_metrics.bleu import (
+    BLEUGrader,
+    SentenceBLEUGrader,
+)
 from rm_gallery.core.metrics.nlp_metrics.gleu import ChrFGrader, GLEUGrader
 from rm_gallery.core.metrics.nlp_metrics.meteor import METEORGrader
 from rm_gallery.core.metrics.nlp_metrics.rouge import (
@@ -194,7 +198,9 @@ def __getattr__(name):
             }
             return _map[name]
         except ImportError:
-            raise AttributeError(f"Multimodal graders not available: {name}") from None
+            raise AttributeError(
+                f"Multimodal graders not available: {name}"
+            ) from None
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 

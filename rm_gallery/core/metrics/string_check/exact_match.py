@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Exact Match Metrics
 
@@ -5,7 +6,7 @@ Exact matching metrics for checking if candidate text matches reference text exa
 Restructured to work with Grader framework.
 """
 
-from rm_gallery.core.grader import Grader, GraderMode, GraderScore
+from rm_gallery.core.grader.base import Grader, GraderMode, GraderScore
 
 
 class ExactMatchGrader(Grader):
@@ -36,7 +37,9 @@ class ExactMatchGrader(Grader):
         description: str = "Exact match between reference and candidate",
     ):
         super().__init__(
-            name=name, grader_mode=GraderMode.POINTWISE, description=description
+            name=name,
+            grader_mode=GraderMode.POINTWISE,
+            description=description,
         )
         self.case_sensitive = case_sensitive
         self.ignore_whitespace = ignore_whitespace
@@ -68,7 +71,9 @@ class ExactMatchGrader(Grader):
 
         return matched, details
 
-    async def evaluate(self, reference: str, candidate: str, **kwargs) -> GraderScore:
+    async def evaluate(
+        self, reference: str, candidate: str, **kwargs
+    ) -> GraderScore:
         """
         Evaluate exact match
 
@@ -115,7 +120,9 @@ class PrefixMatchGrader(Grader):
         description: str = "Check if candidate starts with reference",
     ):
         super().__init__(
-            name=name, grader_mode=GraderMode.POINTWISE, description=description
+            name=name,
+            grader_mode=GraderMode.POINTWISE,
+            description=description,
         )
         self.case_sensitive = case_sensitive
 
@@ -130,7 +137,9 @@ class PrefixMatchGrader(Grader):
 
         return matched, details
 
-    async def evaluate(self, reference: str, candidate: str, **kwargs) -> GraderScore:
+    async def evaluate(
+        self, reference: str, candidate: str, **kwargs
+    ) -> GraderScore:
         """Evaluate prefix match"""
         matched, details = self._compute(reference, candidate)
 
@@ -167,7 +176,9 @@ class SuffixMatchGrader(Grader):
         description: str = "Check if candidate ends with reference",
     ):
         super().__init__(
-            name=name, grader_mode=GraderMode.POINTWISE, description=description
+            name=name,
+            grader_mode=GraderMode.POINTWISE,
+            description=description,
         )
         self.case_sensitive = case_sensitive
 
@@ -182,7 +193,9 @@ class SuffixMatchGrader(Grader):
 
         return matched, details
 
-    async def evaluate(self, reference: str, candidate: str, **kwargs) -> GraderScore:
+    async def evaluate(
+        self, reference: str, candidate: str, **kwargs
+    ) -> GraderScore:
         """Evaluate suffix match"""
         matched, details = self._compute(reference, candidate)
 
@@ -221,7 +234,9 @@ class RegexMatchGrader(Grader):
         description: str = "Regular expression pattern matching",
     ):
         super().__init__(
-            name=name, grader_mode=GraderMode.POINTWISE, description=description
+            name=name,
+            grader_mode=GraderMode.POINTWISE,
+            description=description,
         )
         self.pattern = pattern
         self.case_sensitive = case_sensitive
@@ -252,13 +267,18 @@ class RegexMatchGrader(Grader):
             return False, {"error": f"Invalid regex pattern: {str(e)}"}
 
     async def evaluate(
-        self, reference: str = "", candidate: str = "", **kwargs
+        self,
+        reference: str = "",
+        candidate: str = "",
+        **kwargs,
     ) -> GraderScore:
         """Evaluate regex match"""
         matched, details = self._compute(reference, candidate)
 
         if "error" in details:
-            return GraderScore(score=0.0, reason=details["error"], metadata=details)
+            return GraderScore(
+                score=0.0, reason=details["error"], metadata=details
+            )
 
         return GraderScore(
             score=1.0 if matched else 0.0,

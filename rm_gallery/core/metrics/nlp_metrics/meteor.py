@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 METEOR Metric
 
@@ -7,7 +8,7 @@ morphological variations, and semantic information.
 Restructured to work with Grader framework.
 """
 
-from rm_gallery.core.grader import Grader, GraderMode, GraderScore
+from rm_gallery.core.grader.base import Grader, GraderMode, GraderScore
 
 
 class METEORGrader(Grader):
@@ -43,7 +44,9 @@ class METEORGrader(Grader):
         description: str = "METEOR metric for translation evaluation",
     ):
         super().__init__(
-            name=name, grader_mode=GraderMode.POINTWISE, description=description
+            name=name,
+            grader_mode=GraderMode.POINTWISE,
+            description=description,
         )
         self.alpha = alpha
         self.beta = beta
@@ -101,7 +104,9 @@ class METEORGrader(Grader):
         except Exception as e:
             return 0.0, {"error": str(e)}
 
-    async def evaluate(self, reference: str, candidate: str, **kwargs) -> GraderScore:
+    async def evaluate(
+        self, reference: str, candidate: str, **kwargs
+    ) -> GraderScore:
         """Evaluate METEOR score"""
         score, details = self._compute(reference, candidate)
 

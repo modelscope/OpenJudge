@@ -1,13 +1,13 @@
+# -*- coding: utf-8 -*-
 import asyncio
 from typing import List
 
 from loguru import logger
 
-from rm_gallery.core.data import DataSample
-from rm_gallery.core.grader import Grader, GraderScore, evaluate
+from rm_gallery.core.schema.data import DataSample
+from rm_gallery.core.grader.base import Grader, GraderScore
 from rm_gallery.core.strategy.base import GraderStrategy
 from rm_gallery.core.utils.instance import InstDict, init_instance_by_config
-from rm_gallery.gallery.example.llm import FactualGrader
 
 
 class VotingStrategy(GraderStrategy):
@@ -15,7 +15,9 @@ class VotingStrategy(GraderStrategy):
     multiple times and averaging the results.
     """
 
-    def __init__(self, grader: Grader | InstDict, num_repeats: int = 5, **kwargs):
+    def __init__(
+        self, grader: Grader | InstDict, num_repeats: int = 5, **kwargs
+    ):
         """Initialize VotingStrategy.
 
         Args:
@@ -28,7 +30,10 @@ class VotingStrategy(GraderStrategy):
         self.grader = init_instance_by_config(grader, accept_type=Grader)
 
     async def __call__(
-        self, data_sample: DataSample, *args, **kwargs
+        self,
+        data_sample: DataSample,
+        *args,
+        **kwargs,
     ) -> List[GraderScore]:
         """Optimize reward results by voting (repeating execution and averaging).
 
@@ -42,7 +47,8 @@ class VotingStrategy(GraderStrategy):
         """
         # Collect all repeated execution tasks
         tasks = [
-            self.grader(data_sample, *args, **kwargs) for _ in range(self.num_repeats)
+            self.grader.evaluate_data_sample(data_sample, *args, **kwargs)
+            for _ in range(self.num_repeats)
         ]
 
         # Execute all tasks concurrently
@@ -54,7 +60,9 @@ class VotingStrategy(GraderStrategy):
 
         # Initialize averaged results list
         averaged_results = []
-        num_samples = len(results[0])  # Assume all results have the same length
+        num_samples = len(
+            results[0]
+        )  # Assume all results have the same length
 
         for i in range(num_samples):
             # Get scores for the i-th sample from all repetitions
@@ -71,25 +79,10 @@ class VotingStrategy(GraderStrategy):
                     reason=f"Voting optimization over {self.num_repeats} runs. "
                     f"Individual scores: {scores}, reasons: {reasons}",
                     metadata={
-                        f"attempt_{j+1}": result[i] for j, result in enumerate(results)
+                        f"attempt_{j+1}": result[i]
+                        for j, result in enumerate(results)
                     },
-                )
+                ),
             )
 
         return averaged_results
-
-
-if __name__ == "__main__":
-    data_sample = DataSample(
-        data={"query": "What is the capital of France?"},
-        samples=[{"answer": "Paris"}, {"answer": "London"}],
-    )
-
-    result = asyncio.run(
-        evaluate(
-            VotingStrategy(FactualGrader()),
-            data_sample=data_sample,
-            parser=None,
-        )
-    )
-    logger.info(result)

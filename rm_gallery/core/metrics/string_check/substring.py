@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Substring Match Metrics
 
@@ -7,7 +8,7 @@ Restructured to work with Grader framework.
 
 from typing import List
 
-from rm_gallery.core.grader import Grader, GraderMode, GraderScore
+from rm_gallery.core.grader.base import Grader, GraderMode, GraderScore
 
 
 class SubstringMatchGrader(Grader):
@@ -39,7 +40,9 @@ class SubstringMatchGrader(Grader):
         description: str = "Check if candidate contains reference",
     ):
         super().__init__(
-            name=name, grader_mode=GraderMode.POINTWISE, description=description
+            name=name,
+            grader_mode=GraderMode.POINTWISE,
+            description=description,
         )
         self.case_sensitive = case_sensitive
         self.bidirectional = bidirectional
@@ -67,7 +70,9 @@ class SubstringMatchGrader(Grader):
 
         return matched, details
 
-    async def evaluate(self, reference: str, candidate: str, **kwargs) -> GraderScore:
+    async def evaluate(
+        self, reference: str, candidate: str, **kwargs
+    ) -> GraderScore:
         """Evaluate substring match"""
         matched, details = self._compute(reference, candidate)
 
@@ -106,7 +111,9 @@ class ContainsAllGrader(Grader):
         description: str = "Check if candidate contains all specified substrings",
     ):
         super().__init__(
-            name=name, grader_mode=GraderMode.POINTWISE, description=description
+            name=name,
+            grader_mode=GraderMode.POINTWISE,
+            description=description,
         )
         self.substrings = substrings or []
         self.case_sensitive = case_sensitive
@@ -134,7 +141,9 @@ class ContainsAllGrader(Grader):
             "matched": matched,
             "num_substrings": len(substrings),
             "contains_per_substring": contains,
-            "missing_substrings": [s for s, c in zip(substrings, contains) if not c],
+            "missing_substrings": [
+                s for s, c in zip(substrings, contains) if not c
+            ],
         }
 
         # Calculate score: proportion of contained substrings
@@ -143,7 +152,10 @@ class ContainsAllGrader(Grader):
         return score, details
 
     async def evaluate(
-        self, reference: str = "", candidate: str = "", **kwargs
+        self,
+        reference: str = "",
+        candidate: str = "",
+        **kwargs,
     ) -> GraderScore:
         """Evaluate contains all"""
         score, details = self._compute(reference, candidate)
@@ -183,7 +195,9 @@ class ContainsAnyGrader(Grader):
         description: str = "Check if candidate contains any of the specified substrings",
     ):
         super().__init__(
-            name=name, grader_mode=GraderMode.POINTWISE, description=description
+            name=name,
+            grader_mode=GraderMode.POINTWISE,
+            description=description,
         )
         self.substrings = substrings or []
         self.case_sensitive = case_sensitive
@@ -206,13 +220,18 @@ class ContainsAnyGrader(Grader):
             "matched": matched,
             "num_substrings": len(substrings),
             "contains_per_substring": contains,
-            "matched_substrings": [s for s, c in zip(substrings, contains) if c],
+            "matched_substrings": [
+                s for s, c in zip(substrings, contains) if c
+            ],
         }
 
         return matched, details
 
     async def evaluate(
-        self, reference: str = "", candidate: str = "", **kwargs
+        self,
+        reference: str = "",
+        candidate: str = "",
+        **kwargs,
     ) -> GraderScore:
         """Evaluate contains any"""
         matched, details = self._compute(reference, candidate)
@@ -250,7 +269,9 @@ class WordOverlapGrader(Grader):
         description: str = "Calculate word overlap ratio",
     ):
         super().__init__(
-            name=name, grader_mode=GraderMode.POINTWISE, description=description
+            name=name,
+            grader_mode=GraderMode.POINTWISE,
+            description=description,
         )
         self.case_sensitive = case_sensitive
 
@@ -272,11 +293,16 @@ class WordOverlapGrader(Grader):
             candidate = candidate.lower()
 
         score = self._compute_overlap(candidate, reference)
-        details = {"overlap_ratio": score, "case_sensitive": self.case_sensitive}
+        details = {
+            "overlap_ratio": score,
+            "case_sensitive": self.case_sensitive,
+        }
 
         return score, details
 
-    async def evaluate(self, reference: str, candidate: str, **kwargs) -> GraderScore:
+    async def evaluate(
+        self, reference: str, candidate: str, **kwargs
+    ) -> GraderScore:
         """Evaluate word overlap"""
         score, details = self._compute(reference, candidate)
 
@@ -313,7 +339,9 @@ class CharacterOverlapGrader(Grader):
         description: str = "Calculate character overlap ratio",
     ):
         super().__init__(
-            name=name, grader_mode=GraderMode.POINTWISE, description=description
+            name=name,
+            grader_mode=GraderMode.POINTWISE,
+            description=description,
         )
         self.case_sensitive = case_sensitive
 
@@ -335,11 +363,16 @@ class CharacterOverlapGrader(Grader):
             candidate = candidate.lower()
 
         score = self._compute_char_overlap(candidate, reference)
-        details = {"overlap_ratio": score, "case_sensitive": self.case_sensitive}
+        details = {
+            "overlap_ratio": score,
+            "case_sensitive": self.case_sensitive,
+        }
 
         return score, details
 
-    async def evaluate(self, reference: str, candidate: str, **kwargs) -> GraderScore:
+    async def evaluate(
+        self, reference: str, candidate: str, **kwargs
+    ) -> GraderScore:
         """Evaluate character overlap"""
         score, details = self._compute(reference, candidate)
 

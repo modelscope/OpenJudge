@@ -84,8 +84,8 @@ v2框架是一个为AI模型评估而设计的下一代评估系统，具有灵�
 ### 基本使用
 
 ```
-from rm_gallery.core.grader import FactualGrader
-from rm_gallery.core.dataset import DataSample
+from rm_gallery.core.grader.base import FactualGrader
+from rm_gallery.core.schema.dataset import DataSample
 
 # 创建一个简单的事实评估器
 grader = FactualGrader()
@@ -97,15 +97,15 @@ data_sample = DataSample(
 )
 
 # 执行评估
-results = await grader(data_sample)
+results = await grader.evaluate(data_sample)
 ```
 
 ### 使用策略
 
 ```
-from rm_gallery.core.grader import FactualGrader
+from rm_gallery.core.grader.base import FactualGrader
 from rm_gallery.core.strategy.repeat import RepeatOptimizer
-from rm_gallery.core.dataset import DataSample
+from rm_gallery.core.schema.dataset import DataSample
 
 # 创建一个评估器
 grader = FactualGrader()
@@ -120,15 +120,15 @@ data_sample = DataSample(
 )
 
 # 执行优化后的评估
-results = await optimized_grader(data_sample)
+results = await optimized_grader.evaluate(data_sample)
 ```
 
 ### 运行完整实验
 
 ```
-from rm_gallery.core.dataset import EvaluationDataset
+from rm_gallery.core.schema.dataset import EvaluationDataset
 from rm_gallery.core.experiment import EvaluationExperiment
-from rm_gallery.core.grader import FactualGrader
+from rm_gallery.core.grader.base import FactualGrader
 
 # 创建数据集
 dataset = EvaluationDataset(
@@ -162,7 +162,7 @@ result = await experiment(dataset)
 ### 自定义评估函数
 
 ```
-from rm_gallery.core.grader import FunctionGrader, GraderScore
+from rm_gallery.core.grader.base import FunctionGrader, GraderScore
 from rm_gallery.core.registry import GraderRegistry
 
 # 定义自定义评估函数
@@ -188,9 +188,9 @@ grader = GraderRegistry.get("custom.length_grader")
 ### 使用LLM评估函数
 
 ```
-from rm_gallery.core.grader import LLMGrader
-from rm_gallery.core.model.template import Chat
-from rm_gallery.core.model.message import ChatMessage
+from rm_gallery.core.grader.base import LLMGrader
+from rm_gallery.core.schema.template import Chat
+from rm_gallery.core.schema.message import ChatMessage
 
 # 定义评估模板
 chat_template = Chat(

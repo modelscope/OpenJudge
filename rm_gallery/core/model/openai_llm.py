@@ -9,16 +9,16 @@ from openai.types.chat import ChatCompletion
 from pydantic import BaseModel
 
 from rm_gallery.core.model.base import ChatModelBase
-from rm_gallery.core.model.block import (
+from rm_gallery.core.schema.block import (
     AudioBlock,
     Base64Source,
     TextBlock,
     ThinkingBlock,
     ToolUseBlock,
 )
-from rm_gallery.core.model.response import ChatResponse
-from rm_gallery.core.model.usage import ChatUsage
-from rm_gallery.core.model.utils import _json_loads_with_repair
+from rm_gallery.core.schema.response import ChatResponse
+from rm_gallery.core.schema.usage import ChatUsage
+from rm_gallery.core.utils.utils import _json_loads_with_repair
 
 
 def _format_audio_data_for_qwen_omni(messages: list[dict]) -> None:

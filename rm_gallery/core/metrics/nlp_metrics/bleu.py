@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 BLEU Metric
 
@@ -7,7 +8,7 @@ Restructured to work with Grader framework.
 
 from sacrebleu.metrics import BLEU
 
-from rm_gallery.core.grader import Grader, GraderMode, GraderScore
+from rm_gallery.core.grader.base import Grader, GraderMode, GraderScore
 
 
 class BLEUGrader(Grader):
@@ -40,7 +41,9 @@ class BLEUGrader(Grader):
         description: str = "BLEU metric for translation evaluation",
     ):
         super().__init__(
-            name=name, grader_mode=GraderMode.POINTWISE, description=description
+            name=name,
+            grader_mode=GraderMode.POINTWISE,
+            description=description,
         )
         self.max_ngram_order = max_ngram_order
         self.smooth_method = smooth_method
@@ -74,7 +77,9 @@ class BLEUGrader(Grader):
                 "bp": result.bp,
                 "sys_len": result.sys_len,
                 "ref_len": result.ref_len,
-                "ratio": result.sys_len / result.ref_len if result.ref_len > 0 else 0,
+                "ratio": result.sys_len / result.ref_len
+                if result.ref_len > 0
+                else 0,
                 "raw_score": result.score,
             }
 
@@ -82,12 +87,16 @@ class BLEUGrader(Grader):
         except Exception as e:
             return 0.0, {"error": str(e)}
 
-    async def evaluate(self, reference: str, candidate: str, **kwargs) -> GraderScore:
+    async def evaluate(
+        self, reference: str, candidate: str, **kwargs
+    ) -> GraderScore:
         """Evaluate BLEU score"""
         score, details = self._compute(reference, candidate)
 
         if "error" in details:
-            return GraderScore(score=0.0, reason=details["error"], metadata=details)
+            return GraderScore(
+                score=0.0, reason=details["error"], metadata=details
+            )
 
         return GraderScore(
             score=score,
@@ -124,7 +133,9 @@ class SentenceBLEUGrader(Grader):
         description: str = "Sentence-level BLEU metric",
     ):
         super().__init__(
-            name=name, grader_mode=GraderMode.POINTWISE, description=description
+            name=name,
+            grader_mode=GraderMode.POINTWISE,
+            description=description,
         )
         self.weights = weights
         self.smoothing_function = smoothing_function
@@ -132,10 +143,13 @@ class SentenceBLEUGrader(Grader):
     def _compute(self, reference: str, candidate: str) -> tuple[float, dict]:
         """Compute sentence-level BLEU score"""
         try:
-            from nltk.translate.bleu_score import SmoothingFunction, sentence_bleu
+            from nltk.translate.bleu_score import (
+                SmoothingFunction,
+                sentence_bleu,
+            )
         except ImportError:
             return 0.0, {
-                "error": "NLTK not installed. Please install: pip install nltk"
+                "error": "NLTK not installed. Please install: pip install nltk",
             }
 
         # Tokenize
@@ -164,12 +178,16 @@ class SentenceBLEUGrader(Grader):
         except Exception as e:
             return 0.0, {"error": str(e)}
 
-    async def evaluate(self, reference: str, candidate: str, **kwargs) -> GraderScore:
+    async def evaluate(
+        self, reference: str, candidate: str, **kwargs
+    ) -> GraderScore:
         """Evaluate sentence BLEU"""
         score, details = self._compute(reference, candidate)
 
         if "error" in details:
-            return GraderScore(score=0.0, reason=details["error"], metadata=details)
+            return GraderScore(
+                score=0.0, reason=details["error"], metadata=details
+            )
 
         return GraderScore(
             score=score,

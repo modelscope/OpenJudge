@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 JSON Matching and Validation Metrics
 
@@ -8,7 +9,7 @@ Restructured to work with Grader framework.
 import json
 from typing import Any
 
-from rm_gallery.core.grader import Grader, GraderMode, GraderScore
+from rm_gallery.core.grader.base import Grader, GraderMode, GraderScore
 
 
 class JsonMatchGrader(Grader):
@@ -39,7 +40,9 @@ class JsonMatchGrader(Grader):
         description: str = "JSON deep comparison metric",
     ):
         super().__init__(
-            name=name, grader_mode=GraderMode.POINTWISE, description=description
+            name=name,
+            grader_mode=GraderMode.POINTWISE,
+            description=description,
         )
         self.strict_order = strict_order
         self.ignore_extra_keys = ignore_extra_keys
@@ -73,7 +76,9 @@ class JsonMatchGrader(Grader):
                 return False
 
             if self.strict_order:
-                return all(self._json_match(s, c) for s, c in zip(sampled, correct))
+                return all(
+                    self._json_match(s, c) for s, c in zip(sampled, correct)
+                )
             else:
                 if len(sampled) == 0:
                     return True
@@ -129,13 +134,17 @@ class JsonMatchGrader(Grader):
 
         return matched, details
 
-    async def evaluate(self, reference: str, candidate: str, **kwargs) -> GraderScore:
+    async def evaluate(
+        self, reference: str, candidate: str, **kwargs
+    ) -> GraderScore:
         """Evaluate JSON match"""
         matched, details = self._compute(reference, candidate)
 
         if "error" in details:
             return GraderScore(
-                score=0.0, reason=details["error_message"], metadata=details
+                score=0.0,
+                reason=details["error_message"],
+                metadata=details,
             )
 
         return GraderScore(
@@ -169,7 +178,9 @@ class JsonValidatorGrader(Grader):
         description: str = "JSON format validation metric",
     ):
         super().__init__(
-            name=name, grader_mode=GraderMode.POINTWISE, description=description
+            name=name,
+            grader_mode=GraderMode.POINTWISE,
+            description=description,
         )
 
     def _compute(self, candidate: str) -> tuple[bool, dict]:
@@ -202,7 +213,10 @@ class JsonValidatorGrader(Grader):
             }
 
     async def evaluate(
-        self, reference: str = "", candidate: str = "", **kwargs
+        self,
+        reference: str = "",
+        candidate: str = "",
+        **kwargs,
     ) -> GraderScore:
         """Validate JSON format"""
         is_valid, details = self._compute(candidate)

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Cosine Similarity Metric
 
@@ -11,7 +12,7 @@ from typing import Optional
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 
-from rm_gallery.core.grader import Grader, GraderMode, GraderScore
+from rm_gallery.core.grader.base import Grader, GraderMode, GraderScore
 
 
 class CosineSimilarityGrader(Grader):
@@ -44,13 +45,17 @@ class CosineSimilarityGrader(Grader):
         description: str = "Cosine similarity metric",
     ):
         super().__init__(
-            name=name, grader_mode=GraderMode.POINTWISE, description=description
+            name=name,
+            grader_mode=GraderMode.POINTWISE,
+            description=description,
         )
         self.use_tfidf = use_tfidf
         self.ngram_range = ngram_range
         self.max_features = max_features
 
-    def _cosine_similarity_vectors(self, vec1: np.ndarray, vec2: np.ndarray) -> float:
+    def _cosine_similarity_vectors(
+        self, vec1: np.ndarray, vec2: np.ndarray
+    ) -> float:
         """Calculate cosine similarity between two vectors"""
         norm1 = np.linalg.norm(vec1)
         norm2 = np.linalg.norm(vec2)
@@ -65,7 +70,8 @@ class CosineSimilarityGrader(Grader):
         """TF-IDF based cosine similarity"""
         try:
             vectorizer = TfidfVectorizer(
-                ngram_range=self.ngram_range, max_features=self.max_features
+                ngram_range=self.ngram_range,
+                max_features=self.max_features,
             )
             vectors = vectorizer.fit_transform([text1, text2])
             vec1 = vectors[0].toarray().flatten()
@@ -111,7 +117,9 @@ class CosineSimilarityGrader(Grader):
 
         return score, details
 
-    async def evaluate(self, reference: str, candidate: str, **kwargs) -> GraderScore:
+    async def evaluate(
+        self, reference: str, candidate: str, **kwargs
+    ) -> GraderScore:
         """Evaluate cosine similarity"""
         score, details = self._compute(reference, candidate)
 
@@ -150,7 +158,9 @@ class JaccardSimilarityGrader(Grader):
         description: str = "Jaccard similarity metric",
     ):
         super().__init__(
-            name=name, grader_mode=GraderMode.POINTWISE, description=description
+            name=name,
+            grader_mode=GraderMode.POINTWISE,
+            description=description,
         )
         self.use_ngrams = use_ngrams
         self.n = n
@@ -190,7 +200,9 @@ class JaccardSimilarityGrader(Grader):
 
         return score, details
 
-    async def evaluate(self, reference: str, candidate: str, **kwargs) -> GraderScore:
+    async def evaluate(
+        self, reference: str, candidate: str, **kwargs
+    ) -> GraderScore:
         """Evaluate Jaccard similarity"""
         score, details = self._compute(reference, candidate)
 

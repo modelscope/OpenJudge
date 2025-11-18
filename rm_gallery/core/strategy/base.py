@@ -1,8 +1,9 @@
+# -*- coding: utf-8 -*-
 from abc import ABC, abstractmethod
 from typing import List
 
-from rm_gallery.core.data import DataSample
-from rm_gallery.core.grader import GraderScore
+from rm_gallery.core.schema.data import DataSample
+from rm_gallery.core.grader.base import GraderScore
 
 
 class GraderStrategy(ABC):
@@ -14,7 +15,10 @@ class GraderStrategy(ABC):
 
     @abstractmethod
     async def __call__(
-        self, data_sample: DataSample, *args, **kwargs
+        self,
+        data_sample: DataSample,
+        *args,
+        **kwargs,
     ) -> List[GraderScore]:
         """Core method for optimizing grader functions.
 

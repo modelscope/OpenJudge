@@ -1,9 +1,10 @@
+# -*- coding: utf-8 -*-
 from typing import Callable, Dict, List, Type, Union
 
 from loguru import logger
 
-from rm_gallery.core.grader import Grader, GraderInfo, GraderMode
-from rm_gallery.core.model.template import RequiredField
+from rm_gallery.core.grader.base import Grader, GraderInfo, GraderMode
+from rm_gallery.core.schema.template import RequiredField
 
 
 class GraderRegistry:
@@ -108,7 +109,7 @@ class GraderRegistry:
         """
         # If the grader is a callable but not a Grader instance, wrap it with FunctionGrader
         if not isinstance(grader, Grader):
-            from rm_gallery.core.grader import FunctionGrader
+            from rm_gallery.core.grader.base import FunctionGrader
 
             # Create a new list to ensure type compatibility
             required_fields = list(info.required_fields)
@@ -141,27 +142,31 @@ class GraderRegistry:
                 cls._graders[namespace] = {}
             elif not isinstance(cls._graders[namespace], dict):
                 raise ValueError(
-                    f"Namespace '{namespace}' conflicts with an existing grader name"
+                    f"Namespace '{namespace}' conflicts with an existing grader name",
                 )
 
             namespace_dict = cls._graders[namespace]
             if not isinstance(namespace_dict, dict):
-                raise ValueError(f"Namespace '{namespace}' is not a valid namespace")
+                raise ValueError(
+                    f"Namespace '{namespace}' is not a valid namespace"
+                )
 
             if name in namespace_dict:
                 logger.warning(
-                    f"grader '{full_name}' is already registered. Overwriting."
+                    f"grader '{full_name}' is already registered. Overwriting.",
                 )
 
             namespace_dict[name] = grader
         else:
             if name in cls._graders and isinstance(cls._graders[name], dict):
                 raise ValueError(
-                    f"grader name '{name}' conflicts with an existing namespace"
+                    f"grader name '{name}' conflicts with an existing namespace",
                 )
 
             if name in cls._graders:
-                logger.warning(f"grader '{name}' is already registered. Overwriting.")
+                logger.warning(
+                    f"grader '{name}' is already registered. Overwriting."
+                )
 
             cls._graders[name] = grader
 
@@ -180,9 +185,14 @@ class GraderRegistry:
         if "." in name:
             # Handle namespaced graders
             namespace, sub_name = name.split(".", 1)
-            if namespace in cls._graders and isinstance(cls._graders[namespace], dict):
+            if namespace in cls._graders and isinstance(
+                cls._graders[namespace], dict
+            ):
                 namespace_dict = cls._graders[namespace]
-                if isinstance(namespace_dict, dict) and sub_name in namespace_dict:
+                if (
+                    isinstance(namespace_dict, dict)
+                    and sub_name in namespace_dict
+                ):
                     return namespace_dict[sub_name]
             return None
         else:
@@ -205,9 +215,14 @@ class GraderRegistry:
         if "." in name:
             # Handle namespaced graders
             namespace, sub_name = name.split(".", 1)
-            if namespace in cls._graders and isinstance(cls._graders[namespace], dict):
+            if namespace in cls._graders and isinstance(
+                cls._graders[namespace], dict
+            ):
                 namespace_dict = cls._graders[namespace]
-                if isinstance(namespace_dict, dict) and sub_name in namespace_dict:
+                if (
+                    isinstance(namespace_dict, dict)
+                    and sub_name in namespace_dict
+                ):
                     del namespace_dict[sub_name]
                     # Clean up empty namespace
                     if not namespace_dict:
@@ -237,12 +252,16 @@ class GraderRegistry:
 
         if namespace:
             # List graders in a specific namespace
-            if namespace in cls._graders and isinstance(cls._graders[namespace], dict):
+            if namespace in cls._graders and isinstance(
+                cls._graders[namespace], dict
+            ):
                 namespace_dict = cls._graders[namespace]
                 if isinstance(namespace_dict, dict):
                     for name, grader in namespace_dict.items():
                         if isinstance(grader, Grader):
-                            result[f"{namespace}.{name}"] = type(grader).__name__
+                            result[f"{namespace}.{name}"] = type(
+                                grader
+                            ).__name__
             return result
         else:
             # List all graders
@@ -254,7 +273,9 @@ class GraderRegistry:
                     # Namespace
                     for sub_key, sub_value in value.items():
                         if isinstance(sub_value, Grader):
-                            result[f"{key}.{sub_key}"] = type(sub_value).__name__
+                            result[f"{key}.{sub_key}"] = type(
+                                sub_value
+                            ).__name__
             return result
 
     @classmethod
@@ -264,7 +285,11 @@ class GraderRegistry:
         Returns:
             A list of namespace names
         """
-        return [key for key, value in cls._graders.items() if isinstance(value, dict)]
+        return [
+            key
+            for key, value in cls._graders.items()
+            if isinstance(value, dict)
+        ]
 
     @classmethod
     def clear(cls) -> None:

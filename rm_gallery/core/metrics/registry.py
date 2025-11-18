@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Grader Registry
 
@@ -9,7 +10,7 @@ from typing import Callable, Dict, List, Optional
 
 from loguru import logger
 
-from rm_gallery.core.grader import Grader
+from rm_gallery.core.grader.base import Grader
 
 
 class GraderRegistry:
@@ -42,7 +43,10 @@ class GraderRegistry:
         return cls._instance
 
     def register(
-        self, name: str, grader_class: type[Grader] | Callable, override: bool = False
+        self,
+        name: str,
+        grader_class: type[Grader] | Callable,
+        override: bool = False,
     ) -> None:
         """
         Register grader class
@@ -63,7 +67,7 @@ class GraderRegistry:
         if name in self._graders and not override:
             logger.warning(
                 f"Grader '{name}' is already registered. "
-                f"Use override=True to replace it, or choose a different name."
+                f"Use override=True to replace it, or choose a different name.",
             )
             return
 

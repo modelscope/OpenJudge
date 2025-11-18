@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Qwen VLM API Integration
 
@@ -14,7 +15,7 @@ from pydantic import BaseModel, Field
 
 from rm_gallery.core.metrics.multimodal.schema import MLLMImage
 from rm_gallery.core.model.base import ChatModelBase
-from rm_gallery.core.model.response import ChatResponse
+from rm_gallery.core.schema.response import ChatResponse
 
 
 class QwenVLMConfig(BaseModel):
@@ -32,15 +33,26 @@ class QwenVLMConfig(BaseModel):
     """
 
     api_key: str = Field(..., description="DashScope API key")
-    model_name: str = Field(default="qwen-vl-plus", description="Qwen VL model name")
+    model_name: str = Field(
+        default="qwen-vl-plus", description="Qwen VL model name"
+    )
     temperature: float = Field(
-        default=0.1, ge=0.0, le=2.0, description="Sampling temperature"
+        default=0.1,
+        ge=0.0,
+        le=2.0,
+        description="Sampling temperature",
     )
-    top_p: float = Field(default=0.9, ge=0.0, le=1.0, description="Nucleus sampling")
+    top_p: float = Field(
+        default=0.9, ge=0.0, le=1.0, description="Nucleus sampling"
+    )
     max_tokens: int = Field(
-        default=2000, gt=0, description="Maximum tokens to generate"
+        default=2000,
+        gt=0,
+        description="Maximum tokens to generate",
     )
-    enable_cache: bool = Field(default=False, description="Enable response caching")
+    enable_cache: bool = Field(
+        default=False, description="Enable response caching"
+    )
     cache_ttl: int = Field(default=3600, description="Cache TTL in seconds")
 
 
@@ -96,7 +108,7 @@ class QwenVLAPI(ChatModelBase):
         self.api_key = api_key or os.getenv("DASHSCOPE_API_KEY")
         if not self.api_key:
             raise ValueError(
-                "API key must be provided or set via DASHSCOPE_API_KEY environment variable"
+                "API key must be provided or set via DASHSCOPE_API_KEY environment variable",
             )
 
         self.temperature = temperature
@@ -137,7 +149,9 @@ class QwenVLAPI(ChatModelBase):
 
         # Add system message if provided
         if system_prompt:
-            messages.append({"role": "system", "content": [{"text": system_prompt}]})
+            messages.append(
+                {"role": "system", "content": [{"text": system_prompt}]}
+            )
 
         # Format user message with text and images
         user_content = []
@@ -151,8 +165,8 @@ class QwenVLAPI(ChatModelBase):
                     # DashScope supports base64 images
                     user_content.append(
                         {
-                            "image": f"data:image/{item.format or 'jpeg'};base64,{item.base64}"
-                        }
+                            "image": f"data:image/{item.format or 'jpeg'};base64,{item.base64}",
+                        },
                     )
 
         messages.append({"role": "user", "content": user_content})
@@ -207,11 +221,13 @@ class QwenVLAPI(ChatModelBase):
             if response.status_code != 200:
                 raise RuntimeError(
                     f"API call failed with status {response.status_code}: "
-                    f"{response.message}"
+                    f"{response.message}",
                 )
 
             # Extract text response
-            response_text = response.output.choices[0].message.content[0]["text"]
+            response_text = response.output.choices[0].message.content[0][
+                "text"
+            ]
 
             # Calculate cost (approximate)
             cost = self._estimate_cost(response)
@@ -220,7 +236,9 @@ class QwenVLAPI(ChatModelBase):
             # Parse structured output if schema or response_format provided
             output_schema = response_format or schema
             if output_schema:
-                from rm_gallery.core.metrics.multimodal.utils import trim_and_load_json
+                from rm_gallery.core.metrics.multimodal.utils import (
+                    trim_and_load_json,
+                )
 
                 data = trim_and_load_json(response_text)
                 try:
@@ -228,7 +246,7 @@ class QwenVLAPI(ChatModelBase):
                     return structured_output
                 except Exception as e:
                     logger.warning(
-                        f"Failed to parse as Pydantic model: {e}, returning dict"
+                        f"Failed to parse as Pydantic model: {e}, returning dict",
                     )
                     return data
 
@@ -265,7 +283,9 @@ class QwenVLAPI(ChatModelBase):
         loop = asyncio.get_event_loop()
 
         def _sync_call():
-            return self.generate(text, images, schema, response_format, system_prompt)
+            return self.generate(
+                text, images, schema, response_format, system_prompt
+            )
 
         return await loop.run_in_executor(None, _sync_call)
 

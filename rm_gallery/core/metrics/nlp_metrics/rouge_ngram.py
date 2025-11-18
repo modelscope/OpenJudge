@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Custom ROUGE N-gram Metrics
 
@@ -8,7 +9,7 @@ Restructured to work with Grader framework.
 from collections import Counter
 from typing import List, Tuple
 
-from rm_gallery.core.grader import Grader, GraderMode, GraderScore
+from rm_gallery.core.grader.base import Grader, GraderMode, GraderScore
 
 
 class ROUGENGramGrader(Grader):
@@ -40,7 +41,9 @@ class ROUGENGramGrader(Grader):
         description: str = "ROUGE N-gram overlap metric",
     ):
         super().__init__(
-            name=name, grader_mode=GraderMode.POINTWISE, description=description
+            name=name,
+            grader_mode=GraderMode.POINTWISE,
+            description=description,
         )
         self.n = n
         self.score_type = score_type
@@ -114,7 +117,9 @@ class ROUGENGramGrader(Grader):
 
         return score, details
 
-    async def evaluate(self, reference: str, candidate: str, **kwargs) -> GraderScore:
+    async def evaluate(
+        self, reference: str, candidate: str, **kwargs
+    ) -> GraderScore:
         """Evaluate ROUGE N-gram score"""
         score, details = self._compute(reference, candidate)
 
@@ -146,7 +151,9 @@ class ROUGE3Grader(ROUGENGramGrader):
         score_type: str = "fmeasure",
         description: str = "ROUGE-3 metric (3-gram overlap)",
     ):
-        super().__init__(name=name, n=3, score_type=score_type, description=description)
+        super().__init__(
+            name=name, n=3, score_type=score_type, description=description
+        )
 
 
 class ROUGE4Grader(ROUGENGramGrader):
@@ -170,7 +177,9 @@ class ROUGE4Grader(ROUGENGramGrader):
         score_type: str = "fmeasure",
         description: str = "ROUGE-4 metric (4-gram overlap)",
     ):
-        super().__init__(name=name, n=4, score_type=score_type, description=description)
+        super().__init__(
+            name=name, n=4, score_type=score_type, description=description
+        )
 
 
 class ROUGE5Grader(ROUGENGramGrader):
@@ -194,7 +203,9 @@ class ROUGE5Grader(ROUGENGramGrader):
         score_type: str = "fmeasure",
         description: str = "ROUGE-5 metric (5-gram overlap)",
     ):
-        super().__init__(name=name, n=5, score_type=score_type, description=description)
+        super().__init__(
+            name=name, n=5, score_type=score_type, description=description
+        )
 
 
 __all__ = [

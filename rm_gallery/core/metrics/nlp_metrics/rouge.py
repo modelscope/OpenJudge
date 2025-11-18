@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 ROUGE Metric
 
@@ -10,7 +11,7 @@ from typing import List
 
 from rouge_score import rouge_scorer
 
-from rm_gallery.core.grader import Grader, GraderMode, GraderScore
+from rm_gallery.core.grader.base import Grader, GraderMode, GraderScore
 
 
 class ROUGEGrader(Grader):
@@ -47,13 +48,16 @@ class ROUGEGrader(Grader):
         description: str = "ROUGE metric for summarization evaluation",
     ):
         super().__init__(
-            name=name, grader_mode=GraderMode.POINTWISE, description=description
+            name=name,
+            grader_mode=GraderMode.POINTWISE,
+            description=description,
         )
         self.rouge_types = rouge_types or ["rouge1", "rouge2", "rougeL"]
         self.use_stemmer = use_stemmer
         self.score_key = score_key
         self.scorer = rouge_scorer.RougeScorer(
-            self.rouge_types, use_stemmer=use_stemmer
+            self.rouge_types,
+            use_stemmer=use_stemmer,
         )
 
     def _get_score_value(self, score_obj) -> float:
@@ -91,7 +95,9 @@ class ROUGEGrader(Grader):
 
         return avg_score, details
 
-    async def evaluate(self, reference: str, candidate: str, **kwargs) -> GraderScore:
+    async def evaluate(
+        self, reference: str, candidate: str, **kwargs
+    ) -> GraderScore:
         """Evaluate ROUGE score"""
         score, details = self._compute(reference, candidate)
 

@@ -17,10 +17,10 @@ from typing import List
 
 from loguru import logger
 
-from rm_gallery.core.data import DataSample
-from rm_gallery.core.grader import GraderMode
+from rm_gallery.core.schema.data import DataSample
+from rm_gallery.core.grader.base import GraderMode
 from rm_gallery.core.model.openai_llm import OpenAIChatModel
-from rm_gallery.core.runner.auto_rubrics import AggregationMode, AutoRubrics
+from rm_gallery.core.grader.auto_rubrics import AggregationMode, AutoRubrics
 
 
 def load_data_samples(

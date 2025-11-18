@@ -38,7 +38,7 @@ AutoRubrics is an LLM-based automated evaluation rubric generation and optimizat
 Data must conform to the `DataSample` format:
 
 ```python
-from rm_gallery.core.data import DataSample
+from rm_gallery.core.schema.data import DataSample
 
 # Pointwise example
 pointwise_sample = DataSample(
@@ -84,9 +84,9 @@ Use case: Small sample size (< 100), need customized rubrics for each sample
 ```python
 import asyncio
 from rm_gallery.core.runner.auto_rubrics import AutoRubrics, AggregationMode
-from rm_gallery.core.grader import GraderMode
+from rm_gallery.core.grader.base import GraderMode
 from rm_gallery.core.model.openai_llm import OpenAIChatModel
-from rm_gallery.core.model.template import LanguageEnum
+from rm_gallery.core.schema.template import LanguageEnum
 
 async def run_single_mode():
     # Initialize LLM
@@ -131,9 +131,9 @@ Use case: Large sample size (> 100), need to extract optimal rubric set from man
 ```python
 import asyncio
 from rm_gallery.core.runner.auto_rubrics import AutoRubrics, AggregationMode
-from rm_gallery.core.grader import GraderMode
+from rm_gallery.core.grader.base import GraderMode
 from rm_gallery.core.model.openai_llm import OpenAIChatModel
-from rm_gallery.core.model.template import LanguageEnum
+from rm_gallery.core.schema.template import LanguageEnum
 
 async def run_batch_mode():
     # Initialize LLM
@@ -188,8 +188,8 @@ asyncio.run(run_batch_mode())
 
 ```python
 from rm_gallery.core.runner.auto_rubrics import AutoRubricsConfig, GenerationMode, AggregationMode
-from rm_gallery.core.grader import GraderMode
-from rm_gallery.core.model.template import LanguageEnum
+from rm_gallery.core.grader.base import GraderMode
+from rm_gallery.core.schema.template import LanguageEnum
 
 config = AutoRubricsConfig(
     # === Core Configuration ===

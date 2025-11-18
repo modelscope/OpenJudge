@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Text-to-Image Quality Grader
 
@@ -11,10 +12,12 @@ from typing import List, Tuple, Union
 
 from loguru import logger
 
-from rm_gallery.core.grader import Grader, GraderMode, GraderScore
+from rm_gallery.core.grader.base import Grader, GraderMode, GraderScore
 from rm_gallery.core.metrics.multimodal.schema import MLLMImage, ReasonScore
 from rm_gallery.core.model.qwen_vlm_api import QwenVLAPI
-from rm_gallery.gallery.rm.multimodal.generation.templates import TextToImageTemplate
+from rm_gallery.gallery.grader.multimodal.generation.templates import (
+    TextToImageTemplate,
+)
 
 
 class TextToImageGrader(Grader):
@@ -70,15 +73,23 @@ class TextToImageGrader(Grader):
         generated_image: MLLMImage,
     ) -> Tuple[List[float], str]:
         """Evaluate semantic consistency synchronously"""
-        prompt = TextToImageTemplate.generate_semantic_consistency_prompt(text_prompt)
+        prompt = TextToImageTemplate.generate_semantic_consistency_prompt(
+            text_prompt,
+        )
 
         try:
             result = self.model.generate(
-                text=prompt, images=[generated_image], response_format=ReasonScore
+                text=prompt,
+                images=[generated_image],
+                response_format=ReasonScore,
             )
 
             # Ensure score is a list
-            scores = result.score if isinstance(result.score, list) else [result.score]
+            scores = (
+                result.score
+                if isinstance(result.score, list)
+                else [result.score]
+            )
             return scores, result.reasoning
 
         except Exception as e:
@@ -91,15 +102,23 @@ class TextToImageGrader(Grader):
         generated_image: MLLMImage,
     ) -> Tuple[List[float], str]:
         """Evaluate semantic consistency asynchronously"""
-        prompt = TextToImageTemplate.generate_semantic_consistency_prompt(text_prompt)
+        prompt = TextToImageTemplate.generate_semantic_consistency_prompt(
+            text_prompt,
+        )
 
         try:
             result = await self.model.a_generate(
-                text=prompt, images=[generated_image], response_format=ReasonScore
+                text=prompt,
+                images=[generated_image],
+                response_format=ReasonScore,
             )
 
             # Ensure score is a list
-            scores = result.score if isinstance(result.score, list) else [result.score]
+            scores = (
+                result.score
+                if isinstance(result.score, list)
+                else [result.score]
+            )
             return scores, result.reasoning
 
         except Exception as e:
@@ -115,7 +134,9 @@ class TextToImageGrader(Grader):
 
         try:
             result = self.model.generate(
-                text=prompt, images=[generated_image], response_format=ReasonScore
+                text=prompt,
+                images=[generated_image],
+                response_format=ReasonScore,
             )
 
             # Ensure score is a list with 2 elements
@@ -142,7 +163,9 @@ class TextToImageGrader(Grader):
 
         try:
             result = await self.model.a_generate(
-                text=prompt, images=[generated_image], response_format=ReasonScore
+                text=prompt,
+                images=[generated_image],
+                response_format=ReasonScore,
             )
 
             # Ensure score is a list with 2 elements
@@ -180,11 +203,14 @@ class TextToImageGrader(Grader):
 
         # Evaluate semantic consistency
         sc_scores, sc_reasoning = self._evaluate_semantic_consistency(
-            text_prompt, generated_image
+            text_prompt,
+            generated_image,
         )
 
         # Evaluate perceptual quality
-        pq_scores, pq_reasoning = self._evaluate_perceptual_quality(generated_image)
+        pq_scores, pq_reasoning = self._evaluate_perceptual_quality(
+            generated_image,
+        )
 
         # Calculate final score using geometric mean
         # Formula: sqrt(min(SC) * min(PQ)) / 10
@@ -228,8 +254,14 @@ class TextToImageGrader(Grader):
         self.evaluation_cost = 0.0
 
         # Evaluate semantic consistency and perceptual quality in parallel
-        (sc_scores, sc_reasoning), (pq_scores, pq_reasoning) = await asyncio.gather(
-            self._a_evaluate_semantic_consistency(text_prompt, generated_image),
+        (sc_scores, sc_reasoning), (
+            pq_scores,
+            pq_reasoning,
+        ) = await asyncio.gather(
+            self._a_evaluate_semantic_consistency(
+                text_prompt,
+                generated_image,
+            ),
             self._a_evaluate_perceptual_quality(generated_image),
         )
 
@@ -299,10 +331,16 @@ class TextToImageGrader(Grader):
 
         if async_mode:
             score, details = await self._a_compute(
-                text_prompt, generated_image, **kwargs
+                text_prompt,
+                generated_image,
+                **kwargs,
             )
         else:
-            score, details = self._compute(text_prompt, generated_image, **kwargs)
+            score, details = self._compute(
+                text_prompt,
+                generated_image,
+                **kwargs,
+            )
 
         # Generate comprehensive reason
         reason = f"""Text-to-Image Quality Score: {score:.4f}

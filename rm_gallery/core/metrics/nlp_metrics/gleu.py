@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 GLEU Metric
 
@@ -6,7 +7,7 @@ Optimized for sentence-level evaluation, particularly suitable for grammatical e
 Restructured to work with Grader framework.
 """
 
-from rm_gallery.core.grader import Grader, GraderMode, GraderScore
+from rm_gallery.core.grader.base import Grader, GraderMode, GraderScore
 
 
 class GLEUGrader(Grader):
@@ -40,7 +41,9 @@ class GLEUGrader(Grader):
         description: str = "GLEU metric for sentence-level evaluation",
     ):
         super().__init__(
-            name=name, grader_mode=GraderMode.POINTWISE, description=description
+            name=name,
+            grader_mode=GraderMode.POINTWISE,
+            description=description,
         )
         self.min_len = min_len
         self.max_len = max_len
@@ -83,7 +86,9 @@ class GLEUGrader(Grader):
         except Exception as e:
             return 0.0, {"error": str(e)}
 
-    async def evaluate(self, reference: str, candidate: str, **kwargs) -> GraderScore:
+    async def evaluate(
+        self, reference: str, candidate: str, **kwargs
+    ) -> GraderScore:
         """Evaluate GLEU score"""
         score, details = self._compute(reference, candidate)
 
@@ -130,7 +135,9 @@ class ChrFGrader(Grader):
         description: str = "Character n-gram F-score metric",
     ):
         super().__init__(
-            name=name, grader_mode=GraderMode.POINTWISE, description=description
+            name=name,
+            grader_mode=GraderMode.POINTWISE,
+            description=description,
         )
         self.n = n
         self.beta = beta
@@ -165,7 +172,9 @@ class ChrFGrader(Grader):
         except Exception as e:
             return 0.0, {"error": str(e)}
 
-    async def evaluate(self, reference: str, candidate: str, **kwargs) -> GraderScore:
+    async def evaluate(
+        self, reference: str, candidate: str, **kwargs
+    ) -> GraderScore:
         """Evaluate ChrF score"""
         score, details = self._compute(reference, candidate)
 

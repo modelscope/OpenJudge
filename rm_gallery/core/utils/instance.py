@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import importlib
 from typing import Any, Type, TypedDict
 
@@ -14,7 +15,9 @@ class InstDict(TypedDict, total=False):
 Inst = InstDict | object
 
 
-def init_instance_by_config(config: Inst, accept_type: Type | None = None) -> Any:
+def init_instance_by_config(
+    config: Inst, accept_type: Type | None = None
+) -> Any:
     """Initialize an instance from configuration dictionary or check existing instance.
 
     The configuration can be:
@@ -49,7 +52,7 @@ def init_instance_by_config(config: Inst, accept_type: Type | None = None) -> An
         >>> instance = init_instance_by_config(existing_instance)
         >>>
         >>> # With type checking
-        >>> from rm_gallery.core.grader import Grader
+        >>> from rm_gallery.core.grader.base import Grader
         >>> instance = init_instance_by_config(config, accept_type=Grader)
     """
     # If config is already an instance, just check its type
@@ -57,7 +60,7 @@ def init_instance_by_config(config: Inst, accept_type: Type | None = None) -> An
         instance = config
         if accept_type is not None and not isinstance(instance, accept_type):
             raise TypeError(
-                f"Provided instance {instance.__class__.__name__} is not an instance of {accept_type.__name__}"
+                f"Provided instance {instance.__class__.__name__} is not an instance of {accept_type.__name__}",
             )
         return instance
 
@@ -75,7 +78,7 @@ def init_instance_by_config(config: Inst, accept_type: Type | None = None) -> An
     # Check type if accept_type is provided
     if accept_type is not None and not issubclass(cls, accept_type):
         raise TypeError(
-            f"Instantiated class {cls.__name__} is not a of {accept_type.__name__}"
+            f"Instantiated class {cls.__name__} is not a of {accept_type.__name__}",
         )
 
     # Instantiate the class with kwargs

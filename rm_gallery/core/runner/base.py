@@ -2,7 +2,7 @@
 from abc import ABC, abstractmethod
 from typing import List
 
-from rm_gallery.core.data import DataSample
+from rm_gallery.core.schema.data import DataSample
 
 
 class BaseRunner(ABC):

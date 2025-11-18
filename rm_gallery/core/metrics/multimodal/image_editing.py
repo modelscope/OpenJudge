@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Image Editing Quality Grader
 
@@ -11,10 +12,12 @@ from typing import List, Tuple, Union
 
 from loguru import logger
 
-from rm_gallery.core.grader import Grader, GraderMode, GraderScore
+from rm_gallery.core.grader.base import Grader, GraderMode, GraderScore
 from rm_gallery.core.metrics.multimodal.schema import MLLMImage, ReasonScore
 from rm_gallery.core.model.qwen_vlm_api import QwenVLAPI
-from rm_gallery.gallery.rm.multimodal.generation.templates import ImageEditingTemplate
+from rm_gallery.gallery.grader.multimodal.generation.templates import (
+    ImageEditingTemplate,
+)
 
 
 class ImageEditingGrader(Grader):
@@ -78,7 +81,7 @@ class ImageEditingGrader(Grader):
     ) -> Tuple[List[float], str]:
         """Evaluate semantic consistency synchronously"""
         prompt = ImageEditingTemplate.generate_semantic_consistency_prompt(
-            edit_instruction
+            edit_instruction,
         )
 
         try:
@@ -88,7 +91,11 @@ class ImageEditingGrader(Grader):
                 response_format=ReasonScore,
             )
 
-            scores = result.score if isinstance(result.score, list) else [result.score]
+            scores = (
+                result.score
+                if isinstance(result.score, list)
+                else [result.score]
+            )
             return scores, result.reasoning
 
         except Exception as e:
@@ -103,7 +110,7 @@ class ImageEditingGrader(Grader):
     ) -> Tuple[List[float], str]:
         """Evaluate semantic consistency asynchronously"""
         prompt = ImageEditingTemplate.generate_semantic_consistency_prompt(
-            edit_instruction
+            edit_instruction,
         )
 
         try:
@@ -113,7 +120,11 @@ class ImageEditingGrader(Grader):
                 response_format=ReasonScore,
             )
 
-            scores = result.score if isinstance(result.score, list) else [result.score]
+            scores = (
+                result.score
+                if isinstance(result.score, list)
+                else [result.score]
+            )
             return scores, result.reasoning
 
         except Exception as e:
@@ -129,7 +140,9 @@ class ImageEditingGrader(Grader):
 
         try:
             result = self.model.generate(
-                text=prompt, images=[edited_image], response_format=ReasonScore
+                text=prompt,
+                images=[edited_image],
+                response_format=ReasonScore,
             )
 
             # Ensure score is a list with 2 elements
@@ -156,7 +169,9 @@ class ImageEditingGrader(Grader):
 
         try:
             result = await self.model.a_generate(
-                text=prompt, images=[edited_image], response_format=ReasonScore
+                text=prompt,
+                images=[edited_image],
+                response_format=ReasonScore,
             )
 
             # Ensure score is a list with 2 elements
@@ -196,11 +211,15 @@ class ImageEditingGrader(Grader):
 
         # Evaluate semantic consistency
         sc_scores, sc_reasoning = self._evaluate_semantic_consistency(
-            original_image, edit_instruction, edited_image
+            original_image,
+            edit_instruction,
+            edited_image,
         )
 
         # Evaluate perceptual quality
-        pq_scores, pq_reasoning = self._evaluate_perceptual_quality(edited_image)
+        pq_scores, pq_reasoning = self._evaluate_perceptual_quality(
+            edited_image,
+        )
 
         # Calculate final score using geometric mean
         if not sc_scores or not pq_scores:
@@ -245,9 +264,14 @@ class ImageEditingGrader(Grader):
         self.evaluation_cost = 0.0
 
         # Evaluate semantic consistency and perceptual quality in parallel
-        (sc_scores, sc_reasoning), (pq_scores, pq_reasoning) = await asyncio.gather(
+        (sc_scores, sc_reasoning), (
+            pq_scores,
+            pq_reasoning,
+        ) = await asyncio.gather(
             self._a_evaluate_semantic_consistency(
-                original_image, edit_instruction, edited_image
+                original_image,
+                edit_instruction,
+                edited_image,
             ),
             self._a_evaluate_perceptual_quality(edited_image),
         )
@@ -322,7 +346,8 @@ class ImageEditingGrader(Grader):
             edited_image = edited_image[0]
 
         if not isinstance(original_image, MLLMImage) or not isinstance(
-            edited_image, MLLMImage
+            edited_image,
+            MLLMImage,
         ):
             return GraderScore(
                 score=0.0,
@@ -332,11 +357,17 @@ class ImageEditingGrader(Grader):
 
         if async_mode:
             score, details = await self._a_compute(
-                original_image, edit_instruction, edited_image, **kwargs
+                original_image,
+                edit_instruction,
+                edited_image,
+                **kwargs,
             )
         else:
             score, details = self._compute(
-                original_image, edit_instruction, edited_image, **kwargs
+                original_image,
+                edit_instruction,
+                edited_image,
+                **kwargs,
             )
 
         # Generate comprehensive reason

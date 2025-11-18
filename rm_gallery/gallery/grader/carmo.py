@@ -1,0 +1,166 @@
+# -*- coding: utf-8 -*-
+# https://arxiv.org/pdf/2410.21545
+
+
+from typing import Any, Dict
+from rm_gallery.core.grader.base import GraderMode, GraderRank, LLMGrader
+from rm_gallery.core.schema.message import ChatMessage
+from rm_gallery.core.schema.template import Chat, RequiredField, Template
+from rm_gallery.core.utils.utils import _json_loads_with_repair
+
+CriteriaGenerationTemplate = Template(
+    messages=[
+        ChatMessage(
+            role="system",
+            content="You are an impartial judge tasked with generating rubrics for evaluating responses provided by AI assistants to an instruction.",
+        ),
+        ChatMessage(
+            role="user",
+            content="""# Task Description
+- Your job is to identify important rubrics, along with detailed descriptions, that a human would use to objectively evaluate the quality of the response based on the given instruction.
+- The rubrics should ensure that responses accurately fulfill the requirements of the instruction.
+- The rubrics should be designed to ensure that responses are honest, helpful, and harmless (do not contain offensive content).
+- The descriptions of the rubrics should be framed as chain-of-thought detailed questions that assess whether the response meets the user's instruction.
+- The length of the response should only be considered a rubric if it is specified in the instruction.\n
+# Input
+## Instruction
+{instruction}
+
+# Output Requirements
+```json
+{
+    "rubrics": [
+        "rubric 1",
+        ...
+    ]
+}
+```
+""",
+        ),
+    ],
+)
+
+
+RelativeEvaluationTemplate = Template(
+    messages=[
+        ChatMessage(
+            role="system",
+            content="Please act as an impartial judge and evaluate the quality of the responses provided by two AI assistants to the user instruction shown below.",
+        ),
+        ChatMessage(
+            role="user",
+            content="""Task Description
+- Please act as an impartial judge and evaluate the quality of the responses provided by two AI assistants to the user instruction shown below. You should choose the assistant that follows the user's instructions and answers the user's instruction better.
+- Your evaluation should consider the provided rubrics.
+- Provide detailed reasons assessing the quality of the responses based on each rubric individually. Clearly specify which assistant performed better for each rubric.
+- After assessing all rubrics, provide a final verdict based on the overall performance of the assistants.
+- Don't be influenced by the order in which the responses are presented. Do not favor certain names of the assistants. Be as objective as possible.\n
+# Input
+## Instruction
+{instruction}
+
+## Rubrics
+{rubrics}
+
+## Completion
+{completion}
+
+# Output Requirements
+```json
+{{
+    "rank": "The rank of each completions",
+    "reason": "The reason for the rank."
+}}
+```
+""",
+        ),
+    ],
+)
+
+
+class Cramo(LLMGrader):
+    """Cramo grader for evaluation of AI assistant responses.
+
+    Implements the CRAMO (Criteria-Aware Relative Evaluation of Model Outputs) approach
+    for evaluating responses from AI assistants. This grader first generates
+    evaluation criteria based on the instruction, then evaluates the response
+    using those criteria.
+
+    The grader uses two-stage evaluation:
+    1. Criteria Generation: Generates rubrics for evaluating responses based on the instruction
+    2. Response Evaluation: Evaluates the response based on the generated rubrics
+
+    Attributes:
+        name (str): The name of the grader.
+        mode (GraderMode): The grader mode (POINTWISE for Cramo).
+        template (Template): The evaluation template.
+        model (Dict[str, Any]): The model configuration.
+    """
+
+    def __init__(
+        self,
+        name: str = "",
+        mode: GraderMode = GraderMode.LISTWISE,
+        template: Template | None = RelativeEvaluationTemplate,
+        model: Dict[str, Any] | None = None,
+        **kwargs,
+    ):
+        """Initialize a Cramo grader.
+
+        Args:
+            name: The name of the grader.
+            mode: The grader mode, defaults to POINTWISE.
+            template: The evaluation template, defaults to RelativeEvaluationTemplate.
+            model: The model configuration.
+            **kwargs: Additional keyword arguments.
+        """
+        super().__init__(name, mode, template, model, **kwargs)
+
+    async def evaluate(
+        self,
+        instruction: str,
+        completion: str,
+        **kwargs,
+    ) -> GraderRank:
+        """Evaluate and rank responses using criteria-aware relative evaluation.
+
+        This method implements the CRAMO approach which first automatically generates
+        evaluation criteria (rubrics) based on the instruction, then evaluates and ranks
+        the responses based on these criteria.
+
+        Args:
+            instruction: The instruction to evaluate the response against.
+            completion: The response to evaluate.
+            **kwargs: Additional keyword arguments.
+
+        Returns:
+            GraderRank: A grader rank with ranking and reason.
+
+        Example:
+            >>> from rm_gallery.core.model.dashscope_llm import DashScopeLLM
+            >>> model_config = {"model_name": "qwen-plus"}
+            >>> grader = Cramo(name="cramo_eval", model=model_config)
+            >>> result = await grader.evaluate(
+            ...     instruction="Explain the process of photosynthesis",
+            ...     completion="Photosynthesis is a process used by plants..."
+            ... )
+            >>> print(result.rank)
+            >>> print(result.reason)
+        """
+        # Generate rubrics using CriteriaGenerationTemplate
+        chat = Chat(
+            template=CriteriaGenerationTemplate,
+            model=self.model,
+        )
+        rubrics = chat(
+            char_output=_json_loads_with_repair,
+            instruction=instruction,
+        ).metadata.get("rubrics", [])
+
+        # Evaluate the completion using the generated rubrics
+        result = await super().evaluate(
+            instruction=instruction,
+            completion=completion,
+            rubrics="\n".join(rubrics),
+            **kwargs,
+        )

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 F1 Score Metric
 
@@ -7,7 +8,7 @@ Restructured to work with Grader framework.
 
 from collections import Counter
 
-from rm_gallery.core.grader import Grader, GraderMode, GraderScore
+from rm_gallery.core.grader.base import Grader, GraderMode, GraderScore
 
 
 class F1ScoreGrader(Grader):
@@ -42,7 +43,9 @@ class F1ScoreGrader(Grader):
         description: str = "Token-based F1 score metric",
     ):
         super().__init__(
-            name=name, grader_mode=GraderMode.POINTWISE, description=description
+            name=name,
+            grader_mode=GraderMode.POINTWISE,
+            description=description,
         )
         self.normalize = normalize
 
@@ -80,7 +83,10 @@ class F1ScoreGrader(Grader):
                     "recall": 1.0,
                 }  # Both empty - perfect match
             else:
-                return 0.0, {"precision": 0.0, "recall": 0.0}  # One empty - no match
+                return 0.0, {
+                    "precision": 0.0,
+                    "recall": 0.0,
+                }  # One empty - no match
 
         # Calculate token overlap using Counter
         candidate_counter = Counter(candidate_tokens)
@@ -107,7 +113,9 @@ class F1ScoreGrader(Grader):
 
         return f1, details
 
-    async def evaluate(self, reference: str, candidate: str, **kwargs) -> GraderScore:
+    async def evaluate(
+        self, reference: str, candidate: str, **kwargs
+    ) -> GraderScore:
         """Evaluate F1 score"""
         score, details = self._compute(reference, candidate)
 
@@ -131,7 +139,9 @@ class TokenF1Grader(F1ScoreGrader):
         normalize: bool = True,
         description: str = "Token-based F1 score metric",
     ):
-        super().__init__(name=name, normalize=normalize, description=description)
+        super().__init__(
+            name=name, normalize=normalize, description=description
+        )
 
 
 __all__ = [

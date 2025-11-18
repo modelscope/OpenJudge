@@ -19,10 +19,10 @@ from loguru import logger
 from pydantic import BaseModel
 
 from .base import ChatModelBase
-from .block import TextBlock, ThinkingBlock, ToolUseBlock
-from .response import ChatResponse
-from .usage import ChatUsage
-from .utils import _create_tool_from_base_model, _json_loads_with_repair
+from ..schema.block import TextBlock, ThinkingBlock, ToolUseBlock
+from ..schema.response import ChatResponse
+from ..schema.usage import ChatUsage
+from ..utils.utils import _create_tool_from_base_model, _json_loads_with_repair
 
 if TYPE_CHECKING:
     from dashscope.api_entities.dashscope_response import (

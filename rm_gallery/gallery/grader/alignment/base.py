@@ -11,7 +11,7 @@ from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import Template
 
 ALIGNMENT_POINTWISE_TEMPLATE = Template(
-    prompt=[
+    messages=[
         ChatMessage(
             role="system",
             content="You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words.",
@@ -47,7 +47,7 @@ Be as goal as possible.
 )
 
 ALIGNMENT_LISTWISE_TEMPLATE = Template(
-    prompt=[
+    messages=[
         ChatMessage(
             role="system",
             content="You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words.",

@@ -21,7 +21,6 @@ class Grader(ABC):
         name (str): The name of the grader.
         mode (GraderMode): The grader mode (pointwise or listwise).
         description: The description of the grader.
-        required_fields (List[RequiredField]): The required fields for the grader.
     """
 
     async def evaluate(self, **kwargs) -> GraderScore | GraderRank:
@@ -278,12 +277,12 @@ class Template(BaseModel):
 ##### 使用示例
 
 ```python
-from rm_gallery.core.schema.template import Template, RequiredField
+from rm_gallery.core.schema.template import Template
 from rm_gallery.core.schema.message import ChatMessage
 
 # 单语言模板
 template = Template(
-    prompt=[
+    messages=[
         ChatMessage(
             role="system",
             content="你是一个 helpful assistant，负责评估回答的质量。"
@@ -297,7 +296,7 @@ template = Template(
 
 # 多语言模板
 multilingual_template = Template(
-    prompt={
+    messages={
         LanguageEnum.EN: [
             ChatMessage(
                 role="system",

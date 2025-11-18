@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Union
 from rm_gallery.core.grader.base import GraderScore, LLMGrader, GraderMode
 from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.model.openai_llm import OpenAIChatModel
+from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import Template, PromptDict
 
 
@@ -151,10 +152,16 @@ class ToolCallAccuracyGrader(LLMGrader):
             mode=mode,
             description=description,
             template=Template(
-                prompt=PromptDict(
-                    system=TOOL_CALL_ACCURACY_SYSTEM_PROMPT,
-                    user=TOOL_CALL_ACCURACY_USER_PROMPT,
-                )
+                messages=[
+                    ChatMessage(
+                        role="system",
+                        content=TOOL_CALL_ACCURACY_SYSTEM_PROMPT,
+                    ),
+                    ChatMessage(
+                        role="user",
+                        content=TOOL_CALL_ACCURACY_USER_PROMPT,
+                    ),
+                ],
             ),
             model=model,
             **kwargs,

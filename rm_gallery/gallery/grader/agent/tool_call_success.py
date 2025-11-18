@@ -14,7 +14,7 @@ from rm_gallery.core.schema.template import Template
 
 # Tool call success evaluation template
 TOOL_CALL_SUCCESS_TEMPLATE = Template(
-    prompt=[
+    messages=[
         ChatMessage(
             role="system",
             content="""You are an expert evaluator with strong software development background. You are required to extract the tool result for every tool call then decide for each tool result whether it indicates that the tool call succeeded or failed.

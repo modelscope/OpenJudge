@@ -21,7 +21,7 @@ from rm_gallery.core.schema.grader import (
     GraderRank,
     GraderScore,
 )
-from rm_gallery.core.schema.template import Chat, RequiredField, Template
+from rm_gallery.core.schema.template import Chat, Template
 from rm_gallery.core.utils.concurrency import ConcurrencyManager
 
 
@@ -35,7 +35,6 @@ class Grader(ABC):
         name (str): The name of the grader.
         mode (GraderMode): The grader mode (pointwise or listwise).
         description: The description of the grader.
-        required_fields (List[RequiredField]): The required fields for the grader.
     """
 
     def __init__(
@@ -43,7 +42,6 @@ class Grader(ABC):
         name: str = "",
         mode: GraderMode = GraderMode.POINTWISE,
         description: str = "",
-        required_fields: List[RequiredField | dict] = [],
         **kwargs,
     ):
         """Initialize a Grader.
@@ -52,15 +50,10 @@ class Grader(ABC):
             name: The name of the grader.
             mode: The grader mode. Defaults to POINTWISE.
             description: The description of the grader.
-            required_fields: The required fields for the grader.
         """
-        self.name = name
+        self._name = name
         self.mode = mode
         self.description = description
-        self.required_fields = [
-            RequiredField(**field) if isinstance(field, dict) else field
-            for field in required_fields
-        ]
         self.kwargs = {}
         self.reset(**kwargs)
 
@@ -73,6 +66,15 @@ class Grader(ABC):
         self.kwargs.update(kwargs)
 
     @property
+    def name(self) -> str:
+        """Get the name of the grader.
+
+        Returns:
+            str: The name of the grader.
+        """
+        return self._name
+
+    @property
     def meta(self) -> GraderInfo:
         """Get the metadata of the grader.
 
@@ -83,7 +85,6 @@ class Grader(ABC):
             name=self.name,
             mode=self.mode,
             description=self.description,
-            required_fields=self.required_fields,
         )
 
     @abstractmethod
@@ -325,58 +326,119 @@ class Grader(ABC):
         else:
             raise ValueError(f"Invalid grader mode: {self.mode}")
 
+    @classmethod
+    def from_config(
+        cls,
+        config: dict,
+    ) -> "Grader":
+        """Create a grader from a configuration dictionary.
+
+        This class method creates a new grader instance using the provided configuration.
+        It extracts standard grader properties (name, mode, description) from the config
+        and passes any remaining items as additional keyword arguments.
+
+        Args:
+            config: A dictionary containing the grader configuration.
+                   Expected keys include 'name', 'mode', 'description', and any
+                   additional parameters required by specific grader implementations.
+
+        Returns:
+            A new instance of the grader subclass.
+        """
+        # Extract standard grader properties
+        name = config.pop("name", "")
+        mode = config.pop("mode", GraderMode.POINTWISE)
+        description = config.pop("description", "")
+
+        # Create and return new instance with remaining config items as kwargs
+        return cls(
+            name=name,
+            mode=mode,
+            description=description,
+            **config,
+        )
+
+    def to_dict(self) -> dict:
+        """Convert the grader to a dictionary representation.
+
+        This method serializes the grader's essential properties (name, mode, description)
+        and any additional keyword arguments into a dictionary. The mode is converted to
+        its string value for serialization purposes.
+
+        Returns:
+            A dictionary containing the serialized grader information.
+        """
+        return {
+            "name": self.name,
+            "mode": self.mode.value,
+            "description": self.description,
+            "kwargs": self.kwargs,
+        }
+
 
 class LLMGrader(Grader):
-    """LLM-based evaluation grader.
+    """LLM-based grader.
 
-    A grader that uses a large language model to perform evaluations.
+    This class extends the base Grader class to provide LLM-based evaluation capabilities.
+    It uses a language model to perform evaluations according to specified rubrics.
 
     Attributes:
-        name (str): The name of the grader.
-        mode (GraderMode): The grader mode.
-        chat (Chat): The chat template for the LLM.
-        rubrics (str): The rubrics for the evaluation.
-        kwargs (dict): The kwargs for the grader.
+        template: The template for generating prompts.
+        model: The language model used for evaluation.
+        rubrics: The rubrics used for evaluation.
     """
 
     def __init__(
         self,
         name: str = "",
         mode: GraderMode = GraderMode.POINTWISE,
-        template: Template | dict | None = None,
-        model: ChatModelBase | None = None,
-        rubrics: str = "",
         description: str = "",
-        required_fields: List[RequiredField] | List[dict] = [],
-        **kwargs,
+        template: dict | Template = {},
+        model: dict | ChatModelBase = {},
+        callback: Callable | None = None,
+        rubrics: str = "",
     ):
         """Initialize an LLMGrader.
 
         Args:
             name: The name of the grader.
-            mode: The grader mode.
-            template: The chat template for the LLM.
-            model: The model parameters for the LLM.
-            rubrics: The rubrics for the evaluation.
+            mode: The grader mode. Defaults to POINTWISE.
             description: The description of the grader.
-            required_fields: The required fields for the grader.
-            kwargs: The kwargs for the grader.
+            template: The template for generating prompts.
+            model: The language model used for evaluation.
+            callback: The callback function for processing model response to GraderScore or GraderRank.
+            rubrics: The rubrics used for evaluation.
         """
-        if template is None:
-            raise ValueError("Template is not set")
+        super().__init__(name=name, mode=mode, description=description)
+
         self.template = (
             template
             if isinstance(template, Template)
             else Template(**template)
         )
-        super().__init__(
-            name=name,
-            mode=mode,
-            description=description,
-            required_fields=required_fields,
-            model=model,
-            rubrics=rubrics,
-            **kwargs,
+        self.model = model
+        self.rubrics = rubrics
+
+        if callback:
+            self.callback = callback
+        else:
+            self.callback = (
+                GraderScore
+                if self.mode == GraderMode.POINTWISE
+                else GraderRank
+            )
+
+    @property
+    def meta(self) -> GraderInfo:
+        """Get the metadata of the grader.
+
+        Returns:
+            GraderInfo: The metadata of the grader.
+        """
+        return GraderInfo(
+            name=self.name,
+            mode=self.mode,
+            description=self.description,
         )
 
     def reset(
@@ -397,22 +459,66 @@ class LLMGrader(Grader):
             raise ValueError("Chat template or model is not set")
 
     def to_dict(self) -> dict:
-        """Convert the grader to a dictionary.
+        """Convert the LLMGrader to a dictionary representation.
+
+        This method serializes the LLMGrader's properties (name, mode, description, template,
+        model, and rubrics) into a dictionary. The mode is converted to its string value,
+        and the template and model are converted to dictionaries if they are not already.
 
         Returns:
-            A dictionary representation of the LLM grader.
+            A dictionary containing the serialized LLMGrader information.
         """
         return {
             "name": self.name,
-            "mode": self.mode,
+            "mode": self.mode.value,
             "description": self.description,
-            "required_fields": [
-                field.model_dump() for field in self.required_fields
-            ],
-            "template": self.template.model_dump(),
+            "template": (
+                self.template.model_dump()
+                if isinstance(self.template, Template)
+                else self.template
+            ),
             "rubrics": self.rubrics,
-            **self.kwargs,
         }
+
+    @classmethod
+    def from_config(
+        cls,
+        config: dict,
+    ) -> "LLMGrader":
+        """Create an LLMGrader from a configuration dictionary.
+
+        This class method creates a new LLMGrader instance using the provided configuration.
+        It extracts standard grader properties (name, mode, description) and LLM-specific
+        properties (template, model, rubrics) from the config.
+
+        Args:
+            config: A dictionary containing the LLMGrader configuration.
+                   Expected keys include 'name', 'mode', 'description', 'template',
+                   'model', 'rubrics', and any additional parameters.
+
+        Returns:
+            A new LLMGrader instance.
+        """
+        # Extract standard grader properties
+        name = config.pop("name", "")
+        mode = config.pop("mode", GraderMode.POINTWISE)
+        description = config.pop("description", "")
+
+        # Extract LLMGrader-specific properties
+        template = config.pop("template", {})
+        model = config.pop("model", {})
+        rubrics = config.pop("rubrics", "")
+
+        # Create and return new instance with remaining config items as kwargs
+        return cls(
+            name=name,
+            mode=mode,
+            description=description,
+            template=template,
+            model=model,
+            rubrics=rubrics,
+            **config,
+        )
 
     async def evaluate(self, **kwargs) -> GraderScore | GraderRank:
         """Evaluate using LLM.
@@ -485,18 +591,13 @@ class LLMGrader(Grader):
             >>> print(result.rank, result.reason)
             [1, 2] First answer directly addresses the query while second is tangential
         """
-        if self.mode == GraderMode.LISTWISE:
-            structured_model = GraderRank
-        else:
-            structured_model = GraderScore
-
         # Check if chat is not None before calling it
         if self.chat is None:
             raise ValueError("Chat template is not set")
         params = {"rubrics": self.rubrics, **self.kwargs}
         params.update(kwargs)
 
-        response = await self.chat(structured_model=structured_model, **params)
+        response = await self.chat(callback=self.callback, **params)
         if self.mode == GraderMode.LISTWISE:
             result = GraderRank(
                 rank=response.metadata["rank"],  # type: ignore
@@ -531,7 +632,6 @@ class FunctionGrader(Grader):
         name: str = "",
         mode: GraderMode = GraderMode.POINTWISE,
         description: str = "",
-        required_fields: List[RequiredField] = [],
         **kwargs,
     ):
         """Initialize a FunctionGrader.
@@ -546,7 +646,6 @@ class FunctionGrader(Grader):
             name,
             mode,
             description,
-            required_fields=required_fields,
             **kwargs,
         )
         self.func = func

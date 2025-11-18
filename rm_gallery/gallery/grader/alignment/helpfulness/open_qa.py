@@ -2,7 +2,7 @@
 from typing import List
 from rm_gallery.core.grader.base import GraderMode, LLMGrader, GraderScore, GraderRank
 from rm_gallery.core.schema.message import ChatMessage
-from rm_gallery.core.schema.template import RequiredField, Template
+from rm_gallery.core.schema.template import Template
 from rm_gallery.gallery.grader.alignment.helpfulness import BaseHelpfulnessGrader
 
 
@@ -13,7 +13,7 @@ Clarity and Organization: Present information in a clear, logically structured f
 
 
 OPEN_QA_SCORE_TEMPLATE = Template(
-    messages=[
+    prompt=[
         ChatMessage(
             role="system",
             content="You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words.",
@@ -41,14 +41,13 @@ Be as objective as possible.
     "reason": "The reason for the score."
 }
 ```
-"
-"",
+""",
         ),
     ]
 )
 
 OPEN_QA_RANK_TEMPLATE = Template(
-    messages=[
+    prompt=[
         ChatMessage(
             role="system",
             content="You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words.",
@@ -83,7 +82,7 @@ You may organize your reasoning as you see fit, but keep your thought process as
 
 
 class OpenQAGrader(BaseHelpfulnessGrader):
-    """Open QA: Provides comprehensive, well-researched answers to open-ended questions."""
+    """Open QA Grader for evaluating open-ended question answering performance."""
 
     _point_template = OPEN_QA_SCORE_TEMPLATE
     _list_template = OPEN_QA_RANK_TEMPLATE

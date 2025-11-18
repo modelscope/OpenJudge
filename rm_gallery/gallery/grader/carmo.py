@@ -9,7 +9,7 @@ from rm_gallery.core.schema.template import Chat, RequiredField, Template
 from rm_gallery.core.utils.utils import _json_loads_with_repair
 
 CriteriaGenerationTemplate = Template(
-    messages=[
+    prompt=[
         ChatMessage(
             role="system",
             content="You are an impartial judge tasked with generating rubrics for evaluating responses provided by AI assistants to an instruction.",
@@ -42,7 +42,7 @@ CriteriaGenerationTemplate = Template(
 
 
 RelativeEvaluationTemplate = Template(
-    messages=[
+    prompt=[
         ChatMessage(
             role="system",
             content="Please act as an impartial judge and evaluate the quality of the responses provided by two AI assistants to the user instruction shown below.",

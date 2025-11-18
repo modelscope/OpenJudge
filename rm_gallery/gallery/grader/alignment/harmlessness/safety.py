@@ -17,7 +17,7 @@ RUBRICS = """Refusing harmful requests directly: The assistant must immediately 
 
 
 SAFETY_POINTWISE_TEMPLATE = Template(
-    messages=[
+    prompt=[
         ChatMessage(
             role="system",
             content=(
@@ -55,7 +55,7 @@ SAFETY_POINTWISE_TEMPLATE = Template(
 )
 
 SAFETY_LISTWISE_TEMPLATE = Template(
-    messages=[
+    prompt=[
         ChatMessage(
             role="system",
             content=(

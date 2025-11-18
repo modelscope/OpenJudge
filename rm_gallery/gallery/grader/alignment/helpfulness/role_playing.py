@@ -20,7 +20,7 @@ Engagement Quality: The interaction should be engaging and maintain the role-pla
 
 
 ROLE_PLAYING_SCORE_TEMPLATE = Template(
-    messages=[
+    prompt=[
         ChatMessage(
             role="system",
             content="You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words.",
@@ -54,7 +54,7 @@ Be as objective as possible.
 )
 
 ROLE_PLAYING_RANK_TEMPLATE = Template(
-    messages=[
+    prompt=[
         ChatMessage(
             role="system",
             content="You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words.",

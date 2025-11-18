@@ -8,16 +8,11 @@ from typing import Any, Dict, List, Union
 from rm_gallery.core.grader.base import GraderScore, LLMGrader, GraderMode
 from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.model.openai_llm import OpenAIChatModel
-from rm_gallery.core.schema.message import ChatMessage
-from rm_gallery.core.schema.template import Template
+from rm_gallery.core.schema.template import Template, PromptDict
 
 
-# Tool call accuracy evaluation template
-TOOL_CALL_ACCURACY_TEMPLATE = Template(
-    messages=[
-        ChatMessage(
-            role="system",
-            content="""# Instruction
+TOOL_CALL_ACCURACY_SYSTEM_PROMPT = (
+    """# Instruction
 ## Goal
 Your are an expert in evaluating the accuracy of a tool call considering relevance and potential usefulness including syntactic and semantic correctness of a proposed tool call from an intelligent system based on provided definition and data. Your goal will involve answering the questions below using the information provided.
 
@@ -63,10 +58,10 @@ Tool calls were fully relevant and efficient:
   • No unnecessary or excessive tool calls were made
   • No errors occurred in any of the tools
   • The tool calls made helped the agent address the user's query without facing any issues""",
-        ),
-        ChatMessage(
-            role="user",
-            content="""# Data
+)
+
+
+TOOL_CALL_ACCURACY_USER_PROMPT = """# Data
 CONVERSATION : {query}
 TOOL CALLS TO BE EVALUATED: {tool_calls}
 TOOL DEFINITIONS: {tool_definitions}
@@ -80,10 +75,7 @@ Your output should be a JSON object with the following format:
     "reason": [Reason for the score],
 }}
 ```
-""",
-        ),
-    ],
-)
+"""
 
 
 class ToolCallAccuracyGrader(LLMGrader):
@@ -158,7 +150,12 @@ class ToolCallAccuracyGrader(LLMGrader):
             name=name,
             mode=mode,
             description=description,
-            template=TOOL_CALL_ACCURACY_TEMPLATE,
+            template=Template(
+                prompt=PromptDict(
+                    system=TOOL_CALL_ACCURACY_SYSTEM_PROMPT,
+                    user=TOOL_CALL_ACCURACY_USER_PROMPT,
+                )
+            ),
             model=model,
             **kwargs,
         )

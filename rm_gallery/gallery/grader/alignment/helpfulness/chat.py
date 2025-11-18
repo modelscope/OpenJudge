@@ -19,7 +19,7 @@ Ensure Factual Accuracy and Contextual Nuance: Correct misconceptions, clarify c
 
 
 CHAT_SCORE_TEMPLATE = Template(
-    messages=[
+    prompt=[
         ChatMessage(
             role="system",
             content="You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words.",
@@ -55,7 +55,7 @@ Be as objective as possible.
 )
 
 CHAT_RANK_TEMPLATE = Template(
-    messages=[
+    prompt=[
         ChatMessage(
             role="system",
             content="You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words.",

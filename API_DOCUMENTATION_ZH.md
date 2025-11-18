@@ -283,7 +283,7 @@ from rm_gallery.core.schema.message import ChatMessage
 
 # 单语言模板
 template = Template(
-    messages=[
+    prompt=[
         ChatMessage(
             role="system",
             content="你是一个 helpful assistant，负责评估回答的质量。"
@@ -297,7 +297,7 @@ template = Template(
 
 # 多语言模板
 multilingual_template = Template(
-    messages={
+    prompt={
         LanguageEnum.EN: [
             ChatMessage(
                 role="system",

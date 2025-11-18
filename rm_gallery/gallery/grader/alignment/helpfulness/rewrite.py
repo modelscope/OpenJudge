@@ -19,7 +19,7 @@ Elimination of Redundancy: Remove unnecessary repetition while retaining essenti
 Improved Readability: Enhance sentence structure, vocabulary, and overall readability appropriate to the target audience."""
 
 REWRITE_POINTWISE_TEMPLATE = Template(
-    messages=[
+    prompt=[
         ChatMessage(
             role="system",
             content="You are a helpful assistant skilled in evaluating rewritten text quality. Please make reward judgments based on the given prompt words.",
@@ -53,7 +53,7 @@ Focus on how well the rewriting improves clarity, style, or format while preserv
 )
 
 REWRITE_LISTWISE_TEMPLATE = Template(
-    messages=[
+    prompt=[
         ChatMessage(
             role="system",
             content="You are a helpful assistant skilled in evaluating rewritten text quality. Please make reward judgments based on the given prompt words.",

@@ -15,7 +15,7 @@ Problem-Specific Precision: Address all aspects of the given problem completely,
 
 
 MATH_SCORE_TEMPLATE = Template(
-    messages=[
+    prompt=[
         ChatMessage(
             role="system",
             content="You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words.",
@@ -49,7 +49,7 @@ Be as objective as possible.
 )
 
 MATH_RANK_TEMPLATE = Template(
-    messages=[
+    prompt=[
         ChatMessage(
             role="system",
             content="You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words.",

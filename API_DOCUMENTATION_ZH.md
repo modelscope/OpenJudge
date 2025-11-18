@@ -23,7 +23,7 @@ class Grader(ABC):
         description: The description of the grader.
     """
 
-    async def evaluate(self, **kwargs) -> GraderScore | GraderRank:
+    async def a_evaluate(self, **kwargs) -> GraderScore | GraderRank:
         """Evaluate method to be implemented by subclasses.
 
         This abstract method must be implemented by all Grader subclasses. It performs
@@ -66,7 +66,7 @@ class Grader(ABC):
             ...             description="Evaluates factual accuracy of answers"
             ...         )
             ...
-            ...     async def evaluate(self, query: str, answer: str, **kwargs) -> GraderScore:
+            ...     async def a_evaluate(self, query: str, answer: str, **kwargs) -> GraderScore:
             ...         # Implementation would evaluate accuracy
             ...         return GraderScore(
             ...             score=0.8,
@@ -82,7 +82,7 @@ class Grader(ABC):
             ...             description="Ranks answers by relevance"
             ...         )
             ...
-            ...     async def evaluate(self, query: str, answer_1: str, answer_2: str, **kwargs) -> GraderRank:
+            ...     async def a_evaluate(self, query: str, answer_1: str, answer_2: str, **kwargs) -> GraderRank:
             ...         # Implementation would rank answers by relevance
             ...         return GraderRank(
             ...             rank=[1, 2],
@@ -91,7 +91,7 @@ class Grader(ABC):
         """
         ...
 
-    async def evaluate_data_sample(
+    async def a_evaluate_data_sample(
         self,
         data_sample: DataSample,
         parser: DataSampleParser | None = None,
@@ -197,7 +197,7 @@ class ExactMatchGrader(Grader):
             description="通过精确字符串匹配进行评估"
         )
 
-    async def evaluate(self, reference: str, prediction: str) -> GraderScore:
+    async def a_evaluate(self, reference: str, prediction: str) -> GraderScore:
         """Evaluate through exact string matching.
 
         Args:
@@ -488,7 +488,7 @@ class GradingRunner(BaseRunner):
             max_concurrent: Maximum number of concurrent evaluations (default: 32)
         """
 
-    async def evaluate(self, data_sample: DataSample) -> GradingResult:
+    async def a_evaluate(self, data_sample: DataSample) -> GradingResult:
         """Run experiment for a single sample.
 
         Args:

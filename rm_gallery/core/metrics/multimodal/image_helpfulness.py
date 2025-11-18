@@ -271,7 +271,7 @@ class ImageHelpfulnessGrader(Grader):
 
         return final_score, details
 
-    async def evaluate(
+    async def a_evaluate(
         self,
         actual_output: List[Union[str, MLLMImage]],
         async_mode: bool = True,

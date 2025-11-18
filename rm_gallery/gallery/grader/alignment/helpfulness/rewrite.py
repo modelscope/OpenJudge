@@ -6,6 +6,7 @@ from rm_gallery.core.grader.base import (
     GraderScore,
     GraderRank,
 )
+from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import Template
 from rm_gallery.gallery.grader.alignment.helpfulness import (
@@ -94,7 +95,18 @@ class RewriteGrader(BaseHelpfulnessGrader):
     _list_template = REWRITE_LISTWISE_TEMPLATE
     _rubrics = RUBRICS
 
-    async def evaluate(
+    def __init__(self, model: ChatModelBase | dict, template: Template | None = None, mode: GraderMode = GraderMode.LISTWISE, **kwargs):
+        """Initialize the SafetyGrader."""
+        super().__init__(
+            name="",
+            mode=mode,
+            model=model,
+            template=template,
+            description="Rewrite: Improves existing text by enhancing clarity, style, or format while preserving meaning.",
+            **kwargs,
+        )
+
+    async def a_evaluate(
         self,
         query: str,
         answer: str | List[str],
@@ -148,4 +160,4 @@ class RewriteGrader(BaseHelpfulnessGrader):
             ... )
             >>> print(result.rank, result.reason)
         """
-        return await super().evaluate(query=query, answer=answer, **kwargs)
+        return await super().a_evaluate(query=query, answer=answer, **kwargs)

@@ -13,7 +13,6 @@ class DetoxifyGrader(Grader):
 
     def __init__(
         self,
-        name: str = "",
         detoxify_model_name: str = "unbiased",
         **kwargs,
     ):
@@ -25,12 +24,11 @@ class DetoxifyGrader(Grader):
             detoxify_model_name (str): Name of the detoxify model to use. Defaults to "unbiased".
             **kwargs: Additional arguments passed to the parent class.
         """
-        super().__init__(name, mode=GraderMode.POINTWISE, **kwargs)
+        super().__init__(name="Detoxify", mode=GraderMode.POINTWISE, description="Detoxify: Detecting different types of of toxicity like threats, obscenity, insults ans so on.", **kwargs)
         from detoxify import Detoxify
-
         self._model = Detoxify(detoxify_model_name)
 
-    async def evaluate(
+    async def a_evaluate(
         self,
         answer: str,
         **kwargs,

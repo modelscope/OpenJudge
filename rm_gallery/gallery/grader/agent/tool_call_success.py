@@ -112,27 +112,22 @@ class ToolCallSuccessGrader(LLMGrader):
 
     def __init__(
         self,
-        name: str = "tool_call_success",
-        mode: GraderMode = GraderMode.POINTWISE,
-        description: str = "Evaluates whether tool calls done by an AI agent includes failures or not",
-        model: ChatModelBase | None = None,
+        model: ChatModelBase | dict,
         **kwargs,
     ):
         """Initialize the ToolCallSuccessGrader.
 
         Args:
-            name: The name of the grader.
-            mode: The grader mode (pointwise or listwise).
-            description: Description of what this grader evaluates.
-            model_config: Configuration for the model to use for evaluation.
-                         If None, a default configuration will be used.
+            model: The language model used for evaluation. Can be either a ChatModelBase 
+                   instance or a dictionary configuration. If a dict is provided, it will
+                   be used to initialize an OpenAIChatModel.
             **kwargs: Additional keyword arguments.
         """
 
         super().__init__(
-            name=name,
-            mode=mode,
-            description=description,
+            name="tool_call_success",
+            mode=GraderMode.POINTWISE,
+            description="Evaluates whether tool calls done by an AI agent includes failures or not",
             template=TOOL_CALL_SUCCESS_TEMPLATE,
             model=model,
             **kwargs,
@@ -168,7 +163,7 @@ class ToolCallSuccessGrader(LLMGrader):
 
         return tool_calls
 
-    async def evaluate(
+    async def a_evaluate(
         self,
         tool_definitions: Union[Dict[str, Any], List[Dict[str, Any]]],
         tool_calls: Union[Dict[str, Any], List[Dict[str, Any]]],
@@ -204,7 +199,7 @@ class ToolCallSuccessGrader(LLMGrader):
             ...         "result": {"value": 4}
             ...     }
             ... ]
-            >>> result = asyncio.run(grader.evaluate(tool_definitions=tool_defs, tool_calls=tool_calls))
+            >>> result = asyncio.run(grader.a_evaluate(tool_definitions=tool_defs, tool_calls=tool_calls))
             >>> print(f"Score: {result.score}, Reason: {result.reason}")
             Score: 1.0, Reason: All tool calls were successful
         """
@@ -215,7 +210,7 @@ class ToolCallSuccessGrader(LLMGrader):
             tool_definitions = [tool_definitions] if tool_definitions else []
 
         # Call parent evaluate method with the structured data
-        result = await super().evaluate(
+        result = await super().a_evaluate(
             tool_calls=json.dumps(tool_calls, indent=2),
             tool_definitions=json.dumps(tool_definitions, indent=2),
             **kwargs,
@@ -266,7 +261,7 @@ if __name__ == "__main__":
         ]
 
         # Evaluate successful tool calls
-        result = await grader.evaluate(
+        result = await grader.a_evaluate(
             tool_definitions=tool_definitions,
             tool_calls=successful_tool_calls,
         )
@@ -285,7 +280,7 @@ if __name__ == "__main__":
         ]
 
         # Evaluate failed tool calls
-        result = await grader.evaluate(
+        result = await grader.a_evaluate(
             tool_definitions=tool_definitions,
             tool_calls=failed_tool_calls,
         )

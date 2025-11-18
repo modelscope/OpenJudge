@@ -7,6 +7,7 @@ from rm_gallery.core.grader.base import (
     GraderScore,
     LLMGrader,
 )
+from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import Template
 from rm_gallery.gallery.grader.alignment.base import BaseAlignmentGrader
@@ -110,7 +111,18 @@ class BaseHarmlessnessGrader(BaseAlignmentGrader):
     _list_template = HARMLESSNESS_RANK_TEMPLATE
     _rubrics = DEFAULT_HARMLESSNESS_RUBRICS
 
-    async def evaluate(
+    def __init__(self, model: ChatModelBase | dict, template: Template | None = None, mode: GraderMode = GraderMode.LISTWISE, **kwargs):
+        """Initialize the HarmlessnessGrader."""
+        super().__init__(
+            name="Harmlessness",
+            mode=mode,
+            model=model,
+            template=template,
+            description="The assistant aims to answer questions, avoiding harmful behaviors such as spreading misinformation, spreading harmful ideas, or engaging in other harmful activities.",
+            **kwargs,
+        )
+
+    async def a_evaluate(
         self,
         query: str,
         answer: str | List[str],
@@ -143,4 +155,4 @@ class BaseHarmlessnessGrader(BaseAlignmentGrader):
             >>> print(result.score)
             0.95
         """
-        return await super().evaluate(query=query, answer=answer, **kwargs)
+        return await super().a_evaluate(query=query, answer=answer, **kwargs)

@@ -16,27 +16,22 @@ class ReasoningFormatGrader(Grader):
     with proper <think> and <answer> tags.
     """
 
-    def __init__(
-        self,
-        name: str = "format_reward",
-        mode: GraderMode = GraderMode.POINTWISE,
-        think_token: str = "think",
-        answer_token: str = "answer",
-        description: str = "",
-    ):
+    def __init__(self, think_token: str = "think", answer_token: str = "answer"):
         """
         Initialize the ReasoningFormatGrader.
         Args:
-            name: The name of the grader.
-            mode: The evaluation mode.
-            description: The description of the grader.
-
+            think_token: The token used for thinking tags. Defaults to "think".
+            answer_token: The token used for answer tags. Defaults to "answer".
         """
-        super().__init__(name, mode, description)
+        super().__init__(
+            name="format_reward",
+            mode=GraderMode.POINTWISE,
+            description="Check format reward for thinking format and answer format with proper tags.",
+        )
         self.think_token = think_token
         self.answer_token = answer_token
 
-    async def evaluate(self, answer: str, *args, **kwargs) -> GraderScore:
+    async def a_evaluate(self, answer: str, *args, **kwargs) -> GraderScore:
         """
         Check format and calculate reward for reasoning tags.
 
@@ -117,23 +112,14 @@ class ReasoningToolCallFormatGrader(Grader):
     with proper <think>, <answer> and <tool_call> tags, including JSON validation
     for tool calls.
     """
+    def __init__(self):
+        super().__init__(
+            name="tool_call_format",
+            mode=GraderMode.POINTWISE,
+            description="Check tool call format including think, answer and tool_call tags with JSON validation.",
+        )
 
-    def __init__(
-        self,
-        name: str = "tool_call_format",
-        mode: GraderMode = GraderMode.POINTWISE,
-        description: str = "",
-    ):
-        """
-        Initialize the ReasoningToolCallFormatGrader.
-        Args:
-            name: The name of the grader.
-            mode: The evaluation mode.
-            description: The description of the grader.
-        """
-        super().__init__(name, mode, description)
-
-    async def evaluate(self, answer: str, **kwargs) -> GraderScore:
+    async def a_evaluate(self, answer: str, **kwargs) -> GraderScore:
         """
         Check tool call format and calculate reward score.
 
@@ -330,28 +316,28 @@ class LengthPenaltyGrader(Grader):
 
     def __init__(
         self,
-        name: str = "",
-        mode: GraderMode = GraderMode.POINTWISE,
         min_length: int = 10,
         max_length: int = 1000,
         penalty_rate: float = 0.01,
-        description: str = "",
     ):
         """
         Initialize the LengthPenaltyGrader.
         Args:
-            name: Name of the grader
-            mode: Mode of the grader (POINTWISE or LISTWISE)
             min_length: Minimum length of the content
             max_length: Maximum length of the content
             penalty_rate: Penalty rate for each character beyond the maximum length
         """
-        super().__init__(name, mode, description)
+        super().__init__(
+            name="LengthPenaltyGrader",
+            grader_mode="content",
+            description="Text length based penalty for content that is too short or too long.",
+        )
+
         self.min_length = min_length
         self.max_length = max_length
         self.penalty_rate = penalty_rate
 
-    async def evaluate(self, answer) -> GraderScore:
+    async def a_evaluate(self, answer) -> GraderScore:
         """
         Calculate length-based penalty for text content.
 
@@ -426,8 +412,6 @@ class NgramRepetitionPenaltyGrader(Grader):
 
     def __init__(
         self,
-        name: str = "",
-        mode: GraderMode = GraderMode.POINTWISE,
         n: int = 3,
         penalty_threshold: float = 0.3,
         penalty_rate: float = 1.0,
@@ -438,14 +422,10 @@ class NgramRepetitionPenaltyGrader(Grader):
         encoding_name: str = "cl100k_base",
         chinese_only: bool = False,
         analyze_scope: Literal["thought", "full"] = "full",
-        description: str = "",
     ):
         """
         Initialize the NgramRepetitionPenaltyGrader.
         Args:
-
-            name: Name of the grader
-            mode: Mode of the grader (POINTWISE or LISTWISE)
             n: N value for N-gram
             penalty_threshold: Threshold for hard threshold penalty
             penalty_rate: Penalty rate for each repetition
@@ -455,10 +435,14 @@ class NgramRepetitionPenaltyGrader(Grader):
             tokenizer_type: Tokenizer type (tiktoken, jieba, simple)
             encoding_name: Encoding name for tiktoken
             chinese_only: Whether to keep only Chinese characters (for jieba tokenizer)
-            analyze_scope: Analyze scope (thought or full)
             description: Description of the grader
         """
-        super().__init__(name, mode, description=description)
+        super().__init__(
+            name="NgramRepetitionPenaltyGrader",
+            grader_mode=GraderMode.POINTWISE,
+            description="Calculate N-gram repetition penalty supporting Chinese processing and multiple penalty strategies.",
+        )
+
         self.n = n
         self.penalty_threshold = penalty_threshold
         self.penalty_rate = penalty_rate
@@ -518,7 +502,7 @@ class NgramRepetitionPenaltyGrader(Grader):
                 )
             return 0.0
 
-    async def evaluate(self, answer: str, **kwargs) -> GraderScore:
+    async def a_evaluate(self, answer: str, **kwargs) -> GraderScore:
         """
         Calculate N-gram repetition penalty for text content.
 
@@ -651,10 +635,8 @@ class PrivacyLeakageGrader(Grader):
 
     def __init__(
         self,
-        name: str = "privacy_leakage",
         penalty_per_leak: float = -0.5,
-        mode: GraderMode = GraderMode.POINTWISE,
-        description: str = "Privacy leakage detection reward",
+        **kwargs,
     ):
         """
         Initialize the PrivacyLeakageGrader.
@@ -664,7 +646,12 @@ class PrivacyLeakageGrader(Grader):
         mode: Grader mode.
         description: Description of the grader.
         """
-        super().__init__(name=name, mode=mode, description=description)
+        super().__init__(
+            name="privacy_leakage",
+            mode=GraderMode.POINTWISE,
+            description="Privacy information leakage detection for emails, phone numbers, ID cards, credit cards, and IP addresses",
+            **kwargs,
+        )
         self.penalty_per_leak = penalty_per_leak
 
     def _detect_privacy_leaks(self, text: str) -> List[Dict[str, str]]:
@@ -707,7 +694,7 @@ class PrivacyLeakageGrader(Grader):
 
         return leaks
 
-    async def evaluate(self, answer: str) -> GraderScore:
+    async def a_evaluate(self, answer: str) -> GraderScore:
         """
         Detect privacy leaks in text content and calculate penalties.
 

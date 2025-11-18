@@ -10,17 +10,22 @@ class MathVerifyGrader(Grader):
     Verifies mathematical expressions using the math_verify library, supporting both LaTeX and plain expressions
     """
 
-    def reset(self, timeout_score: float = 1.0, **kwargs):
+    def __init__(self, timeout_score: float = 1.0, **kwargs):
         """
-        Reset the grader
+        Initialize the MathVerifyGrader.
 
         Args:
             timeout_score: Score to assign on timeout
         """
-        super().reset(**kwargs)
+        super().__init__(
+            name="MathVerify",
+            mode=GraderMode.POINTWISE,
+            description="Verifies mathematical expressions using the math_verify library",
+            **kwargs,
+        )
         self.timeout_score = timeout_score
 
-    async def evaluate(self, generated, reference) -> GraderScore:
+    async def a_evaluate(self, generated, reference) -> GraderScore:
         """
         Verify mathematical expressions for accuracy by parsing and comparing the generated answer
         against a reference answer using the math_verify library.

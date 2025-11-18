@@ -298,7 +298,7 @@ class ImageEditingGrader(Grader):
 
         return final_score, details
 
-    async def evaluate(
+    async def a_evaluate(
         self,
         original_image: Union[MLLMImage, List[MLLMImage]],
         edit_instruction: str,

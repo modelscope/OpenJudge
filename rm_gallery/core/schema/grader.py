@@ -27,7 +27,7 @@ class GraderResult(BaseModel):
         reason (str): The reason for the result.
         metadata (Dict[str, Any]): The metadata of the grader result.
     """
-
+    name: str = Field(default=..., description="The name of the grader")
     reason: str = Field(default=..., description="The reason for the result")
     metadata: Dict[str, Any] = Field(
         default_factory=dict,
@@ -49,6 +49,25 @@ class GraderScore(GraderResult):
     score: float = Field(default=..., description="score")
 
 
+class _GraderScore(BaseModel):
+    """Grader score result.
+
+    Represents a numerical score assigned by a grader along with a reason.
+
+    Attributes:
+        score (float): A numerical score assigned by the grader.
+        reason (str): Explanation of how the score was determined.
+        metadata (Dict[str, Any]): Optional additional information from the evaluation.
+    """
+
+    score: float = Field(default=..., description="score")
+    reason: str = Field(default=..., description="reason")
+    metadata: Dict[str, Any] = Field(
+        default_factory=dict,
+        description="The metadata of the grader result",
+    )
+
+
 class GraderRank(GraderResult):
     """Grader rank result.
 
@@ -61,6 +80,25 @@ class GraderRank(GraderResult):
     """
 
     rank: List[int] = Field(default=..., description="rank")
+
+
+class _GraderRank(BaseModel):
+    """Grader rank result.
+
+    Represents a ranking of items assigned by a grader along with a reason.
+
+    Attributes:
+        rank (List[int]): The ranking of items.
+        reason (str): Explanation of how the ranking was determined.
+        metadata (Dict[str, Any]): Optional additional information from the evaluation.
+    """
+
+    rank: List[int] = Field(default=..., description="rank")
+    reason: str = Field(default=..., description="reason")
+    metadata: Dict[str, Any] = Field(
+        default_factory=dict,
+        description="The metadata of the grader result",
+    )
 
 
 class GraderError(GraderResult):

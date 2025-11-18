@@ -71,7 +71,7 @@ class ExactMatchGrader(Grader):
 
         return matched, details
 
-    async def evaluate(
+    async def a_evaluate(
         self, reference: str, candidate: str, **kwargs
     ) -> GraderScore:
         """
@@ -137,7 +137,7 @@ class PrefixMatchGrader(Grader):
 
         return matched, details
 
-    async def evaluate(
+    async def a_evaluate(
         self, reference: str, candidate: str, **kwargs
     ) -> GraderScore:
         """Evaluate prefix match"""
@@ -193,7 +193,7 @@ class SuffixMatchGrader(Grader):
 
         return matched, details
 
-    async def evaluate(
+    async def a_evaluate(
         self, reference: str, candidate: str, **kwargs
     ) -> GraderScore:
         """Evaluate suffix match"""
@@ -266,7 +266,7 @@ class RegexMatchGrader(Grader):
         except re.error as e:
             return False, {"error": f"Invalid regex pattern: {str(e)}"}
 
-    async def evaluate(
+    async def a_evaluate(
         self,
         reference: str = "",
         candidate: str = "",

@@ -6,6 +6,7 @@ from rm_gallery.core.grader.base import (
     GraderScore,
     GraderRank,
 )
+from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import Template
 from rm_gallery.gallery.grader.alignment.helpfulness import (
@@ -96,7 +97,27 @@ class ChatGrader(BaseHelpfulnessGrader):
     _list_template = CHAT_RANK_TEMPLATE
     _rubrics = RUBRICS
 
-    async def evaluate(
+    def __init__(self, model: ChatModelBase | dict, template: Template | None = None, mode: GraderMode = GraderMode.LISTWISE, **kwargs):
+        """Initialize the ChatGrader.
+
+        Args:
+            model: The language model used for evaluation. Can be either a ChatModelBase 
+                   instance or a dictionary configuration. If a dict is provided, it will
+                   be used to initialize an OpenAIChatModel.
+            template: The template for generating prompts. If None, a default template will be used.
+            mode: The grader mode. Defaults to LISTWISE.
+            **kwargs: Additional keyword arguments.
+        """
+        super().__init__(
+            name="ChatGrader",
+            mode=mode,
+            model=model,
+            template=template,
+            description="Simulates human conversation and communicates a variety of topics through text understanding and generation, emphasizing coherence and natural flow of interaction.",
+            **kwargs,
+        )
+
+    async def a_evaluate(
         self,
         query: str,
         answer: str | List[str],
@@ -131,4 +152,4 @@ class ChatGrader(BaseHelpfulnessGrader):
             ...     answer="I'm doing well, thank you for asking! How can I assist you?"
             ... )
         """
-        return await super().evaluate(query=query, answer=answer, **kwargs)
+        return await super().a_evaluate(query=query, answer=answer, **kwargs)

@@ -113,7 +113,7 @@ class F1ScoreGrader(Grader):
 
         return f1, details
 
-    async def evaluate(
+    async def a_evaluate(
         self, reference: str, candidate: str, **kwargs
     ) -> GraderScore:
         """Evaluate F1 score"""

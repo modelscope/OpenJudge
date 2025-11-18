@@ -5,7 +5,7 @@
 from typing import Any, Dict
 from rm_gallery.core.grader.base import GraderMode, GraderRank, LLMGrader
 from rm_gallery.core.schema.message import ChatMessage
-from rm_gallery.core.schema.template import Template
+from rm_gallery.core.schema.template import Chat, Template
 from rm_gallery.core.utils.utils import _json_loads_with_repair
 
 CriteriaGenerationTemplate = Template(
@@ -89,34 +89,18 @@ class Cramo(LLMGrader):
     The grader uses two-stage evaluation:
     1. Criteria Generation: Generates rubrics for evaluating responses based on the instruction
     2. Response Evaluation: Evaluates the response based on the generated rubrics
-
-    Attributes:
-        name (str): The name of the grader.
-        mode (GraderMode): The grader mode (POINTWISE for Cramo).
-        template (Template): The evaluation template.
-        model (Dict[str, Any]): The model configuration.
     """
 
-    def __init__(
-        self,
-        name: str = "",
-        mode: GraderMode = GraderMode.LISTWISE,
-        template: Template | None = RelativeEvaluationTemplate,
-        model: Dict[str, Any] | None = None,
-        **kwargs,
-    ):
-        """Initialize a Cramo grader.
+    def __init__(self):
+        """Initialize a Cramo grader."""
+        super().__init__(
+            name="cramo_eval",
+            mode=GraderMode.LISTWISE,
+            template=RelativeEvaluationTemplate,
+            model=None,
+        )
 
-        Args:
-            name: The name of the grader.
-            mode: The grader mode, defaults to POINTWISE.
-            template: The evaluation template, defaults to RelativeEvaluationTemplate.
-            model: The model configuration.
-            **kwargs: Additional keyword arguments.
-        """
-        super().__init__(name, mode, template, model, **kwargs)
-
-    async def evaluate(
+    async def a_evaluate(
         self,
         instruction: str,
         completion: str,
@@ -158,9 +142,10 @@ class Cramo(LLMGrader):
         ).metadata.get("rubrics", [])
 
         # Evaluate the completion using the generated rubrics
-        result = await super().evaluate(
+        result = await super().a_evaluate(
             instruction=instruction,
             completion=completion,
             rubrics="\n".join(rubrics),
             **kwargs,
         )
+        return result

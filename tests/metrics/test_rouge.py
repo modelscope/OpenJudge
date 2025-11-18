@@ -26,7 +26,7 @@ class TestROUGEBasic:
     async def test_rouge_perfect_match(self):
         """Test perfect match returns score of 1.0"""
         grader = ROUGEGrader()
-        result = await grader.evaluate(
+        result = await grader.a_evaluate(
             reference="the cat is on the mat", candidate="the cat is on the mat"
         )
 
@@ -36,7 +36,7 @@ class TestROUGEBasic:
     async def test_rouge_complete_mismatch(self):
         """Test completely different text"""
         grader = ROUGEGrader()
-        result = await grader.evaluate(
+        result = await grader.a_evaluate(
             reference="the cat is on the mat", candidate="hello world foo bar"
         )
 
@@ -46,7 +46,7 @@ class TestROUGEBasic:
     async def test_rouge_partial_match(self):
         """Test partial overlapping text"""
         grader = ROUGEGrader()
-        result = await grader.evaluate(
+        result = await grader.a_evaluate(
             reference="the cat is on the mat", candidate="the dog is on the rug"
         )
 
@@ -61,7 +61,7 @@ class TestROUGE1:
     async def test_rouge1_perfect_match(self):
         """Test ROUGE-1 perfect match"""
         grader = ROUGE1Grader()
-        result = await grader.evaluate(reference="the cat sat", candidate="the cat sat")
+        result = await grader.a_evaluate(reference="the cat sat", candidate="the cat sat")
 
         assert result.score == 1.0
 
@@ -69,7 +69,7 @@ class TestROUGE1:
     async def test_rouge1_word_order_independent(self):
         """Test that ROUGE-1 is independent of word order"""
         grader = ROUGE1Grader()
-        result = await grader.evaluate(reference="the cat sat", candidate="sat cat the")
+        result = await grader.a_evaluate(reference="the cat sat", candidate="sat cat the")
 
         # ROUGE-1 should give high score for same words different order
         assert result.score > 0.9
@@ -78,7 +78,7 @@ class TestROUGE1:
     async def test_rouge1_extra_words(self):
         """Test ROUGE-1 with extra words in candidate"""
         grader = ROUGE1Grader()
-        result = await grader.evaluate(
+        result = await grader.a_evaluate(
             reference="the cat sat", candidate="the big cat sat down"
         )
 
@@ -93,7 +93,7 @@ class TestROUGE2:
     async def test_rouge2_perfect_match(self):
         """Test ROUGE-2 perfect match"""
         grader = ROUGE2Grader()
-        result = await grader.evaluate(
+        result = await grader.a_evaluate(
             reference="the cat is on the mat", candidate="the cat is on the mat"
         )
 
@@ -103,7 +103,7 @@ class TestROUGE2:
     async def test_rouge2_word_order_matters(self):
         """Test that ROUGE-2 is sensitive to word order"""
         grader = ROUGE2Grader()
-        result = await grader.evaluate(
+        result = await grader.a_evaluate(
             reference="the cat is on the mat", candidate="the mat is on the cat"
         )
 
@@ -114,7 +114,7 @@ class TestROUGE2:
     async def test_rouge2_no_bigram_overlap(self):
         """Test ROUGE-2 with no bigram overlap"""
         grader = ROUGE2Grader()
-        result = await grader.evaluate(reference="a b c d", candidate="b a d c")
+        result = await grader.a_evaluate(reference="a b c d", candidate="b a d c")
 
         # No matching bigrams
         assert result.score == 0.0
@@ -127,7 +127,7 @@ class TestROUGEL:
     async def test_rougeL_perfect_match(self):
         """Test ROUGE-L perfect match"""
         grader = ROUGELGrader()
-        result = await grader.evaluate(
+        result = await grader.a_evaluate(
             reference="the cat is on the mat", candidate="the cat is on the mat"
         )
 
@@ -137,7 +137,7 @@ class TestROUGEL:
     async def test_rougeL_subsequence(self):
         """Test ROUGE-L with common subsequence"""
         grader = ROUGELGrader()
-        result = await grader.evaluate(
+        result = await grader.a_evaluate(
             reference="a b c d e f", candidate="a x b x c x d x e x f"
         )
 
@@ -150,11 +150,11 @@ class TestROUGEL:
         rougeL = ROUGELGrader()
         rouge2 = ROUGE2Grader()
 
-        resultL = await rougeL.evaluate(
+        resultL = await rougeL.a_evaluate(
             reference="the cat sat on the mat",
             candidate="the cat was sitting on the mat",
         )
-        result2 = await rouge2.evaluate(
+        result2 = await rouge2.a_evaluate(
             reference="the cat sat on the mat",
             candidate="the cat was sitting on the mat",
         )
@@ -171,7 +171,7 @@ class TestROUGENGram:
     async def test_rouge3_perfect_match(self):
         """Test ROUGE-3 perfect match"""
         grader = ROUGE3Grader()
-        result = await grader.evaluate(
+        result = await grader.a_evaluate(
             reference="the cat sat on the mat", candidate="the cat sat on the mat"
         )
 
@@ -181,7 +181,7 @@ class TestROUGENGram:
     async def test_rouge4_perfect_match(self):
         """Test ROUGE-4 perfect match"""
         grader = ROUGE4Grader()
-        result = await grader.evaluate(
+        result = await grader.a_evaluate(
             reference="the cat sat on the mat", candidate="the cat sat on the mat"
         )
 
@@ -191,7 +191,7 @@ class TestROUGENGram:
     async def test_rouge5_perfect_match(self):
         """Test ROUGE-5 perfect match"""
         grader = ROUGE5Grader()
-        result = await grader.evaluate(
+        result = await grader.a_evaluate(
             reference="the cat sat on the mat", candidate="the cat sat on the mat"
         )
 
@@ -204,15 +204,15 @@ class TestROUGENGram:
         rouge2 = ROUGE2Grader()
         rouge3 = ROUGE3Grader()
 
-        result1 = await rouge1.evaluate(
+        result1 = await rouge1.a_evaluate(
             reference="the quick brown fox jumps over",
             candidate="the quick brown fox walks over",
         )
-        result2 = await rouge2.evaluate(
+        result2 = await rouge2.a_evaluate(
             reference="the quick brown fox jumps over",
             candidate="the quick brown fox walks over",
         )
-        result3 = await rouge3.evaluate(
+        result3 = await rouge3.a_evaluate(
             reference="the quick brown fox jumps over",
             candidate="the quick brown fox walks over",
         )
@@ -228,7 +228,7 @@ class TestROUGEEdgeCases:
     async def test_empty_candidate(self):
         """Test handling of empty candidate"""
         grader = ROUGEGrader()
-        result = await grader.evaluate(reference="the cat", candidate="")
+        result = await grader.a_evaluate(reference="the cat", candidate="")
 
         assert result.score == 0.0
 
@@ -236,7 +236,7 @@ class TestROUGEEdgeCases:
     async def test_empty_reference(self):
         """Test handling of empty reference"""
         grader = ROUGEGrader()
-        result = await grader.evaluate(reference="", candidate="the cat")
+        result = await grader.a_evaluate(reference="", candidate="the cat")
 
         assert result.score == 0.0
 
@@ -244,7 +244,7 @@ class TestROUGEEdgeCases:
     async def test_single_word(self):
         """Test single word texts"""
         grader = ROUGE1Grader()
-        result = await grader.evaluate(reference="cat", candidate="cat")
+        result = await grader.a_evaluate(reference="cat", candidate="cat")
 
         assert result.score == 1.0
 
@@ -252,7 +252,7 @@ class TestROUGEEdgeCases:
     async def test_repeated_words(self):
         """Test handling of repeated words"""
         grader = ROUGE1Grader()
-        result = await grader.evaluate(reference="cat cat cat", candidate="cat dog cat")
+        result = await grader.a_evaluate(reference="cat cat cat", candidate="cat dog cat")
 
         # Should handle repeated words correctly
         assert 0.5 < result.score < 1.0
@@ -265,7 +265,7 @@ class TestROUGEWithStemming:
     async def test_with_stemming(self):
         """Test ROUGE with stemming enabled"""
         grader = ROUGEGrader(use_stemmer=True)
-        result = await grader.evaluate(
+        result = await grader.a_evaluate(
             reference="the cats are running", candidate="the cat is running"
         )
 
@@ -276,7 +276,7 @@ class TestROUGEWithStemming:
     async def test_without_stemming(self):
         """Test ROUGE without stemming"""
         grader = ROUGEGrader(use_stemmer=False)
-        result = await grader.evaluate(
+        result = await grader.a_evaluate(
             reference="the cats are running", candidate="the cat is running"
         )
 

@@ -96,7 +96,7 @@ class BaseHonestyGrader(BaseAlignmentGrader):
     _list_template = HONESTY_RANK_TEMPLATE
     _rubrics = DEFAULT_HONESTY_RUBRICS
 
-    async def evaluate(
+    async def a_evaluate(
         self,
         query: str,
         answer: str | List[str],
@@ -147,4 +147,4 @@ class BaseHonestyGrader(BaseAlignmentGrader):
             ... )
             >>> print(result.rank, result.reason)
         """
-        return await super().evaluate(query=query, answer=answer, **kwargs)
+        return await super().a_evaluate(query=query, answer=answer, **kwargs)

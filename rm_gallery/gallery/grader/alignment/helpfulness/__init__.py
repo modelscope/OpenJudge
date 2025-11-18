@@ -7,6 +7,7 @@ from rm_gallery.core.grader.base import (
     GraderScore,
     LLMGrader,
 )
+from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import Template
 from rm_gallery.gallery.grader.alignment.base import BaseAlignmentGrader
@@ -109,7 +110,20 @@ class BaseHelpfulnessGrader(BaseAlignmentGrader):
     _list_template = HELPFULNESS_RANK_TEMPLATE
     _rubrics = DEFAULT_HELPFULNESS_RUBRICS
 
-    async def evaluate(
+    def __init__(self, model: ChatModelBase | dict, template: Template | None = None, mode: GraderMode = GraderMode.LISTWISE, **kwargs):
+        """Initialize the BaseHelpfulnessGrader.
+
+        Args:
+            model: The language model used for evaluation. Can be either a ChatModelBase 
+                   instance or a dictionary configuration. If a dict is provided, it will
+                   be used to initialize an OpenAIChatModel.
+            template: The template for generating prompts. If None, a default template will be used.
+            mode: The grader mode. Defaults to LISTWISE.
+            **kwargs: Additional keyword arguments.
+        """
+        super().__init__(model=model, template=template, mode=mode, **kwargs)
+
+    async def a_evaluate(
         self,
         query: str,
         answer: str | List[str],
@@ -132,13 +146,30 @@ class BaseHelpfulnessGrader(BaseAlignmentGrader):
                 listwise evaluation, returns a GraderRank with a ranking of the answers
                 and explanation.
 
+            In pointwise mode:
+                GraderScore: Contains a numerical score and explanation.
+                    - score (float): Numerical helpfulness score (0.0-1.0)
+                    - reason (str): Explanation of how the score was determined
+                    - metadata (Dict[str, Any]): Additional evaluation information
+
+            In listwise mode:
+                GraderRank: Contains a ranked list and explanation.
+                    - rank (List[int]): Ranking of answers by quality
+                    - reason (str): Explanation of how the ranking was determined
+                    - metadata (Dict[str, Any]): Additional evaluation information
+
         Example:
-            >>> grader = BaseHelpfulnessGrader(mode=GraderMode.POINTWISE)
-            >>> result = await grader.evaluate(
+            >>> # Example for pointwise helpfulness grader
+            >>> import asyncio
+            >>> from rm_gallery.core.model.openai_llm import OpenAIChatModel
+            >>> from rm_gallery.core.grader.base import GraderMode
+            >>> model = OpenAIChatModel(model_name="gpt-3.5-turbo")
+            >>> grader = BaseHelpfulnessGrader(mode=GraderMode.POINTWISE, model=model)
+            >>> result = asyncio.run(grader.a_evaluate(
             ...     query="How do I make a cake?",
             ...     answer="First, gather ingredients: flour, eggs, sugar, butter..."
-            ... )
+            ... ))
             >>> print(result.score)
             0.9
         """
-        return await super().evaluate(query=query, answer=answer, **kwargs)
+        return await super().a_evaluate(query=query, answer=answer, **kwargs)

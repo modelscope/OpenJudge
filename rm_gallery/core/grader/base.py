@@ -4,10 +4,12 @@ import asyncio
 # import inspect
 from abc import ABC, abstractmethod
 from functools import partial
+import os
 from typing import Callable, List
 
 from loguru import logger
 
+from rm_gallery.core.model.openai_llm import OpenAIChatModel
 from rm_gallery.core.schema.data import (
     DataSample,
     DataSampleParser,
@@ -15,6 +17,8 @@ from rm_gallery.core.schema.data import (
 )
 from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.schema.grader import (
+    _GraderRank,
+    _GraderScore,
     GraderError,
     GraderInfo,
     GraderMode,
@@ -54,16 +58,7 @@ class Grader(ABC):
         self._name = name
         self.mode = mode
         self.description = description
-        self.kwargs = {}
-        self.reset(**kwargs)
-
-    def reset(self, **kwargs):
-        """Reset the grader.
-
-        Args:
-            **kwargs: Additional keyword arguments.
-        """
-        self.kwargs.update(kwargs)
+        self.kwargs = kwargs
 
     @property
     def name(self) -> str:
@@ -88,7 +83,7 @@ class Grader(ABC):
         )
 
     @abstractmethod
-    async def evaluate(self, **kwargs) -> GraderScore | GraderRank:
+    async def a_evaluate(self, **kwargs) -> GraderScore | GraderRank:
         """Evaluate method to be implemented by subclasses.
 
         This abstract method must be implemented by all Grader subclasses. It performs
@@ -131,7 +126,7 @@ class Grader(ABC):
             ...             description="Evaluates factual accuracy of answers"
             ...         )
             ...
-            ...     async def evaluate(self, query: str, answer: str, **kwargs) -> GraderScore:
+            ...     async def a_evaluate(self, query: str, answer: str, **kwargs) -> GraderScore:
             ...         # Implementation would evaluate accuracy
             ...         return GraderScore(
             ...             score=0.8,
@@ -147,7 +142,7 @@ class Grader(ABC):
             ...             description="Ranks answers by relevance"
             ...         )
             ...
-            ...     async def evaluate(self, query: str, answer_1: str, answer_2: str, **kwargs) -> GraderRank:
+            ...     async def a_evaluate(self, query: str, answer_1: str, answer_2: str, **kwargs) -> GraderRank:
             ...         # Implementation would rank answers by relevance
             ...         return GraderRank(
             ...             rank=[1, 2],
@@ -156,7 +151,7 @@ class Grader(ABC):
         """
         ...
 
-    async def _safe_evaluate(
+    async def _a_safe_evaluate(
         self,
         **kwargs,
     ) -> GraderScore | GraderRank | GraderError:
@@ -173,14 +168,14 @@ class Grader(ABC):
         async def _evaluate_task():
             try:
                 # Check if self.evaluate is a coroutine function
-                if asyncio.iscoroutinefunction(self.evaluate):
-                    result = await self.evaluate(**kwargs)
+                if asyncio.iscoroutinefunction(self.a_evaluate):
+                    result = await self.a_evaluate(**kwargs)
                 else:
                     # If it's a synchronous function, run it in a thread pool
                     loop = asyncio.get_event_loop()
                     result = await loop.run_in_executor(
                         None,
-                        lambda: self.evaluate(**kwargs),
+                        lambda: self.a_evaluate(**kwargs),
                     )
                 return result
             except Exception as e:
@@ -193,13 +188,68 @@ class Grader(ABC):
             _evaluate_task(),
         )
 
-    async def evaluate_data_sample(
+    async def _a_evaluate_data_sample(
         self,
-        data_sample: DataSample,
+        data_sample: DataSample | List[DataSample],
         parser: DataSampleParser | None = None,
         *args,
         **kwargs,
     ) -> List[GraderScore]:
+        """
+        Evaluate a data sample using this grader.
+        """
+        if parser is not None:
+            data_sample = parse_data_sample(data_sample, parser)
+
+        if self.mode == GraderMode.POINTWISE:
+            # Pointwise: Evaluate each sample individually
+            coroutines = [
+                self._a_safe_evaluate(**data_sample.data, **sample)
+                for sample in data_sample.samples
+            ]
+            results: List[GraderScore] = await asyncio.gather(*coroutines)  # type: ignore
+            _results = []
+            for result in results:
+                if isinstance(result, GraderScore):
+                    _results.append(result)
+                elif isinstance(result, GraderError):
+                    _results.append(
+                        GraderScore(score=0.0, reason=result.reason),
+                    )
+                else:
+                    raise ValueError(f"Invalid result type: {type(result)}")
+            return results
+
+        elif self.mode == GraderMode.LISTWISE:
+            # Listwise: Evaluate all samples together in one call
+            params = {key: value for key, value in kwargs.items()}
+            params.update(data_sample.data)
+            if len(data_sample.samples) > 1:
+                if data_sample.samples:
+                    for key in data_sample.samples[0].keys():
+                        params[key] = [
+                            sample[key] for sample in data_sample.samples
+                        ]
+
+            result = await self._a_safe_evaluate(**params)
+            if isinstance(result, GraderRank):
+                results = [
+                    GraderScore(
+                        score=score,
+                        reason=result.reason,
+                    )
+                    for score in result.rank
+                ]
+            elif isinstance(result, GraderError):
+                results = [GraderScore(score=0.0, reason=result.reason)]
+            else:
+                raise ValueError(f"Invalid result type: {type(result)}")
+
+            return results
+        else:
+            raise ValueError(f"Invalid grader mode: {self.mode}")
+        
+    async def a_evaluate_data_samples(self, data_samples: List[DataSample] | DataSample, parser: DataSampleParser | Callable | None = None, *args, **kwargs) -> List[List[GraderScore]] | List[GraderScore]:
         """Main entry point to evaluate data sample.
 
         Evaluates one data samples using the  grader.
@@ -272,59 +322,23 @@ class Grader(ABC):
             ... )
             >>>
             >>> # Evaluate
-            >>> results = await grader.evaluate(data_sample=data_sample)
+            >>> results = await grader.a_evaluate_data_samples(data_sample=data_sample)
             >>> print(results)
         """
-        if parser is not None:
-            data_sample = parse_data_sample(data_sample, parser)
-
-        if self.mode == GraderMode.POINTWISE:
-            # Pointwise: Evaluate each sample individually
-            coroutines = [
-                self._safe_evaluate(**data_sample.data, **sample)
-                for sample in data_sample.samples
+        if isinstance(data_samples, list):
+            corutines: List = [
+                self._a_evaluate_data_sample(
+                    data_sample=_data_sample,
+                    parser=parser,
+                    *args,
+                    **kwargs,
+                )
+                for _data_sample in data_samples
             ]
-            results: List[GraderScore] = await asyncio.gather(*coroutines)  # type: ignore
-            _results = []
-            for result in results:
-                if isinstance(result, GraderScore):
-                    _results.append(result)
-                elif isinstance(result, GraderError):
-                    _results.append(
-                        GraderScore(score=0.0, reason=result.reason),
-                    )
-                else:
-                    raise ValueError(f"Invalid result type: {type(result)}")
-            return results
-
-        elif self.mode == GraderMode.LISTWISE:
-            # Listwise: Evaluate all samples together in one call
-            params = {key: value for key, value in kwargs.items()}
-            params.update(data_sample.data)
-            if len(data_sample.samples) > 1:
-                if data_sample.samples:
-                    for key in data_sample.samples[0].keys():
-                        params[key] = [
-                            sample[key] for sample in data_sample.samples
-                        ]
-
-            result = await self._safe_evaluate(**params)
-            if isinstance(result, GraderRank):
-                results = [
-                    GraderScore(
-                        score=score,
-                        reason=result.reason,
-                    )
-                    for score in result.rank
-                ]
-            elif isinstance(result, GraderError):
-                results = [GraderScore(score=0.0, reason=result.reason)]
-            else:
-                raise ValueError(f"Invalid result type: {type(result)}")
-
-            return results
+            results = await asyncio.gather(*corutines)
+            return list(results)  # type: ignore
         else:
-            raise ValueError(f"Invalid grader mode: {self.mode}")
+            return await self._a_evaluate_data_sample(data_sample=data_samples, parser=parser, *args, **kwargs)
 
     @classmethod
     def from_config(
@@ -390,22 +404,24 @@ class LLMGrader(Grader):
 
     def __init__(
         self,
+        model: ChatModelBase | dict,
         name: str = "",
         mode: GraderMode = GraderMode.POINTWISE,
         description: str = "",
         template: dict | Template = {},
-        model: dict | ChatModelBase = {},
         callback: Callable | None = None,
         rubrics: str = "",
     ):
         """Initialize an LLMGrader.
 
         Args:
+            model: The language model used for evaluation. Can be either a ChatModelBase 
+                   instance or a dictionary configuration. If a dict is provided, it will
+                   be used to initialize an OpenAIChatModel.
             name: The name of the grader.
             mode: The grader mode. Defaults to POINTWISE.
             description: The description of the grader.
             template: The template for generating prompts.
-            model: The language model used for evaluation.
             callback: The callback function for processing model response to GraderScore or GraderRank.
             rubrics: The rubrics used for evaluation.
         """
@@ -416,18 +432,26 @@ class LLMGrader(Grader):
             if isinstance(template, Template)
             else Template(**template)
         )
-        self.model = model
-        self.rubrics = rubrics
 
         if callback:
             self.callback = callback
         else:
             self.callback = (
-                GraderScore
+                _GraderScore
                 if self.mode == GraderMode.POINTWISE
-                else GraderRank
+                else _GraderRank
             )
 
+        if isinstance(model, dict):
+            model = OpenAIChatModel(**model)
+        
+        self.model = model
+        self.rubrics = rubrics
+        if self.template is not None and self.model is not None:
+            self.chat = Chat(template=self.template, model=self.model)
+        else:
+            raise ValueError("Chat template or model is not set")
+        
     @property
     def meta(self) -> GraderInfo:
         """Get the metadata of the grader.
@@ -440,23 +464,6 @@ class LLMGrader(Grader):
             mode=self.mode,
             description=self.description,
         )
-
-    def reset(
-        self,
-        model: ChatModelBase | None = None,
-        rubrics: str = "",
-        **kwargs,
-    ):
-        """
-        Reset the grader with new model and rubrics.
-        """
-        super().reset(**kwargs)
-        self.model = model if model is not None else self.model
-        self.rubrics = rubrics
-        if self.template is not None and self.model is not None:
-            self.chat = Chat(template=self.template, model=self.model)
-        else:
-            raise ValueError("Chat template or model is not set")
 
     def to_dict(self) -> dict:
         """Convert the LLMGrader to a dictionary representation.
@@ -520,7 +527,7 @@ class LLMGrader(Grader):
             **config,
         )
 
-    async def evaluate(self, **kwargs) -> GraderScore | GraderRank:
+    async def a_evaluate(self, **kwargs) -> GraderScore | GraderRank:
         """Evaluate using LLM.
 
         Performs evaluation using a large language model according to the configured
@@ -597,18 +604,26 @@ class LLMGrader(Grader):
         params = {"rubrics": self.rubrics, **self.kwargs}
         params.update(kwargs)
 
-        response = await self.chat(callback=self.callback, **params)
+        language = os.environ.get("LANGUAGE", "en")
+        response = await self.chat(callback=self.callback, language=language, **params)
+        metadata = response.metadata if response.metadata else {}
         if self.mode == GraderMode.LISTWISE:
+            rank = metadata.pop("rank")
+            reason = metadata.pop("reason")
             result = GraderRank(
-                rank=response.metadata["rank"],  # type: ignore
-                reason=response.metadata["reason"],  # type: ignore
-                metadata=response.metadata.get("meta_data", {}),  # type: ignore
+                name=self.name,
+                rank=rank,  # type: ignore
+                reason=reason,  # type: ignore
+                metadata=metadata,  # type: ignore
             )
         elif self.mode == GraderMode.POINTWISE:
+            score = metadata.pop("score")
+            reason = metadata.pop("reason")
             result = GraderScore(
-                score=response.metadata["score"],  # type: ignore
-                reason=response.metadata["reason"],  # type: ignore
-                metadata=response.metadata.get("meta_data", {}),  # type: ignore
+                name=self.name,
+                score=score,  # type: ignore
+                reason=reason,  # type: ignore
+                metadata=metadata,  # type: ignore
             )
         else:
             raise ValueError(f"Unsupported grader mode: {self.mode}")
@@ -650,7 +665,7 @@ class FunctionGrader(Grader):
         )
         self.func = func
 
-    async def evaluate(self, **kwargs) -> GraderScore | GraderRank:
+    async def a_evaluate(self, **kwargs) -> GraderScore | GraderRank:
         """Evaluate using a function.
 
         Performs evaluation by calling the wrapped function with the provided arguments.

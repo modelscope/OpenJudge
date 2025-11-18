@@ -98,9 +98,9 @@ if __name__ == "__main__":
 
     async def main():
         grader = await auto_grader(data_samples_label)
-        return await grader.evaluate_data_sample(
+        return await grader.a_evaluate_data_samples(
             parser=None,
-            data_sample=data_samples_unlabel[0],
+            data_samples=data_samples_unlabel[0],
         )
 
     result = asyncio.run(main())

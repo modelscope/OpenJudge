@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from typing import List
 from rm_gallery.core.grader.base import GraderMode, GraderScore, GraderRank
+from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import Template
 from rm_gallery.gallery.grader.alignment.helpfulness import (
@@ -90,7 +91,18 @@ class MathGrader(BaseHelpfulnessGrader):
     _list_template = MATH_RANK_TEMPLATE
     _rubrics = RUBRICS
 
-    async def evaluate(
+    def __init__(self, model: ChatModelBase | dict, template: Template | None = None, mode: GraderMode = GraderMode.LISTWISE, **kwargs):
+        """Initialize the SafetyGrader."""
+        super().__init__(
+            name="Math",
+            mode=mode,
+            model=model,
+            template=template,
+            description="Solves mathematical problems accurately with clear logical reasoning and proper notation.",
+            **kwargs,
+        )
+    
+    async def a_evaluate(
         self,
         query: str,
         answer: str | List[str],
@@ -124,4 +136,4 @@ class MathGrader(BaseHelpfulnessGrader):
             ...     answer="2x + 5 = 15; 2x = 10; x = 5"
             ... )
         """
-        return await super().evaluate(query=query, answer=answer, **kwargs)
+        return await super().a_evaluate(query=query, answer=answer, **kwargs)

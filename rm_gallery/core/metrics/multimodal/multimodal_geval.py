@@ -370,7 +370,7 @@ class MultimodalGEvalGrader(Grader):
 
         return normalized_score, details
 
-    async def evaluate(
+    async def a_evaluate(
         self,
         async_mode: bool = True,
         **params_dict,

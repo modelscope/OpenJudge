@@ -85,20 +85,10 @@ class GradingRunner(BaseRunner):
         for key, config in self.grading_configs.items():
             grader, parser = parse_grading_config(config)
             if grader is not None:
-<<<<<<< sen_dev_dail
                 coro = grader.evaluate_data_sample(
                     parser=parser,
                     data_sample=data_sample,
                 )
-||||||| base
-                coro = evaluate(grader=grader, parser=parser, data_sample=data_sample)
-=======
-                coro = evaluate(
-                    grader=grader,
-                    parser=parser,
-                    data_sample=data_sample,
-                )
->>>>>>> d79781573ad4744c92a68131bfeb3c389e2d662c
                 coroutines.append(coro)
                 keys.append(key)
 

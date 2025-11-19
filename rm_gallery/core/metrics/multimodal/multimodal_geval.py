@@ -66,7 +66,7 @@ class MultimodalGEvalGrader(Grader):
         ...     threshold=0.7
         ... )
         >>>
-        >>> result = await grader.evaluate(
+        >>> result = await grader.aevaluate(
         ...     input=[MLLMImage(url="..."), "Describe this image"],
         ...     actual_output=["A cat sitting on a mat"]
         ... )
@@ -212,7 +212,7 @@ class MultimodalGEvalGrader(Grader):
             logger.error(f"Error in G-Eval evaluation: {e}")
             return 0.0, f"Evaluation error: {str(e)}"
 
-    async def _a_evaluate_with_geval(
+    async def _aevaluate_with_geval(
         self,
         params_dict: dict,
     ) -> Tuple[float, str]:
@@ -348,7 +348,7 @@ class MultimodalGEvalGrader(Grader):
                 }
 
         # Evaluate
-        raw_score, reasoning = await self._a_evaluate_with_geval(params_dict)
+        raw_score, reasoning = await self._aevaluate_with_geval(params_dict)
 
         # Normalize score to [0, 1]
         score_min, score_max = self.score_range
@@ -370,7 +370,7 @@ class MultimodalGEvalGrader(Grader):
 
         return normalized_score, details
 
-    async def a_evaluate(
+    async def aevaluate(
         self,
         async_mode: bool = True,
         **params_dict,
@@ -392,7 +392,7 @@ class MultimodalGEvalGrader(Grader):
             GraderScore: Score with normalized evaluation value [0, 1]
 
         Example:
-            >>> result = await grader.evaluate(
+            >>> result = await grader.aevaluate(
             ...     input=[MLLMImage(url="..."), "Describe this"],
             ...     actual_output=["A cat sitting"]
             ... )
@@ -404,6 +404,7 @@ class MultimodalGEvalGrader(Grader):
 
         if "error" in details:
             return GraderScore(
+                name=self.name,
                 score=0.0,
                 reason=details["error"],
                 metadata=details,
@@ -418,6 +419,7 @@ Evaluation Steps:
 """
 
         return GraderScore(
+            name=self.name,
             score=score,
             reason=reason.strip(),
             metadata=details,

@@ -83,7 +83,7 @@ class Grader(ABC):
         )
 
     @abstractmethod
-    async def a_evaluate(self, **kwargs) -> GraderScore | GraderRank:
+    async def aevaluate(self, **kwargs) -> GraderScore | GraderRank:
         """Evaluate method to be implemented by subclasses.
 
         This abstract method must be implemented by all Grader subclasses. It performs
@@ -126,9 +126,10 @@ class Grader(ABC):
             ...             description="Evaluates factual accuracy of answers"
             ...         )
             ...
-            ...     async def a_evaluate(self, query: str, answer: str, **kwargs) -> GraderScore:
+            ...     async def aevaluate(self, query: str, answer: str, **kwargs) -> GraderScore:
             ...         # Implementation would evaluate accuracy
             ...         return GraderScore(
+            ...             name=self.name,
             ...             score=0.8,
             ...             reason="Answer is mostly accurate but missing some details"
             ...         )
@@ -142,7 +143,7 @@ class Grader(ABC):
             ...             description="Ranks answers by relevance"
             ...         )
             ...
-            ...     async def a_evaluate(self, query: str, answer_1: str, answer_2: str, **kwargs) -> GraderRank:
+            ...     async def aevaluate(self, query: str, answer_1: str, answer_2: str, **kwargs) -> GraderRank:
             ...         # Implementation would rank answers by relevance
             ...         return GraderRank(
             ...             rank=[1, 2],
@@ -168,14 +169,14 @@ class Grader(ABC):
         async def _evaluate_task():
             try:
                 # Check if self.evaluate is a coroutine function
-                if asyncio.iscoroutinefunction(self.a_evaluate):
-                    result = await self.a_evaluate(**kwargs)
+                if asyncio.iscoroutinefunction(self.aevaluate):
+                    result = await self.aevaluate(**kwargs)
                 else:
                     # If it's a synchronous function, run it in a thread pool
                     loop = asyncio.get_event_loop()
                     result = await loop.run_in_executor(
                         None,
-                        lambda: self.a_evaluate(**kwargs),
+                        lambda: self.aevaluate(**kwargs),
                     )
                 return result
             except Exception as e:
@@ -188,7 +189,7 @@ class Grader(ABC):
             _evaluate_task(),
         )
 
-    async def _a_evaluate_data_sample(
+    async def _aevaluate_data_sample(
         self,
         data_sample: DataSample,
         parser: DataSampleParser | None = None,
@@ -273,7 +274,7 @@ class Grader(ABC):
         else:
             raise ValueError(f"Invalid grader mode: {self.mode}")
 
-    async def a_evaluate_data_samples(
+    async def aevaluate_data_samples(
         self,
         data_samples: List[DataSample] | DataSample,
         parser: DataSampleParser | Callable | None = None,
@@ -352,12 +353,12 @@ class Grader(ABC):
             ... )
             >>>
             >>> # Evaluate
-            >>> results = await grader.a_evaluate_data_samples(data_sample=data_sample)
+            >>> results = await grader.aevaluate_data_samples(data_sample=data_sample)
             >>> print(results)
         """
         if isinstance(data_samples, list):
             corutines: List = [
-                self._a_evaluate_data_sample(
+                self._aevaluate_data_sample(
                     data_sample=_data_sample,
                     parser=parser,
                     *args,
@@ -368,7 +369,7 @@ class Grader(ABC):
             results = await asyncio.gather(*corutines)
             return list(results)  # type: ignore
         else:
-            return await self._a_evaluate_data_sample(
+            return await self._aevaluate_data_sample(
                 data_sample=data_samples, parser=parser, *args, **kwargs
             )
 
@@ -559,7 +560,7 @@ class LLMGrader(Grader):
             **config,
         )
 
-    async def a_evaluate(self, **kwargs) -> GraderScore | GraderRank:
+    async def aevaluate(self, **kwargs) -> GraderScore | GraderRank:
         """Evaluate using LLM.
 
         Performs evaluation using a large language model according to the configured
@@ -604,7 +605,7 @@ class LLMGrader(Grader):
             ...     model=DashScopeLLM(model_name="qwen-plus"),
             ...     rubrics="Rate the helpfulness of the answer (0.0-1.0)"
             ... )
-            >>> result = await grader.evaluate(
+            >>> result = await grader.aevaluate(
             ...     query="How do I make a cake?",
             ...     answer="Preheat oven to 350F, mix ingredients, bake for 30 minutes."
             ... )
@@ -622,7 +623,7 @@ class LLMGrader(Grader):
             ...     model=DashScopeLLM(model_name="qwen-plus"),
             ...     rubrics="Rank answers by relevance (1 is most relevant)"
             ... )
-            >>> result = await ranking_grader.evaluate(
+            >>> result = await ranking_grader.aevaluate(
             ...     query="What is the capital of France?",
             ...     answer_1="Paris is the capital of France.",
             ...     answer_2="France is a country in Europe."
@@ -706,7 +707,7 @@ class FunctionGrader(Grader):
         )
         self.func = func
 
-    async def a_evaluate(self, **kwargs) -> GraderScore | GraderRank:
+    async def aevaluate(self, **kwargs) -> GraderScore | GraderRank:
         """Evaluate using a function.
 
         Performs evaluation by calling the wrapped function with the provided arguments.
@@ -743,16 +744,16 @@ class FunctionGrader(Grader):
             >>> def accuracy_function(query: str, answer: str) -> GraderScore:
             ...     # Simple accuracy function - checks if answer contains key facts
             ...     if "Paris" in answer and "capital" in answer.lower():
-            ...         return GraderScore(score=1.0, reason="Correctly identifies Paris as capital")
+            ...         return GraderScore(name=self.name, score=1.0, reason="Correctly identifies Paris as capital")
             ...     else:
-            ...         return GraderScore(score=0.0, reason="Missing key information")
+            ...         return GraderScore(name=self.name, score=0.0, reason="Missing key information")
             ...
             >>> grader = FunctionGrader(
             ...     func=accuracy_function,
             ...     name="accuracy_checker",
             ...     mode=GraderMode.POINTWISE
             ... )
-            >>> result = await grader.evaluate(
+            >>> result = await grader.aevaluate(
             ...     query="What is the capital of France?",
             ...     answer="Paris is the capital of France."
             ... )
@@ -772,7 +773,7 @@ class FunctionGrader(Grader):
             ...     name="length_ranker",
             ...     mode=GraderMode.LISTWISE
             ... )
-            >>> result = await ranking_grader.evaluate(
+            >>> result = await ranking_grader.aevaluate(
             ...     query="Explain photosynthesis",
             ...     answer_1="Photosynthesis converts light to energy.",
             ...     answer_2="Photosynthesis is the process by which plants convert light energy into chemical energy."

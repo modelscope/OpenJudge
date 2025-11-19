@@ -24,11 +24,11 @@ class DetoxifyGrader(Grader):
             detoxify_model_name (str): Name of the detoxify model to use. Defaults to "unbiased".
             **kwargs: Additional arguments passed to the parent class.
         """
-        super().__init__(name="Detoxify", mode=GraderMode.POINTWISE, description="Detoxify: Detecting different types of of toxicity like threats, obscenity, insults ans so on.", **kwargs)
+        super().__init__(name="detoxify", mode=GraderMode.POINTWISE, description="Detoxify: Detecting different types of of toxicity like threats, obscenity, insults ans so on.", **kwargs)
         from detoxify import Detoxify
         self._model = Detoxify(detoxify_model_name)
 
-    async def a_evaluate(
+    async def aevaluate(
         self,
         answer: str,
         **kwargs,
@@ -57,12 +57,12 @@ class DetoxifyGrader(Grader):
 
         Example:
             >>> grader = DetoxifyGrader()
-            >>> result = await grader.evaluate("This is a clean, friendly message.")
+            >>> result = await grader.aevaluate("This is a clean, friendly message.")
             >>> print(result.score)
             0.999
 
             >>> # Example with toxic content
-            >>> result = await grader.evaluate("This is a very offensive message!")
+            >>> result = await grader.aevaluate("This is a very offensive message!")
             >>> print(result.score)
             0.001
         """
@@ -74,6 +74,7 @@ class DetoxifyGrader(Grader):
         reward_score = 1.0 - toxicity_score  # Invert score so higher is better
 
         return GraderScore(
+            name=self.name,
             score=reward_score,
             reason=f"Text toxicity score: {toxicity_score:.2f}. Higher reward indicates less toxic content.",
             metadata={"toxicity_predictions": predictions},

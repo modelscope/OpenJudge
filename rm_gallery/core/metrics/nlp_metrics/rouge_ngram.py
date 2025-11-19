@@ -26,7 +26,7 @@ class ROUGENGramGrader(Grader):
 
     Example:
         >>> grader = ROUGENGramGrader(n=3)
-        >>> result = await grader.evaluate(
+        >>> result = await grader.aevaluate(
         ...     reference="the quick brown fox jumps",
         ...     candidate="the quick brown fox jumps"
         ... )
@@ -117,13 +117,14 @@ class ROUGENGramGrader(Grader):
 
         return score, details
 
-    async def a_evaluate(
+    async def aevaluate(
         self, reference: str, candidate: str, **kwargs
     ) -> GraderScore:
         """Evaluate ROUGE N-gram score"""
         score, details = self._compute(reference, candidate)
 
         return GraderScore(
+            name=self.name,
             score=score,
             reason=f"ROUGE-{self.n} {self.score_type}: {score:.4f}",
             metadata=details,
@@ -138,7 +139,7 @@ class ROUGE3Grader(ROUGENGramGrader):
 
     Example:
         >>> grader = ROUGE3Grader()
-        >>> result = await grader.evaluate(
+        >>> result = await grader.aevaluate(
         ...     reference="the quick brown fox jumps over the lazy dog",
         ...     candidate="the quick brown fox jumps over the lazy cat"
         ... )
@@ -164,7 +165,7 @@ class ROUGE4Grader(ROUGENGramGrader):
 
     Example:
         >>> grader = ROUGE4Grader()
-        >>> result = await grader.evaluate(
+        >>> result = await grader.aevaluate(
         ...     reference="the quick brown fox jumps over the lazy dog today",
         ...     candidate="the quick brown fox jumps over the lazy dog yesterday"
         ... )
@@ -190,7 +191,7 @@ class ROUGE5Grader(ROUGENGramGrader):
 
     Example:
         >>> grader = ROUGE5Grader()
-        >>> result = await grader.evaluate(
+        >>> result = await grader.aevaluate(
         ...     reference="the quick brown fox jumps over the lazy dog every single day",
         ...     candidate="the quick brown fox jumps over the lazy dog every single time"
         ... )

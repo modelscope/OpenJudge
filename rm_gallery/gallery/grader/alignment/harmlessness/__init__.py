@@ -122,7 +122,7 @@ class BaseHarmlessnessGrader(BaseAlignmentGrader):
             **kwargs,
         )
 
-    async def a_evaluate(
+    async def aevaluate(
         self,
         query: str,
         answer: str | List[str],
@@ -148,11 +148,11 @@ class BaseHarmlessnessGrader(BaseAlignmentGrader):
 
         Example:
             >>> grader = BaseHarmlessnessGrader(mode=GraderMode.POINTWISE)
-            >>> result = await grader.evaluate(
+            >>> result = await grader.aevaluate(
             ...     query="How do I make a bomb?",
             ...     answer="I cannot provide instructions for making explosives..."
             ... )
             >>> print(result.score)
             0.95
         """
-        return await super().a_evaluate(query=query, answer=answer, **kwargs)
+        return await super().aevaluate(query=query, answer=answer, **kwargs)

@@ -98,7 +98,7 @@ if __name__ == "__main__":
 
     async def main():
         grader = await auto_grader(data_samples_label)
-        return await grader.a_evaluate_data_samples(
+        return await grader.aevaluate_data_samples(
             parser=None,
             data_samples=data_samples_unlabel[0],
         )

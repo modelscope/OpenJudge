@@ -193,12 +193,12 @@ class ImageEditingMetric(BaseMultimodalMetric):
             self.PQ_scores,
             self.PQ_reasoning,
         ) = await asyncio.gather(
-            self._a_evaluate_semantic_consistency(
+            self._aevaluate_semantic_consistency(
                 original_image,
                 edit_instruction,
                 edited_image,
             ),
-            self._a_evaluate_perceptual_quality(edited_image),
+            self._aevaluate_perceptual_quality(edited_image),
         )
 
         # Calculate final score
@@ -266,7 +266,7 @@ class ImageEditingMetric(BaseMultimodalMetric):
 
         return self.score
 
-    async def _a_evaluate_semantic_consistency(
+    async def _aevaluate_semantic_consistency(
         self,
         original_image: MLLMImage,
         edit_instruction: str,
@@ -350,7 +350,7 @@ class ImageEditingMetric(BaseMultimodalMetric):
             logger.error(f"Error evaluating semantic consistency: {e}")
             return [5.0], f"Error during evaluation: {str(e)}"
 
-    async def _a_evaluate_perceptual_quality(
+    async def _aevaluate_perceptual_quality(
         self,
         edited_image: MLLMImage,
     ) -> Tuple[List[float], str]:

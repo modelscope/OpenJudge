@@ -100,7 +100,7 @@ class CodeGrader(BaseHelpfulnessGrader):
     def __init__(self, model: ChatModelBase | dict, template: Template | None = None, mode: GraderMode = GraderMode.LISTWISE, **kwargs):
         """Initialize the SafetyGrader."""
         super().__init__(
-            name="Code",
+            name="code",
             mode=mode,
             model=model,
             template=template,
@@ -109,7 +109,7 @@ class CodeGrader(BaseHelpfulnessGrader):
         )
 
     
-    async def a_evaluate(
+    async def aevaluate(
         self,
         query: str,
         answer: str | List[str],
@@ -147,7 +147,7 @@ class CodeGrader(BaseHelpfulnessGrader):
         Example:
             >>> # Example for pointwise code grader
             >>> grader = CodeGrader(mode=GraderMode.POINTWISE)
-            >>> result = await grader.evaluate(
+            >>> result = await grader.aevaluate(
             ...     query="Write a function to calculate factorial of a number",
             ...     answer="def factorial(n):\\n    if n <= 1:\\n        return 1\\n    return n * factorial(n-1)"
             ... )
@@ -155,10 +155,10 @@ class CodeGrader(BaseHelpfulnessGrader):
 
             >>> # Example for listwise code grader
             >>> ranking_grader = CodeGrader(mode=GraderMode.LISTWISE)
-            >>> result = await ranking_grader.evaluate(
+            >>> result = await ranking_grader.aevaluate(
             ...     query="Write a function to reverse a string",
             ...     answer=["def reverse(s):\\n    return s[::-1]", "def reverse(s):\\n    result = ''\\n    for char in s:\\n        result = char + result\\n    return result"]
             ... )
             >>> print(result.rank, result.reason)
         """
-        return await super().a_evaluate(query=query, answer=answer, **kwargs)
+        return await super().aevaluate(query=query, answer=answer, **kwargs)

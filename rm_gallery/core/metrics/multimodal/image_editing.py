@@ -49,7 +49,7 @@ class ImageEditingGrader(Grader):
         >>> vlm_api = QwenVLAPI(api_key="...", model_name="qwen-vl-plus")
         >>> grader = ImageEditingGrader(model=vlm_api, threshold=0.7)
         >>>
-        >>> result = await grader.evaluate(
+        >>> result = await grader.aevaluate(
         ...     original_image=MLLMImage(url="https://example.com/original.jpg"),
         ...     edit_instruction="Change the sofa color to blue",
         ...     edited_image=MLLMImage(url="https://example.com/edited.jpg")
@@ -102,7 +102,7 @@ class ImageEditingGrader(Grader):
             logger.error(f"Error evaluating semantic consistency: {e}")
             return [5.0], f"Error during evaluation: {str(e)}"
 
-    async def _a_evaluate_semantic_consistency(
+    async def _aevaluate_semantic_consistency(
         self,
         original_image: MLLMImage,
         edit_instruction: str,
@@ -160,7 +160,7 @@ class ImageEditingGrader(Grader):
             logger.error(f"Error evaluating perceptual quality: {e}")
             return [5.0, 5.0], f"Error during evaluation: {str(e)}"
 
-    async def _a_evaluate_perceptual_quality(
+    async def _aevaluate_perceptual_quality(
         self,
         edited_image: MLLMImage,
     ) -> Tuple[List[float], str]:
@@ -268,12 +268,12 @@ class ImageEditingGrader(Grader):
             pq_scores,
             pq_reasoning,
         ) = await asyncio.gather(
-            self._a_evaluate_semantic_consistency(
+            self._aevaluate_semantic_consistency(
                 original_image,
                 edit_instruction,
                 edited_image,
             ),
-            self._a_evaluate_perceptual_quality(edited_image),
+            self._aevaluate_perceptual_quality(edited_image),
         )
 
         # Calculate final score using geometric mean
@@ -298,7 +298,7 @@ class ImageEditingGrader(Grader):
 
         return final_score, details
 
-    async def a_evaluate(
+    async def aevaluate(
         self,
         original_image: Union[MLLMImage, List[MLLMImage]],
         edit_instruction: str,
@@ -320,7 +320,7 @@ class ImageEditingGrader(Grader):
             GraderScore: Score with normalized quality value [0, 1]
 
         Example:
-            >>> result = await grader.evaluate(
+            >>> result = await grader.aevaluate(
             ...     original_image=MLLMImage(url="original.jpg"),
             ...     edit_instruction="Change the sofa color to blue",
             ...     edited_image=MLLMImage(url="edited.jpg")
@@ -330,6 +330,7 @@ class ImageEditingGrader(Grader):
         if isinstance(original_image, list):
             if not original_image:
                 return GraderScore(
+                    name=self.name,
                     score=0.0,
                     reason="No original image provided",
                     metadata={"error": "Empty original image list"},
@@ -339,6 +340,7 @@ class ImageEditingGrader(Grader):
         if isinstance(edited_image, list):
             if not edited_image:
                 return GraderScore(
+                    name=self.name,
                     score=0.0,
                     reason="No edited image provided",
                     metadata={"error": "Empty edited image list"},
@@ -350,6 +352,7 @@ class ImageEditingGrader(Grader):
             MLLMImage,
         ):
             return GraderScore(
+                name=self.name,
                 score=0.0,
                 reason="Invalid image type",
                 metadata={"error": "Images must be MLLMImage"},
@@ -385,6 +388,7 @@ The score combines semantic consistency and perceptual quality using geometric m
 """
 
         return GraderScore(
+            name=self.name,
             score=score,
             reason=reason.strip(),
             metadata=details,

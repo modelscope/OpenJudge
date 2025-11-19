@@ -29,7 +29,7 @@ class F1ScoreGrader(Grader):
 
     Example:
         >>> grader = F1ScoreGrader()
-        >>> result = await grader.evaluate(
+        >>> result = await grader.aevaluate(
         ...     reference="the cat is on the mat",
         ...     candidate="cat on mat"
         ... )
@@ -113,13 +113,14 @@ class F1ScoreGrader(Grader):
 
         return f1, details
 
-    async def a_evaluate(
+    async def aevaluate(
         self, reference: str, candidate: str, **kwargs
     ) -> GraderScore:
         """Evaluate F1 score"""
         score, details = self._compute(reference, candidate)
 
         return GraderScore(
+            name=self.name,
             score=score,
             reason=f"F1 score: {score:.4f} (P={details['precision']:.3f}, R={details['recall']:.3f})",
             metadata=details,

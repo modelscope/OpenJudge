@@ -96,7 +96,7 @@ class FactualityGrader(BaseHelpfulnessGrader):
     def __init__(self, model: ChatModelBase | dict, template: Template | None = None, mode: GraderMode = GraderMode.LISTWISE, **kwargs):
         """Initialize the SafetyGrader."""
         super().__init__(
-            name="Factuality",
+            name="factuality",
             mode=mode,
             model=model,
             template=template,
@@ -104,7 +104,7 @@ class FactualityGrader(BaseHelpfulnessGrader):
             **kwargs,
         )
     
-    async def a_evaluate(
+    async def aevaluate(
         self,
         query: str,
         answer: str | List[str],
@@ -140,7 +140,7 @@ class FactualityGrader(BaseHelpfulnessGrader):
         Example:
             >>> # Example for pointwise factuality grader
             >>> grader = FactualityGrader(mode=GraderMode.POINTWISE)
-            >>> result = await grader.evaluate(
+            >>> result = await grader.aevaluate(
             ...     query="What is the capital of France?",
             ...     answer="The capital of France is Paris."
             ... )
@@ -148,10 +148,10 @@ class FactualityGrader(BaseHelpfulnessGrader):
 
             >>> # Example for listwise factuality grader
             >>> ranking_grader = FactualityGrader(mode=GraderMode.LISTWISE)
-            >>> result = await ranking_grader.evaluate(
+            >>> result = await ranking_grader.aevaluate(
             ...     query="What is the capital of France?",
             ...     answer=["The capital of France is Paris.", "The capital of France is London."]
             ... )
             >>> print(result.rank, result.reason)
         """
-        return await super().a_evaluate(query=query, answer=answer, **kwargs)
+        return await super().aevaluate(query=query, answer=answer, **kwargs)

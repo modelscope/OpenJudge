@@ -99,7 +99,7 @@ class OpenQAGrader(BaseHelpfulnessGrader):
     def __init__(self, model: ChatModelBase | dict, template: Template | None = None, mode: GraderMode = GraderMode.LISTWISE, **kwargs):
         """Initialize the SafetyGrader."""
         super().__init__(
-            name="Open QA",
+            name="open_qa",
             mode=mode,
             model=model,
             template=template,
@@ -107,7 +107,7 @@ class OpenQAGrader(BaseHelpfulnessGrader):
             **kwargs,
         )
     
-    async def a_evaluate(
+    async def aevaluate(
         self,
         query: str,
         answer: str | List[str],
@@ -136,9 +136,9 @@ class OpenQAGrader(BaseHelpfulnessGrader):
 
         Example:
             >>> grader = OpenQAGrader()
-            >>> result = await grader.evaluate(
+            >>> result = await grader.aevaluate(
             ...     query="What are the potential impacts of climate change on agriculture?",
             ...     answer="Climate change can affect agriculture through..."
             ... )
         """
-        return await super().a_evaluate(query=query, answer=answer, **kwargs)
+        return await super().aevaluate(query=query, answer=answer, **kwargs)

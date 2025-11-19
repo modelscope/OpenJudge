@@ -95,7 +95,7 @@ class GenerationGrader(BaseHelpfulnessGrader):
     def __init__(self, model: ChatModelBase | dict, template: Template | None = None, mode: GraderMode = GraderMode.LISTWISE, **kwargs):
         """Initialize the SafetyGrader."""
         super().__init__(
-            name="Generation",
+            name="generation",
             mode=mode,
             model=model,
             template=template,
@@ -103,7 +103,7 @@ class GenerationGrader(BaseHelpfulnessGrader):
             **kwargs,
         )
         
-    async def a_evaluate(
+    async def aevaluate(
         self,
         query: str,
         answer: str | List[str],
@@ -133,9 +133,9 @@ class GenerationGrader(BaseHelpfulnessGrader):
 
         Example:
             >>> grader = GenerationGrader()
-            >>> result = await grader.evaluate(
+            >>> result = await grader.aevaluate(
             ...     query="Write a short story about a robot learning to paint",
             ...     answer="Once upon a time, there was a robot named ART-1 who discovered the joy of painting..."
             ... )
         """
-        return await super().a_evaluate(query=query, answer=answer, **kwargs)
+        return await super().aevaluate(query=query, answer=answer, **kwargs)

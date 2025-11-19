@@ -99,7 +99,7 @@ class FocusGrader(BaseHelpfulnessGrader):
     def __init__(self, model: ChatModelBase | dict, template: Template | None = None, mode: GraderMode = GraderMode.LISTWISE, **kwargs):
         """Initialize the SafetyGrader."""
         super().__init__(
-            name="Focus",
+            name="focus",
             mode=mode,
             model=model,
             template=template,
@@ -107,7 +107,7 @@ class FocusGrader(BaseHelpfulnessGrader):
             **kwargs,
         )
 
-    async def a_evaluate(
+    async def aevaluate(
         self,
         query: str,
         answer: str | List[str],
@@ -137,9 +137,9 @@ class FocusGrader(BaseHelpfulnessGrader):
 
         Example:
             >>> grader = FocusGrader()
-            >>> result = await grader.evaluate(
+            >>> result = await grader.aevaluate(
             ...     query="Explain photosynthesis",
             ...     answer="Photosynthesis is the process by which plants convert light energy into chemical energy."
             ... )
         """
-        return await super().a_evaluate(query=query, answer=answer, **kwargs)
+        return await super().aevaluate(query=query, answer=answer, **kwargs)

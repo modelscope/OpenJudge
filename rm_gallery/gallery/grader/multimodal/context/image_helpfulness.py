@@ -199,7 +199,7 @@ class ImageHelpfulnessMetric(BaseMultimodalMetric):
             self.contexts_below.append(context_below)
 
             tasks.append(
-                self._a_evaluate_image_helpfulness(
+                self._aevaluate_image_helpfulness(
                     image,
                     context_above,
                     context_below,
@@ -255,7 +255,7 @@ class ImageHelpfulnessMetric(BaseMultimodalMetric):
             logger.error(f"Error evaluating image helpfulness: {e}")
             return 0.0, f"Evaluation error: {str(e)}"
 
-    async def _a_evaluate_image_helpfulness(
+    async def _aevaluate_image_helpfulness(
         self,
         image: MLLMImage,
         context_above: Optional[str],

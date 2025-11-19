@@ -45,7 +45,7 @@ class ImageHelpfulnessGrader(Grader):
         >>> api = QwenVLAPI(api_key="your-key", model_name="qwen-vl-plus")
         >>> grader = ImageHelpfulnessGrader(model=api, threshold=0.7)
         >>>
-        >>> result = await grader.evaluate(
+        >>> result = await grader.aevaluate(
         ...     actual_output=[
         ...         "The architecture consists of multiple layers.",
         ...         MLLMImage(url="https://example.com/architecture_diagram.jpg"),
@@ -144,7 +144,7 @@ class ImageHelpfulnessGrader(Grader):
             logger.error(f"Error evaluating image helpfulness: {e}")
             return 0.0, f"Evaluation error: {str(e)}"
 
-    async def _a_evaluate_single_image(
+    async def _aevaluate_single_image(
         self,
         image: MLLMImage,
         context_above: Optional[str],
@@ -243,7 +243,7 @@ class ImageHelpfulnessGrader(Grader):
             )
             image = actual_output[image_index]
             tasks.append(
-                self._a_evaluate_single_image(
+                self._aevaluate_single_image(
                     image,
                     context_above,
                     context_below,
@@ -271,7 +271,7 @@ class ImageHelpfulnessGrader(Grader):
 
         return final_score, details
 
-    async def a_evaluate(
+    async def aevaluate(
         self,
         actual_output: List[Union[str, MLLMImage]],
         async_mode: bool = True,
@@ -289,7 +289,7 @@ class ImageHelpfulnessGrader(Grader):
             GraderScore: Score with normalized helpfulness value [0, 1]
 
         Example:
-            >>> result = await grader.evaluate(
+            >>> result = await grader.aevaluate(
             ...     actual_output=[
             ...         "The system architecture:",
             ...         MLLMImage(url="diagram.jpg"),
@@ -304,6 +304,7 @@ class ImageHelpfulnessGrader(Grader):
 
         if "error" in details:
             return GraderScore(
+                name=self.name,
                 score=0.0,
                 reason=details["error"],
                 metadata=details,
@@ -325,6 +326,7 @@ class ImageHelpfulnessGrader(Grader):
             reason = "\n".join(reason_parts)
 
         return GraderScore(
+            name=self.name,
             score=score,
             reason=f"Image helpfulness score: {score:.4f}\n{reason}",
             metadata=details,

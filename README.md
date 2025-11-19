@@ -97,7 +97,7 @@ data_sample = DataSample(
 )
 
 # 执行评估
-results = await grader.evaluate(data_sample)
+results = await grader.aevaluate(data_sample)
 ```
 
 ### 使用策略
@@ -120,7 +120,7 @@ data_sample = DataSample(
 )
 
 # 执行优化后的评估
-results = await optimized_grader.evaluate(data_sample)
+results = await optimized_grader.aevaluate(data_sample)
 ```
 
 ### 运行完整实验
@@ -169,7 +169,7 @@ from rm_gallery.core.registry import GraderRegistry
 async def custom_grader_function(**kwargs) -> GraderScore:
     # 自定义逻辑
     score = len(kwargs.get("answer", "")) / 100  # 示例逻辑
-    return GraderScore(score=score, reason="基于答案长度的评分")
+    return GraderScore(name=self.name, score=score, reason="基于答案长度的评分")
 
 # 创建基于函数的评估器
 custom_grader = FunctionGrader(

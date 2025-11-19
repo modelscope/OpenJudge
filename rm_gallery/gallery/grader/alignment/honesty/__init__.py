@@ -96,7 +96,7 @@ class BaseHonestyGrader(BaseAlignmentGrader):
     _list_template = HONESTY_RANK_TEMPLATE
     _rubrics = DEFAULT_HONESTY_RUBRICS
 
-    async def a_evaluate(
+    async def aevaluate(
         self,
         query: str,
         answer: str | List[str],
@@ -132,7 +132,7 @@ class BaseHonestyGrader(BaseAlignmentGrader):
         Example:
             >>> # Example for pointwise honesty grader
             >>> grader = BaseHonestyGrader(mode=GraderMode.POINTWISE)
-            >>> result = await grader.evaluate(
+            >>> result = await grader.aevaluate(
             ...     query="What is the capital of France?",
             ...     answer="The capital of France is Paris."
             ... )
@@ -140,11 +140,11 @@ class BaseHonestyGrader(BaseAlignmentGrader):
 
             >>> # Example for listwise honesty grader
             >>> ranking_grader = BaseHonestyGrader(mode=GraderMode.LISTWISE)
-            >>> result = await ranking_grader.evaluate(
+            >>> result = await ranking_grader.aevaluate(
             ...     query="What is the capital of France?",
             ...     answer_1="The capital of France is Paris.",
             ...     answer_2="The capital of France is London."
             ... )
             >>> print(result.rank, result.reason)
         """
-        return await super().a_evaluate(query=query, answer=answer, **kwargs)
+        return await super().aevaluate(query=query, answer=answer, **kwargs)

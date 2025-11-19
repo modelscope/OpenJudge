@@ -41,7 +41,7 @@ class ImageCoherenceGrader(Grader):
         >>> api = QwenVLAPI(api_key="your-key", model_name="qwen-vl-plus")
         >>> grader = ImageCoherenceGrader(model=api, threshold=0.7)
         >>>
-        >>> result = await grader.evaluate(
+        >>> result = await grader.aevaluate(
         ...     actual_output=[
         ...         "Our sales grew significantly in Q3.",
         ...         MLLMImage(url="https://example.com/sales_chart.jpg"),
@@ -150,7 +150,7 @@ class ImageCoherenceGrader(Grader):
             logger.error(f"Error evaluating image coherence: {e}")
             return 0.0, f"Evaluation error: {str(e)}"
 
-    async def _a_evaluate_single_image(
+    async def _aevaluate_single_image(
         self,
         image: MLLMImage,
         context_above: Optional[str],
@@ -271,7 +271,7 @@ class ImageCoherenceGrader(Grader):
             )
             image = actual_output[image_index]
             tasks.append(
-                self._a_evaluate_single_image(
+                self._aevaluate_single_image(
                     image,
                     context_above,
                     context_below,
@@ -302,7 +302,7 @@ class ImageCoherenceGrader(Grader):
 
         return final_score, details
 
-    async def a_evaluate(
+    async def aevaluate(
         self,
         actual_output: List[Union[str, MLLMImage]],
         async_mode: bool = True,
@@ -320,7 +320,7 @@ class ImageCoherenceGrader(Grader):
             GraderScore: Score with normalized coherence value [0, 1]
 
         Example:
-            >>> result = await grader.evaluate(
+            >>> result = await grader.aevaluate(
             ...     actual_output=[
             ...         "Sales data for Q3:",
             ...         MLLMImage(url="chart.jpg"),
@@ -335,6 +335,7 @@ class ImageCoherenceGrader(Grader):
 
         if "error" in details:
             return GraderScore(
+                name=self.name,
                 score=0.0,
                 reason=details["error"],
                 metadata=details,
@@ -356,6 +357,7 @@ class ImageCoherenceGrader(Grader):
             reason = "\n".join(reason_parts)
 
         return GraderScore(
+            name=self.name,
             score=score,
             reason=f"Image coherence score: {score:.4f}\n{reason}",
             metadata=details,

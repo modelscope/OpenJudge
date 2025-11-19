@@ -22,7 +22,7 @@ from rm_gallery.core.schema.data import DataSample, DataSampleParser
 from rm_gallery.core.grader.base import GraderMode, GraderRank, GraderScore
 from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.schema.template import LanguageEnum
-from rm_gallery.core.rubric.prompts import RubricPromptTemplates
+from rm_gallery.core.grader.rubric.prompts import RubricPromptTemplates
 
 
 class RubricGenerationOutput(BaseModel):
@@ -144,7 +144,7 @@ class QuerySpecificRubricGenerator:
         # Iterative improvement
         for epoch in range(self.max_epochs):
             # Evaluate current rubrics
-            evaluation_result = await self.a_evaluate(mapped_sample, rubrics)
+            evaluation_result = await self.aevaluate(mapped_sample, rubrics)
 
             # Validate
             is_correct = self.validate(mapped_sample, evaluation_result)
@@ -228,7 +228,7 @@ class QuerySpecificRubricGenerator:
             )
         return []
 
-    async def a_evaluate(
+    async def aevaluate(
         self,
         sample: DataSample,
         rubrics: List[str],

@@ -30,7 +30,7 @@ Reward models for mathematical tasks:
 from rm_gallery.core.reward.registry import RewardRegistry
 
 rm = RewardRegistry.get("math_correctness_reward")
-result = rm.evaluate(sample)
+result = rm.aevaluate(sample)
 ```
 
 ### 💻 Code (`code/`)
@@ -47,7 +47,7 @@ Reward models for code evaluation:
 **Example Usage:**
 ```python
 rm = RewardRegistry.get("code_quality_reward")
-result = rm.evaluate(sample)
+result = rm.aevaluate(sample)
 ```
 
 ### 🤝 Alignment (`alignment/`)
@@ -64,7 +64,7 @@ Reward models for AI alignment (3H: Helpful, Harmless, Honest):
 **Example Usage:**
 ```python
 rm = RewardRegistry.get("helpfulness_listwise_reward")
-result = rm.evaluate(sample)
+result = rm.aevaluate(sample)
 ```
 
 ### 🎯 General (`general/`)
@@ -81,7 +81,7 @@ General-purpose evaluation metrics:
 **Example Usage:**
 ```python
 rm = RewardRegistry.get("accuracy_reward")
-result = rm.evaluate(sample)
+result = rm.aevaluate(sample)
 ```
 
 ### 📝 Format (`format/`)
@@ -98,7 +98,7 @@ Format and style checking:
 **Example Usage:**
 ```python
 rm = RewardRegistry.get("length_reward")
-result = rm.evaluate(sample)
+result = rm.aevaluate(sample)
 ```
 
 ## 🚀 Quick Start
@@ -139,7 +139,7 @@ sample = DataSample(
 )
 
 # Evaluate
-result = rm.evaluate(sample)
+result = rm.aevaluate(sample)
 score = result.output[0].answer.reward.details[0].score
 print(f"Score: {score}")
 ```
@@ -180,7 +180,7 @@ custom_rm = BaseHelpfulnessListWiseReward(
     llm=llm
 )
 
-result = custom_rm.evaluate(sample)
+result = custom_rm.aevaluate(sample)
 ```
 
 ### Combine Multiple Rewards
@@ -198,7 +198,7 @@ composition = RewardComposition(
     weights=[0.4, 0.4, 0.2]  # Weighted combination
 )
 
-result = composition.evaluate(sample)
+result = composition.aevaluate(sample)
 ```
 
 ## 📖 Model Documentation

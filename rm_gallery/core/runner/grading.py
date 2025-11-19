@@ -85,7 +85,7 @@ class GradingRunner(BaseRunner):
         for key, config in self.grading_configs.items():
             grader, parser = parse_grading_config(config)
             if grader is not None:
-                coro = grader.a_evaluate_data_samples(
+                coro = grader.aevaluate_data_samples(
                     parser=parser,
                     data_sample=data_sample,
                 )
@@ -122,7 +122,7 @@ class GradingRunner(BaseRunner):
 
         # Create async tasks for each data sample
         for data_sample in data_samples:
-            coroutines.append(self.evaluate(data_sample))
+            coroutines.append(self.aevaluate(data_sample))
 
         # Execute all tasks in parallel
         results = await asyncio.gather(*coroutines)

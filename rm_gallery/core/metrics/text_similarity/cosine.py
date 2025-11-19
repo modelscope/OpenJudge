@@ -29,7 +29,7 @@ class CosineSimilarityGrader(Grader):
 
     Example:
         >>> grader = CosineSimilarityGrader(use_tfidf=True)
-        >>> result = await grader.evaluate(
+        >>> result = await grader.aevaluate(
         ...     reference="the cat sat on the mat",
         ...     candidate="the dog sat on the mat"
         ... )
@@ -117,13 +117,14 @@ class CosineSimilarityGrader(Grader):
 
         return score, details
 
-    async def a_evaluate(
+    async def aevaluate(
         self, reference: str, candidate: str, **kwargs
     ) -> GraderScore:
         """Evaluate cosine similarity"""
         score, details = self._compute(reference, candidate)
 
         return GraderScore(
+            name=self.name,
             score=score,
             reason=f"Cosine similarity: {score:.4f}",
             metadata=details,
@@ -143,7 +144,7 @@ class JaccardSimilarityGrader(Grader):
 
     Example:
         >>> grader = JaccardSimilarityGrader()
-        >>> result = await grader.evaluate(
+        >>> result = await grader.aevaluate(
         ...     reference="the cat sat on the mat",
         ...     candidate="the dog sat on the mat"
         ... )
@@ -200,13 +201,14 @@ class JaccardSimilarityGrader(Grader):
 
         return score, details
 
-    async def a_evaluate(
+    async def aevaluate(
         self, reference: str, candidate: str, **kwargs
     ) -> GraderScore:
         """Evaluate Jaccard similarity"""
         score, details = self._compute(reference, candidate)
 
         return GraderScore(
+            name=self.name,
             score=score,
             reason=f"Jaccard similarity: {score:.4f}",
             metadata=details,

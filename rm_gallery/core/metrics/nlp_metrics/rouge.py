@@ -32,7 +32,7 @@ class ROUGEGrader(Grader):
 
     Example:
         >>> grader = ROUGEGrader(rouge_types=["rouge1", "rouge2", "rougeL"])
-        >>> result = await grader.evaluate(
+        >>> result = await grader.aevaluate(
         ...     reference="the cat is on the mat",
         ...     candidate="the cat is on the mat"
         ... )
@@ -95,13 +95,14 @@ class ROUGEGrader(Grader):
 
         return avg_score, details
 
-    async def a_evaluate(
+    async def aevaluate(
         self, reference: str, candidate: str, **kwargs
     ) -> GraderScore:
         """Evaluate ROUGE score"""
         score, details = self._compute(reference, candidate)
 
         return GraderScore(
+            name=self.name,
             score=score,
             reason=f"ROUGE score: {score:.4f}",
             metadata=details,

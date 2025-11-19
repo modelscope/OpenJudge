@@ -36,7 +36,7 @@ class TextSimilarityEvaluator(BaseModel):
         ... )
         >>>
         >>> # Evaluate single sample
-        >>> results = evaluator.evaluate(
+        >>> results = evaluator.aevaluate(
         ...     reference="the cat is on the mat",
         ...     candidate="the cat is on the mat"
         ... )
@@ -268,7 +268,7 @@ class TextSimilarityEvaluator(BaseModel):
         comparison_results = {}
 
         for model_name, candidate in candidates.items():
-            results = self.evaluate(reference, candidate, metrics)
+            results = self.aevaluate(reference, candidate, metrics)
             comparison_results[model_name] = results
 
         return comparison_results

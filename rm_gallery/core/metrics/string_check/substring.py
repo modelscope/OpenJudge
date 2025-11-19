@@ -25,7 +25,7 @@ class SubstringMatchGrader(Grader):
 
     Example:
         >>> grader = SubstringMatchGrader(case_sensitive=False)
-        >>> result = await grader.evaluate(
+        >>> result = await grader.aevaluate(
         ...     reference="cat",
         ...     candidate="The cat sat on the mat"
         ... )
@@ -70,13 +70,14 @@ class SubstringMatchGrader(Grader):
 
         return matched, details
 
-    async def a_evaluate(
+    async def aevaluate(
         self, reference: str, candidate: str, **kwargs
     ) -> GraderScore:
         """Evaluate substring match"""
         matched, details = self._compute(reference, candidate)
 
         return GraderScore(
+            name=self.name,
             score=1.0 if matched else 0.0,
             reason=f"Substring match: {'found' if matched else 'not found'}",
             metadata=details,
@@ -96,7 +97,7 @@ class ContainsAllGrader(Grader):
 
     Example:
         >>> grader = ContainsAllGrader(substrings=["cat", "mat"])
-        >>> result = await grader.evaluate(
+        >>> result = await grader.aevaluate(
         ...     reference="",  # substrings already specified at initialization
         ...     candidate="The cat sat on the mat"
         ... )
@@ -151,7 +152,7 @@ class ContainsAllGrader(Grader):
 
         return score, details
 
-    async def a_evaluate(
+    async def aevaluate(
         self,
         reference: str = "",
         candidate: str = "",
@@ -161,6 +162,7 @@ class ContainsAllGrader(Grader):
         score, details = self._compute(reference, candidate)
 
         return GraderScore(
+            name=self.name,
             score=score,
             reason=f"Contains all substrings: {details['matched']}",
             metadata=details,
@@ -180,7 +182,7 @@ class ContainsAnyGrader(Grader):
 
     Example:
         >>> grader = ContainsAnyGrader(substrings=["cat", "dog"])
-        >>> result = await grader.evaluate(
+        >>> result = await grader.aevaluate(
         ...     reference="",
         ...     candidate="The cat sat on the mat"
         ... )
@@ -227,7 +229,7 @@ class ContainsAnyGrader(Grader):
 
         return matched, details
 
-    async def a_evaluate(
+    async def aevaluate(
         self,
         reference: str = "",
         candidate: str = "",
@@ -237,6 +239,7 @@ class ContainsAnyGrader(Grader):
         matched, details = self._compute(reference, candidate)
 
         return GraderScore(
+            name=self.name,
             score=1.0 if matched else 0.0,
             reason=f"Contains any substring: {matched}",
             metadata=details,
@@ -255,7 +258,7 @@ class WordOverlapGrader(Grader):
 
     Example:
         >>> grader = WordOverlapGrader()
-        >>> result = await grader.evaluate(
+        >>> result = await grader.aevaluate(
         ...     reference="the cat sat on the mat",
         ...     candidate="the dog sat on the rug"
         ... )
@@ -300,13 +303,14 @@ class WordOverlapGrader(Grader):
 
         return score, details
 
-    async def a_evaluate(
+    async def aevaluate(
         self, reference: str, candidate: str, **kwargs
     ) -> GraderScore:
         """Evaluate word overlap"""
         score, details = self._compute(reference, candidate)
 
         return GraderScore(
+            name=self.name,
             score=score,
             reason=f"Word overlap ratio: {score:.2f}",
             metadata=details,
@@ -325,7 +329,7 @@ class CharacterOverlapGrader(Grader):
 
     Example:
         >>> grader = CharacterOverlapGrader()
-        >>> result = await grader.evaluate(
+        >>> result = await grader.aevaluate(
         ...     reference="hello",
         ...     candidate="helo"
         ... )
@@ -370,13 +374,14 @@ class CharacterOverlapGrader(Grader):
 
         return score, details
 
-    async def a_evaluate(
+    async def aevaluate(
         self, reference: str, candidate: str, **kwargs
     ) -> GraderScore:
         """Evaluate character overlap"""
         score, details = self._compute(reference, candidate)
 
         return GraderScore(
+            name=self.name,
             score=score,
             reason=f"Character overlap ratio: {score:.2f}",
             metadata=details,

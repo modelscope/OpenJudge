@@ -28,7 +28,7 @@ class METEORGrader(Grader):
 
     Example:
         >>> grader = METEORGrader()
-        >>> result = await grader.evaluate(
+        >>> result = await grader.aevaluate(
         ...     reference="the cat sat on the mat",
         ...     candidate="on the mat sat the cat"
         ... )
@@ -104,7 +104,7 @@ class METEORGrader(Grader):
         except Exception as e:
             return 0.0, {"error": str(e)}
 
-    async def a_evaluate(
+    async def aevaluate(
         self, reference: str, candidate: str, **kwargs
     ) -> GraderScore:
         """Evaluate METEOR score"""
@@ -112,12 +112,14 @@ class METEORGrader(Grader):
 
         if "error" in details:
             return GraderScore(
+                ame=self.name,
                 score=0.0,
                 reason=details.get("message", details["error"]),
                 metadata=details,
             )
 
         return GraderScore(
+            name=self.name,
             score=score,
             reason=f"METEOR score: {score:.4f}",
             metadata=details,

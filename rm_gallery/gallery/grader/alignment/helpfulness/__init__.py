@@ -123,7 +123,7 @@ class BaseHelpfulnessGrader(BaseAlignmentGrader):
         """
         super().__init__(model=model, template=template, mode=mode, **kwargs)
 
-    async def a_evaluate(
+    async def aevaluate(
         self,
         query: str,
         answer: str | List[str],
@@ -165,11 +165,11 @@ class BaseHelpfulnessGrader(BaseAlignmentGrader):
             >>> from rm_gallery.core.grader.base import GraderMode
             >>> model = OpenAIChatModel(model_name="gpt-3.5-turbo")
             >>> grader = BaseHelpfulnessGrader(mode=GraderMode.POINTWISE, model=model)
-            >>> result = asyncio.run(grader.a_evaluate(
+            >>> result = asyncio.run(grader.aevaluate(
             ...     query="How do I make a cake?",
             ...     answer="First, gather ingredients: flour, eggs, sugar, butter..."
             ... ))
             >>> print(result.score)
             0.9
         """
-        return await super().a_evaluate(query=query, answer=answer, **kwargs)
+        return await super().aevaluate(query=query, answer=answer, **kwargs)

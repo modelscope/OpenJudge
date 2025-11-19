@@ -98,7 +98,7 @@ class RewriteGrader(BaseHelpfulnessGrader):
     def __init__(self, model: ChatModelBase | dict, template: Template | None = None, mode: GraderMode = GraderMode.LISTWISE, **kwargs):
         """Initialize the SafetyGrader."""
         super().__init__(
-            name="",
+            name="rewrite",
             mode=mode,
             model=model,
             template=template,
@@ -106,7 +106,7 @@ class RewriteGrader(BaseHelpfulnessGrader):
             **kwargs,
         )
 
-    async def a_evaluate(
+    async def aevaluate(
         self,
         query: str,
         answer: str | List[str],
@@ -143,7 +143,7 @@ class RewriteGrader(BaseHelpfulnessGrader):
         Example:
             >>> # Example for pointwise rewrite grader
             >>> grader = RewriteGrader(mode=GraderMode.POINTWISE)
-            >>> result = await grader.evaluate(
+            >>> result = await grader.aevaluate(
             ...     query="Photosynthesis is the process by which plants convert light energy into chemical energy.",
             ...     answer="Plants use sunlight to make their own food."
             ... )
@@ -151,7 +151,7 @@ class RewriteGrader(BaseHelpfulnessGrader):
 
             >>> # Example for listwise rewrite grader
             >>> ranking_grader = RewriteGrader(mode=GraderMode.LISTWISE)
-            >>> result = await ranking_grader.evaluate(
+            >>> result = await ranking_grader.aevaluate(
             ...     query="Photosynthesis is the process by which plants convert light energy into chemical energy.",
             ...     answer=[
             ...         "Plants use sunlight to make their own food.",
@@ -160,4 +160,4 @@ class RewriteGrader(BaseHelpfulnessGrader):
             ... )
             >>> print(result.rank, result.reason)
         """
-        return await super().a_evaluate(query=query, answer=answer, **kwargs)
+        return await super().aevaluate(query=query, answer=answer, **kwargs)

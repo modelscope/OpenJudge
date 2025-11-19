@@ -18,14 +18,14 @@ class MathVerifyGrader(Grader):
             timeout_score: Score to assign on timeout
         """
         super().__init__(
-            name="MathVerify",
+            name="math_verify",
             mode=GraderMode.POINTWISE,
             description="Verifies mathematical expressions using the math_verify library",
             **kwargs,
         )
         self.timeout_score = timeout_score
 
-    async def a_evaluate(self, generated, reference) -> GraderScore:
+    async def aevaluate(self, generated, reference) -> GraderScore:
         """
         Verify mathematical expressions for accuracy by parsing and comparing the generated answer
         against a reference answer using the math_verify library.
@@ -48,15 +48,15 @@ class MathVerifyGrader(Grader):
         Examples:
             >>> import asyncio
             >>> grader = MathVerifyGrader()
-            >>> result = asyncio.run(grader.evaluate("2+2", "4"))
+            >>> result = asyncio.run(grader.aevaluate("2+2", "4"))
             >>> print(result.score)
             1.0
 
-            >>> result = asyncio.run(grader.evaluate("x^2", "x*x"))
+            >>> result = asyncio.run(grader.aevaluate("x^2", "x*x"))
             >>> print(result.score)
             1.0
 
-            >>> result = asyncio.run(grader.evaluate("3+4", "8"))
+            >>> result = asyncio.run(grader.aevaluate("3+4", "8"))
             >>> print(result.score)
             0.0
         """
@@ -105,6 +105,7 @@ class MathVerifyGrader(Grader):
             reason = f"Exception occurred: {str(e)}"
 
         return GraderScore(
+            name=self.name,
             score=score,
             reason=reason,
             metadata={

@@ -97,7 +97,7 @@ class TranslationGrader(BaseHelpfulnessGrader):
     def __init__(self, model: ChatModelBase | dict, template: Template | None = None, mode: GraderMode = GraderMode.LISTWISE, **kwargs):
         """Initialize the SafetyGrader."""
         super().__init__(
-            name="Translation",
+            name="translation",
             mode=mode,
             model=model,
             template=template,
@@ -105,7 +105,7 @@ class TranslationGrader(BaseHelpfulnessGrader):
             **kwargs,
         )
     
-    async def a_evaluate(
+    async def aevaluate(
         self,
         query: str,
         answer: str | List[str],
@@ -134,9 +134,9 @@ class TranslationGrader(BaseHelpfulnessGrader):
 
         Example:
             >>> grader = TranslationGrader()
-            >>> result = await grader.evaluate(
+            >>> result = await grader.aevaluate(
             ...     query="Translate to French: Hello, how are you today?",
             ...     answer="Bonjour, comment allez-vous aujourd'hui?"
             ... )
         """
-        return await super().a_evaluate(query=query, answer=answer, **kwargs)
+        return await super().aevaluate(query=query, answer=answer, **kwargs)

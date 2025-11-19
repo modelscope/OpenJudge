@@ -31,7 +31,7 @@ class ReasoningFormatGrader(Grader):
         self.think_token = think_token
         self.answer_token = answer_token
 
-    async def a_evaluate(self, answer: str, *args, **kwargs) -> GraderScore:
+    async def aevaluate(self, answer: str, *args, **kwargs) -> GraderScore:
         """
         Check format and calculate reward for reasoning tags.
 
@@ -57,11 +57,11 @@ class ReasoningFormatGrader(Grader):
 
         Examples:
             >>> grader = ReasoningFormatGrader()
-            >>> result = await grader.evaluate("Some text without tags")
+            >>> result = await grader.aevaluate("Some text without tags")
             >>> print(result.score)
             0.0
 
-            >>> result = await grader.evaluate("<think>Thought process</think>\\n<answer>Final answer</answer>")
+            >>> result = await grader.aevaluate("<think>Thought process</think>\\n<answer>Final answer</answer>")
             >>> print(result.score)
             1.0
         """
@@ -92,6 +92,7 @@ class ReasoningFormatGrader(Grader):
             reasons.append("All format requirements met")
 
         return GraderScore(
+            name=self.name,
             score=reward,
             reason="; ".join(reasons),
             metadata={
@@ -119,7 +120,7 @@ class ReasoningToolCallFormatGrader(Grader):
             description="Check tool call format including think, answer and tool_call tags with JSON validation.",
         )
 
-    async def a_evaluate(self, answer: str, **kwargs) -> GraderScore:
+    async def aevaluate(self, answer: str, **kwargs) -> GraderScore:
         """
         Check tool call format and calculate reward score.
 
@@ -150,11 +151,11 @@ class ReasoningToolCallFormatGrader(Grader):
 
         Examples:
             >>> grader = ReasoningToolCallFormatGrader()
-            >>> result = await grader.evaluate("思考过程</think>\\n<answer>最终答案</answer>")
+            >>> result = await grader.aevaluate("思考过程</think>\\n<answer>最终答案</answer>")
             >>> print(result.score)
             1.0
 
-            >>> result = await grader.evaluate("思考过程</think>\\n<function_call>{\\"name\\": \\"func\\", \\"arguments\\": {\\"arg1\\": \\"value1\\"}}</function_call>")
+            >>> result = await grader.aevaluate("思考过程</think>\\n<function_call>{\\"name\\": \\"func\\", \\"arguments\\": {\\"arg1\\": \\"value1\\"}}</function_call>")
             >>> print(result.score)
             1.0
         """
@@ -295,6 +296,7 @@ class ReasoningToolCallFormatGrader(Grader):
         # Calculate reward score
         reward = 1.0 if valid_format else 0.0
         return GraderScore(
+            name=self.name,
             score=reward,
             reason="; ".join(reasons),
             metadata={
@@ -328,7 +330,7 @@ class LengthPenaltyGrader(Grader):
             penalty_rate: Penalty rate for each character beyond the maximum length
         """
         super().__init__(
-            name="LengthPenaltyGrader",
+            name="length_penalty",
             grader_mode="content",
             description="Text length based penalty for content that is too short or too long.",
         )
@@ -337,7 +339,7 @@ class LengthPenaltyGrader(Grader):
         self.max_length = max_length
         self.penalty_rate = penalty_rate
 
-    async def a_evaluate(self, answer) -> GraderScore:
+    async def aevaluate(self, answer) -> GraderScore:
         """
         Calculate length-based penalty for text content.
 
@@ -364,15 +366,15 @@ class LengthPenaltyGrader(Grader):
 
         Examples:
             >>> grader = LengthPenaltyGrader(min_length=5, max_length=20, penalty_rate=0.1)
-            >>> result = await grader.evaluate("This is a good length")
+            >>> result = await grader.aevaluate("This is a good length")
             >>> print(result.score)
             0.0
 
-            >>> result = await grader.evaluate("Too short")
+            >>> result = await grader.aevaluate("Too short")
             >>> print(result.score < 0)
             True
 
-            >>> result = await grader.evaluate("This text is way too long to be acceptable for this particular grader")
+            >>> result = await grader.aevaluate("This text is way too long to be acceptable for this particular grader")
             >>> print(result.score < 0)
             True
         """
@@ -394,6 +396,7 @@ class LengthPenaltyGrader(Grader):
             )
 
         return GraderScore(
+            name=self.name,
             score=penalty,
             reason="; ".join(reason_parts),
             metadata={
@@ -438,7 +441,7 @@ class NgramRepetitionPenaltyGrader(Grader):
             description: Description of the grader
         """
         super().__init__(
-            name="NgramRepetitionPenaltyGrader",
+            name="ngram_repetition_penalty",
             grader_mode=GraderMode.POINTWISE,
             description="Calculate N-gram repetition penalty supporting Chinese processing and multiple penalty strategies.",
         )
@@ -502,7 +505,7 @@ class NgramRepetitionPenaltyGrader(Grader):
                 )
             return 0.0
 
-    async def a_evaluate(self, answer: str, **kwargs) -> GraderScore:
+    async def aevaluate(self, answer: str, **kwargs) -> GraderScore:
         """
         Calculate N-gram repetition penalty for text content.
 
@@ -532,12 +535,12 @@ class NgramRepetitionPenaltyGrader(Grader):
 
         Examples:
             >>> grader = NgramRepetitionPenaltyGrader(n=3, penalty_threshold=0.3)
-            >>> result = await grader.evaluate("This is a test. This is a test. This is a test.")
+            >>> result = await grader.aevaluate("This is a test. This is a test. This is a test.")
             >>> print(result.score < 0)
             True
 
             >>> grader = NgramRepetitionPenaltyGrader(n=2, use_soft_penalty=True, max_penalty=-0.5)
-            >>> result = await grader.evaluate("Different words forming different bigrams here")
+            >>> result = await grader.aevaluate("Different words forming different bigrams here")
             >>> print(result.score)
             0.0
         """
@@ -547,6 +550,7 @@ class NgramRepetitionPenaltyGrader(Grader):
             text_to_analyze = self._extract_thought_process(answer)
             if not text_to_analyze:
                 return GraderScore(
+                    name=self.name,
                     score=0.0,
                     reason="No thought process found to analyze",
                     metadata={
@@ -569,6 +573,7 @@ class NgramRepetitionPenaltyGrader(Grader):
 
         if len(tokens) < self.n:
             return GraderScore(
+                name=self.name,
                 score=0.0,
                 reason=f"Text too short for {self.n}-gram analysis",
                 metadata={
@@ -584,6 +589,7 @@ class NgramRepetitionPenaltyGrader(Grader):
 
         if not ngrams:
             return GraderScore(
+                name=self.name,
                 score=0.0,
                 reason="No ngrams generated",
                 metadata={
@@ -608,6 +614,7 @@ class NgramRepetitionPenaltyGrader(Grader):
         # Build reason description
         penalty_mode = "soft" if self.use_soft_penalty else "hard"
         return GraderScore(
+            name=self.name,
             score=penalty,
             reason=f"{self.n}-gram repetition rate: {repetition_rate:.3f}, penalty: {penalty:.3f} ({penalty_mode} penalty, {self.tokenizer_type} tokenizer, scope: {self.analyze_scope})",
             metadata={
@@ -694,7 +701,7 @@ class PrivacyLeakageGrader(Grader):
 
         return leaks
 
-    async def a_evaluate(self, answer: str) -> GraderScore:
+    async def aevaluate(self, answer: str) -> GraderScore:
         """
         Detect privacy leaks in text content and calculate penalties.
 
@@ -717,15 +724,15 @@ class PrivacyLeakageGrader(Grader):
 
         Examples:
             >>> grader = PrivacyLeakageGrader(penalty_per_leak=-0.5)
-            >>> result = await grader.evaluate("Contact me at john.doe@example.com")
+            >>> result = await grader.aevaluate("Contact me at john.doe@example.com")
             >>> print(result.score)
             -0.5
 
-            >>> result = await grader.evaluate("No sensitive information here")
+            >>> result = await grader.aevaluate("No sensitive information here")
             >>> print(result.score)
             0.0
 
-            >>> result = await grader.evaluate("Call me at 123-456-7890 or email me at user@domain.com")
+            >>> result = await grader.aevaluate("Call me at 123-456-7890 or email me at user@domain.com")
             >>> print(result.score)
             -1.0
         """
@@ -745,6 +752,7 @@ class PrivacyLeakageGrader(Grader):
             reason = "No privacy leaks detected"
 
         return GraderScore(
+            name=self.name,
             score=penalty,
             reason=reason,
             metadata={

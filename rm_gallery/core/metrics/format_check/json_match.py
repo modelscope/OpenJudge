@@ -25,7 +25,7 @@ class JsonMatchGrader(Grader):
 
     Example:
         >>> grader = JsonMatchGrader()
-        >>> result = await grader.evaluate(
+        >>> result = await grader.aevaluate(
         ...     reference='{"name": "Alice", "age": 30}',
         ...     candidate='{"name": "Alice", "age": 30}'
         ... )
@@ -134,7 +134,7 @@ class JsonMatchGrader(Grader):
 
         return matched, details
 
-    async def a_evaluate(
+    async def aevaluate(
         self, reference: str, candidate: str, **kwargs
     ) -> GraderScore:
         """Evaluate JSON match"""
@@ -142,12 +142,14 @@ class JsonMatchGrader(Grader):
 
         if "error" in details:
             return GraderScore(
+                name=self.name,
                 score=0.0,
                 reason=details["error_message"],
                 metadata=details,
             )
 
         return GraderScore(
+            name=self.name,
             score=1.0 if matched else 0.0,
             reason=f"JSON match: {'matched' if matched else 'not matched'}",
             metadata=details,
@@ -165,7 +167,7 @@ class JsonValidatorGrader(Grader):
 
     Example:
         >>> grader = JsonValidatorGrader()
-        >>> result = await grader.evaluate(
+        >>> result = await grader.aevaluate(
         ...     reference="",  # reference not needed
         ...     candidate='{"valid": "json"}'
         ... )
@@ -212,7 +214,7 @@ class JsonValidatorGrader(Grader):
                 "candidate_length": len(candidate),
             }
 
-    async def a_evaluate(
+    async def aevaluate(
         self,
         reference: str = "",
         candidate: str = "",
@@ -223,12 +225,14 @@ class JsonValidatorGrader(Grader):
 
         if not is_valid:
             return GraderScore(
+                name=self.name,
                 score=0.0,
                 reason=details.get("error_message", "Invalid JSON"),
                 metadata=details,
             )
 
         return GraderScore(
+            name=self.name,
             score=1.0,
             reason="Valid JSON",
             metadata=details,

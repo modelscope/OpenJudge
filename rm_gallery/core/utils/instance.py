@@ -42,7 +42,7 @@ def init_instance_by_config(
         >>> # From config dict
         >>> config = {
         ...     'class': 'ExactMatchGrader',
-        ...     'module': 'rm_gallery.core.metrics.string_check.exact_match',
+        ...     'module': 'rm_gallery.gallery.grader.string.exact_match',
         ...     'kwargs': {'ignore_case': True}
         ... }
         >>> instance = init_instance_by_config(config)

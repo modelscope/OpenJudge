@@ -1,18 +1,21 @@
 # -*- coding: utf-8 -*-
+"""
+Grading runner for evaluating data samples using graders.
+"""
 import asyncio
-from typing import Callable, Dict, List, Tuple, TypedDict
+from typing import Any, Callable, Dict, List, Tuple, TypedDict
 
 from loguru import logger
 
+from rm_gallery.core.grader.base import Grader, GraderScore
+from rm_gallery.core.model.openai_llm import OpenAIChatModel
+from rm_gallery.core.registry import GR
+from rm_gallery.core.runner.base import BaseRunner
 from rm_gallery.core.schema.data import (
     DataSample,
     DataSampleParser,
     validate_data_samples,
 )
-from rm_gallery.core.grader.base import Grader, GraderScore
-from rm_gallery.core.model.openai_llm import OpenAIChatModel
-from rm_gallery.core.registry import GR
-from rm_gallery.core.runner.base import BaseRunner
 from rm_gallery.core.utils.concurrency import ConcurrencyManager
 from rm_gallery.core.utils.instance import init_instance_by_config
 
@@ -57,7 +60,7 @@ class GradingRunner(BaseRunner):
         grading_configs: Dict[str, GradingConfig],
         max_concurrent: int = 32,
     ):
-        """Initialize the EvaluationRunner.
+        """Initialize the GradingRunner.
 
         Args:
             graders: dict of graders to use for the experiment
@@ -106,8 +109,8 @@ class GradingRunner(BaseRunner):
     async def __call__(
         self,
         data_samples: List[DataSample],
-        *args,
-        **kwargs,
+        *args: Any,
+        **kwargs: Any,
     ) -> dict:
         """Run experiment.
 
@@ -156,7 +159,7 @@ if __name__ == "__main__":
         },
         "required": ["data", "samples"],
     }
-    data_samples = [
+    test_samples = [
         {
             "data": {
                 "query": "What is the capital of France?",
@@ -170,18 +173,18 @@ if __name__ == "__main__":
             "samples": [{"answer": "Berlin"}, {"answer": "Munich"}],
         },
     ]
-    data_samples = validate_data_samples(data_samples, data_sample_schema)
-    from rm_gallery.gallery.example.llm import FactualGrader
+    test_samples = validate_data_samples(test_samples, data_sample_schema)
+    from rm_gallery.gallery.grader.alignment.honesty.factuality import FactualityGrader
 
     model = OpenAIChatModel(model_name="qwen-plus")
 
     runner = GradingRunner(
         grading_configs={
             "factual_grader": {
-                "grader": FactualGrader(model=model),
+                "grader": FactualityGrader(model=model),
                 "weight": 1.0,
             },
         },
     )
     # Run using async method
-    result = asyncio.run(runner(data_samples=data_samples))
+    result = asyncio.run(runner(data_samples=test_samples))

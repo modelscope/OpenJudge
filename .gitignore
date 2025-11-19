@@ -34,5 +34,17 @@ uv*/
 # Test Artifacts
 tests/plt_*
 
+# Security Files
+*.pem
+*.key
+*.p12
+*.pfx
+secrets.yaml
+secrets.yml
+credentials.json
+.secrets
+.env.*
+!.env.example
+
 # Temporary and Backup Files
 _del

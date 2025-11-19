@@ -109,7 +109,7 @@ class ChatGrader(BaseHelpfulnessGrader):
             **kwargs: Additional keyword arguments.
         """
         super().__init__(
-            name="ChatGrader",
+            name="chat",
             mode=mode,
             model=model,
             template=template,
@@ -117,7 +117,7 @@ class ChatGrader(BaseHelpfulnessGrader):
             **kwargs,
         )
 
-    async def a_evaluate(
+    async def aevaluate(
         self,
         query: str,
         answer: str | List[str],
@@ -147,9 +147,9 @@ class ChatGrader(BaseHelpfulnessGrader):
 
         Example:
             >>> grader = ChatGrader()
-            >>> result = await grader.evaluate(
+            >>> result = await grader.aevaluate(
             ...     query="Hi, how are you today?",
             ...     answer="I'm doing well, thank you for asking! How can I assist you?"
             ... )
         """
-        return await super().a_evaluate(query=query, answer=answer, **kwargs)
+        return await super().aevaluate(query=query, answer=answer, **kwargs)

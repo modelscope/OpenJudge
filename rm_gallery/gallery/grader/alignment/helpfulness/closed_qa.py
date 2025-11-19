@@ -106,7 +106,7 @@ class ClosedQAGrader(BaseHelpfulnessGrader):
             **kwargs: Additional keyword arguments.
         """
         super().__init__(
-            name="Closed QA",
+            name="closed_qa",
             mode=mode,
             model=model,
             template=template,
@@ -114,7 +114,7 @@ class ClosedQAGrader(BaseHelpfulnessGrader):
             **kwargs,
         )
 
-    async def a_evaluate(
+    async def aevaluate(
         self,
         query: str,
         answer: str | List[str],
@@ -156,7 +156,7 @@ class ClosedQAGrader(BaseHelpfulnessGrader):
             >>> from rm_gallery.core.grader.base import GraderMode
             >>> model = OpenAIChatModel(model_name="gpt-3.5-turbo")
             >>> grader = ClosedQAGrader(mode=GraderMode.POINTWISE, model=model)
-            >>> result = asyncio.run(grader.a_evaluate(
+            >>> result = asyncio.run(grader.aevaluate(
             ...     query="What is the capital of France?",
             ...     answer="The capital of France is Paris."
             ... ))
@@ -165,11 +165,11 @@ class ClosedQAGrader(BaseHelpfulnessGrader):
 
             >>> # Example for listwise closed QA grader
             >>> ranking_grader = ClosedQAGrader(mode=GraderMode.LISTWISE, model=model)
-            >>> result = asyncio.run(ranking_grader.a_evaluate(
+            >>> result = asyncio.run(ranking_grader.aevaluate(
             ...     query="What is the capital of France?",
             ...     answer=["The capital of France is Paris.", "The capital of France is London."]
             ... ))
             >>> print(result.rank, result.reason)
             [1, 2] First answer correctly identifies Paris as the capital while second answer is incorrect.
         """
-        return await super().a_evaluate(query=query, answer=answer, **kwargs)
+        return await super().aevaluate(query=query, answer=answer, **kwargs)

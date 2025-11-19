@@ -22,7 +22,7 @@ class ExactMatchGrader(Grader):
 
     Example:
         >>> grader = ExactMatchGrader(case_sensitive=False)
-        >>> result = await grader.evaluate(
+        >>> result = await grader.aevaluate(
         ...     reference="Hello World",
         ...     candidate="hello world"
         ... )
@@ -71,7 +71,7 @@ class ExactMatchGrader(Grader):
 
         return matched, details
 
-    async def a_evaluate(
+    async def aevaluate(
         self, reference: str, candidate: str, **kwargs
     ) -> GraderScore:
         """
@@ -87,6 +87,7 @@ class ExactMatchGrader(Grader):
         matched, details = self._compute(reference, candidate)
 
         return GraderScore(
+            name=self.name,
             score=1.0 if matched else 0.0,
             reason=f"Exact match: {'matched' if matched else 'not matched'}",
             metadata=details,
@@ -106,7 +107,7 @@ class PrefixMatchGrader(Grader):
 
     Example:
         >>> grader = PrefixMatchGrader()
-        >>> result = await grader.evaluate(
+        >>> result = await grader.aevaluate(
         ...     reference="Hello",
         ...     candidate="Hello World"
         ... )
@@ -137,13 +138,14 @@ class PrefixMatchGrader(Grader):
 
         return matched, details
 
-    async def a_evaluate(
+    async def aevaluate(
         self, reference: str, candidate: str, **kwargs
     ) -> GraderScore:
         """Evaluate prefix match"""
         matched, details = self._compute(reference, candidate)
 
         return GraderScore(
+            name=self.name,
             score=1.0 if matched else 0.0,
             reason=f"Prefix match: {'matched' if matched else 'not matched'}",
             metadata=details,
@@ -162,7 +164,7 @@ class SuffixMatchGrader(Grader):
 
     Example:
         >>> grader = SuffixMatchGrader()
-        >>> result = await grader.evaluate(
+        >>> result = await grader.aevaluate(
         ...     reference="World",
         ...     candidate="Hello World"
         ... )
@@ -193,13 +195,14 @@ class SuffixMatchGrader(Grader):
 
         return matched, details
 
-    async def a_evaluate(
+    async def aevaluate(
         self, reference: str, candidate: str, **kwargs
     ) -> GraderScore:
         """Evaluate suffix match"""
         matched, details = self._compute(reference, candidate)
 
         return GraderScore(
+            name=self.name,
             score=1.0 if matched else 0.0,
             reason=f"Suffix match: {'matched' if matched else 'not matched'}",
             metadata=details,
@@ -219,7 +222,7 @@ class RegexMatchGrader(Grader):
 
     Example:
         >>> grader = RegexMatchGrader(pattern=r"\\d{3}-\\d{4}")
-        >>> result = await grader.evaluate(
+        >>> result = await grader.aevaluate(
         ...     reference="",  # pattern already specified at initialization
         ...     candidate="My phone is 123-4567"
         ... )
@@ -266,7 +269,7 @@ class RegexMatchGrader(Grader):
         except re.error as e:
             return False, {"error": f"Invalid regex pattern: {str(e)}"}
 
-    async def a_evaluate(
+    async def aevaluate(
         self,
         reference: str = "",
         candidate: str = "",
@@ -277,10 +280,12 @@ class RegexMatchGrader(Grader):
 
         if "error" in details:
             return GraderScore(
+                name=self.name,
                 score=0.0, reason=details["error"], metadata=details
             )
 
         return GraderScore(
+            name=self.name,
             score=1.0 if matched else 0.0,
             reason=f"Regex match: {'matched' if matched else 'not matched'}",
             metadata=details,

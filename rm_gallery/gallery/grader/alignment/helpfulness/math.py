@@ -94,7 +94,7 @@ class MathGrader(BaseHelpfulnessGrader):
     def __init__(self, model: ChatModelBase | dict, template: Template | None = None, mode: GraderMode = GraderMode.LISTWISE, **kwargs):
         """Initialize the SafetyGrader."""
         super().__init__(
-            name="Math",
+            name="math",
             mode=mode,
             model=model,
             template=template,
@@ -102,7 +102,7 @@ class MathGrader(BaseHelpfulnessGrader):
             **kwargs,
         )
     
-    async def a_evaluate(
+    async def aevaluate(
         self,
         query: str,
         answer: str | List[str],
@@ -131,9 +131,9 @@ class MathGrader(BaseHelpfulnessGrader):
 
         Example:
             >>> grader = MathGrader()
-            >>> result = await grader.evaluate(
+            >>> result = await grader.aevaluate(
             ...     query="Solve for x: 2x + 5 = 15",
             ...     answer="2x + 5 = 15; 2x = 10; x = 5"
             ... )
         """
-        return await super().a_evaluate(query=query, answer=answer, **kwargs)
+        return await super().aevaluate(query=query, answer=answer, **kwargs)

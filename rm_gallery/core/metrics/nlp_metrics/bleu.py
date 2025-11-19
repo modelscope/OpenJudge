@@ -25,7 +25,7 @@ class BLEUGrader(Grader):
 
     Example:
         >>> grader = BLEUGrader(max_ngram_order=4)
-        >>> result = await grader.evaluate(
+        >>> result = await grader.aevaluate(
         ...     reference="the cat is on the mat",
         ...     candidate="the cat is on the mat"
         ... )
@@ -87,7 +87,7 @@ class BLEUGrader(Grader):
         except Exception as e:
             return 0.0, {"error": str(e)}
 
-    async def a_evaluate(
+    async def aevaluate(
         self, reference: str, candidate: str, **kwargs
     ) -> GraderScore:
         """Evaluate BLEU score"""
@@ -95,10 +95,12 @@ class BLEUGrader(Grader):
 
         if "error" in details:
             return GraderScore(
+                name=self.name,
                 score=0.0, reason=details["error"], metadata=details
             )
 
         return GraderScore(
+            name=self.name,
             score=score,
             reason=f"BLEU score: {score:.4f}",
             metadata=details,
@@ -118,7 +120,7 @@ class SentenceBLEUGrader(Grader):
 
     Example:
         >>> grader = SentenceBLEUGrader()
-        >>> result = await grader.evaluate(
+        >>> result = await grader.aevaluate(
         ...     reference="the cat sat on the mat",
         ...     candidate="the cat is on the mat"
         ... )
@@ -178,7 +180,7 @@ class SentenceBLEUGrader(Grader):
         except Exception as e:
             return 0.0, {"error": str(e)}
 
-    async def a_evaluate(
+    async def aevaluate(
         self, reference: str, candidate: str, **kwargs
     ) -> GraderScore:
         """Evaluate sentence BLEU"""
@@ -186,10 +188,12 @@ class SentenceBLEUGrader(Grader):
 
         if "error" in details:
             return GraderScore(
+                name=self.name,
                 score=0.0, reason=details["error"], metadata=details
             )
 
         return GraderScore(
+            name=self.name,
             score=score,
             reason=f"Sentence BLEU: {score:.4f}",
             metadata=details,

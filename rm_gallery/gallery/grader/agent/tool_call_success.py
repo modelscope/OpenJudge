@@ -105,7 +105,7 @@ class ToolCallSuccessGrader(LLMGrader):
         ...         "result": {"temperature": 25, "condition": "sunny"}
         ...     }
         ... ]
-        >>> result = asyncio.run(grader.evaluate(tool_definitions=tool_definitions, tool_calls=tool_calls))
+        >>> result = asyncio.run(grader.aevaluate(tool_definitions=tool_definitions, tool_calls=tool_calls))
         >>> print(result.score)
         1.0
     """
@@ -163,7 +163,7 @@ class ToolCallSuccessGrader(LLMGrader):
 
         return tool_calls
 
-    async def a_evaluate(
+    async def aevaluate(
         self,
         tool_definitions: Union[Dict[str, Any], List[Dict[str, Any]]],
         tool_calls: Union[Dict[str, Any], List[Dict[str, Any]]],
@@ -199,7 +199,7 @@ class ToolCallSuccessGrader(LLMGrader):
             ...         "result": {"value": 4}
             ...     }
             ... ]
-            >>> result = asyncio.run(grader.a_evaluate(tool_definitions=tool_defs, tool_calls=tool_calls))
+            >>> result = asyncio.run(grader.aevaluate(tool_definitions=tool_defs, tool_calls=tool_calls))
             >>> print(f"Score: {result.score}, Reason: {result.reason}")
             Score: 1.0, Reason: All tool calls were successful
         """
@@ -210,7 +210,7 @@ class ToolCallSuccessGrader(LLMGrader):
             tool_definitions = [tool_definitions] if tool_definitions else []
 
         # Call parent evaluate method with the structured data
-        result = await super().a_evaluate(
+        result = await super().aevaluate(
             tool_calls=json.dumps(tool_calls, indent=2),
             tool_definitions=json.dumps(tool_definitions, indent=2),
             **kwargs,
@@ -261,7 +261,7 @@ if __name__ == "__main__":
         ]
 
         # Evaluate successful tool calls
-        result = await grader.a_evaluate(
+        result = await grader.aevaluate(
             tool_definitions=tool_definitions,
             tool_calls=successful_tool_calls,
         )
@@ -280,7 +280,7 @@ if __name__ == "__main__":
         ]
 
         # Evaluate failed tool calls
-        result = await grader.a_evaluate(
+        result = await grader.aevaluate(
             tool_definitions=tool_definitions,
             tool_calls=failed_tool_calls,
         )

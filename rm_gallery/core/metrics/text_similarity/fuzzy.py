@@ -28,7 +28,7 @@ class FuzzyMatchGrader(Grader):
 
     Example:
         >>> grader = FuzzyMatchGrader(method="ratio", threshold=0.8)
-        >>> result = await grader.evaluate(
+        >>> result = await grader.aevaluate(
         ...     reference="hello world",
         ...     candidate="hello worl"
         ... )
@@ -99,7 +99,7 @@ class FuzzyMatchGrader(Grader):
 
         return score, details
 
-    async def a_evaluate(
+    async def aevaluate(
         self, reference: str, candidate: str, **kwargs
     ) -> GraderScore:
         """Evaluate fuzzy match"""
@@ -107,6 +107,7 @@ class FuzzyMatchGrader(Grader):
 
         matched_text = "matched" if details["matched"] else "not matched"
         return GraderScore(
+            name=self.name,
             score=score,
             reason=f"Fuzzy match ({self.method}): {score:.4f} ({matched_text})",
             metadata=details,
@@ -125,7 +126,7 @@ class EditDistanceGrader(Grader):
 
     Example:
         >>> grader = EditDistanceGrader()
-        >>> result = await grader.evaluate(
+        >>> result = await grader.aevaluate(
         ...     reference="kitten",
         ...     candidate="sitting"
         ... )
@@ -167,13 +168,14 @@ class EditDistanceGrader(Grader):
 
         return normalized_score, details
 
-    async def a_evaluate(
+    async def aevaluate(
         self, reference: str, candidate: str, **kwargs
     ) -> GraderScore:
         """Evaluate edit distance"""
         score, details = self._compute(reference, candidate)
 
         return GraderScore(
+            name=self.name,
             score=score,
             reason=f"Edit distance similarity: {score:.4f} (distance={details['raw_distance']})",
             metadata=details,

@@ -49,7 +49,7 @@ class ImageReferenceGrader(Grader):
         >>> api = QwenVLAPI(api_key="your-key", model_name="qwen-vl-plus")
         >>> grader = ImageReferenceGrader(model=api, threshold=0.7)
         >>>
-        >>> result = await grader.evaluate(
+        >>> result = await grader.aevaluate(
         ...     actual_output=[
         ...         "The sales data is presented below.",
         ...         MLLMImage(url="https://example.com/sales_chart.jpg"),
@@ -148,7 +148,7 @@ class ImageReferenceGrader(Grader):
             logger.error(f"Error evaluating image reference: {e}")
             return 0.0, f"Evaluation error: {str(e)}"
 
-    async def _a_evaluate_single_image(
+    async def _aevaluate_single_image(
         self,
         image: MLLMImage,
         context_above: Optional[str],
@@ -247,7 +247,7 @@ class ImageReferenceGrader(Grader):
             )
             image = actual_output[image_index]
             tasks.append(
-                self._a_evaluate_single_image(
+                self._aevaluate_single_image(
                     image,
                     context_above,
                     context_below,
@@ -275,7 +275,7 @@ class ImageReferenceGrader(Grader):
 
         return final_score, details
 
-    async def a_evaluate(
+    async def aevaluate(
         self,
         actual_output: List[Union[str, MLLMImage]],
         async_mode: bool = True,
@@ -293,7 +293,7 @@ class ImageReferenceGrader(Grader):
             GraderScore: Score with normalized reference quality value [0, 1]
 
         Example:
-            >>> result = await grader.evaluate(
+            >>> result = await grader.aevaluate(
             ...     actual_output=[
             ...         "See the chart below.",
             ...         MLLMImage(url="chart.jpg"),
@@ -308,6 +308,7 @@ class ImageReferenceGrader(Grader):
 
         if "error" in details:
             return GraderScore(
+                name=self.name,
                 score=0.0,
                 reason=details["error"],
                 metadata=details,
@@ -329,6 +330,7 @@ class ImageReferenceGrader(Grader):
             reason = "\n".join(reason_parts)
 
         return GraderScore(
+            name=self.name,
             score=score,
             reason=f"Image reference quality score: {score:.4f}\n{reason}",
             metadata=details,

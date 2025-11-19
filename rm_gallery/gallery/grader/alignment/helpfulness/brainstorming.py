@@ -98,7 +98,7 @@ class BrainstormingGrader(BaseHelpfulnessGrader):
     def __init__(self, model: ChatModelBase | dict, template: Template | None = None, mode: GraderMode = GraderMode.LISTWISE, **kwargs):
         """Initialize the SafetyGrader."""
         super().__init__(
-            name="BrainstormingGrader",
+            name="brainstorming",
             mode=mode,
             model=model,
             template=template,
@@ -106,7 +106,7 @@ class BrainstormingGrader(BaseHelpfulnessGrader):
             **kwargs,
         )
 
-    async def a_evaluate(
+    async def aevaluate(
         self,
         query: str,
         answer: str | List[str],
@@ -136,9 +136,9 @@ class BrainstormingGrader(BaseHelpfulnessGrader):
 
         Example:
             >>> grader = BrainstormingGrader()
-            >>> result = await grader.evaluate(
+            >>> result = await grader.aevaluate(
             ...     query="Give me ideas for a birthday gift for my 10-year-old",
             ...     answer="Here are some ideas: 1) Art supplies kit, 2) Science experiment set, 3) Board game, 4) Book series"
             ... )
         """
-        return await super().a_evaluate(query=query, answer=answer, **kwargs)
+        return await super().aevaluate(query=query, answer=answer, **kwargs)

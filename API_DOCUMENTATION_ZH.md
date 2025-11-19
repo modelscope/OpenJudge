@@ -23,7 +23,7 @@ class Grader(ABC):
         description: The description of the grader.
     """
 
-    async def a_evaluate(self, **kwargs) -> GraderScore | GraderRank:
+    async def aevaluate(self, **kwargs) -> GraderScore | GraderRank:
         """Evaluate method to be implemented by subclasses.
 
         This abstract method must be implemented by all Grader subclasses. It performs
@@ -66,9 +66,10 @@ class Grader(ABC):
             ...             description="Evaluates factual accuracy of answers"
             ...         )
             ...
-            ...     async def a_evaluate(self, query: str, answer: str, **kwargs) -> GraderScore:
+            ...     async def aevaluate(self, query: str, answer: str, **kwargs) -> GraderScore:
             ...         # Implementation would evaluate accuracy
             ...         return GraderScore(
+            ...             name=self.name,
             ...             score=0.8,
             ...             reason="Answer is mostly accurate but missing some details"
             ...         )
@@ -82,7 +83,7 @@ class Grader(ABC):
             ...             description="Ranks answers by relevance"
             ...         )
             ...
-            ...     async def a_evaluate(self, query: str, answer_1: str, answer_2: str, **kwargs) -> GraderRank:
+            ...     async def aevaluate(self, query: str, answer_1: str, answer_2: str, **kwargs) -> GraderRank:
             ...         # Implementation would rank answers by relevance
             ...         return GraderRank(
             ...             rank=[1, 2],
@@ -91,7 +92,7 @@ class Grader(ABC):
         """
         ...
 
-    async def a_evaluate_data_sample(
+    async def aevaluate_data_sample(
         self,
         data_sample: DataSample,
         parser: DataSampleParser | None = None,
@@ -170,7 +171,7 @@ class Grader(ABC):
             ... )
             >>>
             >>> # Evaluate
-            >>> results = await grader.evaluate(data_sample=data_sample)
+            >>> results = await grader.aevaluate(data_sample=data_sample)
             >>> print(results)
         """
 ```
@@ -197,7 +198,7 @@ class ExactMatchGrader(Grader):
             description="通过精确字符串匹配进行评估"
         )
 
-    async def a_evaluate(self, reference: str, prediction: str) -> GraderScore:
+    async def aevaluate(self, reference: str, prediction: str) -> GraderScore:
         """Evaluate through exact string matching.
 
         Args:
@@ -209,6 +210,7 @@ class ExactMatchGrader(Grader):
         """
         score = 1.0 if reference.strip() == prediction.strip() else 0.0
         return GraderScore(
+            name=self.name,
             score=score,
             reason="精确匹配" if score == 1.0 else "非精确匹配"
         )
@@ -231,6 +233,7 @@ async def exact_match_function(reference: str, prediction: str) -> GraderScore:
     """
     score = 1.0 if reference.strip() == prediction.strip() else 0.0
     return GraderScore(
+        name=self.name,
         score=score,
         reason="精确匹配" if score == 1.0 else "非精确匹配"
     )
@@ -426,9 +429,9 @@ async def contains_capital_function(query: str, answer: str) -> GraderScore:
 
     for country, capital in capitals.items():
         if country in query and capital.lower() in answer.lower():
-            return GraderScore(score=1.0, reason=f"包含首都 {capital}")
+            return GraderScore(name=self.name, score=1.0, reason=f"包含首都 {capital}")
 
-    return GraderScore(score=0.0, reason="不包含正确首都")
+    return GraderScore(name=self.name, score=0.0, reason="不包含正确首都")
 
 contains_capital_grader = FunctionGrader(
     name="contains_capital",
@@ -488,7 +491,7 @@ class GradingRunner(BaseRunner):
             max_concurrent: Maximum number of concurrent evaluations (default: 32)
         """
 
-    async def a_evaluate(self, data_sample: DataSample) -> GradingResult:
+    async def aevaluate(self, data_sample: DataSample) -> GradingResult:
         """Run experiment for a single sample.
 
         Args:

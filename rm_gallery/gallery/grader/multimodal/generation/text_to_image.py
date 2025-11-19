@@ -180,11 +180,11 @@ class TextToImageMetric(BaseMultimodalMetric):
             self.PQ_scores,
             self.PQ_reasoning,
         ) = await asyncio.gather(
-            self._a_evaluate_semantic_consistency(
+            self._aevaluate_semantic_consistency(
                 text_prompt,
                 generated_image,
             ),
-            self._a_evaluate_perceptual_quality(generated_image),
+            self._aevaluate_perceptual_quality(generated_image),
         )
 
         # Calculate final score
@@ -248,7 +248,7 @@ class TextToImageMetric(BaseMultimodalMetric):
 
         return self.score
 
-    async def _a_evaluate_semantic_consistency(
+    async def _aevaluate_semantic_consistency(
         self,
         text_prompt: str,
         generated_image: MLLMImage,
@@ -329,7 +329,7 @@ class TextToImageMetric(BaseMultimodalMetric):
             logger.error(f"Error evaluating semantic consistency: {e}")
             return [5.0], f"Error during evaluation: {str(e)}"
 
-    async def _a_evaluate_perceptual_quality(
+    async def _aevaluate_perceptual_quality(
         self,
         generated_image: MLLMImage,
     ) -> Tuple[List[float], str]:

@@ -33,7 +33,7 @@ async def test_fuzzy_match():
     from rm_gallery.core.metrics.text_similarity.fuzzy import FuzzyMatchGrader
 
     grader = FuzzyMatchGrader()
-    result = await grader.a_evaluate(reference="hello world", candidate="hello world")
+    result = await grader.aevaluate(reference="hello world", candidate="hello world")
 
     if result.score == 1.0:
         print(f"✓ Fuzzy match works: {result.score}")
@@ -51,7 +51,7 @@ async def test_exact_match():
     from rm_gallery.core.metrics.string_check.exact_match import ExactMatchGrader
 
     grader = ExactMatchGrader()
-    result = await grader.a_evaluate(reference="test", candidate="test")
+    result = await grader.aevaluate(reference="test", candidate="test")
 
     if result.score == 1.0:
         print(f"✓ Exact match works: {result.score}")
@@ -69,7 +69,7 @@ async def test_json_match():
     from rm_gallery.core.metrics.format_check.json_match import JsonMatchGrader
 
     grader = JsonMatchGrader()
-    result = await grader.a_evaluate(
+    result = await grader.aevaluate(
         reference='{"name": "Alice"}', candidate='{"name": "Alice"}'
     )
 
@@ -100,7 +100,7 @@ async def test_multiple_graders():
     candidate = "the cat sat on the mat"
 
     for grader in graders:
-        result = await grader.evaluate(reference=reference, candidate=candidate)
+        result = await grader.aevaluate(reference=reference, candidate=candidate)
         print(f"  - {grader.name}: {result.score:.4f}")
 
     print("✓ Multiple graders work")

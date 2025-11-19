@@ -25,7 +25,7 @@ class GraderRegistry:
         >>> @register_grader("my_grader")
         ... class MyGrader(Grader):
         ...     async def evaluate(self, **kwargs):
-        ...         return GraderScore(score=1.0, reason="Test")
+        ...         return GraderScore(name=self.name, score=1.0, reason="Test")
         >>>
         >>> # Get registered grader
         >>> GraderClass = grader_registry.get("my_grader")
@@ -248,7 +248,7 @@ def register_grader(name: str, override: bool = False):
         ... class ExactMatchGrader(Grader):
         ...     async def evaluate(self, reference: str, candidate: str, **kwargs):
         ...         matched = reference == candidate
-        ...         return GraderScore(score=1.0 if matched else 0.0, reason="Exact match")
+        ...         return GraderScore(name=self.name, score=1.0 if matched else 0.0, reason="Exact match")
     """
 
     def decorator(cls: type[Grader] | Callable) -> type[Grader] | Callable:
@@ -272,7 +272,7 @@ def get_grader(name: str, **kwargs) -> Optional[Grader]:
     Example:
         >>> bleu = get_grader("bleu", max_ngram_order=4)
         >>> if bleu:
-        ...     result = await bleu.evaluate(reference="test", candidate="test")
+        ...     result = await bleu.aevaluate(reference="test", candidate="test")
     """
     return grader_registry.get_instance(name, **kwargs)
 

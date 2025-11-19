@@ -19,12 +19,12 @@ class SyntaxCheckGrader(Grader):
 
     def __init__(self):
         super().__init__(
-            name="SyntaxCheck",
+            name="syntax_check",
             mode=GraderMode.POINTWISE,
             description="Check code syntax using Abstract Syntax Tree to validate Python code blocks.",
         )
 
-    async def a_evaluate(self, answer: str) -> GraderScore:
+    async def aevaluate(self, answer: str) -> GraderScore:
         """Check code syntax in the provided answer.
 
         Extracts Python code blocks from markdown-style code fences and validates
@@ -48,12 +48,12 @@ class SyntaxCheckGrader(Grader):
 
         Example:
             >>> grader = SyntaxCheckGrader()
-            >>> result = await grader.evaluate("Here's a function:\\n```python\\ndef hello():\\n    print('Hello')\\n```")
+            >>> result = await grader.aevaluate("Here's a function:\\n```python\\ndef hello():\\n    print('Hello')\\n```")
             >>> print(result.score, result.reason)
             1.0 Syntax check: 1/1 blocks valid, 0 errors
 
             >>> # Example with syntax error
-            >>> result = await grader.evaluate("Here's a function with error:\\n```python\\ndef hello(\\n    print('Hello')\\n```")
+            >>> result = await grader.aevaluate("Here's a function with error:\\n```python\\ndef hello(\\n    print('Hello')\\n```")
             >>> print(result.score, result.reason)
             -0.5 Syntax check: 0/1 blocks valid, 1 errors
         """
@@ -65,6 +65,7 @@ class SyntaxCheckGrader(Grader):
         if not code_blocks:
             # No code blocks, return neutral score
             return GraderScore(
+                name=self.name,
                 score=0.0,
                 reason="No code blocks found to check",
                 metadata={"code_blocks": [], "syntax_errors": []},
@@ -95,6 +96,7 @@ class SyntaxCheckGrader(Grader):
             score -= 0.5
 
         return GraderScore(
+            name=self.name,
             score=score,
             reason=f"Syntax check: {valid_blocks}/{len(code_blocks)} blocks valid, {len(syntax_errors)} errors",
             metadata={
@@ -111,7 +113,7 @@ class CodeStyleGrader(Grader):
 
     def __init__(self):
         super().__init__(
-            name="CodeStyle",
+            name="code_style",
             mode=GraderMode.POINTWISE,
             description="Basic code style checking including indentation consistency and naming conventions.",
         )
@@ -177,7 +179,7 @@ class CodeStyleGrader(Grader):
             f"Naming convention: {good_names}/{total_names} names follow snake_case",
         )
 
-    async def a_evaluate(self, answer: str) -> GraderScore:
+    async def aevaluate(self, answer: str) -> GraderScore:
         """Evaluate code style in the provided answer.
 
         Performs basic code style checking including indentation consistency and
@@ -199,12 +201,12 @@ class CodeStyleGrader(Grader):
 
         Example:
             >>> grader = CodeStyleGrader()
-            >>> result = await grader.evaluate("Here's a function:\\n```python\\ndef calculate_sum(a, b):\\n    return a + b\\n```")
+            >>> result = await grader.aevaluate("Here's a function:\\n```python\\ndef calculate_sum(a, b):\\n    return a + b\\n```")
             >>> print(result.score, result.reason)
             1.0 Code style score: 1.000; Consistent indentation; Naming convention: 2/2 names follow snake_case
 
             >>> # Example with style issues
-            >>> result = await grader.evaluate("Here's a function with style issues:\\n```python\\ndef CalculateSum(a,b):\\n	return a+b\\n```")
+            >>> result = await grader.aevaluate("Here's a function with style issues:\\n```python\\ndef CalculateSum(a,b):\\n	return a+b\\n```")
             >>> print(result.score, result.reason)
             0.5 Code style score: 0.500; Consistent indentation; Naming convention: 1/2 names follow snake_case
         """
@@ -214,6 +216,7 @@ class CodeStyleGrader(Grader):
 
         if not code_blocks:
             return GraderScore(
+                name=self.name,
                 score=0.0,
                 reason="No code blocks found to check style",
                 metadata={"code_blocks": []},
@@ -241,6 +244,7 @@ class CodeStyleGrader(Grader):
         # Average score
         average_score = total_score / len(code_blocks)
         return GraderScore(
+            name=self.name,
             score=average_score,
             reason=f"Code style score: {average_score:.3f}; "
             + "; ".join(details),
@@ -262,12 +266,12 @@ class PatchSimilarityGrader(Grader):
 
     def __init__(self):
         super().__init__(
-            name="PatchSimilarityGrader",
+            name="patch_similarity",
             mode=GraderMode.POINTWISE,
             description="Calculate similarity between generated patch and oracle patch using difflib.SequenceMatcher",
         )
 
-    async def a_evaluate(self, generated: str, reference: str) -> GraderScore:
+    async def aevaluate(self, generated: str, reference: str) -> GraderScore:
         """Calculate similarity between generated and reference patches.
 
         Uses difflib.SequenceMatcher to calculate the similarity ratio between
@@ -292,7 +296,7 @@ class PatchSimilarityGrader(Grader):
             >>> grader = PatchSimilarityGrader()
             >>> generated = "def add(a, b):\\n    return a + b"
             >>> reference = "def add(x, y):\\n    return x + y"
-            >>> result = await grader.evaluate(generated, reference)
+            >>> result = await grader.aevaluate(generated, reference)
             >>> print(result.score, result.reason)
             0.8 Patch similarity: 0.800 based on sequence matching
         """
@@ -305,6 +309,7 @@ class PatchSimilarityGrader(Grader):
         opcodes = list(matcher.get_opcodes())
 
         return GraderScore(
+            name=self.name,
             score=similarity,
             reason=f"Patch similarity: {similarity:.3f} based on sequence matching",
             metadata={
@@ -333,7 +338,7 @@ class CodeExecutionGrader(Grader):
         **kwargs,
     ):
         super().__init__(
-            name="CodeExecutionGrader",
+            name="code_execution",
             mode=GraderMode.POINTWISE,
             description="Executes code against test cases and evaluates correctness based on test case results",
             **kwargs,
@@ -378,7 +383,7 @@ class CodeExecutionGrader(Grader):
         # If no code block markers, assume the entire content is code
         return content
 
-    async def a_evaluate(self, answer: str) -> GraderScore:
+    async def aevaluate(self, answer: str) -> GraderScore:
         """Evaluate code by executing it against test cases.
 
         Tests the functional correctness of generated code by executing it
@@ -402,13 +407,13 @@ class CodeExecutionGrader(Grader):
         Example:
             >>> grader = CodeExecutionGrader()
             >>> code_answer = "def add(a, b):\\n    return a + b"
-            >>> result = await grader.evaluate(code_answer)
+            >>> result = await grader.aevaluate(code_answer)
             >>> print(result.score, result.reason)
             1.0 Code executed successfully and passed all tests
 
             >>> # Example with failing code
             >>> bad_code = "def add(a, b):\\n    return a - b"
-            >>> result = await grader.evaluate(bad_code)
+            >>> result = await grader.aevaluate(bad_code)
             >>> print(result.score, result.reason)
             0.0 Code execution failed or did not pass tests
         """
@@ -494,6 +499,7 @@ class CodeExecutionGrader(Grader):
 
         # Single return statement at the end of the function
         return GraderScore(
+            name=self.name,
             score=score,
             reason=reason,
             metadata=extra_data,

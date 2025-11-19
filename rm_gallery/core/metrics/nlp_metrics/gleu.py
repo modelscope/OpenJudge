@@ -26,7 +26,7 @@ class GLEUGrader(Grader):
 
     Example:
         >>> grader = GLEUGrader()
-        >>> result = await grader.evaluate(
+        >>> result = await grader.aevaluate(
         ...     reference="the cat sat on the mat",
         ...     candidate="the cat is on the mat"
         ... )
@@ -86,7 +86,7 @@ class GLEUGrader(Grader):
         except Exception as e:
             return 0.0, {"error": str(e)}
 
-    async def a_evaluate(
+    async def aevaluate(
         self, reference: str, candidate: str, **kwargs
     ) -> GraderScore:
         """Evaluate GLEU score"""
@@ -94,12 +94,14 @@ class GLEUGrader(Grader):
 
         if "error" in details:
             return GraderScore(
+                name=self.name,
                 score=0.0,
                 reason=details.get("message", details["error"]),
                 metadata=details,
             )
 
         return GraderScore(
+            name=self.name,
             score=score,
             reason=f"GLEU score: {score:.4f}",
             metadata=details,
@@ -120,7 +122,7 @@ class ChrFGrader(Grader):
 
     Example:
         >>> grader = ChrFGrader(n=6, beta=2)
-        >>> result = await grader.evaluate(
+        >>> result = await grader.aevaluate(
         ...     reference="the cat sat on the mat",
         ...     candidate="the cat is on the mat"
         ... )
@@ -172,7 +174,7 @@ class ChrFGrader(Grader):
         except Exception as e:
             return 0.0, {"error": str(e)}
 
-    async def a_evaluate(
+    async def aevaluate(
         self, reference: str, candidate: str, **kwargs
     ) -> GraderScore:
         """Evaluate ChrF score"""
@@ -180,12 +182,14 @@ class ChrFGrader(Grader):
 
         if "error" in details:
             return GraderScore(
+                name=self.name,
                 score=0.0,
                 reason=details.get("message", details["error"]),
                 metadata=details,
             )
 
         return GraderScore(
+            name=self.name,
             score=score,
             reason=f"ChrF score: {score:.4f}",
             metadata=details,

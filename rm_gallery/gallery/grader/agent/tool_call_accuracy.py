@@ -118,7 +118,7 @@ class ToolCallAccuracyGrader(LLMGrader):
         ...         "result": {"temperature": 25, "condition": "sunny"}
         ...     }
         ... ]
-        >>> result = asyncio.run(grader.evaluate(
+        >>> result = asyncio.run(grader.aevaluate(
         ...     query=conversation,
         ...     tool_definitions=tool_definitions,
         ...     tool_calls=tool_calls
@@ -190,7 +190,7 @@ class ToolCallAccuracyGrader(LLMGrader):
 
         return tool_calls
 
-    async def a_evaluate(
+    async def aevaluate(
         self,
         query: Union[str, List[Dict[str, Any]]],
         tool_definitions: Union[Dict[str, Any], List[Dict[str, Any]]],
@@ -245,7 +245,7 @@ class ToolCallAccuracyGrader(LLMGrader):
             ...         "result": {"temperature": 25, "condition": "sunny"}
             ...     }
             ... ]
-            >>> result = asyncio.run(grader.a_evaluate(
+            >>> result = asyncio.run(grader.aevaluate(
             ...     query=conversation,
             ...     tool_definitions=tool_defs,
             ...     tool_calls=tool_calls
@@ -262,6 +262,7 @@ class ToolCallAccuracyGrader(LLMGrader):
         # Check if we have tool calls to evaluate
         if not tool_calls:
             return GraderScore(
+                name=self.name,
                 score=0.0,
                 reason="No tool calls found in the response to evaluate",
                 metadata={
@@ -276,7 +277,7 @@ class ToolCallAccuracyGrader(LLMGrader):
             tool_definitions = [tool_definitions] if tool_definitions else []
 
         # Call parent evaluate method with the structured data
-        result = await super().a_evaluate(
+        result = await super().aevaluate(
             query=json.dumps(query, indent=2),
             tool_calls=json.dumps(tool_calls, indent=2),
             tool_definitions=json.dumps(tool_definitions, indent=2),
@@ -341,7 +342,7 @@ if __name__ == "__main__":
         ]
 
         # Evaluate the tool calls
-        result = await grader.a_evaluate(
+        result = await grader.aevaluate(
             query=conversation,
             tool_definitions=tool_definitions,
             tool_calls=tool_calls,

@@ -100,7 +100,7 @@ class Cramo(LLMGrader):
             model=None,
         )
 
-    async def a_evaluate(
+    async def aevaluate(
         self,
         instruction: str,
         completion: str,
@@ -124,7 +124,7 @@ class Cramo(LLMGrader):
             >>> from rm_gallery.core.model.dashscope_llm import DashScopeLLM
             >>> model_config = {"model_name": "qwen-plus"}
             >>> grader = Cramo(name="cramo_eval", model=model_config)
-            >>> result = await grader.evaluate(
+            >>> result = await grader.aevaluate(
             ...     instruction="Explain the process of photosynthesis",
             ...     completion="Photosynthesis is a process used by plants..."
             ... )
@@ -142,7 +142,7 @@ class Cramo(LLMGrader):
         ).metadata.get("rubrics", [])
 
         # Evaluate the completion using the generated rubrics
-        result = await super().a_evaluate(
+        result = await super().aevaluate(
             instruction=instruction,
             completion=completion,
             rubrics="\n".join(rubrics),

@@ -99,7 +99,7 @@ class PreciseIfGrader(BaseHelpfulnessGrader):
     def __init__(self, model: ChatModelBase | dict, template: Template | None = None, mode: GraderMode = GraderMode.LISTWISE, **kwargs):
         """Initialize the SafetyGrader."""
         super().__init__(
-            name="Precise-If",
+            name="precise_if",
             mode=mode,
             model=model,
             template=template,
@@ -107,7 +107,7 @@ class PreciseIfGrader(BaseHelpfulnessGrader):
             **kwargs,
         )
         
-    async def a_evaluate(
+    async def aevaluate(
         self,
         query: str,
         answer: str | List[str],
@@ -137,9 +137,9 @@ class PreciseIfGrader(BaseHelpfulnessGrader):
 
         Example:
             >>> grader = PreciseIfGrader()
-            >>> result = await grader.evaluate(
+            >>> result = await grader.aevaluate(
             ...     query="If the temperature is above 30°C, suggest cooling methods",
             ...     answer="Since the temperature is 35°C, I suggest using a fan or air conditioning."
             ... )
         """
-        return await super().a_evaluate(query=query, answer=answer, **kwargs)
+        return await super().aevaluate(query=query, answer=answer, **kwargs)

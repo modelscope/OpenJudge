@@ -203,7 +203,7 @@ class ImageReferenceMetric(BaseMultimodalMetric):
             self.contexts_below.append(context_below)
 
             tasks.append(
-                self._a_evaluate_image_reference(
+                self._aevaluate_image_reference(
                     image,
                     context_above,
                     context_below,
@@ -259,7 +259,7 @@ class ImageReferenceMetric(BaseMultimodalMetric):
             logger.error(f"Error evaluating image reference: {e}")
             return 0.0, f"Evaluation error: {str(e)}"
 
-    async def _a_evaluate_image_reference(
+    async def _aevaluate_image_reference(
         self,
         image: MLLMImage,
         context_above: Optional[str],

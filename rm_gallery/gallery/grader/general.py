@@ -19,13 +19,13 @@ class AccuracyGrader(Grader):
 
     Examples:
         >>> grader = AccuracyGrader()
-        >>> result = await grader.evaluate(
+        >>> result = await grader.aevaluate(
         ...     generated="The capital of France is Paris",
         ...     reference="The capital of France is Paris"
         ... )
         >>> print(result.score)
         1.0
-        >>> result = await grader.evaluate(
+        >>> result = await grader.aevaluate(
         ...     generated="The capital of France is London",
         ...     reference="The capital of France is Paris"
         ... )
@@ -34,12 +34,12 @@ class AccuracyGrader(Grader):
     """
     def __init__(self):
         super().__init__(
-            name="Accuracy",
+            name="accuracy",
             mode=GraderMode.POINTWISE,
             description="Calculate accuracy between generated content and reference answer",
         )
 
-    async def a_evaluate(self, generated: str, reference: str) -> GraderScore:
+    async def aevaluate(self, generated: str, reference: str) -> GraderScore:
         """
         Calculate accuracy between generated content and reference answer.
 
@@ -64,7 +64,7 @@ class AccuracyGrader(Grader):
 
         Examples:
             >>> grader = AccuracyGrader()
-            >>> result = await grader.evaluate(
+            >>> result = await grader.aevaluate(
             ...     generated="The capital of France is Paris",
             ...     reference="The capital of France is Paris"
             ... )
@@ -72,7 +72,7 @@ class AccuracyGrader(Grader):
             1.0
             >>> print(result.reason)
             Accuracy: 1.000
-            >>> result = await grader.evaluate(
+            >>> result = await grader.aevaluate(
             ...     generated="The capital of France is London",
             ...     reference="The capital of France is Paris"
             ... )
@@ -84,6 +84,7 @@ class AccuracyGrader(Grader):
         accuracy = 1.0 if generated == reference else 0.0
 
         return GraderScore(
+            name=self.name,
             score=accuracy,
             reason=f"Accuracy: {accuracy:.3f}",
             metadata={
@@ -112,7 +113,7 @@ class F1ScoreGrader(Grader):
         """
         """
         super().__init__(
-            name="F1 Score",
+            name="f1_score",
             mode=GraderMode.POINTWISE,
             description="Calculate F1 score between generated content and reference answer at word level",
             **kwargs,
@@ -129,7 +130,7 @@ class F1ScoreGrader(Grader):
             chinese_only=chinese_only,
         )
 
-    async def a_evaluate(self, generated, reference) -> GraderScore:
+    async def aevaluate(self, generated, reference) -> GraderScore:
         """
         Calculate F1 score between generated content and reference answer at word level.
 
@@ -152,13 +153,13 @@ class F1ScoreGrader(Grader):
 
         Examples:
             >>> grader = F1ScoreGrader()
-            >>> result = await grader.evaluate(
+            >>> result = await grader.aevaluate(
             ...     generated="The quick brown fox",
             ...     reference="The quick brown fox jumps over the lazy dog"
             ... )
             >>> print(round(result.score, 3))
             0.571
-            >>> result = await grader.evaluate(
+            >>> result = await grader.aevaluate(
             ...     generated="Hello world",
             ...     reference="Hello world"
             ... )
@@ -199,6 +200,7 @@ class F1ScoreGrader(Grader):
             )
 
         return GraderScore(
+            name=self.name,
             score=f1,
             reason=f"F1 score: {f1:.3f} (Precision: {precision:.3f}, Recall: {recall:.3f})",
             metadata={
@@ -226,7 +228,7 @@ class RougeLGrader(Grader):
 
     Examples:
         >>> grader = RougeLGrader()
-        >>> result = await grader.evaluate(
+        >>> result = await grader.aevaluate(
         ...     generated="the quick brown fox jumps over the lazy dog",
         ...     reference="the fast brown fox jumped over the sleepy dog"
         ... )
@@ -236,12 +238,12 @@ class RougeLGrader(Grader):
 
     def __init__(self):
         super().__init__(
-            name="ROUGE-L",
+            name="rouge_l",
             mode=GraderMode.POINTWISE,
             description="Calculate ROUGE-L score between generated content and reference answer",
         )
 
-    async def a_evaluate(self, generated: str, reference: str) -> GraderScore:
+    async def aevaluate(self, generated: str, reference: str) -> GraderScore:
         """
         Calculate ROUGE-L score between generated content and reference answer.
 
@@ -268,7 +270,7 @@ class RougeLGrader(Grader):
 
         Examples:
             >>> grader = RougeLGrader()
-            >>> result = await grader.evaluate(
+            >>> result = await grader.aevaluate(
             ...     generated="the quick brown fox jumps over the lazy dog",
             ...     reference="the fast brown fox jumped over the sleepy dog"
             ... )
@@ -276,7 +278,7 @@ class RougeLGrader(Grader):
             0.727
             >>> print(result.reason)
             ROUGE-L score: 0.727
-            >>> result = await grader.evaluate(
+            >>> result = await grader.aevaluate(
             ...     generated="completely different text",
             ...     reference="the fast brown fox jumped over the sleepy dog"
             ... )
@@ -323,6 +325,7 @@ class RougeLGrader(Grader):
                 )
 
         return GraderScore(
+            name=self.name,
             score=rouge_l,
             reason=f"ROUGE-L score: {rouge_l:.3f}",
             metadata={
@@ -348,13 +351,13 @@ class NumberAccuracyGrader(Grader):
 
     Examples:
         >>> grader = NumberAccuracyGrader(tolerance=1e-6)
-        >>> result = await grader.evaluate(
+        >>> result = await grader.aevaluate(
         ...     generated="The result is 3.14159",
         ...     reference="The result is 3.14159"
         ... )
         >>> print(result.score)
         1.0
-        >>> result = await grader.evaluate(
+        >>> result = await grader.aevaluate(
         ...     generated="The result is 3.14",
         ...     reference="The result is 3.14159"
         ... )
@@ -364,7 +367,7 @@ class NumberAccuracyGrader(Grader):
     def __init__(self, tolerance: float = 1e-6, **kwargs):
         """"""
         super().__init__(
-            name="NumberAccuracyGrader",
+            name="number_accuracy",
             mode=GraderMode.POINTWISE,
             description="Check numerical calculation accuracy by comparing numbers in generated vs reference content",
             **kwargs,
@@ -378,7 +381,7 @@ class NumberAccuracyGrader(Grader):
         numbers = re.findall(number_pattern, text)
         return [float(n) for n in numbers if n]
 
-    async def a_evaluate(self, generated, reference) -> GraderScore:
+    async def aevaluate(self, generated, reference) -> GraderScore:
         """
         Calculate number accuracy by comparing extracted numbers from both texts.
 
@@ -407,7 +410,7 @@ class NumberAccuracyGrader(Grader):
 
         Examples:
             >>> grader = NumberAccuracyGrader(tolerance=1e-6)
-            >>> result = await grader.evaluate(
+            >>> result = await grader.aevaluate(
             ...     generated="The result is 3.14159",
             ...     reference="The result is 3.14159"
             ... )
@@ -415,7 +418,7 @@ class NumberAccuracyGrader(Grader):
             1.0
             >>> print(result.reason)
             Number accuracy: 1/1 numbers correct
-            >>> result = await grader.evaluate(
+            >>> result = await grader.aevaluate(
             ...     generated="The temperatures are 25.5 and 30.2 degrees",
             ...     reference="The temperatures are 25.5 and 30.0 degrees"
             ... )
@@ -429,6 +432,7 @@ class NumberAccuracyGrader(Grader):
 
         if not reference_numbers:
             return GraderScore(
+                name=self.name,
                 score=0.0,
                 reason="No reference numbers to compare",
                 metadata={
@@ -438,6 +442,7 @@ class NumberAccuracyGrader(Grader):
             )
         if not generated_numbers:
             return GraderScore(
+                name=self.name,
                 score=0.0,
                 reason="No numbers found in generated content",
                 metadata={
@@ -462,6 +467,7 @@ class NumberAccuracyGrader(Grader):
         )
 
         return GraderScore(
+            name=self.name,
             score=accuracy,
             reason=f"Number accuracy: {correct}/{len(reference_numbers)} numbers correct",
             metadata={

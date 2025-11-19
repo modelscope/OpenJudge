@@ -24,7 +24,7 @@ from pydantic import BaseModel, Field
 from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.model.openai_llm import OpenAIChatModel
 from rm_gallery.core.schema.template import LanguageEnum
-from rm_gallery.core.rubric.prompts import RubricCategorizationTemplate
+from rm_gallery.core.grader.rubric.prompts import RubricCategorizationTemplate
 
 
 class RubricCategory(BaseModel):

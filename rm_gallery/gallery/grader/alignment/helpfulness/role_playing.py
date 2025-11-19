@@ -97,7 +97,7 @@ class RolePlayingGrader(BaseHelpfulnessGrader):
     def __init__(self, model: ChatModelBase | dict, template: Template | None = None, mode: GraderMode = GraderMode.LISTWISE, **kwargs):
         """Initialize the SafetyGrader."""
         super().__init__(
-            name="Role Playing",
+            name="role_playing",
             mode=mode,
             model=model,
             template=template,
@@ -105,7 +105,7 @@ class RolePlayingGrader(BaseHelpfulnessGrader):
             **kwargs,
         )
 
-    async def a_evaluate(
+    async def aevaluate(
         self,
         query: str,
         answer: str | List[str],
@@ -135,9 +135,9 @@ class RolePlayingGrader(BaseHelpfulnessGrader):
 
         Example:
             >>> grader = RolePlayingGrader()
-            >>> result = await grader.evaluate(
+            >>> result = await grader.aevaluate(
             ...     query="Greetings, wise wizard!",
             ...     answer="Ah, greetings young traveler! What brings you to my tower this eve?"
             ... )
         """
-        return await super().a_evaluate(query=query, answer=answer, **kwargs)
+        return await super().aevaluate(query=query, answer=answer, **kwargs)

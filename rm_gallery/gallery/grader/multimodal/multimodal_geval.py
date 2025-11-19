@@ -231,7 +231,7 @@ class MultimodalGEval(BaseMultimodalMetric):
             self._generated_steps = await self._a_generate_evaluation_steps()
 
         # Evaluate
-        g_score, reason = await self._a_evaluate(
+        g_score, reason = await self._aevaluate(
             test_case,
             _additional_context,
         )
@@ -444,7 +444,7 @@ class MultimodalGEval(BaseMultimodalMetric):
             logger.error(f"Error during evaluation: {e}")
             return 0.0, f"Error: {str(e)}"
 
-    async def _a_evaluate(
+    async def _aevaluate(
         self,
         test_case: MLLMTestCase,
         _additional_context: Optional[str] = None,

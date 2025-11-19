@@ -228,7 +228,7 @@ class ImageCoherenceMetric(BaseMultimodalMetric):
             self.contexts_below.append(context_below)
 
             tasks.append(
-                self._a_evaluate_image_coherence(
+                self._aevaluate_image_coherence(
                     image,
                     context_above,
                     context_below,
@@ -289,7 +289,7 @@ class ImageCoherenceMetric(BaseMultimodalMetric):
             logger.error(f"Error evaluating image coherence: {e}")
             return 0.0, f"Evaluation error: {str(e)}"
 
-    async def _a_evaluate_image_coherence(
+    async def _aevaluate_image_coherence(
         self,
         image: MLLMImage,
         context_above: Optional[str],

@@ -98,7 +98,7 @@ class SummarizationGrader(BaseHelpfulnessGrader):
     def __init__(self, model: ChatModelBase | dict, template: Template | None = None, mode: GraderMode = GraderMode.LISTWISE, **kwargs):
         """Initialize the SafetyGrader."""
         super().__init__(
-            name="Summarization",
+            name="summarization",
             mode=mode,
             model=model,
             template=template,
@@ -106,7 +106,7 @@ class SummarizationGrader(BaseHelpfulnessGrader):
             **kwargs,
         )
 
-    async def a_evaluate(
+    async def aevaluate(
         self,
         query: str,
         answer: str | List[str],
@@ -135,9 +135,9 @@ class SummarizationGrader(BaseHelpfulnessGrader):
 
         Example:
             >>> grader = SummarizationGrader()
-            >>> result = await grader.evaluate(
+            >>> result = await grader.aevaluate(
             ...     query="Summarize: Albert Einstein was a German-born theoretical physicist who developed the theory of relativity and is widely considered one of the most influential scientists of all time.",
             ...     answer="Einstein was a famous physicist who created the theory of relativity."
             ... )
         """
-        return await super().a_evaluate(query=query, answer=answer, **kwargs)
+        return await super().aevaluate(query=query, answer=answer, **kwargs)

@@ -21,11 +21,7 @@ from loguru import logger
 from rm_gallery.core.schema.data import DataSample
 from rm_gallery.core.grader.base import GraderMode
 from rm_gallery.core.model.openai_llm import OpenAIChatModel
-from rm_gallery.core.grader.auto_rubrics import (
-    AggregationMode,
-    AutoRubrics,
-    GenerationMode,
-)
+from rm_gallery.core.grader.auto_rubrics import AutoRubrics
 
 
 def create_test_samples() -> List[DataSample]:
@@ -135,9 +131,9 @@ async def test_single_data(mode: GraderMode, samples: List[DataSample]):
         parser=None,
         language="en",
         grader_mode=mode,
-        generation_mode=GenerationMode.SINGLE,
-        aggregation_mode=AggregationMode.KEEP_ALL,
-        generate_number=3,
+        sampling_mode="all_samples",
+        aggregation_mode="keep_all",
+        generate_number=1,
         max_epochs=3,
         min_score=0,
         max_score=1,
@@ -156,6 +152,8 @@ async def test_single_data(mode: GraderMode, samples: List[DataSample]):
 
         if rubrics:
             logger.info(f"Generated rubrics: {rubrics}")
+
+    logger.info(f"Final rubrics: {results.get('final_rubrics', '')}")
 
     return results
 

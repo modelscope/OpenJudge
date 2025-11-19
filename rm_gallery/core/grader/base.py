@@ -16,6 +16,7 @@ from rm_gallery.core.schema.data import (
     parse_data_sample,
 )
 from rm_gallery.core.model.base import ChatModelBase
+from rm_gallery.core.schema.template import LanguageEnum
 from rm_gallery.core.schema.grader import (
     _GraderRank,
     _GraderScore,
@@ -232,7 +233,9 @@ class Grader(ABC):
                 elif isinstance(result, GraderError):
                     _results.append(
                         GraderScore(
-                            name=result.name, score=0.0, reason=result.reason
+                            name=result.name,
+                            score=0.0,
+                            reason=result.reason,
                         ),
                     )
                 else:
@@ -264,8 +267,10 @@ class Grader(ABC):
             elif isinstance(result, GraderError):
                 results = [
                     GraderScore(
-                        name=result.name, score=0.0, reason=result.reason
-                    )
+                        name=result.name,
+                        score=0.0,
+                        reason=result.reason,
+                    ),
                 ]
             else:
                 raise ValueError(f"Invalid result type: {type(result)}")
@@ -370,7 +375,10 @@ class Grader(ABC):
             return list(results)  # type: ignore
         else:
             return await self._aevaluate_data_sample(
-                data_sample=data_samples, parser=parser, *args, **kwargs
+                data_sample=data_samples,
+                parser=parser,
+                *args,
+                **kwargs,
             )
 
     @classmethod
@@ -440,10 +448,12 @@ class LLMGrader(Grader):
         model: ChatModelBase | dict,
         name: str = "",
         mode: GraderMode = GraderMode.POINTWISE,
+        language: LanguageEnum | str | None = None,
         description: str = "",
         template: dict | Template = {},
         callback: Callable | None = None,
         rubrics: str = "",
+        **kwargs,
     ):
         """Initialize an LLMGrader.
 
@@ -453,12 +463,34 @@ class LLMGrader(Grader):
                    be used to initialize an OpenAIChatModel.
             name: The name of the grader.
             mode: The grader mode. Defaults to POINTWISE.
+            language: The language of the grader. Can be LanguageEnum, string, or None.
+                     If None, defaults to environment variable LANGUAGE or "en".
             description: The description of the grader.
             template: The template for generating prompts.
             callback: The callback function for processing model response to GraderScore or GraderRank.
             rubrics: The rubrics used for evaluation.
+            **kwargs: Additional keyword arguments (e.g., min_score, max_score, num_responses).
         """
-        super().__init__(name=name, mode=mode, description=description)
+        super().__init__(
+            name=name,
+            mode=mode,
+            description=description,
+            **kwargs,
+        )
+
+        # Handle language parameter
+        if language is None:
+            language = os.environ.get("LANGUAGE", "en")
+
+        if isinstance(language, str):
+            # Convert string to LanguageEnum
+            self.language = (
+                LanguageEnum(language)
+                if language in [item.value for item in LanguageEnum]
+                else LanguageEnum.EN
+            )
+        else:
+            self.language = language
 
         self.template = (
             template
@@ -637,16 +669,10 @@ class LLMGrader(Grader):
         params = {"rubrics": self.rubrics, **self.kwargs}
         params.update(kwargs)
 
-        language = os.environ.get("LANGUAGE", "en")
-        from rm_gallery.core.schema.template import LanguageEnum
-
-        language_enum = (
-            LanguageEnum(language)
-            if language in [item.value for item in LanguageEnum]
-            else LanguageEnum.EN
-        )
         response = await self.chat(
-            callback=self.callback, language=language_enum, **params
+            callback=self.callback,
+            language=self.language,
+            **params,
         )
         metadata = response.metadata if response.metadata else {}
         if self.mode == GraderMode.LISTWISE:

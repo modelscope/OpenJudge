@@ -45,13 +45,13 @@ class QuerySpecificRubricGenerator:
     def __init__(
         self,
         model: ChatModelBase,
-        grader_mode: GraderMode = GraderMode.POINTWISE,
+        grader_mode: GraderMode | str = GraderMode.POINTWISE,
         generate_number: int = 3,
         max_retries: int = 5,
         max_epochs: int = 3,
         min_score: int = 0,
         max_score: int = 4,
-        language: LanguageEnum = LanguageEnum.ZH,
+        language: LanguageEnum | str = LanguageEnum.ZH,
         parser: Optional[DataSampleParser] = None,
     ):
         """
@@ -59,23 +59,36 @@ class QuerySpecificRubricGenerator:
 
         Args:
             model: Language model for generation and evaluation
-            grader_mode: "pointwise" or "listwise" (pairwise is treated as listwise)
+            grader_mode: GraderMode enum or string ("pointwise" or "listwise")
             generate_number: Number of rubrics to generate
             max_retries: Maximum retry attempts for LLM calls
             max_epochs: Maximum iteration epochs for improvement
             min_score: Minimum score for pointwise
             max_score: Maximum score for pointwise
-            language: Language for prompts (ZH or EN)
+            language: LanguageEnum or string ("zh" or "en")
             parser: Optional DataSampleParser for field transformation
         """
         self.model = model
-        self.grader_mode = grader_mode
+
+        if isinstance(grader_mode, str):
+            self.grader_mode = GraderMode(grader_mode)
+        else:
+            self.grader_mode = grader_mode
+
+        if isinstance(language, str):
+            self.language = (
+                LanguageEnum(language)
+                if language in [item.value for item in LanguageEnum]
+                else LanguageEnum.ZH
+            )
+        else:
+            self.language = language
+
         self.generate_number = generate_number
         self.max_retries = max_retries
         self.max_epochs = max_epochs
         self.min_score = min_score
         self.max_score = max_score
-        self.language = language
         self.parser = parser
 
         # Initialize templates
@@ -183,7 +196,7 @@ class QuerySpecificRubricGenerator:
         """Generate rubrics for a single sample using ChatTemplate"""
         sample_content = self._format_sample_context(sample)
 
-        @retry(stop=stop_after_attempt(self.max_retries), wait=wait_fixed(1.0))
+        # @retry(stop=stop_after_attempt(self.max_retries), wait=wait_fixed(1.0))
         async def generate_rubrics():
             # Prepare parameters for generation
             if self.grader_mode == "pointwise":
@@ -203,7 +216,7 @@ class QuerySpecificRubricGenerator:
 
             # Use ChatTemplate with structured output
             response = await self.generation_template(
-                structured_model=RubricGenerationOutput,
+                callback=RubricGenerationOutput,
                 **params,
             )
 
@@ -272,13 +285,13 @@ class QuerySpecificRubricGenerator:
             params = {
                 "language": self.language,
                 "sample_content": sample_content,
-                "rubrics_text": rubrics_text,
+                "rubrics": rubrics_text,
                 "feedback": feedback,
                 "generate_number": self.generate_number,
             }
 
             response = await self.revision_template(
-                structured_model=RubricGenerationOutput,
+                callback=RubricGenerationOutput,
                 **params,
             )
 
@@ -328,22 +341,22 @@ class QuerySpecificRubricGenerator:
 
         for item in sample.samples:
             item_query = query or item.get("query", "")
-            response = item.get("answer", "")
+            answer = item.get("answer", "")
 
             try:
                 # Prepare parameters for pointwise evaluation
                 params = {
                     "language": self.language,
-                    "rubrics_text": rubrics_text,
+                    "rubrics": rubrics_text,
                     "query": item_query,
-                    "response": response,
+                    "answer": answer,
                     "min_score": self.min_score,
                     "max_score": self.max_score,
                 }
 
                 # Use ChatTemplate with structured output
                 response_obj = await self.evaluation_template(
-                    structured_model=GraderScore,
+                    callback=GraderScore,
                     **params,
                 )
                 logger.debug(f"Pointwise evaluation response: {response_obj}")
@@ -374,15 +387,15 @@ class QuerySpecificRubricGenerator:
             # Prepare parameters for listwise evaluation
             params = {
                 "language": self.language,
-                "rubrics_text": rubrics_text,
+                "rubrics": rubrics_text,
                 "query": query,
-                "responses_text": responses_text,
+                "answer": responses_text,
                 "num_responses": len(sample.samples),
             }
 
             # Use ChatTemplate with structured output
             response_obj = await self.evaluation_template(
-                structured_model=GraderRank,
+                callback=GraderRank,
                 **params,
             )
             logger.debug(f"Listwise evaluation response: {response_obj}")

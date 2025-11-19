@@ -22,7 +22,6 @@ from loguru import logger
 from pydantic import BaseModel, Field
 
 from rm_gallery.core.model.base import ChatModelBase
-from rm_gallery.core.model.openai_llm import OpenAIChatModel
 from rm_gallery.core.schema.template import LanguageEnum
 from rm_gallery.core.grader.rubric.prompts import RubricCategorizationTemplate
 
@@ -84,8 +83,8 @@ class LLMRubricCategorizer:
 
             # Call LLM using Chat with structured output
             response_obj = await self.categorization_template(
-                structured_model=RubricCategorizationOutput,
-                rubrics_text=rubrics_text,
+                callback=RubricCategorizationOutput,
+                rubrics=rubrics_text,
                 num_categories=self.num_categories,
                 language=self.language,
             )

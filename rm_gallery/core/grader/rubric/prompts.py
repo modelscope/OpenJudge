@@ -54,7 +54,6 @@ class RubricPromptTemplates:
 {{
     "rubrics": [
         "第一个评估标准的详细描述",
-        "第二个评估标准的详细描述",
         ...
     ],
     "reason": "生成这些评估标准的原因和依据"
@@ -86,7 +85,6 @@ Please output strictly in the following JSON format:
 {{
     "rubrics": [
         "Detailed description of the first evaluation criterion",
-        "Detailed description of the second evaluation criterion",
         ...
     ],
     "reason": "Reason and basis for generating these evaluation criteria"
@@ -126,7 +124,6 @@ Please generate evaluation criteria:""",
 {{
     "rubrics": [
         "第一个排序标准的详细描述",
-        "第二个排序标准的详细描述",
         ...
     ],
     "reason": "生成这些排序标准的原因和依据"
@@ -158,7 +155,6 @@ Please output strictly in the following JSON format:
 {{
     "rubrics": [
         "Detailed description of the first ranking criterion",
-        "Detailed description of the second ranking criterion",
         ...
     ],
     "reason": "Reason and basis for generating these ranking criteria"
@@ -186,10 +182,10 @@ Please generate ranking criteria""",
                             content="""请根据评估标准对回答评分。
 
 评估标准:
-{rubrics_text}
+{rubrics}
 
 查询: {query}
-回答: {response}
+回答: {answer}
 
 评分范围: {min_score} 到 {max_score}
 
@@ -211,10 +207,10 @@ Please generate ranking criteria""",
                             content="""Please score the response based on the evaluation criteria.
 
 Evaluation Criteria:
-{rubrics_text}
+{rubrics}
 
 Query: {query}
-Response: {response}
+Response: {answer}
 
 Score Range: {min_score} to {max_score}
 
@@ -247,12 +243,12 @@ Please output the scoring result""",
                             content="""请根据评估标准对所有回答进行排序。
 
 评估标准:
-{rubrics_text}
+{rubrics}
 
 查询: {query}
 
 所有回答:
-{responses_text}
+{answer}
 
 ## 任务要求
 - 根据评估标准，对所有{num_responses}个回答进行质量评估
@@ -287,12 +283,12 @@ Please output the scoring result""",
                             content="""Please rank all responses based on the evaluation criteria.
 
 Evaluation Criteria:
-{rubrics_text}
+{rubrics}
 
 Query: {query}
 
 All Responses:
-{responses_text}
+{answer}
 
 ## Task Requirements
 - Evaluate all {num_responses} responses based on the evaluation criteria
@@ -343,7 +339,7 @@ Important reminders:
 {sample_content}
 
 ## 之前的评分标准
-{rubrics_text}
+{rubrics}
 
 ## 验证失败的详细反馈
 {feedback}
@@ -373,7 +369,6 @@ Important reminders:
 {{
     "rubrics": [
         "改进后的第一个评分标准的详细描述",
-        "改进后的第二个评分标准的详细描述",
         ...
     ],
     "reason": "改进这些评分标准的原因和依据"
@@ -394,7 +389,7 @@ Important reminders:
 {sample_content}
 
 ## Previous Scoring Criteria
-{rubrics_text}
+{rubrics}
 
 ## Detailed Validation Failure Feedback
 {feedback}
@@ -422,7 +417,6 @@ Please output strictly in the following JSON format:
 {{
     "rubrics": [
         "Detailed description of the first improved scoring criterion",
-        "Detailed description of the second improved scoring criterion",
         ...
     ],
     "reason": "Reason and basis for improving these scoring criteria"
@@ -451,7 +445,7 @@ Please generate improved Pointwise scoring criteria:""",
 {sample_content}
 
 ## 之前的排序标准
-{rubrics_text}
+{rubrics}
 
 ## 验证失败的详细反馈
 {feedback}
@@ -484,7 +478,6 @@ Please generate improved Pointwise scoring criteria:""",
 {{
     "rubrics": [
         "改进后的第一个排序标准的详细描述",
-        "改进后的第二个排序标准的详细描述",
         ...
     ],
     "reason": "改进这些排序标准的原因和依据"
@@ -505,7 +498,7 @@ Please generate improved Pointwise scoring criteria:""",
 {sample_content}
 
 ## Previous Ranking Criteria
-{rubrics_text}
+{rubrics}
 
 ## Detailed Validation Failure Feedback
 {feedback}
@@ -538,7 +531,6 @@ Please output strictly in the following JSON format:
 {{
     "rubrics": [
         "Detailed description of the first improved ranking criterion",
-        "Detailed description of the second improved ranking criterion",
         ...
     ],
     "reason": "Reason and basis for improving these ranking criteria"
@@ -572,7 +564,7 @@ class RubricCategorizationTemplate:
                             content="""请将以下评估建议聚合成{num_categories}个或更少的结构化评估标准。
 
 ## 输入评估建议
-{rubrics_text}
+{rubrics}
 
 ## 任务要求
 - 评估标准必须完全自包含，非专业读者无需查阅任何外部信息
@@ -620,7 +612,7 @@ class RubricCategorizationTemplate:
                             content="""Please aggregate the following evaluation suggestions into {num_categories} or fewer structured evaluation rubrics.
 
 ## Input Evaluation Suggestions
-{rubrics_text}
+{rubrics}
 
 ## Task Requirements
 - Rubrics must be fully self-contained so that non-expert readers need not consult any external information

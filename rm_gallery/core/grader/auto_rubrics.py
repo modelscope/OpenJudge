@@ -3,8 +3,8 @@
 AutoRubrics - Dual Mode Rubric Generation System
 
 This module provides an automated rubric generation system with two modes:
-1. Single Mode: Generate rubrics for each sample independently with iterative refinement
-2. Batch Mode: Use MCR²-based selection and aggregation for optimal rubric sets
+1. all_samples Mode: Generate rubrics for each sample independently with iterative refinement
+2. smart_sampling Mode: Use MCR²-based selection and aggregation for optimal rubric sets
 
 Key Features:
 - Iterative rubric generation with convergence detection
@@ -34,16 +34,16 @@ from rm_gallery.core.grader.rubric.mcr_selector import SuperFastAdaptiveMCR2
 from rm_gallery.core.runner.base import BaseRunner
 
 
-class GenerationMode(str, Enum):
-    """Rubric generation modes.
+class SamplingMode(str, Enum):
+    """Rubric generation sampling modes.
 
     Attributes:
-        SINGLE: Generate rubrics for each sample independently with iterative refinement
-        BATCH: Use MCR²-based selection for optimal rubric subsets across batches
+        ALL_SAMPLES: Generate rubrics for each sample independently with iterative refinement
+        SMART_SAMPLING: Use MCR²-based selection for optimal rubric subsets across batches
     """
 
-    SINGLE = "single"
-    BATCH = "batch"
+    ALL_SAMPLES = "all_samples"
+    SMART_SAMPLING = "smart_sampling"
 
 
 class AggregationMode(str, Enum):
@@ -55,7 +55,7 @@ class AggregationMode(str, Enum):
     """
 
     KEEP_ALL = "keep_all"
-    CATEGORIZE = "categorize"
+    MERGE_SIMILAR = "merge_similar"
 
 
 class AutoRubricsConfig(BaseModel):
@@ -65,7 +65,7 @@ class AutoRubricsConfig(BaseModel):
     Parameters are organized by functionality for clarity.
 
     Attributes:
-        generation_mode: Generation strategy (SINGLE or BATCH)
+        sampling_mode: Sampling strategy (ALL_SAMPLES or SMART_SAMPLING)
         grader_mode: Grader evaluation mode (POINTWISE or LISTWISE)
         language: Language for prompts (ZH or EN)
 
@@ -88,16 +88,16 @@ class AutoRubricsConfig(BaseModel):
 
         # Aggregation parameters
         aggregation_mode: Final rubric aggregation strategy
-        merge_num_categories: Target number of categories when using CATEGORIZE mode
+        merge_num_categories: Target number of categories when using MERGE_SIMILAR mode
     """
 
     # Core configuration
-    generation_mode: GenerationMode = Field(
-        default=GenerationMode.SINGLE,
-        description="Generation mode: single or batch",
+    sampling_mode: SamplingMode = Field(
+        default=SamplingMode.ALL_SAMPLES,
+        description="Sampling mode: all_samples or smart_sampling",
     )
     grader_mode: GraderMode = Field(
-        default=GraderMode.LISTWISE,
+        default=GraderMode.POINTWISE,
         description="Grader mode (POINTWISE or LISTWISE)",
     )
     language: LanguageEnum = Field(
@@ -176,7 +176,7 @@ class AutoRubricsConfig(BaseModel):
         description="Final aggregation strategy",
     )
     merge_num_categories: int = Field(
-        default=5,
+        default=2,
         description="Number of categories for CATEGORIZE mode",
     )
 
@@ -186,8 +186,8 @@ class AutoRubrics(BaseRunner):
     Dual-Mode AutoRubrics Generator
 
     Supports two generation modes:
-    1. Single Mode: Generate rubrics for each sample independently
-    2. Batch Mode: Use MCR-based selection and aggregation for optimal rubric sets
+    1. All samples Mode: Generate rubrics for each sample independently
+    2. Smart sampling Mode: Use MCR-based selection and aggregation for optimal rubric sets
     """
 
     def __init__(
@@ -210,7 +210,7 @@ class AutoRubrics(BaseRunner):
         # Create query-specific generator
         self.generator = QuerySpecificRubricGenerator(
             model=model,
-            grader_mode=self.config.grader_mode.value,
+            grader_mode=self.config.grader_mode,
             generate_number=self.config.generate_number,
             max_retries=self.config.max_retries,
             max_epochs=self.config.max_epochs,
@@ -221,19 +221,17 @@ class AutoRubrics(BaseRunner):
 
         # Initialize MCR selector only for batch mode
         self.mcr_selector = None
-        if self.config.generation_mode == GenerationMode.BATCH:
+        if self.config.sampling_mode == SamplingMode.SMART_SAMPLING:
             self.mcr_selector = SuperFastAdaptiveMCR2(
                 batch_size=self.config.mcr_batch_size,
             )
 
         # Initialize categorizer for merge mode
         self.categorizer = None
-        if self.config.aggregation_mode == AggregationMode.CATEGORIZE:
+        if self.config.aggregation_mode == AggregationMode.MERGE_SIMILAR:
             self.categorizer = LLMRubricCategorizer(
                 num_categories=self.config.merge_num_categories,
-                model_name=model.model_name
-                if hasattr(model, "model_name")
-                else "qwen3-32b",
+                model=model,
                 language=self.config.language.value,
             )
 
@@ -245,7 +243,7 @@ class AutoRubrics(BaseRunner):
         self.current_sample_index = 0
 
         logger.info(
-            f"AutoRubrics initialized: generation_mode={self.config.generation_mode.value}, "
+            f"AutoRubrics initialized: sampling_mode={self.config.sampling_mode.value}, "
             f"grader_mode={self.config.grader_mode.value}, "
             f"language={self.config.language.value}, "
             f"aggregation_mode={self.config.aggregation_mode.value}",
@@ -267,16 +265,16 @@ class AutoRubrics(BaseRunner):
             ]
 
         logger.info(
-            f"Starting AutoRubrics ({self.config.generation_mode.value} mode) "
-            f"with {len(data_samples)} daa samples",
+            f"Starting AutoRubrics ({self.config.sampling_mode.value} mode) "
+            f"with {len(data_samples)} data samples",
         )
 
-        if self.config.generation_mode == GenerationMode.SINGLE:
-            return await self._run_single_mode(data_samples)
+        if self.config.sampling_mode == SamplingMode.ALL_SAMPLES:
+            return await self._run_all_samples_mode(data_samples)
         else:
-            return await self._run_batch_mode(data_samples)
+            return await self._run_smart_sampling_mode(data_samples)
 
-    async def _run_single_mode(
+    async def _run_all_samples_mode(
         self,
         data_samples: List[DataSample],
     ) -> Dict[str, Any]:
@@ -311,7 +309,7 @@ class AutoRubrics(BaseRunner):
         )
 
         return self._build_final_results(
-            generation_mode="single",
+            sampling_mode="all_samples",
             total_data_samples=len(data_samples),
             all_rubrics=all_rubrics,
             final_rubrics=final_rubrics,
@@ -320,12 +318,12 @@ class AutoRubrics(BaseRunner):
             extra_data={"sample_results": results},
         )
 
-    async def _run_batch_mode(
+    async def _run_smart_sampling_mode(
         self,
         data_samples: List[DataSample],
     ) -> Dict[str, Any]:
         """
-        Batch mode: Use MCR-based selection and aggregation
+        Smart sampling mode: Use MCR-based selection and aggregation
 
         Args:
             data_samples: All data_samples to process
@@ -393,7 +391,7 @@ class AutoRubrics(BaseRunner):
         )
 
         return self._build_final_results(
-            generation_mode="batch",
+            sampling_mode="smart_sampling",
             total_data_samples=len(data_samples),
             all_rubrics=self.all_rubrics,
             final_rubrics=final_rubrics,
@@ -680,7 +678,7 @@ class AutoRubrics(BaseRunner):
             Tuple of (final_rubrics, aggregation_info)
         """
         if (
-            self.config.aggregation_mode == AggregationMode.CATEGORIZE
+            self.config.aggregation_mode == AggregationMode.MERGE_SIMILAR
             and rubrics
         ):
             if not self.categorizer:
@@ -708,7 +706,7 @@ class AutoRubrics(BaseRunner):
 
     def _build_final_results(
         self,
-        generation_mode: str,
+        sampling_mode: str,
         total_data_samples: int,
         all_rubrics: List[str],
         final_rubrics: List[str],
@@ -719,7 +717,7 @@ class AutoRubrics(BaseRunner):
         """Build final results dictionary.
 
         Args:
-            generation_mode: "single" or "batch"
+            sampling_mode: "all_samples" or "smart_sampling"
             total_samples: Total number of data samples processed
             all_rubrics: All generated rubrics before aggregation
             final_rubrics: Final rubrics after aggregation
@@ -731,7 +729,7 @@ class AutoRubrics(BaseRunner):
             Final results dictionary
         """
         results = {
-            "generation_mode": generation_mode,
+            "sampling_mode": sampling_mode,
             "grader_mode": self.config.grader_mode.value,
             "aggregation_mode": self.config.aggregation_mode.value,
             "config": self.config.dict(),
@@ -755,9 +753,9 @@ class AutoRubrics(BaseRunner):
         model: OpenAIChatModel,
         parser: DataSampleParser | Callable | None = None,
         # Core settings
-        generation_mode: GenerationMode = GenerationMode.SINGLE,
-        grader_mode: GraderMode = GraderMode.POINTWISE,
-        language: LanguageEnum = LanguageEnum.ZH,
+        sampling_mode: SamplingMode | str = SamplingMode.ALL_SAMPLES,
+        grader_mode: GraderMode | str = GraderMode.POINTWISE,
+        language: LanguageEnum | str = LanguageEnum.ZH,
         # Generation parameters
         generate_number: int = 3,
         max_epochs: int = 3,
@@ -765,7 +763,7 @@ class AutoRubrics(BaseRunner):
         # Score range (for pointwise)
         min_score: int = 0,
         max_score: int = 1,
-        # Batch mode parameters (only used when generation_mode=BATCH)
+        # Batch mode parameters (only used when sampling_mode=SMART_SAMPLING)
         batch_size: int = 10,
         mcr_batch_size: int = 10,
         max_iterations: int = 50,
@@ -773,7 +771,7 @@ class AutoRubrics(BaseRunner):
         patience: int = 2,
         max_total_rubrics: int = 200,
         # Aggregation parameters
-        aggregation_mode: AggregationMode = AggregationMode.KEEP_ALL,
+        aggregation_mode: AggregationMode | str = AggregationMode.KEEP_ALL,
         merge_num_categories: int = 5,
         **kwargs,
     ) -> "AutoRubrics":
@@ -781,10 +779,11 @@ class AutoRubrics(BaseRunner):
         Create AutoRubrics instance with unified configuration
 
         Args:
-            llm: Language model
-            generation_mode: SINGLE for independent processing, BATCH for MCR-based selection
-            grader_mode: POINTWISE or LISTWISE evaluation
-            language: Language for prompts (ZH or EN)
+            model: Language model
+            parser: Optional data sample parser
+            sampling_mode: SamplingMode enum or string ("all_samples" or "smart_sampling")
+            grader_mode: GraderMode enum or string ("pointwise" or "listwise")
+            language: LanguageEnum or string ("zh" or "en")
 
             # Generation parameters
             generate_number: Number of rubrics per sample
@@ -804,14 +803,14 @@ class AutoRubrics(BaseRunner):
             max_total_rubrics: Maximum total rubrics in pool
 
             # Aggregation
-            aggregation_mode: KEEP_ALL or CATEGORIZE
-            merge_num_categories: Number of categories when using CATEGORIZE
+            aggregation_mode: AggregationMode enum or string ("keep_all" or "merge_similar")
+            merge_num_categories: Number of categories when using MERGE_SIMILAR
 
         Returns:
             AutoRubrics instance
         """
         config = AutoRubricsConfig(
-            generation_mode=generation_mode,
+            sampling_mode=sampling_mode,
             grader_mode=grader_mode,
             language=language,
             generate_number=generate_number,

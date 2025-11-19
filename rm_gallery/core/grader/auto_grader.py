@@ -1,32 +1,86 @@
 # -*- coding: utf-8 -*-
-import asyncio
-from typing import Callable, List
+from typing import Any, Callable, List, Optional
+
+from pydantic import BaseModel, Field
+from loguru import logger
 
 from rm_gallery.core.schema.data import DataSample, DataSampleParser
-from rm_gallery.core.grader.base import LLMGrader
+from rm_gallery.core.grader.base import LLMGrader, GraderMode
 from rm_gallery.core.model import OpenAIChatModel
-from rm_gallery.core.grader.auto_rubrics import AutoRubrics, AutoRubricsConfig
 from rm_gallery.core.runner.base import BaseRunner
+from rm_gallery.core.grader.prompts import EvaluationPromptTemplates
+from rm_gallery.core.schema.template import Template, ChatMessage
+
+from rm_gallery.core.grader.auto_rubrics import AutoRubrics, AutoRubricsConfig
 
 
-class AutoGraderConfig(AutoRubricsConfig):
-    ...
+class AutoGraderConfig(BaseModel):
+    """Configuration for AutoGrader."""
+
+    # Method selection
+    method: str = Field(
+        default="auto_rubrics",
+        description="Method to generate rubrics",
+    )
+
+    # Method configuration
+    method_config: Optional[Any] = Field(
+        default=AutoRubricsConfig(),
+        description="Configuration for the selected method",
+    )
+
+    # Grader configuration
+    grader_name: str = Field(
+        default="Auto Grader",
+        description="Name for the generated grader",
+    )
+
+    # Optional custom prompts (if provided, will override template selection)
+    custom_evaluation_prompt: Optional[str] = Field(
+        default=None,
+        description="Custom evaluation prompt (overrides template selection for evaluation)",
+    )
 
 
 class AutoGrader(BaseRunner):
+    """AutoGrader with flexible rubric generation methods and prompt templates."""
+
     def __init__(
         self,
         model: OpenAIChatModel,
         parser: DataSampleParser | Callable | None = None,
         config: AutoGraderConfig | None = None,
     ):
-        """AutoGrader"""
-        self.config = config
-        self.auto_rubrics = AutoRubrics(
-            model=model,
-            parser=parser,
-            config=config,
+        """AutoGrader initialization.
+
+        Args:
+            model: OpenAI chat model for LLM operations
+            parser: Data sample parser
+            config: AutoGrader configuration
+        """
+        self.model = model
+        self.parser = parser
+        self.config = config or AutoGraderConfig()
+
+        # Initialize rubric generator based on method
+        self.rubric_generator = self._create_rubric_generator()
+
+        logger.info(
+            f"AutoGrader initialized with method='{self.config.method}', grader_mode={self.config.method_config.grader_mode.value}",
         )
+
+    def _create_rubric_generator(self):
+        """Create rubric generator based on method configuration."""
+        if self.config.method == "auto_rubrics":
+            return AutoRubrics(
+                model=self.model,
+                parser=self.parser,
+                config=self.config.method_config,
+            )
+        else:
+            raise ValueError(
+                f"Unsupported method: {self.config.method}. Supported methods: 'auto_rubrics'.",
+            )
 
     async def __call__(
         self,
@@ -34,8 +88,16 @@ class AutoGrader(BaseRunner):
         *args,
         **kwargs,
     ) -> LLMGrader:
-        # Generate rubrics using AutoRubrics
-        rubrics_result = await self.auto_rubrics(data_samples)
+        """Generate rubrics and create LLMGrader.
+
+        Args:
+            data_samples: List of data samples to generate rubrics from
+
+        Returns:
+            LLMGrader instance with generated rubrics
+        """
+        # Generate rubrics using the selected method
+        rubrics_result = await self.rubric_generator(data_samples)
 
         # Extract the final rubrics from the result
         if (
@@ -44,65 +106,117 @@ class AutoGrader(BaseRunner):
         ):
             rubrics = "\n".join(rubrics_result["final_rubrics"])
         else:
-            # Fallback if the structure is different
             rubrics = str(rubrics_result)
 
-        # Create a default template for the LLMGrader
-        default_template = {
-            "messages": [
-                {
-                    "role": "system",
-                    "content": "You are a helpful assistant that evaluates the quality of responses. Please evaluate the following response based on the provided rubrics.",
-                },
-                {
-                    "role": "user",
-                    "content": 'Question: {query}\nAnswer: {answer}\n\nRubrics for evaluation:\n{rubrics}\n\nPlease provide a score from 0 to 1 and a reason for your score in the following JSON format:{{"score": <score>, "reason": "<reason>"}}',
-                },
-            ],
-        }
+        logger.info(f"Rubrics: {rubrics}")
+
+        template = self._create_evaluation_template()
+
+        # Prepare kwargs for evaluation - these will be passed to template formatting
+        eval_kwargs = {}
+        if self.config.method_config.grader_mode == GraderMode.POINTWISE:
+            eval_kwargs["min_score"] = self.config.method_config.min_score
+            eval_kwargs["max_score"] = self.config.method_config.max_score
+        elif self.config.method_config.grader_mode == GraderMode.LISTWISE:
+            eval_kwargs["num_responses"] = len(data_samples[0].samples)
 
         return LLMGrader(
-            name="Auto Grader",
-            template=default_template,
-            model=self.auto_rubrics.model,
+            name=self.config.grader_name,
+            mode=self.config.method_config.grader_mode,
+            language=self.config.method_config.language,
+            template=template,
+            model=self.model,
             rubrics=rubrics,
+            **eval_kwargs,
         )
 
+    def _create_evaluation_template(self) -> Template:
+        """Create evaluation template based on language and grader mode.
 
-if __name__ == "__main__":
-    from rm_gallery.core.model import OpenAIChatModel
-
-    model = OpenAIChatModel(model_name="qwen3-32b")
-    auto_grader = AutoGrader(model)
-    data_samples_label = [
-        DataSample(
-            data={
-                "query": "What is the capital of France?",
-            },
-            samples=[
-                {
-                    "answer": "The capital of France is Paris.",
-                    "score": 1,
+        Returns:
+            Template object for LLMGrader
+        """
+        # Use custom prompts if provided
+        if (
+            self.config.custom_evaluation_prompt
+        ):
+            return Template(
+                messages={
+                    self.config.method_config.language: [
+                        ChatMessage(
+                            role="user",
+                            content=self.config.custom_evaluation_prompt,
+                        ),
+                    ],
                 },
-            ],
-        ),
-    ]
-    data_samples_unlabel = [
-        DataSample(
-            data={
-                "query": "What is the capital of Germany?",
-            },
-            samples=[{"answer": "The capital of Germany is not Berlin."}],
-        ),
-    ]
+            )
 
-    async def main():
-        grader = await auto_grader(data_samples_label)
-        return await grader.aevaluate_data_samples(
-            parser=None,
-            data_samples=data_samples_unlabel[0],
+        # Select template based on grader mode and return the multi-language template directly
+        if self.config.method_config.grader_mode == GraderMode.POINTWISE:
+            chat_template = EvaluationPromptTemplates.pointwise_evaluation(
+                self.model,
+            )
+        elif self.config.method_config.grader_mode == GraderMode.LISTWISE:
+            chat_template = EvaluationPromptTemplates.listwise_evaluation(
+                self.model,
+            )
+        else:
+            raise ValueError(
+                f"Unsupported grader mode: {self.config.method_config.grader_mode}",
+            )
+
+        return chat_template.template
+
+    @classmethod
+    def create(
+        cls,
+        model: OpenAIChatModel,
+        parser: DataSampleParser | Callable | None = None,
+        # Method configuration
+        method: str = "auto_rubrics",
+        method_config: Optional[Any] = None,
+        # Grader configuration
+        grader_name: str = "Auto Grader",
+        # Custom prompts (optional)
+        custom_evaluation_prompt: Optional[str] = None,
+        # Method-specific parameters (when method_config is None)
+        **method_kwargs,
+    ) -> "AutoGrader":
+        """Create AutoGrader instance with flexible configuration.
+
+        Args:
+            model: OpenAI chat model
+            parser: Data sample parser
+            method: Method to generate rubrics ('auto_rubrics' or 'checklist')
+            method_config: Configuration object for the selected method
+            grader_name: Name for the generated grader
+            custom_evaluation_prompt: Custom evaluation prompt (overrides template selection for evaluation)
+            **method_kwargs: Additional parameters for the method (when method_config is None)
+
+        Returns:
+            AutoGrader instance
+
+        """
+        # Create method config if needed and not provided
+        if method_config is None and method_kwargs:
+            if method == "auto_rubrics":
+                method_config = AutoRubricsConfig(**method_kwargs)
+            else:
+                logger.warning(
+                    f"Unknown method '{method}', using method_kwargs as config",
+                )
+                method_config = method_kwargs
+
+        # Create AutoGrader config
+        config = AutoGraderConfig(
+            method=method,
+            method_config=method_config,
+            grader_name=grader_name,
+            custom_evaluation_prompt=custom_evaluation_prompt
         )
 
-    result = asyncio.run(main())
-
-    print(result)
+        return cls(
+            model=model,
+            parser=parser,
+            config=config,
+        )

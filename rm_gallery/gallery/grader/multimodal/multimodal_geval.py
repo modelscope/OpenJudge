@@ -1,525 +1,343 @@
 # -*- coding: utf-8 -*-
 """
-Multimodal G-Eval Metric
+Multimodal G-Eval Grader
 
-Based on the G-Eval framework (https://arxiv.org/pdf/2303.16634.pdf).
-Provides flexible evaluation with custom criteria and automatic evaluation step generation.
+Based on the G-Eval framework for flexible evaluation with custom criteria.
+Restructured to work with Grader framework.
 """
 
-import asyncio
-from typing import Any, List, Optional, Tuple, Union
+from typing import Any, List, Optional, Tuple
 
 from loguru import logger
-from pydantic import Field
 
-from rm_gallery.core.metrics.multimodal.base import BaseMultimodalMetric
-from rm_gallery.core.metrics.multimodal.schema import (
-    MLLMTestCase,
+from rm_gallery.core.grader.base import Grader
+from rm_gallery.core.model.openai_llm import OpenAIChatModel
+from rm_gallery.core.schema.grader import GraderMode, GraderScore
+from rm_gallery.gallery.grader.multimodal._internal import (
+    EvaluationSteps,
+    MLLMImage,
     MLLMTestCaseParams,
-    ReasonScore,
-)
-from rm_gallery.core.metrics.multimodal.utils import construct_verbose_logs
-from rm_gallery.core.model.qwen_vlm_api import QwenVLAPI
-from rm_gallery.gallery.grader.multimodal.schema import EvaluationSteps, Rubric
-from rm_gallery.gallery.grader.multimodal.template import (
     MultimodalGEvalTemplate,
-)
-from rm_gallery.gallery.grader.multimodal.utils import (
+    Rubric,
     construct_g_eval_params_string,
-    construct_test_case_list,
+    format_image_content,
     format_rubrics,
     validate_and_sort_rubrics,
     validate_criteria_and_evaluation_steps,
 )
 
 
-class MultimodalGEval(BaseMultimodalMetric):
+class MultimodalGEvalGrader(Grader):
     """
-    Multimodal G-Eval metric for flexible evaluation with custom criteria
+    Multimodal G-Eval Grader
 
-    This metric implements the G-Eval framework for multimodal evaluation,
-    allowing custom evaluation criteria and automatic generation of evaluation steps.
-
-    Key Features:
+    Flexible evaluation with custom criteria using the G-Eval framework.
+    Supports:
     - Chain-of-Thought evaluation with step-by-step reasoning
     - Automatic evaluation step generation from criteria
     - Custom rubrics for detailed scoring standards
-    - Support for multiple test case parameters
     - Flexible scoring (0-10 scale, normalized to 0-1)
 
     Attributes:
+        name: Grader name
+        model: OpenAIChatModel instance for evaluation
         evaluation_name: Name for this evaluation
-        evaluation_params: List of test case parameters to evaluate
+        evaluation_params: List of parameters to evaluate (e.g., input, actual_output)
         criteria: Evaluation criteria description
         evaluation_steps: Explicit evaluation steps (optional, auto-generated if not provided)
         rubric: Detailed scoring rubric (optional)
-        vlm_api: Qwen VLM API instance for evaluation
+        threshold: Success threshold [0, 1] (default: 0.7)
 
     Example:
-        >>> from rm_gallery.gallery.rm.multimodal import MultimodalGEval
-        >>> from rm_gallery.core.model.qwen_vlm_api import QwenVLAPI
-        >>> from rm_gallery.core.metrics.multimodal import MLLMTestCase, MLLMTestCaseParams
+        >>> from rm_gallery.core.model.openai_llm import OpenAIChatModel
+        >>> from rm_gallery.gallery.grader.multimodal import MLLMTestCaseParams, MLLMImage
         >>>
-        >>> # Initialize VLM API
-        >>> vlm_api = QwenVLAPI(model_name="qwen-vl-plus")
-        >>>
-        >>> # Create metric
-        >>> metric = MultimodalGEval(
-        ...     name="image_caption_quality",
+        >>> vlm_api = VisionModelAdapter.from_qwen(model_name="qwen-vl-plus")
+        >>> grader = MultimodalGEvalGrader(
+        ...     model=vlm_api,
         ...     evaluation_name="Image Caption Quality",
         ...     evaluation_params=[
         ...         MLLMTestCaseParams.INPUT,
         ...         MLLMTestCaseParams.ACTUAL_OUTPUT
         ...     ],
         ...     criteria="Evaluate the quality of image captions based on accuracy and detail",
-        ...     vlm_api=vlm_api,
         ...     threshold=0.7
         ... )
         >>>
-        >>> # Evaluate
-        >>> test_case = MLLMTestCase(
+        >>> result = await grader.evaluate(
         ...     input=[MLLMImage(url="..."), "Describe this image"],
         ...     actual_output=["A cat sitting on a mat"]
         ... )
-        >>> score = metric.measure(test_case)
     """
 
-    name: str = Field(
-        default="multimodal_geval",
-        description="Metric identifier",
-    )
-    evaluation_name: str = Field(..., description="Name for this evaluation")
-    evaluation_params: List[MLLMTestCaseParams] = Field(
-        ...,
-        description="Test case parameters to evaluate",
-    )
-    criteria: Optional[str] = Field(
-        None,
-        description="Evaluation criteria description",
-    )
-    evaluation_steps: Optional[List[str]] = Field(
-        None,
-        description="Explicit evaluation steps (auto-generated if not provided)",
-    )
-    rubric: Optional[List[Rubric]] = Field(
-        None,
-        description="Detailed scoring rubric",
-    )
-    vlm_api: QwenVLAPI = Field(..., description="Qwen VLM API instance")
-    score_range: Tuple[int, int] = Field(
-        default=(0, 10),
-        description="Score range (min, max)",
-    )
-
-    # Internal state
-    _generated_steps: Optional[List[str]] = None
-
-    def model_post_init(self, __context: Any) -> None:
-        """Validate configuration after initialization"""
-        super().model_post_init(__context)
-
-        validate_criteria_and_evaluation_steps(
-            self.criteria,
-            self.evaluation_steps,
-        )
-
-        if self.rubric:
-            self.rubric = validate_and_sort_rubrics(self.rubric)
-
-        self.grader_model = self.vlm_api.get_model_name()
-
-        if self.strict_mode and self.rubric:
-            score_values = [r.score for r in self.rubric]
-            if not (
-                len(score_values) == 2
-                and 0 in score_values
-                and 1 in score_values
-            ):
-                raise ValueError(
-                    "In strict_mode, rubric must have exactly 2 entries with scores 0 and 1",
-                )
-
-    def measure(
+    def __init__(
         self,
-        test_case: MLLMTestCase,
-        _show_indicator: bool = True,
-        _in_component: bool = False,
-        _additional_context: Optional[str] = None,
-    ) -> float:
-        """
-        Measure the metric score for a test case
-
-        Args:
-            test_case: Multimodal test case to evaluate
-            _show_indicator: Whether to show progress indicator
-            _in_component: Whether this is called within another component
-            _additional_context: Additional context for evaluation
-
-        Returns:
-            float: Normalized score [0, 1]
-        """
-        self.check_test_case_params(test_case, self.evaluation_params)
-
+        model: OpenAIChatModel,
+        evaluation_name: str,
+        evaluation_params: List[MLLMTestCaseParams],
+        name: str = "multimodal_geval",
+        criteria: Optional[str] = None,
+        evaluation_steps: Optional[List[str]] = None,
+        rubric: Optional[List[Rubric]] = None,
+        threshold: float = 0.7,
+        score_range: Tuple[int, int] = (0, 10),
+        description: str = "Multimodal G-Eval flexible evaluation",
+    ):
+        super().__init__(
+            name=name,
+            grader_mode=GraderMode.POINTWISE,
+            description=description,
+        )
+        self.model = model
+        self.evaluation_name = evaluation_name
+        self.evaluation_params = evaluation_params
+        self.criteria = criteria
+        self.evaluation_steps = evaluation_steps
+        self.rubric = rubric
+        self.threshold = threshold
+        self.score_range = score_range
         self.evaluation_cost = 0.0
+        self._generated_steps: Optional[List[str]] = None
 
-        if self.async_mode:
-            loop = asyncio.get_event_loop()
-            return loop.run_until_complete(
-                self.a_measure(
-                    test_case,
-                    _show_indicator=_show_indicator,
-                    _in_component=_in_component,
-                    _additional_context=_additional_context,
-                ),
+        # Validate criteria and evaluation steps
+        validate_criteria_and_evaluation_steps(criteria, evaluation_steps)
+
+        # Validate and sort rubrics
+        if rubric:
+            self.rubric = validate_and_sort_rubrics(rubric, score_range)
+
+    async def _a_generate_evaluation_steps(
+        self,
+        _params_dict: dict,
+    ) -> List[str]:
+        """Generate evaluation steps from criteria (async)"""
+        if self._generated_steps is not None:
+            return self._generated_steps
+
+        if self.criteria is None:
+            raise ValueError(
+                "Cannot generate evaluation steps without criteria",
             )
 
-        # Generate evaluation steps if not provided
-        if self._generated_steps is None:
-            self._generated_steps = self._generate_evaluation_steps()
+        # Build parameters string for context
+        params_str = construct_g_eval_params_string(self.evaluation_params)
 
-        # Evaluate
-        g_score, reason = self._evaluate(test_case, _additional_context)
-
-        # Store results
-        self.reason = reason
-        self.score = self._normalize_score(g_score)
-
-        if self.strict_mode and self.score < self.threshold:
-            self.score = 0.0
-
-        self.success = self.is_successful()
-
-        # Generate verbose logs
-        self.verbose_logs = construct_verbose_logs(
-            self,
-            steps=[
-                f"Criteria: {self.criteria}",
-                f"Evaluation Steps: {self._generated_steps}",
-                f"Rubric: {format_rubrics(self.rubric) if self.rubric else 'None'}",
-                f"Score: {self.score:.4f} (raw: {g_score}/{self.score_range[1]})",
-                f"Reason: {self.reason}",
-            ],
+        # Generate steps using VLM
+        template = MultimodalGEvalTemplate.generate_evaluation_steps(
+            parameters=params_str,
+            criteria=self.criteria,
         )
-
-        return self.score
-
-    async def a_measure(
-        self,
-        test_case: MLLMTestCase,
-        _show_indicator: bool = True,
-        _in_component: bool = False,
-        _additional_context: Optional[str] = None,
-    ) -> float:
-        """
-        Async version of measure
-
-        Args:
-            test_case: Multimodal test case to evaluate
-            _show_indicator: Whether to show progress indicator
-            _in_component: Whether this is called within another component
-            _additional_context: Additional context for evaluation
-
-        Returns:
-            float: Normalized score [0, 1]
-        """
-        self.check_test_case_params(test_case, self.evaluation_params)
-
-        self.evaluation_cost = 0.0
-
-        # Generate evaluation steps if not provided
-        if self._generated_steps is None:
-            self._generated_steps = await self._a_generate_evaluation_steps()
-
-        # Evaluate
-        g_score, reason = await self._aevaluate(
-            test_case,
-            _additional_context,
-        )
-
-        # Store results
-        self.reason = reason
-        self.score = self._normalize_score(g_score)
-
-        if self.strict_mode and self.score < self.threshold:
-            self.score = 0.0
-
-        self.success = self.is_successful()
-
-        # Generate verbose logs
-        self.verbose_logs = construct_verbose_logs(
-            self,
-            steps=[
-                f"Criteria: {self.criteria}",
-                f"Evaluation Steps: {self._generated_steps}",
-                f"Rubric: {format_rubrics(self.rubric) if self.rubric else 'None'}",
-                f"Score: {self.score:.4f} (raw: {g_score}/{self.score_range[1]})",
-                f"Reason: {self.reason}",
-            ],
-        )
-
-        return self.score
-
-    def _normalize_score(self, raw_score: Union[int, float]) -> float:
-        """
-        Normalize raw score to [0, 1] range
-
-        Args:
-            raw_score: Raw score from evaluation
-
-        Returns:
-            float: Normalized score [0, 1]
-        """
-        if self.strict_mode:
-            return float(raw_score)
-
-        min_score, max_score = self.score_range
-        normalized = (raw_score - min_score) / (max_score - min_score)
-        return max(0.0, min(1.0, normalized))
-
-    def _generate_evaluation_steps(self) -> List[str]:
-        """
-        Generate evaluation steps from criteria (synchronous)
-
-        Returns:
-            List[str]: Generated evaluation steps
-        """
-        if self.evaluation_steps:
-            return self.evaluation_steps
-
-        g_eval_params_str = construct_g_eval_params_string(
-            self.evaluation_params,
-        )
-        prompt = MultimodalGEvalTemplate.generate_evaluation_steps(
-            parameters=g_eval_params_str,
+        messages = template.get()
+        prompt = messages[0].content.format(
+            parameters=params_str,
             criteria=self.criteria,
         )
 
         try:
-            response = self.vlm_api.generate(
-                text=prompt,
-                images=[],
-                response_format=EvaluationSteps,
+            response = await self.model(
+                messages=[{"role": "user", "content": prompt}],
+                structured_model=EvaluationSteps,
             )
 
-            if isinstance(response, dict) and "steps" in response:
-                return response["steps"]
-            elif hasattr(response, "steps"):
-                return response.steps
+            # Extract structured output
+            if response.metadata:
+                result = EvaluationSteps(**response.metadata)
             else:
-                logger.warning(
-                    f"Unexpected response format from VLM: {response}, "
-                    f"using default evaluation steps",
+                # Fallback: parse from text content
+                text_content = "".join(
+                    [
+                        block.text
+                        for block in response.content
+                        if hasattr(block, "text")
+                    ],
                 )
-                return [
-                    f"Evaluate the {construct_g_eval_params_string(self.evaluation_params)}",
-                ]
+                import json
+
+                result = EvaluationSteps(**json.loads(text_content))
+
+            self._generated_steps = result.steps
+            return self._generated_steps
 
         except Exception as e:
             logger.error(f"Error generating evaluation steps: {e}")
+            # Fallback to default steps
             return [
-                f"Evaluate the {construct_g_eval_params_string(self.evaluation_params)}",
-            ]
+                f"Analyze the {param.value}" for param in self.evaluation_params
+            ] + ["Evaluate based on the given criteria"]
 
-    async def _a_generate_evaluation_steps(self) -> List[str]:
-        """
-        Generate evaluation steps from criteria (asynchronous)
-
-        Returns:
-            List[str]: Generated evaluation steps
-        """
-        if self.evaluation_steps:
-            return self.evaluation_steps
-
-        g_eval_params_str = construct_g_eval_params_string(
-            self.evaluation_params,
+    async def _a_evaluate_with_geval(
+        self,
+        params_dict: dict,
+    ) -> Tuple[float, str]:
+        """Evaluate using G-Eval framework (asynchronous)"""
+        # Get or generate evaluation steps
+        steps = (
+            self.evaluation_steps
+            if self.evaluation_steps
+            else await self._a_generate_evaluation_steps(params_dict)
         )
-        prompt = MultimodalGEvalTemplate.generate_evaluation_steps(
-            parameters=g_eval_params_str,
-            criteria=self.criteria,
+
+        # Format evaluation steps as string
+        steps_str = "\n".join(
+            [f"{i+1}. {step}" for i, step in enumerate(steps)],
+        )
+
+        # Build parameters string
+        params_str = construct_g_eval_params_string(self.evaluation_params)
+
+        # Format rubric if provided
+        rubric_str = format_rubrics(self.rubric) if self.rubric else None
+
+        # Build test case list (text and images)
+        test_case_list = []
+        for param in self.evaluation_params:
+            param_value = params_dict.get(param.value, [])
+            if isinstance(param_value, list):
+                test_case_list.extend(param_value)
+            else:
+                test_case_list.append(param_value)
+
+        # Generate evaluation prompt using template
+        prompt_parts = MultimodalGEvalTemplate.generate_evaluation_results(
+            evaluation_steps=steps_str,
+            test_case_list=test_case_list,
+            parameters=params_str,
+            rubric=rubric_str,
+            score_range=self.score_range,
         )
 
         try:
-            response = await self.vlm_api.a_generate(
-                text=prompt,
-                images=[],
-                response_format=EvaluationSteps,
+            # Extract text and images from prompt parts
+            prompt_text = "".join(
+                [p for p in prompt_parts if isinstance(p, str)],
+            )
+            prompt_images = [p for p in prompt_parts if isinstance(p, MLLMImage)]
+
+            # Format content with images
+            if prompt_images:
+                content = format_image_content(prompt_text, prompt_images)
+            else:
+                content = prompt_text
+
+            response = await self.model(
+                messages=[{"role": "user", "content": content}],
             )
 
-            if isinstance(response, dict) and "steps" in response:
-                return response["steps"]
-            elif hasattr(response, "steps"):
-                return response.steps
-            else:
-                logger.warning(
-                    f"Unexpected response format from VLM: {response}, "
-                    f"using default evaluation steps",
-                )
-                return [
-                    f"Evaluate the {construct_g_eval_params_string(self.evaluation_params)}",
-                ]
+            # Parse response from text content
+            import json
+
+            text_content = "".join(
+                [block.text for block in response.content if hasattr(block, "text")],
+            )
+
+            # Parse JSON response
+            result_data = json.loads(text_content.strip())
+            score_data = result_data.get("score", 0)
+            score = (
+                float(score_data)
+                if not isinstance(score_data, list)
+                else float(score_data[0])
+            )
+            reasoning = result_data.get("reasoning", "No reasoning provided")
+
+            return score, reasoning
 
         except Exception as e:
-            logger.error(f"Error generating evaluation steps: {e}")
-            return [
-                f"Evaluate the {construct_g_eval_params_string(self.evaluation_params)}",
-            ]
+            logger.error(f"Error in G-Eval evaluation: {e}")
+            return 0.0, f"Evaluation error: {str(e)}"
 
-    def _evaluate(
+    async def _a_compute(
         self,
-        test_case: MLLMTestCase,
-        _additional_context: Optional[str] = None,
-    ) -> Tuple[float, str]:
+        **params_dict: Any,
+    ) -> Tuple[float, dict]:
         """
-        Evaluate test case (synchronous)
+        Compute G-Eval score (asynchronous)
 
         Args:
-            test_case: Test case to evaluate
-            _additional_context: Additional context
+            **params_dict: Dictionary containing evaluation parameters
 
         Returns:
-            Tuple of (score, reason)
+            tuple[float, dict]: (normalized_score [0,1], details)
         """
-        g_eval_params_str = construct_g_eval_params_string(
-            self.evaluation_params,
-        )
-        test_case_list = construct_test_case_list(
-            test_case,
-            self.evaluation_params,
-        )
+        self.evaluation_cost = 0.0
 
-        evaluation_steps_str = "\n".join(
-            f"{i+1}. {step}"
-            for i, step in enumerate(
-                self._generated_steps or self.evaluation_steps,
-            )
-        )
+        # Validate required parameters
+        for param in self.evaluation_params:
+            if param.value not in params_dict:
+                return 0.0, {
+                    "error": f"Missing required parameter: {param.value}",
+                }
 
-        if self.strict_mode:
-            prompt_parts = (
-                MultimodalGEvalTemplate.generate_strict_evaluation_results(
-                    evaluation_steps=evaluation_steps_str,
-                    test_case_list=test_case_list,
-                    parameters=g_eval_params_str,
-                    _additional_context=_additional_context,
-                )
-            )
-        else:
-            rubric_str = format_rubrics(self.rubric) if self.rubric else None
-            prompt_parts = MultimodalGEvalTemplate.generate_evaluation_results(
-                evaluation_steps=evaluation_steps_str,
-                test_case_list=test_case_list,
-                parameters=g_eval_params_str,
-                rubric=rubric_str,
-                score_range=self.score_range,
-                _additional_context=_additional_context,
-            )
+        # Evaluate
+        raw_score, reasoning = await self._a_evaluate_with_geval(params_dict)
 
-        try:
-            response = self.vlm_api.generate_from_parts(
-                parts=prompt_parts,
-                response_format=ReasonScore,
-            )
+        # Normalize score to [0, 1]
+        score_min, score_max = self.score_range
+        normalized_score = (raw_score - score_min) / (score_max - score_min)
+        normalized_score = max(0.0, min(1.0, normalized_score))
 
-            if isinstance(response, dict):
-                score = response.get("score", 0)
-                reason = response.get(
-                    "reasoning",
-                    response.get("reason", "No reason provided"),
-                )
-            elif hasattr(response, "score"):
-                score = response.score
-                reason = (
-                    response.reasoning
-                    if hasattr(response, "reasoning")
-                    else "No reason provided"
-                )
-            else:
-                logger.warning(f"Unexpected response format: {response}")
-                score = 0
-                reason = "Error: Invalid response format"
+        details = {
+            "raw_score": raw_score,
+            "score_range": self.score_range,
+            "reasoning": reasoning,
+            "evaluation_name": self.evaluation_name,
+            "evaluation_params": [p.value for p in self.evaluation_params],
+            "evaluation_steps": (self.evaluation_steps or self._generated_steps),
+            "evaluation_cost": self.evaluation_cost,
+            "threshold": self.threshold,
+        }
 
-            return float(score), str(reason)
+        return normalized_score, details
 
-        except Exception as e:
-            logger.error(f"Error during evaluation: {e}")
-            return 0.0, f"Error: {str(e)}"
-
-    async def _aevaluate(
+    async def evaluate(
         self,
-        test_case: MLLMTestCase,
-        _additional_context: Optional[str] = None,
-    ) -> Tuple[float, str]:
+        **params_dict: Any,
+    ) -> GraderScore:
         """
-        Evaluate test case (asynchronous)
+        Evaluate using Multimodal G-Eval framework
 
         Args:
-            test_case: Test case to evaluate
-            _additional_context: Additional context
+            **params_dict: Dictionary containing evaluation parameters
+                Expected keys depend on evaluation_params, e.g.:
+                - input: List[Union[str, MLLMImage]]
+                - actual_output: List[Union[str, MLLMImage]]
+                - expected_output: List[Union[str, MLLMImage]]
+                - context: List[Union[str, MLLMImage]]
+                etc.
 
         Returns:
-            Tuple of (score, reason)
+            GraderScore: Score with normalized evaluation value [0, 1]
+
+        Example:
+            >>> result = await grader.evaluate(
+            ...     input=[MLLMImage(url="..."), "Describe this"],
+            ...     actual_output=["A cat sitting"]
+            ... )
         """
-        g_eval_params_str = construct_g_eval_params_string(
-            self.evaluation_params,
+        score, details = await self._a_compute(**params_dict)
+
+        if "error" in details:
+            return GraderScore(
+                score=0.0,
+                reason=details["error"],
+                metadata=details,
+            )
+
+        raw_score = details["raw_score"]
+        max_score = self.score_range[1]
+        reason = f"""{self.evaluation_name}: {score:.4f} (raw: {raw_score:.2f}/{max_score})
+
+{details['reasoning']}
+
+Evaluation Steps:
+{chr(10).join(f"{i+1}. {step}" for i, step in enumerate(details['evaluation_steps'] or []))}
+"""
+
+        return GraderScore(
+            score=score,
+            reason=reason.strip(),
+            metadata=details,
         )
-        test_case_list = construct_test_case_list(
-            test_case,
-            self.evaluation_params,
-        )
 
-        evaluation_steps_str = "\n".join(
-            f"{i+1}. {step}"
-            for i, step in enumerate(
-                self._generated_steps or self.evaluation_steps,
-            )
-        )
 
-        if self.strict_mode:
-            prompt_parts = (
-                MultimodalGEvalTemplate.generate_strict_evaluation_results(
-                    evaluation_steps=evaluation_steps_str,
-                    test_case_list=test_case_list,
-                    parameters=g_eval_params_str,
-                    _additional_context=_additional_context,
-                )
-            )
-        else:
-            rubric_str = format_rubrics(self.rubric) if self.rubric else None
-            prompt_parts = MultimodalGEvalTemplate.generate_evaluation_results(
-                evaluation_steps=evaluation_steps_str,
-                test_case_list=test_case_list,
-                parameters=g_eval_params_str,
-                rubric=rubric_str,
-                score_range=self.score_range,
-                _additional_context=_additional_context,
-            )
-
-        try:
-            response = await self.vlm_api.a_generate_from_parts(
-                parts=prompt_parts,
-                response_format=ReasonScore,
-            )
-
-            if isinstance(response, dict):
-                score = response.get("score", 0)
-                reason = response.get(
-                    "reasoning",
-                    response.get("reason", "No reason provided"),
-                )
-            elif hasattr(response, "score"):
-                score = response.score
-                reason = (
-                    response.reasoning
-                    if hasattr(response, "reasoning")
-                    else "No reason provided"
-                )
-            else:
-                logger.warning(f"Unexpected response format: {response}")
-                score = 0
-                reason = "Error: Invalid response format"
-
-            return float(score), str(reason)
-
-        except Exception as e:
-            logger.error(f"Error during evaluation: {e}")
-            return 0.0, f"Error: {str(e)}"
+__all__ = ["MultimodalGEvalGrader"]

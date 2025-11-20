@@ -7,18 +7,21 @@ Quick test to verify core Grader functionality works before running full test su
 
 import pytest
 
+# pylint: disable=line-too-long
+
 
 def test_basic_imports():
     """Test that all modules can be imported"""
     print("Testing imports...")
 
     # Test imports for Grader architecture - avoid circular import by importing from specific modules
+    # pylint: disable=unused-import
     from rm_gallery.gallery.grader.format.json_match import (  # noqa: F401
         JsonMatchGrader,
     )
     from rm_gallery.gallery.grader.text.similarity import SimilarityGrader  # noqa: F401
-    from rm_gallery.gallery.grader.string.exact_match import (  # noqa: F401
-        ExactMatchGrader,
+    from rm_gallery.gallery.grader.text.string_match import (  # noqa: F401
+        StringMatchGrader,
     )
 
     print("✓ All imports successful")
@@ -32,8 +35,10 @@ async def test_fuzzy_match():
     from rm_gallery.gallery.grader.text.similarity import SimilarityGrader
 
     grader = SimilarityGrader()
-    result = await grader.evaluate(
-        reference="hello world", candidate="hello world", algorithm="fuzzy_match"
+    result = await grader.aevaluate(
+        reference="hello world",
+        candidate="hello world",
+        algorithm="fuzzy_match",
     )
 
     if result.score == 1.0:
@@ -49,9 +54,9 @@ async def test_exact_match():
     """Test exact match grader"""
     print("\nTesting Exact Match...")
 
-    from rm_gallery.gallery.grader.string.exact_match import ExactMatchGrader
+    from rm_gallery.gallery.grader.text.string_match import StringMatchGrader
 
-    grader = ExactMatchGrader()
+    grader = StringMatchGrader()
     result = await grader.aevaluate(reference="test", candidate="test")
 
     if result.score == 1.0:
@@ -88,27 +93,31 @@ async def test_multiple_graders():
     """Test using multiple graders"""
     print("\nTesting Multiple Graders...")
 
-    from rm_gallery.gallery.grader.string.exact_match import ExactMatchGrader
     from rm_gallery.gallery.grader.text.similarity import SimilarityGrader
+    from rm_gallery.gallery.grader.text.string_match import StringMatchGrader
 
     reference = "the cat sat on the mat"
     candidate = "the cat sat on the mat"
 
     # Test similarity grader with different algorithms
     similarity_grader = SimilarityGrader()
-    result1 = await similarity_grader.evaluate(
-        reference=reference, candidate=candidate, algorithm="fuzzy_match"
+    result1 = await similarity_grader.aevaluate(
+        reference=reference,
+        candidate=candidate,
+        algorithm="fuzzy_match",
     )
     print(f"  - fuzzy_match: {result1.score:.4f}")
 
-    result2 = await similarity_grader.evaluate(
-        reference=reference, candidate=candidate, algorithm="bleu"
+    result2 = await similarity_grader.aevaluate(
+        reference=reference,
+        candidate=candidate,
+        algorithm="bleu",
     )
     print(f"  - bleu: {result2.score:.4f}")
 
     # Test exact match grader
-    exact_grader = ExactMatchGrader()
-    result3 = await exact_grader.evaluate(reference=reference, candidate=candidate)
+    exact_grader = StringMatchGrader()
+    result3 = await exact_grader.aevaluate(reference=reference, candidate=candidate)
     print(f"  - exact_match: {result3.score:.4f}")
 
     print("✓ Multiple graders work")

@@ -12,9 +12,9 @@ from typing import Any, Optional
 from loguru import logger
 
 from rm_gallery.core.grader.base import Grader
-from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.model.openai_llm import OpenAIChatModel
 from rm_gallery.core.schema.grader import GraderMode, GraderScore
+from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import LanguageEnum, RequiredField, Template
 
 # pylint: disable=line-too-long
@@ -163,7 +163,7 @@ class InstructionAdherenceGrader(Grader):
         ... )
         >>> grader = InstructionAdherenceGrader(model=api, threshold=0.7)
         >>>
-        >>> result = await grader.evaluate(
+        >>> result = await grader.aevaluate(
         ...     instruction="Write a 3-sentence summary in formal tone about climate change.",
         ...     output="Climate change is a big problem. It's getting hotter. We need to act now!",
         ...     input="Summarize the climate situation."
@@ -214,7 +214,7 @@ class InstructionAdherenceGrader(Grader):
         self.language = language
         self.evaluation_cost = 0.0
 
-    async def evaluate(  # pylint: disable=redefined-builtin,unused-argument
+    async def aevaluate(  # pylint: disable=redefined-builtin,unused-argument
         self,
         instruction: str,
         output: str,
@@ -235,7 +235,7 @@ class InstructionAdherenceGrader(Grader):
                         where 1.0 means perfect adherence, 0.0 means complete failure
 
         Example:
-            >>> result = await grader.evaluate(
+            >>> result = await grader.aevaluate(
             ...     instruction="Write exactly 3 bullet points about AI safety.",
             ...     output="• AI safety is important\\n• We need alignment research\\n• Testing is crucial",
             ... )
@@ -295,6 +295,7 @@ class InstructionAdherenceGrader(Grader):
         reason = f"Instruction adherence score: {normalized_score:.4f}\n{reasoning}"
 
         return GraderScore(
+            name=self.name,
             score=normalized_score,
             reason=reason,
             metadata=metadata,

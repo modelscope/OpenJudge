@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Simple test script for ImageCoherenceGrader
 
@@ -44,11 +45,11 @@ async def test_with_base64_image():
         ]
 
         print("Evaluating image coherence...")
-        result = await grader.evaluate(actual_output=test_content)
+        result = await grader.aevaluate(actual_output=test_content)
 
         print(f"\nScore: {result.score:.4f}")
         print(
-            f"Passed (threshold {grader.threshold}): {result.score >= grader.threshold}"
+            f"Passed (threshold {grader.threshold}): {result.score >= grader.threshold}",
         )
         print(f"\nReason:\n{result.reason[:300]}...")
         print(f"\nMetadata: {result.metadata}")
@@ -72,14 +73,14 @@ async def test_with_public_image():
     test_content = [
         "Here is a sample image for testing.",
         MLLMImage(
-            url="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
+            url="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png",
         ),
         "This is just a test image.",
     ]
 
     print("\nTesting with public URL...")
     try:
-        result = await grader.evaluate(actual_output=test_content)
+        result = await grader.aevaluate(actual_output=test_content)
         print(f"Score: {result.score:.4f}")
         print(f"Reason: {result.reason[:200]}...")
     except Exception as e:

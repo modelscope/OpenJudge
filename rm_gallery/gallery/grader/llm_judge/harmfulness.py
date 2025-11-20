@@ -11,9 +11,9 @@ from typing import Any, Optional
 from loguru import logger
 
 from rm_gallery.core.grader.base import Grader
-from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.model.openai_llm import OpenAIChatModel
 from rm_gallery.core.schema.grader import GraderMode, GraderScore
+from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import LanguageEnum, RequiredField, Template
 
 # pylint: disable=line-too-long
@@ -157,7 +157,7 @@ class HarmfulnessGrader(Grader):
         ... )
         >>> grader = HarmfulnessGrader(model=api, threshold=0.7)
         >>>
-        >>> result = await grader.evaluate(
+        >>> result = await grader.aevaluate(
         ...     input="How to stay healthy?",
         ...     output="Regular exercise and balanced diet are important.",
         ...     context="Health advice question"
@@ -215,7 +215,7 @@ class HarmfulnessGrader(Grader):
         self.language = language
         self.evaluation_cost = 0.0
 
-    async def evaluate(  # pylint: disable=redefined-builtin,unused-argument
+    async def aevaluate(  # pylint: disable=redefined-builtin,unused-argument
         self,
         input: str,
         output: str,
@@ -239,7 +239,7 @@ class HarmfulnessGrader(Grader):
                         0.0 means severely harmful/inappropriate
 
         Example:
-            >>> result = await grader.evaluate(
+            >>> result = await grader.aevaluate(
             ...     input="How to resolve conflicts?",
             ...     output="Communication and empathy are key to resolving conflicts.",
             ...     context="Conflict resolution advice"
@@ -315,6 +315,7 @@ class HarmfulnessGrader(Grader):
         reason = f"Harmfulness evaluation score: {normalized_score:.4f}\n{reasoning}"
 
         return GraderScore(
+            name=self.name,
             score=normalized_score,
             reason=reason,
             metadata=metadata,

@@ -22,16 +22,14 @@ from loguru import logger
 from pydantic import BaseModel, Field
 from tqdm import tqdm
 
-from rm_gallery.core.schema.data import DataSample, DataSampleParser
 from rm_gallery.core.grader.base import GraderMode
-from rm_gallery.core.model.openai_llm import OpenAIChatModel
-from rm_gallery.core.schema.template import LanguageEnum
 from rm_gallery.core.grader.rubric.categorizer import LLMRubricCategorizer
-from rm_gallery.core.grader.rubric.generator import (
-    QuerySpecificRubricGenerator,
-)
+from rm_gallery.core.grader.rubric.generator import QuerySpecificRubricGenerator
 from rm_gallery.core.grader.rubric.mcr_selector import SuperFastAdaptiveMCR2
+from rm_gallery.core.model.openai_llm import OpenAIChatModel
 from rm_gallery.core.runner.base import BaseRunner
+from rm_gallery.core.schema.data import DataSample, DataSampleParser
+from rm_gallery.core.schema.template import LanguageEnum
 
 
 class SamplingMode(str, Enum):
@@ -260,9 +258,7 @@ class AutoRubrics(BaseRunner):
             Dict with final rubrics, statistics, and processing details
         """
         if self.parser is not None:
-            data_samples = [
-                self.parser(data_sample) for data_sample in data_samples
-            ]
+            data_samples = [self.parser(data_sample) for data_sample in data_samples]
 
         logger.info(
             f"Starting AutoRubrics ({self.config.sampling_mode.value} mode) "
@@ -358,7 +354,7 @@ class AutoRubrics(BaseRunner):
             mcr_results = self._evaluate_mcr(new_rubrics)
 
             # Check stopping conditions
-            should_continue, reason = self._should_continue(
+            should_continue, _ = self._should_continue(
                 mcr_results,
                 iteration,
                 gen_stats,
@@ -370,8 +366,7 @@ class AutoRubrics(BaseRunner):
             self.iteration_history.append(
                 {
                     "iteration": iteration,
-                    "batch_start": self.current_sample_index
-                    - len(batch_samples),
+                    "batch_start": self.current_sample_index - len(batch_samples),
                     "batch_end": self.current_sample_index - 1,
                     "batch_size": len(batch_samples),
                     "new_generated": len(new_rubrics),
@@ -542,7 +537,7 @@ class AutoRubrics(BaseRunner):
         gen_stats: Dict,
     ) -> Tuple[bool, str]:
         """Determine whether to continue iteration"""
-
+        del gen_stats
         # Check information gain
         increment = mcr_results.get("increment", 0.0)
 
@@ -598,10 +593,7 @@ class AutoRubrics(BaseRunner):
         Returns:
             List of generation results
         """
-        tasks = [
-            self.generator.generate_iterative(sample)
-            for sample in data_samples
-        ]
+        tasks = [self.generator.generate_iterative(sample) for sample in data_samples]
 
         results = []
         with tqdm(total=len(data_samples), desc=desc, unit="sample") as pbar:
@@ -677,10 +669,7 @@ class AutoRubrics(BaseRunner):
         Returns:
             Tuple of (final_rubrics, aggregation_info)
         """
-        if (
-            self.config.aggregation_mode == AggregationMode.MERGE_SIMILAR
-            and rubrics
-        ):
+        if self.config.aggregation_mode == AggregationMode.MERGE_SIMILAR and rubrics:
             if not self.categorizer:
                 logger.warning(
                     "Categorizer not initialized, returning original rubrics",
@@ -732,7 +721,7 @@ class AutoRubrics(BaseRunner):
             "sampling_mode": sampling_mode,
             "grader_mode": self.config.grader_mode.value,
             "aggregation_mode": self.config.aggregation_mode.value,
-            "config": self.config.dict(),
+            "config": self.config.model_dump(),
             "total_samples": total_data_samples,
             "final_rubrics": final_rubrics,
             "final_rubric_count": len(final_rubrics),
@@ -773,7 +762,7 @@ class AutoRubrics(BaseRunner):
         # Aggregation parameters
         aggregation_mode: AggregationMode | str = AggregationMode.KEEP_ALL,
         merge_num_categories: int = 5,
-        **kwargs,
+        **kwargs: Any,
     ) -> "AutoRubrics":
         """
         Create AutoRubrics instance with unified configuration

@@ -7,11 +7,13 @@ with single data samples and different configurations.
 """
 
 import asyncio
+
 import pytest
-from rm_gallery.core.model import OpenAIChatModel
-from rm_gallery.core.schema.data import DataSample
+
 from rm_gallery.core.grader.auto_grader import AutoGrader
 from rm_gallery.core.grader.auto_rubrics import AutoRubricsConfig
+from rm_gallery.core.model import OpenAIChatModel
+from rm_gallery.core.schema.data import DataSample
 
 
 # Test data fixtures
@@ -70,7 +72,7 @@ async def test_auto_grader_with_default_config() -> None:
     assert grader is not None, "Grader should be created successfully"
 
     # Evaluate test data
-    result = await grader.a_evaluate_data_samples(
+    result = await grader.aevaluate_data_samples(
         parser=None,
         data_samples=test_data,
     )
@@ -109,7 +111,7 @@ async def test_auto_grader_with_custom_config() -> None:
     assert grader is not None, "Grader should be created successfully"
 
     # Evaluate test data
-    result = await grader.a_evaluate_data_samples(
+    result = await grader.aevaluate_data_samples(
         parser=None,
         data_samples=test_data,
     )
@@ -155,19 +157,17 @@ async def test_auto_grader_comparison() -> None:
     custom_grader = await custom_grader_factory(listwise_data)
 
     # Evaluate with both graders
-    default_result = await default_grader.a_evaluate_data_samples(
+    default_result = await default_grader.aevaluate_data_samples(
         parser=None,
         data_samples=test_data,
     )
-    custom_result = await custom_grader.a_evaluate_data_samples(
+    custom_result = await custom_grader.aevaluate_data_samples(
         parser=None,
         data_samples=test_data,
     )
 
     # Assertions
-    assert (
-        default_result is not None
-    ), "Default grader result should not be None"
+    assert default_result is not None, "Default grader result should not be None"
     assert custom_result is not None, "Custom grader result should not be None"
 
     print(f"Default grader result: {default_result}")

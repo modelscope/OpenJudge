@@ -11,9 +11,9 @@ from typing import Any, Optional
 from loguru import logger
 
 from rm_gallery.core.grader.base import Grader
-from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.model.openai_llm import OpenAIChatModel
 from rm_gallery.core.schema.grader import GraderMode, GraderScore
+from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import LanguageEnum, RequiredField, Template
 
 # pylint: disable=line-too-long
@@ -154,7 +154,7 @@ class HelpfulnessGrader(Grader):
         ... )
         >>> grader = HelpfulnessGrader(model=api, threshold=0.7)
         >>>
-        >>> result = await grader.evaluate(
+        >>> result = await grader.aevaluate(
         ...     context="User needs help understanding Python decorators.",
         ...     input="What are decorators in Python?",
         ...     output="Decorators are functions that modify other functions...",
@@ -213,7 +213,7 @@ class HelpfulnessGrader(Grader):
         self.language = language
         self.evaluation_cost = 0.0
 
-    async def evaluate(  # pylint: disable=redefined-builtin,unused-argument
+    async def aevaluate(  # pylint: disable=redefined-builtin,unused-argument
         self,
         input: str,
         output: str,
@@ -236,7 +236,7 @@ class HelpfulnessGrader(Grader):
                         where 1.0 means extremely helpful, 0.0 means not helpful
 
         Example:
-            >>> result = await grader.evaluate(
+            >>> result = await grader.aevaluate(
             ...     input="Explain machine learning",
             ...     output="Machine learning is a subset of AI that enables systems to learn from data...",
             ...     context="Audience: beginners",
@@ -313,6 +313,7 @@ class HelpfulnessGrader(Grader):
         reason = f"Helpfulness evaluation score: {normalized_score:.4f}\n{reasoning}"
 
         return GraderScore(
+            name=self.name,
             score=normalized_score,
             reason=reason,
             metadata=metadata,

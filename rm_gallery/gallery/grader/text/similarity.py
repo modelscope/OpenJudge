@@ -105,7 +105,7 @@ class SimilarityGrader(Grader):
         >>> grader = SimilarityGrader(normalize=True)
         >>>
         >>> # Use BLEU algorithm
-        >>> result = await grader.evaluate(
+        >>> result = await grader.aevaluate(
         ...     reference="the cat is on the mat",
         ...     candidate="the cat is on the mat",
         ...     algorithm="bleu",
@@ -113,14 +113,14 @@ class SimilarityGrader(Grader):
         ... )
         >>>
         >>> # Use ROUGE algorithm
-        >>> result = await grader.evaluate(
+        >>> result = await grader.aevaluate(
         ...     reference="the cat is on the mat",
         ...     candidate="the cat is on the mat",
         ...     algorithm="rouge1"
         ... )
         >>>
         >>> # Use F1 Score algorithm with override
-        >>> result = await grader.evaluate(
+        >>> result = await grader.aevaluate(
         ...     reference="hello world",
         ...     candidate="hello world",
         ...     algorithm="f1_score",
@@ -155,7 +155,7 @@ class SimilarityGrader(Grader):
         self.case_sensitive = case_sensitive
         self.use_stemmer = use_stemmer
 
-    async def evaluate(
+    async def aevaluate(
         self,
         reference: str,
         candidate: str,
@@ -211,12 +211,18 @@ class SimilarityGrader(Grader):
         # Handle errors
         if "error" in details:
             error_msg = details.get("message", details["error"])
-            return GraderScore(score=0.0, reason=error_msg, metadata=details)
+            return GraderScore(
+                name=self.name,
+                score=0.0,
+                reason=error_msg,
+                metadata=details,
+            )
 
         # Format reason based on algorithm
         reason = self._format_reason(algorithm, score, details)
 
         return GraderScore(
+            name=self.name,
             score=score,
             reason=reason,
             metadata={**details, "algorithm": algorithm},

@@ -6,7 +6,7 @@ Registry for managing and discovering all available graders.
 Uses singleton pattern to ensure global uniqueness.
 """
 
-from typing import Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 from loguru import logger
 
@@ -24,7 +24,7 @@ class GraderRegistry:
         >>>
         >>> @register_grader("my_grader")
         ... class MyGrader(Grader):
-        ...     async def evaluate(self, **kwargs):
+        ...     async def aevaluate(self, **kwargs):
         ...         return GraderScore(name=self.name, score=1.0, reason="Test")
         >>>
         >>> # Get registered grader
@@ -116,7 +116,7 @@ class GraderRegistry:
             logger.warning(f"Grader '{name}' not found in registry")
         return grader_class
 
-    def get_instance(self, name: str, **kwargs) -> Optional[Grader]:
+    def get_instance(self, name: str, **kwargs: Any) -> Optional[Grader]:
         """
         Get grader instance
 
@@ -233,7 +233,7 @@ class GraderRegistry:
 grader_registry = GraderRegistry()
 
 
-def register_grader(name: str, override: bool = False):
+def register_grader(name: str, override: bool = False) -> Callable:
     """
     Decorator: Register grader class
 
@@ -245,10 +245,12 @@ def register_grader(name: str, override: bool = False):
 
     Example:
         >>> @register_grader("exact_match")
-        ... class ExactMatchGrader(Grader):
-        ...     async def evaluate(self, reference: str, candidate: str, **kwargs):
+        ... class StringMatchGrader(Grader):
+        ...     async def aevaluate(self, reference: str, candidate: str, **kwargs):
         ...         matched = reference == candidate
-        ...         return GraderScore(name=self.name, score=1.0 if matched else 0.0, reason="Exact match")
+        ...         return GraderScore(name=self.name,
+        ...                            score=1.0 if matched else 0.0,
+        ...                            reason="Exact match")
     """
 
     def decorator(cls: type[Grader] | Callable) -> type[Grader] | Callable:
@@ -258,7 +260,7 @@ def register_grader(name: str, override: bool = False):
     return decorator
 
 
-def get_grader(name: str, **kwargs) -> Optional[Grader]:
+def get_grader(name: str, **kwargs: Any) -> Optional[Grader]:
     """
     Helper function: Get grader instance
 

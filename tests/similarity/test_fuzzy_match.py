@@ -17,8 +17,10 @@ class TestFuzzyMatchBasic:
     async def test_exact_match(self):
         """Test exact match returns perfect score"""
         grader = SimilarityGrader()
-        result = await grader.evaluate(
-            reference="hello world", candidate="hello world", algorithm="fuzzy_match"
+        result = await grader.aevaluate(
+            reference="hello world",
+            candidate="hello world",
+            algorithm="fuzzy_match",
         )
 
         assert result.score == 1.0
@@ -29,7 +31,7 @@ class TestFuzzyMatchBasic:
     async def test_complete_mismatch(self):
         """Test completely different strings return low score"""
         grader = SimilarityGrader()
-        result = await grader.evaluate(
+        result = await grader.aevaluate(
             reference="hello world",
             candidate="goodbye universe",
             algorithm="fuzzy_match",
@@ -42,7 +44,7 @@ class TestFuzzyMatchBasic:
     async def test_partial_match(self):
         """Test partial matching"""
         grader = SimilarityGrader()
-        result = await grader.evaluate(
+        result = await grader.aevaluate(
             reference="hello world",
             candidate="hello worl",
             algorithm="fuzzy_match",  # Missing 'd'
@@ -56,8 +58,10 @@ class TestFuzzyMatchBasic:
         # Note: FuzzyMatchGrader doesn't have normalize_text parameter
         # Case sensitivity is handled by the fuzzy matching algorithm
         grader = SimilarityGrader()
-        result = await grader.evaluate(
-            reference="Hello World", candidate="hello world", algorithm="fuzzy_match"
+        result = await grader.aevaluate(
+            reference="Hello World",
+            candidate="hello world",
+            algorithm="fuzzy_match",
         )
 
         # Fuzzy match is case-sensitive, so won't be 1.0, but should be high
@@ -71,7 +75,7 @@ class TestFuzzyMatchMethods:
     async def test_ratio_method(self):
         """Test standard ratio method"""
         grader = SimilarityGrader()
-        result = await grader.evaluate(
+        result = await grader.aevaluate(
             reference="the quick brown fox",
             candidate="the quick brown fox",
             algorithm="fuzzy_match",
@@ -85,7 +89,7 @@ class TestFuzzyMatchMethods:
     async def test_partial_ratio_method(self):
         """Test partial ratio for substring matching"""
         grader = SimilarityGrader()
-        result = await grader.evaluate(
+        result = await grader.aevaluate(
             reference="the quick brown fox jumps",
             candidate="quick brown fox",
             algorithm="fuzzy_match",
@@ -99,7 +103,7 @@ class TestFuzzyMatchMethods:
     async def test_token_sort_ratio_method(self):
         """Test token sort ratio for order-independent matching"""
         grader = SimilarityGrader()
-        result = await grader.evaluate(
+        result = await grader.aevaluate(
             reference="brown quick the fox",
             candidate="the quick brown fox",
             algorithm="fuzzy_match",
@@ -125,8 +129,10 @@ class TestFuzzyMatchMultipleReferences:
 
         scores = []
         for ref in references:
-            result = await grader.evaluate(
-                reference=ref, candidate=candidate, algorithm="fuzzy_match"
+            result = await grader.aevaluate(
+                reference=ref,
+                candidate=candidate,
+                algorithm="fuzzy_match",
             )
             scores.append(result.score)
 
@@ -143,8 +149,10 @@ class TestFuzzyMatchMultipleReferences:
 
         scores = []
         for ref in references:
-            result = await grader.evaluate(
-                reference=ref, candidate=candidate, algorithm="fuzzy_match"
+            result = await grader.aevaluate(
+                reference=ref,
+                candidate=candidate,
+                algorithm="fuzzy_match",
             )
             scores.append(result.score)
 
@@ -161,8 +169,10 @@ class TestFuzzyMatchMultipleReferences:
 
         scores = []
         for ref in references:
-            result = await grader.evaluate(
-                reference=ref, candidate=candidate, algorithm="fuzzy_match"
+            result = await grader.aevaluate(
+                reference=ref,
+                candidate=candidate,
+                algorithm="fuzzy_match",
             )
             scores.append(result.score)
 
@@ -177,8 +187,10 @@ class TestFuzzyMatchEdgeCases:
     async def test_empty_strings(self):
         """Test handling of empty strings"""
         grader = SimilarityGrader()
-        result = await grader.evaluate(
-            reference="", candidate="", algorithm="fuzzy_match"
+        result = await grader.aevaluate(
+            reference="",
+            candidate="",
+            algorithm="fuzzy_match",
         )
 
         # Empty strings should match perfectly
@@ -188,8 +200,10 @@ class TestFuzzyMatchEdgeCases:
     async def test_empty_reference_non_empty_candidate(self):
         """Test empty reference with non-empty candidate"""
         grader = SimilarityGrader()
-        result = await grader.evaluate(
-            reference="", candidate="hello", algorithm="fuzzy_match"
+        result = await grader.aevaluate(
+            reference="",
+            candidate="hello",
+            algorithm="fuzzy_match",
         )
 
         assert result.score == 0.0
@@ -199,8 +213,10 @@ class TestFuzzyMatchEdgeCases:
         """Test performance with long strings"""
         grader = SimilarityGrader()
         long_text = "word " * 1000  # 1000 words
-        result = await grader.evaluate(
-            reference=long_text, candidate=long_text, algorithm="fuzzy_match"
+        result = await grader.aevaluate(
+            reference=long_text,
+            candidate=long_text,
+            algorithm="fuzzy_match",
         )
 
         assert result.score == 1.0
@@ -209,7 +225,7 @@ class TestFuzzyMatchEdgeCases:
     async def test_special_characters(self):
         """Test handling of special characters"""
         grader = SimilarityGrader()
-        result = await grader.evaluate(
+        result = await grader.aevaluate(
             reference="hello@world#2024!",
             candidate="hello@world#2024!",
             algorithm="fuzzy_match",
@@ -221,8 +237,10 @@ class TestFuzzyMatchEdgeCases:
     async def test_unicode_characters(self):
         """Test handling of Unicode characters"""
         grader = SimilarityGrader()
-        result = await grader.evaluate(
-            reference="你好世界", candidate="你好世界", algorithm="fuzzy_match"
+        result = await grader.aevaluate(
+            reference="你好世界",
+            candidate="你好世界",
+            algorithm="fuzzy_match",
         )
 
         assert result.score == 1.0
@@ -237,7 +255,7 @@ class TestFuzzyMatchThreshold:
         grader = SimilarityGrader()
 
         # High similarity - should match
-        result = await grader.evaluate(
+        result = await grader.aevaluate(
             reference="the quick brown fox",
             candidate="the quick brown fo",
             algorithm="fuzzy_match",
@@ -255,7 +273,7 @@ class TestFuzzyMatchThreshold:
 
         # Strict threshold
         grader_strict = SimilarityGrader()
-        result_strict = await grader_strict.evaluate(
+        result_strict = await grader_strict.aevaluate(
             reference="hello world",
             candidate="hello worl",
             algorithm="fuzzy_match",
@@ -264,7 +282,7 @@ class TestFuzzyMatchThreshold:
 
         # Lenient threshold
         grader_lenient = SimilarityGrader()
-        result_lenient = await grader_lenient.evaluate(
+        result_lenient = await grader_lenient.aevaluate(
             reference="hello world",
             candidate="hello worl",
             algorithm="fuzzy_match",

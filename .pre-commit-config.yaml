@@ -29,6 +29,7 @@ repos:
                 pb2\.py$
                 | grpc\.py$
                 | ^docs
+                | ^tests/
                 | \.html$
             )
         args: [ --disallow-untyped-defs,
@@ -138,3 +139,13 @@ repos:
   #           "--ignore-words-list",
   #           "xxx",
   #         ]
+  - repo: local
+    hooks:
+      - id: pytest
+        name: Run pytest
+        entry: python -m pytest
+        language: system
+        pass_filenames: false
+        always_run: true
+        args: ["--ignore=tests/multimodal",
+               "--ignore=tests/rubric/test_auto_rubric.py"]

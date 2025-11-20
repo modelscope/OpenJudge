@@ -12,9 +12,9 @@ from typing import Any, Optional
 from loguru import logger
 
 from rm_gallery.core.grader.base import Grader
-from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.model.openai_llm import OpenAIChatModel
 from rm_gallery.core.schema.grader import GraderMode, GraderScore
+from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import LanguageEnum, RequiredField, Template
 
 # pylint: disable=line-too-long
@@ -156,7 +156,7 @@ class HallucinationGrader(Grader):
         >>> # Chinese grader
         >>> grader_zh = HallucinationGrader(model=api, threshold=0.7, language=LanguageEnum.ZH)
         >>>
-        >>> result = await grader_en.evaluate(
+        >>> result = await grader_en.aevaluate(
         ...     context="The company was founded in 2020 in San Francisco.",
         ...     input="When was the company founded?",
         ...     output="The company was founded in 2020 in San Francisco with 100 employees.",
@@ -214,7 +214,7 @@ class HallucinationGrader(Grader):
         self.language = language
         self.evaluation_cost = 0.0
 
-    async def evaluate(  # pylint: disable=redefined-builtin,unused-argument
+    async def aevaluate(  # pylint: disable=redefined-builtin,unused-argument
         self,
         context: str,
         input: str,
@@ -237,7 +237,7 @@ class HallucinationGrader(Grader):
                         where 1.0 means no hallucinations, 0.0 means severe hallucinations
 
         Example:
-            >>> result = await grader.evaluate(
+            >>> result = await grader.aevaluate(
             ...     context="The product launched in 2023.",
             ...     input="When did the product launch?",
             ...     output="The product launched in 2023 with great success.",
@@ -306,6 +306,7 @@ class HallucinationGrader(Grader):
         reason = f"Hallucination evaluation score: {normalized_score:.4f}\n{reasoning}"
 
         return GraderScore(
+            name=self.name,
             score=normalized_score,
             reason=reason,
             metadata=metadata,

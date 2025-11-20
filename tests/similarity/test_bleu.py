@@ -17,7 +17,7 @@ class TestBLEUBasic:
     async def test_perfect_match(self):
         """Test perfect match returns score of 1.0"""
         grader = SimilarityGrader()
-        result = await grader.evaluate(
+        result = await grader.aevaluate(
             reference="the cat is on the mat",
             candidate="the cat is on the mat",
             algorithm="bleu",
@@ -30,7 +30,7 @@ class TestBLEUBasic:
     async def test_complete_mismatch(self):
         """Test completely different sentences"""
         grader = SimilarityGrader()
-        result = await grader.evaluate(
+        result = await grader.aevaluate(
             reference="the cat is on the mat",
             candidate="hello world foo bar baz qux",
             algorithm="bleu",
@@ -42,7 +42,7 @@ class TestBLEUBasic:
     async def test_partial_match(self):
         """Test partial matching"""
         grader = SimilarityGrader()
-        result = await grader.evaluate(
+        result = await grader.aevaluate(
             reference="the cat is on the mat",
             candidate="the dog is on the mat",
             algorithm="bleu",
@@ -55,7 +55,7 @@ class TestBLEUBasic:
     async def test_word_order_matters(self):
         """Test that word order affects BLEU score"""
         grader = SimilarityGrader()
-        result = await grader.evaluate(
+        result = await grader.aevaluate(
             reference="the cat is on the mat",
             candidate="the mat on is cat the",
             algorithm="bleu",
@@ -74,7 +74,7 @@ class TestBLEUParameters:
         # Test with different max n-gram orders
         for n in [1, 2, 3, 4]:
             grader = SimilarityGrader()
-            result = await grader.evaluate(
+            result = await grader.aevaluate(
                 reference="the quick brown fox jumps over the lazy dog",
                 candidate="the quick brown fox jumps over the lazy dog",
                 algorithm="bleu",
@@ -89,7 +89,7 @@ class TestBLEUParameters:
         # Test different smoothing methods
         for method in ["none", "floor", "add-k", "exp"]:
             grader = SimilarityGrader()
-            result = await grader.evaluate(
+            result = await grader.aevaluate(
                 reference="the cat sat on the mat",
                 candidate="the cat",
                 algorithm="bleu",
@@ -105,7 +105,7 @@ class TestBLEUEdgeCases:
     async def test_empty_candidate(self):
         """Test handling of empty candidate"""
         grader = SimilarityGrader()
-        result = await grader.evaluate(
+        result = await grader.aevaluate(
             reference="the cat is on the mat",
             candidate="",
             algorithm="bleu",
@@ -118,7 +118,7 @@ class TestBLEUEdgeCases:
     async def test_empty_reference(self):
         """Test handling of empty reference"""
         grader = SimilarityGrader()
-        result = await grader.evaluate(
+        result = await grader.aevaluate(
             reference="",
             candidate="the cat",
             algorithm="bleu",
@@ -131,7 +131,7 @@ class TestBLEUEdgeCases:
     async def test_single_word_sentences(self):
         """Test single word sentences"""
         grader = SimilarityGrader()
-        result = await grader.evaluate(
+        result = await grader.aevaluate(
             reference="cat",
             candidate="cat",
             algorithm="bleu",
@@ -144,7 +144,7 @@ class TestBLEUEdgeCases:
         """Test with very long sentences"""
         grader = SimilarityGrader()
         long_sentence = " ".join(["word"] * 500)
-        result = await grader.evaluate(
+        result = await grader.aevaluate(
             reference=long_sentence,
             candidate=long_sentence,
             algorithm="bleu",
@@ -160,7 +160,7 @@ class TestBLEUDetails:
     async def test_precision_details(self):
         """Test that precision details are included"""
         grader = SimilarityGrader()
-        result = await grader.evaluate(
+        result = await grader.aevaluate(
             reference="the cat is on the mat",
             candidate="the cat is on the mat",
             algorithm="bleu",
@@ -179,7 +179,7 @@ class TestBLEUDetails:
         grader = SimilarityGrader()
 
         # Short candidate
-        result = await grader.evaluate(
+        result = await grader.aevaluate(
             reference="the cat is on the mat",
             candidate="the cat",
             algorithm="bleu",
@@ -193,7 +193,7 @@ class TestBLEUDetails:
     async def test_length_information(self):
         """Test that length information is included"""
         grader = SimilarityGrader()
-        result = await grader.evaluate(
+        result = await grader.aevaluate(
             reference="the cat is on the mat",
             candidate="the dog is on the rug",
             algorithm="bleu",
@@ -211,7 +211,7 @@ class TestSentenceBLEU:
     async def test_sentence_bleu_basic(self):
         """Test basic sentence BLEU"""
         grader = SimilarityGrader()
-        result = await grader.evaluate(
+        result = await grader.aevaluate(
             reference="the cat is on the mat",
             candidate="the cat is on the mat",
             algorithm="sentence_bleu",
@@ -224,12 +224,12 @@ class TestSentenceBLEU:
         """Compare sentence-level and corpus-level BLEU"""
         grader = SimilarityGrader()
 
-        sentence_result = await grader.evaluate(
+        sentence_result = await grader.aevaluate(
             reference="the cat is on the mat",
             candidate="the dog is on the mat",
             algorithm="sentence_bleu",
         )
-        corpus_result = await grader.evaluate(
+        corpus_result = await grader.aevaluate(
             reference="the cat is on the mat",
             candidate="the dog is on the mat",
             algorithm="bleu",

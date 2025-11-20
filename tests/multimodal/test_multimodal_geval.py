@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Test script for MultimodalGEvalGrader
 
@@ -16,6 +17,7 @@ from rm_gallery.gallery.grader.multimodal._internal import (
 from rm_gallery.gallery.grader.multimodal.multimodal_geval import MultimodalGEvalGrader
 
 
+# pylint: disable=line-too-long
 async def test_geval_basic():
     """Test basic G-Eval with auto-generated evaluation steps"""
     print("=" * 80)
@@ -54,14 +56,14 @@ async def test_geval_basic():
     print("\n--- Test Case 1: Image with Caption ---")
     test_input = [
         MLLMImage(
-            url="https://dashscope.oss-cn-beijing.aliyuncs.com/images/dog_and_girl.jpeg"
+            url="https://dashscope.oss-cn-beijing.aliyuncs.com/images/dog_and_girl.jpeg",
         ),
         "Describe this image in detail",
     ]
     test_output = ["A young girl with a friendly dog in an outdoor setting"]
 
     try:
-        result = await grader.evaluate(input=test_input, actual_output=test_output)
+        result = await grader.aevaluate(input=test_input, actual_output=test_output)
 
         print(f"\nScore: {result.score:.4f}")
         print(f"\nReason:\n{result.reason}")
@@ -121,14 +123,16 @@ async def test_geval_with_explicit_steps():
     expected_output = ["The image shows a cat"]
 
     try:
-        result = await grader.evaluate(
-            input=test_input, actual_output=test_output, expected_output=expected_output
+        result = await grader.aevaluate(
+            input=test_input,
+            actual_output=test_output,
+            expected_output=expected_output,
         )
 
         print(f"\nScore: {result.score:.4f}")
         print(f"\nReason:\n{result.reason}")
         print(
-            f"Raw score: {result.metadata.get('raw_score')}/{result.metadata.get('score_range')[1]}"
+            f"Raw score: {result.metadata.get('raw_score')}/{result.metadata.get('score_range')[1]}",
         )
     except Exception as e:
         print(f"Error: {e}")
@@ -185,16 +189,16 @@ async def test_geval_with_rubric():
     print("\n--- Test Case 3: With Rubric ---")
     test_input = [
         MLLMImage(
-            url="https://dashscope.oss-cn-beijing.aliyuncs.com/images/dog_and_girl.jpeg"
+            url="https://dashscope.oss-cn-beijing.aliyuncs.com/images/dog_and_girl.jpeg",
         ),
         "Describe this image",
     ]
     test_output = [
-        "This image shows a young girl playing with a golden retriever dog outdoors on a sunny day"
+        "This image shows a young girl playing with a golden retriever dog outdoors on a sunny day",
     ]
 
     try:
-        result = await grader.evaluate(input=test_input, actual_output=test_output)
+        result = await grader.aevaluate(input=test_input, actual_output=test_output)
 
         print(f"\nScore: {result.score:.4f}")
         print(f"\nReason:\n{result.reason}")
@@ -218,7 +222,9 @@ async def test_geval_with_local_image():
     base_url = os.getenv("OPENAI_BASE_URL")
 
     model = OpenAIChatModel(
-        model_name="qwen-vl-max", api_key=api_key, base_url=base_url
+        model_name="qwen-vl-max",
+        api_key=api_key,
+        base_url=base_url,
     )
 
     grader = MultimodalGEvalGrader(
@@ -234,7 +240,7 @@ async def test_geval_with_local_image():
         "/Users/boyin.liu/Desktop/code/RM-Gallery-git/data/test_images/html_good_1.png"
     )
 
-    print(f"\n--- Test Case 4: Local Image ---")
+    print("\n--- Test Case 4: Local Image ---")
     print(f"Checking for test image: {test_image_path}")
 
     if os.path.exists(test_image_path):
@@ -250,7 +256,7 @@ async def test_geval_with_local_image():
         ]
 
         try:
-            result = await grader.evaluate(input=test_input, actual_output=test_output)
+            result = await grader.aevaluate(input=test_input, actual_output=test_output)
 
             print(f"\nScore: {result.score:.4f}")
             print(f"\nReason (first 300 chars):\n{result.reason[:300]}...")
@@ -276,7 +282,9 @@ async def test_geval_multiple_images():
     base_url = os.getenv("OPENAI_BASE_URL")
 
     model = OpenAIChatModel(
-        model_name="qwen-vl-max", api_key=api_key, base_url=base_url
+        model_name="qwen-vl-max",
+        api_key=api_key,
+        base_url=base_url,
     )
 
     grader = MultimodalGEvalGrader(
@@ -297,17 +305,17 @@ async def test_geval_multiple_images():
     test_input = [
         "Compare these two images:",
         MLLMImage(
-            url="https://dashscope.oss-cn-beijing.aliyuncs.com/images/dog_and_girl.jpeg"
+            url="https://dashscope.oss-cn-beijing.aliyuncs.com/images/dog_and_girl.jpeg",
         ),
         MLLMImage(url="https://dashscope.oss-cn-beijing.aliyuncs.com/images/cat.png"),
         "What are the similarities and differences?",
     ]
     test_output = [
-        "The first image shows a dog with a girl outdoors, while the second image shows a cat. Both feature domestic animals but in different settings and contexts."
+        "The first image shows a dog with a girl outdoors, while the second image shows a cat. Both feature domestic animals but in different settings and contexts.",
     ]
 
     try:
-        result = await grader.evaluate(input=test_input, actual_output=test_output)
+        result = await grader.aevaluate(input=test_input, actual_output=test_output)
 
         print(f"\nScore: {result.score:.4f}")
         print(f"\nReason:\n{result.reason}")
@@ -331,7 +339,9 @@ async def test_geval_error_handling():
     base_url = os.getenv("OPENAI_BASE_URL")
 
     model = OpenAIChatModel(
-        model_name="qwen-vl-max", api_key=api_key, base_url=base_url
+        model_name="qwen-vl-max",
+        api_key=api_key,
+        base_url=base_url,
     )
 
     grader = MultimodalGEvalGrader(
@@ -345,8 +355,8 @@ async def test_geval_error_handling():
 
     try:
         # Call without providing actual_output
-        result = await grader.evaluate(
-            input=["Test input"]
+        result = await grader.aevaluate(
+            input=["Test input"],
             # Missing: actual_output
         )
 
@@ -372,13 +382,13 @@ async def main():
     if not api_key:
         print("\nError: OPENAI_API_KEY environment variable not set")
         print("Please set it using:")
-        print('export OPENAI_API_KEY="your-api-key"')
+        print('export OPENAI_API_KEY="your-api-key"')  # pragma: allowlist secret
         return
 
     if not base_url:
         print("\nWarning: OPENAI_BASE_URL not set, will use default OpenAI endpoint")
 
-    print(f"\nConfiguration:")
+    print("\nConfiguration:")
     print(f"  API Key: {api_key[:10]}...{api_key[-4:]}")
     print(f"  Base URL: {base_url or 'default'}")
     print("")

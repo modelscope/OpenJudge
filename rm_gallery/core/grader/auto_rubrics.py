@@ -22,13 +22,14 @@ from loguru import logger
 from pydantic import BaseModel, Field
 from tqdm import tqdm
 
+from rm_gallery.core.schema.data import EvalCase, EvalCaseParser
 from rm_gallery.core.grader.base import GraderMode
 from rm_gallery.core.grader.rubric.categorizer import LLMRubricCategorizer
 from rm_gallery.core.grader.rubric.generator import QuerySpecificRubricGenerator
 from rm_gallery.core.grader.rubric.mcr_selector import SuperFastAdaptiveMCR2
 from rm_gallery.core.model.openai_llm import OpenAIChatModel
 from rm_gallery.core.runner.base import BaseRunner
-from rm_gallery.core.schema.data import DataSample, DataSampleParser
+from rm_gallery.core.schema.data import EvalCase, EvalCaseParser
 from rm_gallery.core.schema.template import LanguageEnum
 
 
@@ -77,7 +78,7 @@ class AutoRubricsConfig(BaseModel):
         max_score: Maximum score value for pointwise mode
 
         # Batch mode parameters
-        batch_size: Number of data samples to process per batch iteration
+        batch_size: Number of eval cases to process per batch iteration
         mcr_batch_size: Number of rubrics selected by MCR² per iteration
         min_increment_threshold: Minimum information gain to continue iteration
         patience: Consecutive low-increment iterations before early stopping
@@ -138,7 +139,7 @@ class AutoRubricsConfig(BaseModel):
     batch_size: int = Field(
         default=10,
         ge=1,
-        description="Number of data samples per batch iteration",
+        description="Number of eval cases per batch iteration",
     )
 
     # MCR² parameters
@@ -191,7 +192,7 @@ class AutoRubrics(BaseRunner):
     def __init__(
         self,
         model: OpenAIChatModel,
-        parser: DataSampleParser | Callable | None = None,
+        parser: EvalCaseParser | Callable | None = None,
         config: AutoRubricsConfig | None = None,
     ):
         """
@@ -247,56 +248,56 @@ class AutoRubrics(BaseRunner):
             f"aggregation_mode={self.config.aggregation_mode.value}",
         )
 
-    async def __call__(self, data_samples: List[DataSample]) -> Dict[str, Any]:
+    async def aevaluate_batch(self, eval_cases: List[EvalCase]) -> Dict[str, Any]:
         """
         Run AutoRubrics pipeline based on generation mode
 
         Args:
-            data_samples: All data samples to process
+            eval_cases: All eval cases to process
 
         Returns:
             Dict with final rubrics, statistics, and processing details
         """
         if self.parser is not None:
-            data_samples = [self.parser(data_sample) for data_sample in data_samples]
+            eval_cases = [self.parser(eval_case) for eval_case in eval_cases]
 
         logger.info(
             f"Starting AutoRubrics ({self.config.sampling_mode.value} mode) "
-            f"with {len(data_samples)} data samples",
+            f"with {len(eval_cases)} eval cases",
         )
 
         if self.config.sampling_mode == SamplingMode.ALL_SAMPLES:
-            return await self._run_all_samples_mode(data_samples)
+            return await self._run_all_samples_mode(eval_cases)
         else:
-            return await self._run_smart_sampling_mode(data_samples)
+            return await self._run_smart_sampling_mode(eval_cases)
 
     async def _run_all_samples_mode(
         self,
-        data_samples: List[DataSample],
+        eval_cases: List[EvalCase],
     ) -> Dict[str, Any]:
         """
         Single mode: Generate rubrics for each sample independently
 
         Args:
-            data_samples: All data_samples to process
+            eval_cases: All eval_cases to process
 
         Returns:
             Dict with rubrics for each sample and aggregated statistics
         """
         logger.info(
-            f"Running single mode for {len(data_samples)} data_samples",
+            f"Running single mode for {len(eval_cases)} eval_cases",
         )
 
-        # Process all data_samples concurrently
+        # Process all eval_cases concurrently
         results = await self._process_samples_concurrently(
-            data_samples,
-            "Processing data samples",
+            eval_cases,
+            "Processing eval cases",
         )
 
         # Extract rubrics and calculate stats
         all_rubrics, stats = self._extract_rubrics_and_stats(
             results,
-            len(data_samples),
+            len(eval_cases),
         )
 
         # Apply aggregation and generate final results
@@ -306,7 +307,7 @@ class AutoRubrics(BaseRunner):
 
         return self._build_final_results(
             sampling_mode="all_samples",
-            total_data_samples=len(data_samples),
+            total_eval_cases=len(eval_cases),
             all_rubrics=all_rubrics,
             final_rubrics=final_rubrics,
             aggregation_info=aggregation_info,
@@ -316,19 +317,19 @@ class AutoRubrics(BaseRunner):
 
     async def _run_smart_sampling_mode(
         self,
-        data_samples: List[DataSample],
+        eval_cases: List[EvalCase],
     ) -> Dict[str, Any]:
         """
         Smart sampling mode: Use MCR-based selection and aggregation
 
         Args:
-            data_samples: All data_samples to process
+            eval_cases: All eval_cases to process
 
         Returns:
             Dict with optimal rubric subset and iteration history
         """
         logger.info(
-            f"🔄 Running batch mode with MCR selection for {len(data_samples)} data samples",
+            f"🔄 Running batch mode with MCR selection for {len(eval_cases)} eval cases",
         )
 
         iteration = 0
@@ -336,11 +337,11 @@ class AutoRubrics(BaseRunner):
             iteration += 1
 
             # Get next batch
-            batch_samples = self._get_next_batch(data_samples)
+            batch_samples = self._get_next_batch(eval_cases)
             if batch_samples is None:
                 # Reset for new cycle
                 self.current_sample_index = 0
-                batch_samples = self._get_next_batch(data_samples)
+                batch_samples = self._get_next_batch(eval_cases)
                 if batch_samples is None:
                     logger.error("Failed to get batch, stopping")
                     break
@@ -387,7 +388,7 @@ class AutoRubrics(BaseRunner):
 
         return self._build_final_results(
             sampling_mode="smart_sampling",
-            total_data_samples=len(data_samples),
+            total_eval_cases=len(eval_cases),
             all_rubrics=self.all_rubrics,
             final_rubrics=final_rubrics,
             aggregation_info=aggregation_info,
@@ -404,46 +405,46 @@ class AutoRubrics(BaseRunner):
 
     def _get_next_batch(
         self,
-        all_data_samples: List[DataSample],
-    ) -> Optional[List[DataSample]]:
-        """Get next batch of data_samples for processing.
+        all_eval_cases: List[EvalCase],
+    ) -> Optional[List[EvalCase]]:
+        """Get next batch of eval_cases for processing.
 
         Args:
-            all_samples: Complete list of all data samples
+            all_samples: Complete list of all eval cases
 
         Returns:
-            Next batch of data samples, or None if all data samples processed
+            Next batch of eval cases, or None if all eval cases processed
         """
-        if not all_data_samples:
+        if not all_eval_cases:
             logger.warning("Empty sample list provided")
             return None
 
         start_idx = self.current_sample_index
         end_idx = min(
             start_idx + self.config.batch_size,
-            len(all_data_samples),
+            len(all_eval_cases),
         )
 
-        if start_idx >= len(all_data_samples):
+        if start_idx >= len(all_eval_cases):
             return None
 
-        batch = all_data_samples[start_idx:end_idx]
+        batch = all_eval_cases[start_idx:end_idx]
         self.current_sample_index = end_idx
 
         logger.info(
-            f"Processing batch: data samples {start_idx}-{end_idx-1} "
-            f"({len(batch)}/{len(all_data_samples)} data samples)",
+            f"Processing batch: eval cases {start_idx}-{end_idx-1} "
+            f"({len(batch)}/{len(all_eval_cases)} eval cases)",
         )
         return batch
 
     async def _generate_batch(
         self,
-        batch_samples: List[DataSample],
+        batch_samples: List[EvalCase],
     ) -> Tuple[List[str], Dict[str, Any]]:
-        """Generate rubrics for a batch of data samples concurrently.
+        """Generate rubrics for a batch of eval cases concurrently.
 
         Args:
-            batch_samples: List of data samples to generate rubrics for
+            batch_samples: List of eval cases to generate rubrics for
 
         Returns:
             Tuple of (valid_rubrics, generation_statistics)
@@ -453,10 +454,10 @@ class AutoRubrics(BaseRunner):
             return [], {"error": "Empty batch"}
 
         logger.info(
-            f"Generating rubrics for {len(batch_samples)} data samples...",
+            f"Generating rubrics for {len(batch_samples)} eval cases...",
         )
 
-        # Process data samples concurrently
+        # Process eval cases concurrently
         results = await self._process_samples_concurrently(
             batch_samples,
             "Generating",
@@ -581,22 +582,24 @@ class AutoRubrics(BaseRunner):
 
     async def _process_samples_concurrently(
         self,
-        data_samples: List[DataSample],
+        eval_cases: List[EvalCase],
         desc: str = "Processing",
     ) -> List[Dict[str, Any]]:
         """Process samples concurrently with progress tracking.
 
         Args:
-            data_samples: List of data samples to process
+            eval_cases: List of eval cases to process
             desc: Description for progress bar
 
         Returns:
             List of generation results
         """
-        tasks = [self.generator.generate_iterative(sample) for sample in data_samples]
+        tasks = [
+            self.generator.generate_iterative(eval_case) for eval_case in eval_cases
+        ]
 
         results = []
-        with tqdm(total=len(data_samples), desc=desc, unit="sample") as pbar:
+        with tqdm(total=len(eval_cases), desc=desc, unit="sample") as pbar:
             for coro in asyncio.as_completed(tasks):
                 try:
                     result = await coro
@@ -620,36 +623,36 @@ class AutoRubrics(BaseRunner):
     def _extract_rubrics_and_stats(
         self,
         results: List[Dict[str, Any]],
-        total_data_samples: int,
+        total_eval_cases: int,
     ) -> Tuple[List[str], Dict[str, Any]]:
         """Extract rubrics and calculate statistics from generation results.
 
         Args:
             results: List of generation results
-            total_data_samples: Total number of data_samples processed
+            total_eval_cases: Total number of eval_cases processed
 
         Returns:
             Tuple of (all_rubrics, statistics)
         """
         all_rubrics = []
-        successful_data_samples = 0
+        successful_eval_cases = 0
         failed_samples = 0
 
         for result in results:
             if result.get("rubric_valid") == "True":
-                successful_data_samples += 1
+                successful_eval_cases += 1
                 all_rubrics.extend(result.get("rubrics", []))
             else:
                 failed_samples += 1
 
         success_rate = (
-            (successful_data_samples / total_data_samples * 100)
-            if total_data_samples
+            (successful_eval_cases / total_eval_cases * 100)
+            if total_eval_cases
             else 0
         )
 
         stats = {
-            "successful_samples": successful_data_samples,
+            "successful_samples": successful_eval_cases,
             "failed_samples": failed_samples,
             "success_rate": success_rate,
             "total_rubrics": len(all_rubrics),
@@ -696,7 +699,7 @@ class AutoRubrics(BaseRunner):
     def _build_final_results(
         self,
         sampling_mode: str,
-        total_data_samples: int,
+        total_eval_cases: int,
         all_rubrics: List[str],
         final_rubrics: List[str],
         aggregation_info: Dict[str, Any],
@@ -707,7 +710,7 @@ class AutoRubrics(BaseRunner):
 
         Args:
             sampling_mode: "all_samples" or "smart_sampling"
-            total_samples: Total number of data samples processed
+            total_samples: Total number of eval cases processed
             all_rubrics: All generated rubrics before aggregation
             final_rubrics: Final rubrics after aggregation
             aggregation_info: Aggregation metadata
@@ -721,8 +724,8 @@ class AutoRubrics(BaseRunner):
             "sampling_mode": sampling_mode,
             "grader_mode": self.config.grader_mode.value,
             "aggregation_mode": self.config.aggregation_mode.value,
-            "config": self.config.model_dump(),
-            "total_samples": total_data_samples,
+            "config": self.config.dict(),
+            "total_samples": total_eval_cases,
             "final_rubrics": final_rubrics,
             "final_rubric_count": len(final_rubrics),
             "all_rubrics": all_rubrics,
@@ -740,7 +743,7 @@ class AutoRubrics(BaseRunner):
     def create(
         cls,
         model: OpenAIChatModel,
-        parser: DataSampleParser | Callable | None = None,
+        parser: EvalCaseParser | Callable | None = None,
         # Core settings
         sampling_mode: SamplingMode | str = SamplingMode.ALL_SAMPLES,
         grader_mode: GraderMode | str = GraderMode.POINTWISE,
@@ -769,7 +772,7 @@ class AutoRubrics(BaseRunner):
 
         Args:
             model: Language model
-            parser: Optional data sample parser
+            parser: Optional eval case parser
             sampling_mode: SamplingMode enum or string ("all_samples" or "smart_sampling")
             grader_mode: GraderMode enum or string ("pointwise" or "listwise")
             language: LanguageEnum or string ("zh" or "en")
@@ -784,7 +787,7 @@ class AutoRubrics(BaseRunner):
             max_score: Maximum score value
 
             # Batch mode parameters (ignored in single mode)
-            batch_size: Data samples per batch iteration
+            batch_size: EvalCases per batch iteration
             mcr_batch_size: Rubrics selected by MCR² per iteration
             max_iterations: Maximum batch iterations
             min_increment_threshold: Minimum information gain threshold

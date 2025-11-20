@@ -3,44 +3,45 @@
 AutoGrader Single Test Module
 
 This module contains unit tests for the AutoGrader functionality
-with single data samples and different configurations.
+with single eval cases and different configurations.
 """
 
 import asyncio
 
 import pytest
-
+from rm_gallery.core.model import OpenAIChatModel
+from rm_gallery.core.schema.data import EvalCase
 from rm_gallery.core.grader.auto_grader import AutoGrader
 from rm_gallery.core.grader.auto_rubrics import AutoRubricsConfig
 from rm_gallery.core.model import OpenAIChatModel
-from rm_gallery.core.schema.data import DataSample
+from rm_gallery.core.schema.data import EvalCase
 
 
 # Test data fixtures
-def get_pointwise_sample() -> DataSample:
+def get_pointwise_sample() -> EvalCase:
     """Sample data with score labels for pointwise evaluation."""
-    return DataSample(
-        data={"query": "What is the capital of France?"},
-        samples=[{"answer": "The capital of France is Paris.", "score": 1}],
+    return EvalCase(
+        input={"query": "What is the capital of France?"},
+        outputs=[{"answer": "The capital of France is Paris.", "score": 1}],
     )
 
 
-def get_listwise_sample() -> DataSample:
+def get_listwise_sample() -> EvalCase:
     """Sample data with rank labels for listwise evaluation."""
-    return DataSample(
-        data={"query": "What is the capital of France?"},
-        samples=[
+    return EvalCase(
+        input={"query": "What is the capital of France?"},
+        outputs=[
             {"answer": "The capital of France is Paris.", "rank": 2},
             {"answer": "The capital of France is not Paris.", "rank": 1},
         ],
     )
 
 
-def get_unlabeled_sample() -> DataSample:
+def get_unlabeled_sample() -> EvalCase:
     """Sample data without labels for evaluation."""
-    return DataSample(
-        data={"query": "What is the capital of Germany?"},
-        samples=[
+    return EvalCase(
+        input={"query": "What is the capital of Germany?"},
+        outputs=[
             {"answer": "The capital of Germany is not Berlin."},
             {"answer": "The capital of Germany is Berlin."},
         ],
@@ -68,13 +69,13 @@ async def test_auto_grader_with_default_config() -> None:
     )
 
     # Train the grader
-    grader = await auto_grader(training_data)
+    grader = await auto_grader.aevaluate_batch(training_data)
     assert grader is not None, "Grader should be created successfully"
 
     # Evaluate test data
-    result = await grader.aevaluate_data_samples(
+    result = await grader.aevaluate_batch(
         parser=None,
-        data_samples=test_data,
+        eval_cases=test_data,
     )
 
     assert result is not None, "Evaluation result should not be None"
@@ -107,13 +108,13 @@ async def test_auto_grader_with_custom_config() -> None:
     )
 
     # Train the grader
-    grader = await auto_grader(training_data)
+    grader = await auto_grader.aevaluate_batch(training_data)
     assert grader is not None, "Grader should be created successfully"
 
     # Evaluate test data
-    result = await grader.aevaluate_data_samples(
+    result = await grader.aevaluate_batch(
         parser=None,
-        data_samples=test_data,
+        eval_cases=test_data,
     )
 
     assert result is not None, "Evaluation result should not be None"
@@ -157,13 +158,13 @@ async def test_auto_grader_comparison() -> None:
     custom_grader = await custom_grader_factory(listwise_data)
 
     # Evaluate with both graders
-    default_result = await default_grader.aevaluate_data_samples(
+    default_result = await default_grader.aevaluate_batch(
         parser=None,
-        data_samples=test_data,
+        eval_cases=test_data,
     )
-    custom_result = await custom_grader.aevaluate_data_samples(
+    custom_result = await custom_grader.aevaluate_batch(
         parser=None,
-        data_samples=test_data,
+        eval_cases=test_data,
     )
 
     # Assertions

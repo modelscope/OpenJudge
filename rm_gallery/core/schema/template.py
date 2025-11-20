@@ -411,23 +411,3 @@ class Chat(ABC):
         else:
             raise ValueError("Invalid file format")
         return cls(**data)
-
-
-if __name__ == "__main__":
-    en_template = Template(
-        messages={
-            LanguageEnum.EN: [
-                {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": "{question}"},
-            ],
-        },
-    )
-    openai_model = OpenAIChatModel(model_name="qwen-plus", stream=False)
-    chat = Chat(template=en_template, model=openai_model)
-    chat_messages = chat.format(
-        language=LanguageEnum.EN,
-        question="What is the capital of France?",
-    )
-    print(chat_messages)
-    result = asyncio.run(chat(question="What is the capital of France?"))
-    print(result)

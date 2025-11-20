@@ -12,12 +12,8 @@ from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import Template
 
 
-# Tool call success evaluation template
-TOOL_CALL_SUCCESS_TEMPLATE = Template(
-    messages=[
-        ChatMessage(
-            role="system",
-            content="""You are an expert evaluator with strong software development background. You are required to extract the tool result for every tool call then decide for each tool result whether it indicates that the tool call succeeded or failed.
+# Tool call success evaluation system prompt
+TOOL_CALL_SUCCESS_SYSTEM_PROMPT = """You are an expert evaluator with strong software development background. You are required to extract the tool result for every tool call then decide for each tool result whether it indicates that the tool call succeeded or failed.
 
 ROLE
 ====
@@ -43,11 +39,10 @@ A tool call is considered failed if any of the following occurs:
 1. The tool result is empty or null
 2. The tool result contains explicit error messages
 3. The tool result indicates timeout or exception
-4. The tool result is an empty object when a populated object is expected""",
-        ),
-        ChatMessage(
-            role="user",
-            content="""INPUT
+4. The tool result is an empty object when a populated object is expected"""
+
+# Tool call success evaluation user prompt
+TOOL_CALL_SUCCESS_USER_PROMPT = """INPUT
 =====
 
 TOOL_DEFINITIONS: {tool_definitions}
@@ -64,11 +59,7 @@ Generate a JSON object with the following structure:
   "reason": "Brief explanation of why the tool calls succeeded or failed",
   "score": 1.0 for success or 0.0 for failure
 }}
-```
-""",
-        ),
-    ],
-)
+```"""
 
 
 class ToolCallSuccessGrader(LLMGrader):
@@ -118,7 +109,7 @@ class ToolCallSuccessGrader(LLMGrader):
         """Initialize the ToolCallSuccessGrader.
 
         Args:
-            model: The language model used for evaluation. Can be either a ChatModelBase 
+            model: The language model used for evaluation. Can be either a ChatModelBase
                    instance or a dictionary configuration. If a dict is provided, it will
                    be used to initialize an OpenAIChatModel.
             **kwargs: Additional keyword arguments.
@@ -128,7 +119,18 @@ class ToolCallSuccessGrader(LLMGrader):
             name="tool_call_success",
             mode=GraderMode.POINTWISE,
             description="Evaluates whether tool calls done by an AI agent includes failures or not",
-            template=TOOL_CALL_SUCCESS_TEMPLATE,
+            template=Template(
+                messages=[
+                    ChatMessage(
+                        role="system",
+                        content=TOOL_CALL_SUCCESS_SYSTEM_PROMPT,
+                    ),
+                    ChatMessage(
+                        role="user",
+                        content=TOOL_CALL_SUCCESS_USER_PROMPT,
+                    ),
+                ],
+            ),
             model=model,
             **kwargs,
         )
@@ -223,70 +225,3 @@ class ToolCallSuccessGrader(LLMGrader):
             result.score = score
 
         return result
-
-
-if __name__ == "__main__":
-    import asyncio
-
-    async def main():
-        # Initialize the grader
-        model = OpenAIChatModel(model_name="qwen-plus", stream=False)
-        grader = ToolCallSuccessGrader(model=model)
-
-        # Define tool definitions
-        tool_definitions = [
-            {
-                "name": "get_weather",
-                "description": "Get weather information for a location",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "location": {
-                            "type": "string",
-                            "description": "City name",
-                        },
-                    },
-                    "required": ["location"],
-                },
-            },
-        ]
-
-        # Define successful tool calls
-        successful_tool_calls = [
-            {
-                "name": "get_weather",
-                "arguments": {"location": "New York"},
-                "result": {"temperature": 25, "condition": "sunny"},
-            },
-        ]
-
-        # Evaluate successful tool calls
-        result = await grader.aevaluate(
-            tool_definitions=tool_definitions,
-            tool_calls=successful_tool_calls,
-        )
-        print("Successful tool call evaluation:")
-        print(f"Score: {result.score}")
-        print(f"Reason: {result.reason}")
-        print()
-
-        # Define failed tool calls
-        failed_tool_calls = [
-            {
-                "name": "get_weather",
-                "arguments": {"location": "New York"},
-                "result": {"error": "Connection timeout"},
-            },
-        ]
-
-        # Evaluate failed tool calls
-        result = await grader.aevaluate(
-            tool_definitions=tool_definitions,
-            tool_calls=failed_tool_calls,
-        )
-        print("Failed tool call evaluation:")
-        print(f"Score: {result.score}")
-        print(f"Reason: {result.reason}")
-
-    # Run the example
-    asyncio.run(main())

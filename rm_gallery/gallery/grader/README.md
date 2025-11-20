@@ -124,10 +124,10 @@ print(f"Math models: {math_models}")
 rm = RewardRegistry.get("helpfulness_listwise_reward")
 
 # Prepare data
-from rm_gallery.core.schema.data.schema import DataSample, DataOutput, Step
+from rm_gallery.core.schema.data.schema import EvalCase, DataOutput, Step
 from rm_gallery.core.schema.message import ChatMessage, MessageRole
 
-sample = DataSample(
+sample = EvalCase(
     unique_id="example",
     input=[ChatMessage(role=MessageRole.USER, content="What is AI?")],
     output=[

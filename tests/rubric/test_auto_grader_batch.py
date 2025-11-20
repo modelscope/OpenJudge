@@ -19,11 +19,14 @@ from typing import Any, Dict, List, Optional
 import pytest
 from loguru import logger
 
+from rm_gallery.core.schema.data import EvalCase
+from rm_gallery.core.grader.base import GraderMode
+from rm_gallery.core.model import OpenAIChatModel
 from rm_gallery.core.grader.auto_grader import AutoGrader
 from rm_gallery.core.grader.auto_rubrics import AutoRubricsConfig
 from rm_gallery.core.grader.base import GraderMode
 from rm_gallery.core.model import OpenAIChatModel
-from rm_gallery.core.schema.data import DataSample
+from rm_gallery.core.schema.data import EvalCase
 
 # pylint: disable=line-too-long,too-many-nested-blocks,redefined-outer-name
 
@@ -38,7 +41,7 @@ class AccuracyCalculator:
     @staticmethod
     def calculate_accuracy(
         grader_mode: GraderMode,
-        test_samples: List[DataSample],
+        test_samples: List[EvalCase],
         results: List,
     ) -> Dict[str, Any]:
         """Calculate accuracy metrics based on grader mode."""
@@ -57,7 +60,7 @@ class AccuracyCalculator:
 
     @staticmethod
     def _calculate_pointwise_accuracy(
-        test_samples: List[DataSample],
+        test_samples: List[EvalCase],
         results: List,
     ) -> Dict[str, Any]:
         """Calculate accuracy for pointwise evaluation."""
@@ -67,7 +70,7 @@ class AccuracyCalculator:
         for sample, result in zip(test_samples, results):
             result_list = result if isinstance(result, list) else [result]
 
-            for idx, item in enumerate(sample.samples):
+            for idx, item in enumerate(sample.outputs):
                 if idx < len(result_list):
                     expected_score = item.get("score")
                     if expected_score is not None:
@@ -90,7 +93,7 @@ class AccuracyCalculator:
 
     @staticmethod
     def _calculate_listwise_accuracy(
-        test_samples: List[DataSample],
+        test_samples: List[EvalCase],
         results: List,
     ) -> Dict[str, Any]:
         """Calculate accuracy for listwise evaluation."""
@@ -100,7 +103,7 @@ class AccuracyCalculator:
         for idx, (sample, result) in enumerate(zip(test_samples, results)):
             expected_ranks = [
                 item.get("rank")
-                for item in sample.samples
+                for item in sample.outputs
                 if item.get("rank") is not None
             ]
 
@@ -155,31 +158,31 @@ class DataLoader:
     """Utility class for loading test data."""
 
     @staticmethod
-    def load_data_samples(
+    def load_eval_cases(
         file_path: str,
         max_samples: Optional[int] = None,
-    ) -> List[DataSample]:
-        """Load data samples from JSONL file."""
-        logger.info(f"Loading data samples from {file_path}")
+    ) -> List[EvalCase]:
+        """Load eval cases from JSONL file."""
+        logger.info(f"Loading eval cases from {file_path}")
 
         if not Path(file_path).exists():
             raise FileNotFoundError(f"Data file not found: {file_path}")
 
-        data_samples = []
+        eval_cases = []
         with open(file_path, "r", encoding="utf-8") as f:
             for i, line in enumerate(f):
                 if max_samples and i >= max_samples:
                     break
                 try:
                     data = json.loads(line.strip())
-                    sample = DataSample(**data)
-                    data_samples.append(sample)
+                    sample = EvalCase(**data)
+                    eval_cases.append(sample)
                 except Exception as e:
                     logger.warning(f"Failed to parse line {i+1}: {e}")
                     continue
 
-        logger.info(f"Successfully loaded {len(data_samples)} data samples")
-        return data_samples
+        logger.info(f"Successfully loaded {len(eval_cases)} eval cases")
+        return eval_cases
 
 
 class TestConfig:
@@ -223,15 +226,15 @@ class AutoGraderBatchTester:
 
     async def run_batch_test(
         self,
-        data_samples: List[DataSample],
+        eval_cases: List[EvalCase],
         config: TestConfig,
         grader_name: str = "AutoGrader_Batch_Test",
     ) -> Dict[str, Any]:
         """Run a complete batch test with the given configuration."""
 
         # Split data into training and testing
-        train_samples = data_samples[: config.max_train_samples]
-        test_samples = data_samples[
+        train_samples = eval_cases[: config.max_train_samples]
+        test_samples = eval_cases[
             config.max_train_samples : config.max_train_samples
             + config.max_test_samples
         ]
@@ -263,12 +266,12 @@ class AutoGraderBatchTester:
 
         # Train the grader
         logger.info("Training grader...")
-        grader = await auto_grader(train_samples)
+        grader = await auto_grader.aevaluate_batch(train_samples)
         logger.info(f"Grader trained: {grader.name} ({grader.mode.value})")
 
         # Evaluate test samples
         logger.info("Evaluating test samples...")
-        results = await grader.aevaluate_data_samples(test_samples)
+        results = await grader.aevaluate_batch(test_samples)
 
         # Calculate accuracy
         accuracy_metrics = self.accuracy_calculator.calculate_accuracy(
@@ -358,7 +361,7 @@ async def test_listwise_batch_evaluation(
         pytest.skip(f"Data file not found: {sample_data_path}")
 
     # Load data
-    data_samples = batch_tester.data_loader.load_data_samples(
+    eval_cases = batch_tester.data_loader.load_eval_cases(
         sample_data_path,
         max_samples=100,
     )
@@ -375,7 +378,7 @@ async def test_listwise_batch_evaluation(
 
     # Run test
     results = await batch_tester.run_batch_test(
-        data_samples,
+        eval_cases,
         config,
         "Test_Listwise_Grader",
     )
@@ -404,7 +407,7 @@ async def test_pointwise_batch_evaluation(
         pytest.skip(f"Data file not found: {sample_data_path}")
 
     # Load data
-    data_samples = batch_tester.data_loader.load_data_samples(
+    eval_cases = batch_tester.data_loader.load_eval_cases(
         sample_data_path,
         max_samples=100,
     )
@@ -421,7 +424,7 @@ async def test_pointwise_batch_evaluation(
 
     # Run test
     results = await batch_tester.run_batch_test(
-        data_samples,
+        eval_cases,
         config,
         "Test_Pointwise_Grader",
     )
@@ -448,7 +451,7 @@ async def test_batch_with_results_saving(
         pytest.skip(f"Data file not found: {sample_data_path}")
 
     # Load data
-    data_samples = batch_tester.data_loader.load_data_samples(
+    eval_cases = batch_tester.data_loader.load_eval_cases(
         sample_data_path,
         max_samples=50,
     )
@@ -461,7 +464,7 @@ async def test_batch_with_results_saving(
     )
 
     # Run test
-    results = await batch_tester.run_batch_test(data_samples, config)
+    results = await batch_tester.run_batch_test(eval_cases, config)
 
     # Save results
     output_path = tmp_path / "test_results.json"
@@ -499,14 +502,14 @@ async def main() -> None:
 
     try:
         # Load data
-        logger.info("Loading data samples...")
-        data_samples = batch_tester.data_loader.load_data_samples(
+        logger.info("Loading eval cases...")
+        eval_cases = batch_tester.data_loader.load_eval_cases(
             train_file,
             max_samples=100,
         )
 
-        if not data_samples:
-            logger.error("No valid data samples loaded")
+        if not eval_cases:
+            logger.error("No valid eval cases loaded")
             return
 
         # Test configuration
@@ -523,7 +526,7 @@ async def main() -> None:
         # Run batch test
         logger.info("Starting batch test...")
         results = await batch_tester.run_batch_test(
-            data_samples,
+            eval_cases,
             config,
             "Manual_Batch_Test_Grader",
         )

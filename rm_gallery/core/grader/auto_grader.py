@@ -4,7 +4,7 @@ from typing import Any, Callable, List, Optional
 from pydantic import BaseModel, Field
 from loguru import logger
 
-from rm_gallery.core.schema.data import DataSample, DataSampleParser
+from rm_gallery.core.schema.data import EvalCase, EvalCaseParser
 from rm_gallery.core.grader.base import LLMGrader, GraderMode
 from rm_gallery.core.model import OpenAIChatModel
 from rm_gallery.core.runner.base import BaseRunner
@@ -48,14 +48,14 @@ class AutoGrader(BaseRunner):
     def __init__(
         self,
         model: OpenAIChatModel,
-        parser: DataSampleParser | Callable | None = None,
+        parser: EvalCaseParser | Callable | None = None,
         config: AutoGraderConfig | None = None,
     ):
         """AutoGrader initialization.
 
         Args:
             model: OpenAI chat model for LLM operations
-            parser: Data sample parser
+            parser: EvalCase parser
             config: AutoGrader configuration
         """
         self.model = model
@@ -82,22 +82,22 @@ class AutoGrader(BaseRunner):
                 f"Unsupported method: {self.config.method}. Supported methods: 'auto_rubrics'.",
             )
 
-    async def __call__(
+    async def aevaluate_batch(
         self,
-        data_samples: List[DataSample],
+        eval_cases: List[EvalCase],
         *args,
         **kwargs,
     ) -> LLMGrader:
         """Generate rubrics and create LLMGrader.
 
         Args:
-            data_samples: List of data samples to generate rubrics from
+            eval_cases: List of eval cases to generate rubrics from
 
         Returns:
             LLMGrader instance with generated rubrics
         """
         # Generate rubrics using the selected method
-        rubrics_result = await self.rubric_generator(data_samples)
+        rubrics_result = await self.rubric_generator(eval_cases)
 
         # Extract the final rubrics from the result
         if (
@@ -118,7 +118,7 @@ class AutoGrader(BaseRunner):
             eval_kwargs["min_score"] = self.config.method_config.min_score
             eval_kwargs["max_score"] = self.config.method_config.max_score
         elif self.config.method_config.grader_mode == GraderMode.LISTWISE:
-            eval_kwargs["num_responses"] = len(data_samples[0].samples)
+            eval_kwargs["num_responses"] = len(eval_cases[0].outputs)
 
         return LLMGrader(
             name=self.config.grader_name,
@@ -137,9 +137,7 @@ class AutoGrader(BaseRunner):
             Template object for LLMGrader
         """
         # Use custom prompts if provided
-        if (
-            self.config.custom_evaluation_prompt
-        ):
+        if self.config.custom_evaluation_prompt:
             return Template(
                 messages={
                     self.config.method_config.language: [
@@ -171,7 +169,7 @@ class AutoGrader(BaseRunner):
     def create(
         cls,
         model: OpenAIChatModel,
-        parser: DataSampleParser | Callable | None = None,
+        parser: EvalCaseParser | Callable | None = None,
         # Method configuration
         method: str = "auto_rubrics",
         method_config: Optional[Any] = None,
@@ -186,7 +184,7 @@ class AutoGrader(BaseRunner):
 
         Args:
             model: OpenAI chat model
-            parser: Data sample parser
+            parser: EvalCase parser
             method: Method to generate rubrics ('auto_rubrics' or 'checklist')
             method_config: Configuration object for the selected method
             grader_name: Name for the generated grader
@@ -212,7 +210,7 @@ class AutoGrader(BaseRunner):
             method=method,
             method_config=method_config,
             grader_name=grader_name,
-            custom_evaluation_prompt=custom_evaluation_prompt
+            custom_evaluation_prompt=custom_evaluation_prompt,
         )
 
         return cls(

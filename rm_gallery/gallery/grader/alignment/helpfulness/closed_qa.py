@@ -20,15 +20,11 @@ Logical Coherence: Structure responses in a clear, logical manner that enhances 
 """
 
 
-CLOSED_QA_SCORE_TEMPLATE = Template(
-    messages=[
-        ChatMessage(
-            role="system",
-            content="You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words.",
-        ),
-        ChatMessage(
-            role="user",
-            content="""# Task Description
+# Closed QA Score System Prompt
+CLOSED_QA_POINTWISE_SYSTEM_PROMPT = "You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words."
+
+# Closed QA Score User Prompt
+CLOSED_QA_POINTWISE_USER_PROMPT = """# Task Description
 Please act as an impartial judge and evaluate the quality of a closed QA response.
 You should assess the response based on factual accuracy, precision, and completeness.
 Be as objective as possible.
@@ -49,20 +45,13 @@ Be as objective as possible.
     "reason": "The reason for the score."
 }
 ```
-""",
-        ),
-    ],
-)
+"""
 
-CLOSED_QA_RANK_TEMPLATE = Template(
-    messages=[
-        ChatMessage(
-            role="system",
-            content="You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words.",
-        ),
-        ChatMessage(
-            role="user",
-            content="""# Task Description
+# Closed QA Rank System Prompt
+CLOSED_QA_LISTWISE_SYSTEM_PROMPT = "You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words."
+
+# Closed QA Rank User Prompt
+CLOSED_QA_LISTWISE_USER_PROMPT = """# Task Description
 Your role is that of a professional evaluation expert. I will provide you with a question and several candidate answers. Your task is to select the single best answer from the candidates.
 
 # Rubrics
@@ -81,7 +70,30 @@ Your role is that of a professional evaluation expert. I will provide you with a
     "reason": "The reason for the score."
 }
 ```
-""",
+"""
+
+CLOSED_QA_POINTWISE_TEMPLATE = Template(
+    messages=[
+        ChatMessage(
+            role="system",
+            content=CLOSED_QA_POINTWISE_SYSTEM_PROMPT,
+        ),
+        ChatMessage(
+            role="user",
+            content=CLOSED_QA_POINTWISE_USER_PROMPT,
+        ),
+    ],
+)
+
+CLOSED_QA_LISTWISE_TEMPLATE = Template(
+    messages=[
+        ChatMessage(
+            role="system",
+            content=CLOSED_QA_LISTWISE_SYSTEM_PROMPT,
+        ),
+        ChatMessage(
+            role="user",
+            content=CLOSED_QA_LISTWISE_USER_PROMPT,
         ),
     ],
 )
@@ -90,19 +102,27 @@ Your role is that of a professional evaluation expert. I will provide you with a
 class ClosedQAGrader(BaseHelpfulnessGrader):
     """Closed QA: Provides precise, fact-based answers to questions with definitive correct responses."""
 
-    _point_template = CLOSED_QA_SCORE_TEMPLATE
-    _list_template = CLOSED_QA_RANK_TEMPLATE
+    _point_template = CLOSED_QA_POINTWISE_TEMPLATE
+    _list_template = CLOSED_QA_LISTWISE_TEMPLATE
     _rubrics = RUBRICS
 
-    def __init__(self, model: ChatModelBase | dict, template: Template | None = None, mode: GraderMode = GraderMode.LISTWISE, **kwargs):
+    def __init__(
+        self,
+        model: ChatModelBase | dict,
+        template: Template | None = None,
+        mode: GraderMode = GraderMode.LISTWISE,
+        rubrics: str | None = None,
+        **kwargs,
+    ):
         """Initialize the ClosedQAGrader.
 
         Args:
-            model: The language model used for evaluation. Can be either a ChatModelBase 
+            model: The language model used for evaluation. Can be either a ChatModelBase
                    instance or a dictionary configuration. If a dict is provided, it will
                    be used to initialize an OpenAIChatModel.
             template: The template for generating prompts. If None, a default template will be used.
             mode: The grader mode. Defaults to LISTWISE.
+            rubrics: Custom rubrics for evaluation. If None, default rubrics will be used.
             **kwargs: Additional keyword arguments.
         """
         super().__init__(
@@ -110,6 +130,7 @@ class ClosedQAGrader(BaseHelpfulnessGrader):
             mode=mode,
             model=model,
             template=template,
+            rubrics=rubrics,
             description="Provides precise, fact-based answers to questions with definitive correct responses.",
             **kwargs,
         )
@@ -145,7 +166,7 @@ class ClosedQAGrader(BaseHelpfulnessGrader):
 
             In listwise mode:
                 GraderRank: Contains a ranked list and explanation.
-                    - rank (List[int]): Ranking of answers by quality
+                    - rank (List[int]): Ranking of responses by quality
                     - reason (str): Explanation of how the ranking was determined
                     - metadata (Dict[str, Any]): Additional evaluation information
 
@@ -161,15 +182,6 @@ class ClosedQAGrader(BaseHelpfulnessGrader):
             ...     answer="The capital of France is Paris."
             ... ))
             >>> print(result.score, result.reason)
-            1.0 The answer correctly identifies Paris as the capital of France.
-
-            >>> # Example for listwise closed QA grader
-            >>> ranking_grader = ClosedQAGrader(mode=GraderMode.LISTWISE, model=model)
-            >>> result = asyncio.run(ranking_grader.aevaluate(
-            ...     query="What is the capital of France?",
-            ...     answer=["The capital of France is Paris.", "The capital of France is London."]
-            ... ))
-            >>> print(result.rank, result.reason)
-            [1, 2] First answer correctly identifies Paris as the capital while second answer is incorrect.
+            1.0 The response correctly identifies Paris as the capital of France.
         """
         return await super().aevaluate(query=query, answer=answer, **kwargs)

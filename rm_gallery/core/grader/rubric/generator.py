@@ -18,7 +18,7 @@ from loguru import logger
 from pydantic import BaseModel, Field
 from tenacity import retry, stop_after_attempt, wait_fixed
 
-from rm_gallery.core.schema.data import DataSample, DataSampleParser
+from rm_gallery.core.schema.data import EvalCase, EvalCaseParser
 from rm_gallery.core.grader.base import GraderMode, GraderRank, GraderScore
 from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.schema.template import LanguageEnum
@@ -52,7 +52,7 @@ class QuerySpecificRubricGenerator:
         min_score: int = 0,
         max_score: int = 4,
         language: LanguageEnum | str = LanguageEnum.ZH,
-        parser: Optional[DataSampleParser] = None,
+        parser: Optional[EvalCaseParser] = None,
     ):
         """
         Initialize generator
@@ -66,7 +66,7 @@ class QuerySpecificRubricGenerator:
             min_score: Minimum score for pointwise
             max_score: Maximum score for pointwise
             language: LanguageEnum or string ("zh" or "en")
-            parser: Optional DataSampleParser for field transformation
+            parser: Optional EvalCaseParser for field transformation
         """
         self.model = model
 
@@ -130,7 +130,7 @@ class QuerySpecificRubricGenerator:
                 self.model,
             )
 
-    async def generate_iterative(self, sample: DataSample) -> Dict[str, Any]:
+    async def generate_iterative(self, sample: EvalCase) -> Dict[str, Any]:
         """
         Complete iterative generation and improvement for a single sample
 
@@ -192,7 +192,7 @@ class QuerySpecificRubricGenerator:
             "evaluation_result": evaluation_result,
         }
 
-    async def generate(self, sample: DataSample) -> List[str]:
+    async def generate(self, sample: EvalCase) -> List[str]:
         """Generate rubrics for a single sample using ChatTemplate"""
         sample_content = self._format_sample_context(sample)
 
@@ -243,7 +243,7 @@ class QuerySpecificRubricGenerator:
 
     async def aevaluate(
         self,
-        sample: DataSample,
+        sample: EvalCase,
         rubrics: List[str],
     ) -> Dict[str, Any]:
         """
@@ -260,7 +260,7 @@ class QuerySpecificRubricGenerator:
 
     def validate(
         self,
-        sample: DataSample,
+        sample: EvalCase,
         evaluation_result: Dict[str, Any],
     ) -> bool:
         """Validate evaluation result against ground truth"""
@@ -271,7 +271,7 @@ class QuerySpecificRubricGenerator:
 
     async def revise(
         self,
-        sample: DataSample,
+        sample: EvalCase,
         rubrics: List[str],
         feedback: str,
     ) -> List[str]:
@@ -318,7 +318,7 @@ class QuerySpecificRubricGenerator:
 
     def generate_feedback(
         self,
-        sample: DataSample,
+        sample: EvalCase,
         evaluation_result: Dict[str, Any],
     ) -> str:
         """Generate simple feedback for revision"""
@@ -331,7 +331,7 @@ class QuerySpecificRubricGenerator:
 
     async def _evaluate_pointwise(
         self,
-        sample: DataSample,
+        sample: EvalCase,
         rubrics: List[str],
     ) -> Dict[str, Any]:
         """Evaluate in pointwise mode using ChatTemplate"""
@@ -339,7 +339,7 @@ class QuerySpecificRubricGenerator:
         rubrics_text = self._format_rubrics_text(rubrics)
         query = self._get_query_from_sample(sample)
 
-        for item in sample.samples:
+        for item in sample.outputs:
             item_query = query or item.get("query", "")
             answer = item.get("answer", "")
 
@@ -375,7 +375,7 @@ class QuerySpecificRubricGenerator:
 
     async def _evaluate_listwise(
         self,
-        sample: DataSample,
+        sample: EvalCase,
         rubrics: List[str],
     ) -> Dict[str, Any]:
         """Evaluate in listwise mode - model gives complete ranking at once"""
@@ -390,7 +390,7 @@ class QuerySpecificRubricGenerator:
                 "rubrics": rubrics_text,
                 "query": query,
                 "answer": responses_text,
-                "num_responses": len(sample.samples),
+                "num_responses": len(sample.outputs),
             }
 
             # Use ChatTemplate with structured output
@@ -404,7 +404,7 @@ class QuerySpecificRubricGenerator:
                 rank_values = response_obj.metadata["rank"]
 
                 # Validate rank values
-                if len(rank_values) == len(sample.samples):
+                if len(rank_values) == len(sample.outputs):
                     if len(set(rank_values)) != len(rank_values):
                         logger.warning(
                             f"Duplicate rank values detected (ties not allowed): {rank_values}",
@@ -422,20 +422,20 @@ class QuerySpecificRubricGenerator:
 
     def _validate_pointwise(
         self,
-        sample: DataSample,
+        sample: EvalCase,
         evaluation_result: Dict[str, Any],
     ) -> bool:
         """strict score match for each sample"""
         scores = evaluation_result.get("scores", [])
-        if not scores or len(scores) != len(sample.samples):
+        if not scores or len(scores) != len(sample.outputs):
             return False
 
         # Check against expected scores
         has_score_annotations = any(
-            item.get("score") is not None for item in sample.samples
+            item.get("score") is not None for item in sample.outputs
         )
         if has_score_annotations:
-            for i, item in enumerate(sample.samples):
+            for i, item in enumerate(sample.outputs):
                 expected_score = item.get("score")
                 if expected_score is not None:
                     actual_score = scores[i]
@@ -447,7 +447,7 @@ class QuerySpecificRubricGenerator:
 
     def _validate_listwise(
         self,
-        sample: DataSample,
+        sample: EvalCase,
         evaluation_result: Dict[str, Any],
     ) -> bool:
         """Validate listwise results - supports rank value comparison by relative order"""
@@ -455,7 +455,7 @@ class QuerySpecificRubricGenerator:
 
         # Check if we have rank annotations
         has_rank_annotations = any(
-            item.get("rank") is not None for item in sample.samples
+            item.get("rank") is not None for item in sample.outputs
         )
         if has_rank_annotations:
             if not rank_values:
@@ -463,7 +463,7 @@ class QuerySpecificRubricGenerator:
 
             # Extract expected rank values from ground truth
             expected_ranks = []
-            for item in sample.samples:
+            for item in sample.outputs:
                 rank_value = item.get("rank")
                 if rank_value is not None:
                     expected_ranks.append(rank_value)
@@ -493,13 +493,13 @@ class QuerySpecificRubricGenerator:
 
     def _generate_pointwise_feedback(
         self,
-        sample: DataSample,
+        sample: EvalCase,
         evaluation_result: Dict[str, Any],
     ) -> str:
         """Generate simple pointwise feedback"""
         # Extract expected scores
         expected_scores = []
-        for item in sample.samples:
+        for item in sample.outputs:
             score = item.get("score")
             if score is not None:
                 expected_scores.append(score)
@@ -515,13 +515,13 @@ class QuerySpecificRubricGenerator:
 
     def _generate_listwise_feedback(
         self,
-        sample: DataSample,
+        sample: EvalCase,
         evaluation_result: Dict[str, Any],
     ) -> str:
         """Generate simple listwise feedback"""
         # Extract expected rank values
         expected_ranks = []
-        for item in sample.samples:
+        for item in sample.outputs:
             rank = item.get("rank")
             if rank is not None:
                 expected_ranks.append(rank)
@@ -535,17 +535,17 @@ class QuerySpecificRubricGenerator:
 
         return f"Expected ranks: {expected_ranks_str}\nActual ranks: {actual_ranks_str}"
 
-    def _format_sample_context(self, sample: DataSample) -> str:
+    def _format_sample_context(self, sample: EvalCase) -> str:
         """Format sample context for reference - language-neutral data formatting"""
         lines = []
 
         # Extract query
         query = ""
-        if hasattr(sample, "data") and isinstance(sample.data, dict):
-            query = sample.data.get("query", "")
+        if hasattr(sample, "data") and isinstance(sample.input, dict):
+            query = sample.input.get("query", "")
 
-        if hasattr(sample, "samples") and sample.samples:
-            for i, item in enumerate(sample.samples):
+        if hasattr(sample, "samples") and sample.outputs:
+            for i, item in enumerate(sample.outputs):
                 item_query = query or item.get("query", "")
                 response = item.get("answer", "")
 
@@ -569,7 +569,7 @@ class QuerySpecificRubricGenerator:
 
     # ========== Data Processing Methods ==========
 
-    def _apply_parser(self, sample: DataSample) -> DataSample:
+    def _apply_parser(self, sample: EvalCase) -> EvalCase:
         """Apply parser transformation if provided, otherwise return original sample"""
         if self.parser is not None:
             return self.parser(sample)
@@ -577,15 +577,15 @@ class QuerySpecificRubricGenerator:
 
     # ========== Utility Methods ==========
 
-    def _get_query_from_sample(self, sample: DataSample) -> str:
+    def _get_query_from_sample(self, sample: EvalCase) -> str:
         """Extract query from sample data or first sample item"""
         data_query = ""
-        if hasattr(sample, "data") and isinstance(sample.data, dict):
-            data_query = sample.data.get("query", "")
+        if hasattr(sample, "data") and isinstance(sample.input, dict):
+            data_query = sample.input.get("query", "")
 
         # Fallback to first sample's query if no data-level query
-        if not data_query and sample.samples:
-            data_query = sample.samples[0].get("query", "")
+        if not data_query and sample.outputs:
+            data_query = sample.outputs[0].get("query", "")
 
         return data_query
 
@@ -595,9 +595,9 @@ class QuerySpecificRubricGenerator:
             [f"{i+1}. {rubric}" for i, rubric in enumerate(rubrics)],
         )
 
-    def _format_responses_for_listwise(self, sample: DataSample) -> str:
+    def _format_responses_for_listwise(self, sample: EvalCase) -> str:
         """Format all responses for listwise evaluation"""
         responses = []
-        for i, item in enumerate(sample.samples):
+        for i, item in enumerate(sample.outputs):
             responses.append(f"Response {i+1}: {item.get('answer', '')}")
         return "\n\n".join(responses)

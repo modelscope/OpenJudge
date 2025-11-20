@@ -2,7 +2,7 @@
 from abc import ABC, abstractmethod
 from typing import List
 
-from rm_gallery.core.schema.data import DataSample
+from rm_gallery.core.schema.data import EvalCase
 
 
 class BaseRunner(ABC):
@@ -11,16 +11,16 @@ class BaseRunner(ABC):
     """
 
     @abstractmethod
-    async def __call__(
+    async def aevaluate_batch(
         self,
-        data_samples: List[DataSample],
+        eval_cases: List[EvalCase],
         *args,
         **kwargs,
     ) -> dict:
         """
         Auto-Runner on the data.
         Args:
-            data_samples: The training data.
+            eval_cases: The training data.
             *args: Additional positional arguments.
             **kwargs: Additional keyword arguments.
 

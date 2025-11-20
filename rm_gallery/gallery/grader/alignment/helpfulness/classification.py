@@ -20,15 +20,11 @@ Consistency: Apply consistent classification criteria across similar types of in
 """
 
 
-CLASSIFICATION_SCORE_TEMPLATE = Template(
-    messages=[
-        ChatMessage(
-            role="system",
-            content="You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words.",
-        ),
-        ChatMessage(
-            role="user",
-            content="""# Task Description
+# Classification Score System Prompt
+CLASSIFICATION_POINTWISE_SYSTEM_PROMPT = "You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words."
+
+# Classification Score User Prompt
+CLASSIFICATION_POINTWISE_USER_PROMPT = """# Task Description
 Please act as an impartial judge and evaluate the accuracy of a classification response.
 You should assess the classification based on accuracy, justification, and handling of ambiguous cases.
 Be as objective as possible.
@@ -49,20 +45,13 @@ Be as objective as possible.
     "reason": "The reason for the score."
 }
 ```
-""",
-        ),
-    ],
-)
+"""
 
-CLASSIFICATION_RANK_TEMPLATE = Template(
-    messages=[
-        ChatMessage(
-            role="system",
-            content="You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words.",
-        ),
-        ChatMessage(
-            role="user",
-            content="""# Task Description
+# Classification Rank System Prompt
+CLASSIFICATION_LISTWISE_SYSTEM_PROMPT = "You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words."
+
+# Classification Rank User Prompt
+CLASSIFICATION_LISTWISE_USER_PROMPT = """# Task Description
 Your role is that of a professional evaluation expert. I will provide you with a question and several candidate answers. Your task is to select the single best answer from the candidates.
 
 # Rubrics
@@ -81,7 +70,30 @@ Your role is that of a professional evaluation expert. I will provide you with a
     "reason": "The reason for the score."
 }
 ```
-""",
+"""
+
+CLASSIFICATION_POINTWISE_TEMPLATE = Template(
+    messages=[
+        ChatMessage(
+            role="system",
+            content=CLASSIFICATION_POINTWISE_SYSTEM_PROMPT,
+        ),
+        ChatMessage(
+            role="user",
+            content=CLASSIFICATION_POINTWISE_USER_PROMPT,
+        ),
+    ],
+)
+
+CLASSIFICATION_LISTWISE_TEMPLATE = Template(
+    messages=[
+        ChatMessage(
+            role="system",
+            content=CLASSIFICATION_LISTWISE_SYSTEM_PROMPT,
+        ),
+        ChatMessage(
+            role="user",
+            content=CLASSIFICATION_LISTWISE_USER_PROMPT,
         ),
     ],
 )
@@ -90,17 +102,35 @@ Your role is that of a professional evaluation expert. I will provide you with a
 class ClassificationGrader(BaseHelpfulnessGrader):
     """Classification: Accurately categorizes input content into predefined classes or labels."""
 
-    _point_template = CLASSIFICATION_SCORE_TEMPLATE
-    _list_template = CLASSIFICATION_RANK_TEMPLATE
+    _point_template = CLASSIFICATION_POINTWISE_TEMPLATE
+    _list_template = CLASSIFICATION_LISTWISE_TEMPLATE
     _rubrics = RUBRICS
 
-    def __init__(self, model: ChatModelBase | dict, template: Template | None = None, mode: GraderMode = GraderMode.LISTWISE, **kwargs):
-        """Initialize the SafetyGrader."""
+    def __init__(
+        self,
+        model: ChatModelBase | dict,
+        template: Template | None = None,
+        mode: GraderMode = GraderMode.LISTWISE,
+        rubrics: str | None = None,
+        **kwargs,
+    ):
+        """Initialize the ClassificationGrader.
+
+        Args:
+            model: The language model used for evaluation. Can be either a ChatModelBase
+                   instance or a dictionary configuration. If a dict is provided, it will
+                   be used to initialize an OpenAIChatModel.
+            template: The template for generating prompts. If None, a default template will be used.
+            mode: The grader mode. Defaults to LISTWISE.
+            rubrics: Custom rubrics for evaluation. If None, default rubrics will be used.
+            **kwargs: Additional keyword arguments.
+        """
         super().__init__(
             name="classification",
             mode=mode,
             model=model,
             template=template,
+            rubrics=rubrics,
             description="Accurately categorizes input content into predefined classes or labels.",
             **kwargs,
         )

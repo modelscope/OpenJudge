@@ -106,7 +106,7 @@ class MultimodalGEvalGrader(Grader):
         if rubric:
             self.rubric = validate_and_sort_rubrics(rubric, score_range)
 
-    async def _a_generate_evaluation_steps(
+    async def _agenerate_evaluation_steps(
         self,
         _params_dict: dict,
     ) -> List[str]:
@@ -174,7 +174,7 @@ class MultimodalGEvalGrader(Grader):
         steps = (
             self.evaluation_steps
             if self.evaluation_steps
-            else await self._a_generate_evaluation_steps(params_dict)
+            else await self._agenerate_evaluation_steps(params_dict)
         )
 
         # Format evaluation steps as string
@@ -246,7 +246,7 @@ class MultimodalGEvalGrader(Grader):
             logger.error(f"Error in G-Eval evaluation: {e}")
             return 0.0, f"Evaluation error: {str(e)}"
 
-    async def _a_compute(
+    async def _acompute(
         self,
         **params_dict: Any,
     ) -> Tuple[float, dict]:
@@ -314,7 +314,7 @@ class MultimodalGEvalGrader(Grader):
             ...     actual_output=["A cat sitting"]
             ... )
         """
-        score, details = await self._a_compute(**params_dict)
+        score, details = await self._acompute(**params_dict)
 
         if "error" in details:
             return GraderScore(

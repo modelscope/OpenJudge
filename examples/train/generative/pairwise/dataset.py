@@ -56,7 +56,7 @@ Response B is significantly better than Response A. Response A is very basic and
         )
 
     def _build_messages(self, example: Dict[str, Any]) -> List[Dict[str, str]]:
-        """Construct prompt for pairwise comparison without DataSample conversion"""
+        """Construct prompt for pairwise comparison without EvalCase conversion"""
         example = self._normalize_row(example)
 
         # Extract query and two responses

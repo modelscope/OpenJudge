@@ -88,7 +88,7 @@ The training examples expect data in parquet format. You can convert your data u
 from rm_gallery.gallery.data import export_data
 
 export_data(
-    data_samples=your_data,
+    eval_cases=your_data,
     output_dir="./exports",
     formats=["parquet"],
     split_ratio={"train": 0.8, "test": 0.2}

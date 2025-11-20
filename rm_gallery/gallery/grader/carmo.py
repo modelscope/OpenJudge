@@ -4,19 +4,16 @@
 
 from typing import Any, Dict
 from rm_gallery.core.grader.base import GraderMode, GraderRank, LLMGrader
+from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import Chat, Template
 from rm_gallery.core.utils.utils import _json_loads_with_repair
 
-CriteriaGenerationTemplate = Template(
-    messages=[
-        ChatMessage(
-            role="system",
-            content="You are an impartial judge tasked with generating rubrics for evaluating responses provided by AI assistants to an instruction.",
-        ),
-        ChatMessage(
-            role="user",
-            content="""# Task Description
+# Criteria Generation System Prompt
+CRITERIA_GENERATION_SYSTEM_PROMPT = "You are an impartial judge tasked with generating rubrics for evaluating responses provided by AI assistants to an instruction."
+
+# Criteria Generation User Prompt
+CRITERIA_GENERATION_USER_PROMPT = """# Task Description
 - Your job is to identify important rubrics, along with detailed descriptions, that a human would use to objectively evaluate the quality of the response based on the given instruction.
 - The rubrics should ensure that responses accurately fulfill the requirements of the instruction.
 - The rubrics should be designed to ensure that responses are honest, helpful, and harmless (do not contain offensive content).
@@ -34,22 +31,13 @@ CriteriaGenerationTemplate = Template(
         ...
     ]
 }
-```
-""",
-        ),
-    ],
-)
+```"""
 
+# Relative Evaluation System Prompt
+RELATIVE_EVALUATION_SYSTEM_PROMPT = "Please act as an impartial judge and evaluate the quality of the responses provided by two AI assistants to the user instruction shown below."
 
-RelativeEvaluationTemplate = Template(
-    messages=[
-        ChatMessage(
-            role="system",
-            content="Please act as an impartial judge and evaluate the quality of the responses provided by two AI assistants to the user instruction shown below.",
-        ),
-        ChatMessage(
-            role="user",
-            content="""Task Description
+# Relative Evaluation User Prompt
+RELATIVE_EVALUATION_USER_PROMPT = """Task Description
 - Please act as an impartial judge and evaluate the quality of the responses provided by two AI assistants to the user instruction shown below. You should choose the assistant that follows the user's instructions and answers the user's instruction better.
 - Your evaluation should consider the provided rubrics.
 - Provide detailed reasons assessing the quality of the responses based on each rubric individually. Clearly specify which assistant performed better for each rubric.
@@ -71,8 +59,30 @@ RelativeEvaluationTemplate = Template(
     "rank": "The rank of each completions",
     "reason": "The reason for the rank."
 }}
-```
-""",
+```"""
+
+CriteriaGenerationTemplate = Template(
+    messages=[
+        ChatMessage(
+            role="system",
+            content=CRITERIA_GENERATION_SYSTEM_PROMPT,
+        ),
+        ChatMessage(
+            role="user",
+            content=CRITERIA_GENERATION_USER_PROMPT,
+        ),
+    ],
+)
+
+RelativeEvaluationTemplate = Template(
+    messages=[
+        ChatMessage(
+            role="system",
+            content=RELATIVE_EVALUATION_SYSTEM_PROMPT,
+        ),
+        ChatMessage(
+            role="user",
+            content=RELATIVE_EVALUATION_USER_PROMPT,
         ),
     ],
 )
@@ -91,13 +101,13 @@ class Cramo(LLMGrader):
     2. Response Evaluation: Evaluates the response based on the generated rubrics
     """
 
-    def __init__(self):
+    def __init__(self, model: ChatModelBase | dict):
         """Initialize a Cramo grader."""
         super().__init__(
             name="cramo_eval",
             mode=GraderMode.LISTWISE,
             template=RelativeEvaluationTemplate,
-            model=None,
+            model=model,
         )
 
     async def aevaluate(

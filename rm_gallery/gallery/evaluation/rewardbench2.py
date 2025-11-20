@@ -19,7 +19,7 @@ from rm_gallery.core.runner.evaluation import (
     EvaluationRunner,
     MetricResult,
 )
-from rm_gallery.core.schema.data import DataSample
+from rm_gallery.core.schema.data import EvalCase
 
 # Standard prompts from RewardBench generative.py
 REWARDBENCH2_SYSTEM_PROMPT = (
@@ -87,9 +87,9 @@ class RewardBench2Runner(EvaluationRunner):
         self.model = model
         self.max_workers = max_workers
 
-    def _detect_ties_mode(self, data_sample: DataSample) -> bool:
+    def _detect_ties_mode(self, eval_case: EvalCase) -> bool:
         """Detect if this is a Ties subset based on metadata."""
-        subset = data_sample.data.get("subset", "").lower()
+        subset = eval_case.input.get("subset", "").lower()
         return subset == "ties"
 
     async def _evaluate_fourway(
@@ -223,19 +223,19 @@ class RewardBench2Runner(EvaluationRunner):
 
     async def _evaluate_single_sample(
         self,
-        data_sample: DataSample,
+        eval_case: EvalCase,
     ) -> EvaluationResult:
         """Evaluate a single sample."""
         try:
-            is_ties = self._detect_ties_mode(data_sample)
-            query = data_sample.data.get("query", "")
-            answers = [sample.get("answer", "") for sample in data_sample.samples]
+            is_ties = self._detect_ties_mode(eval_case)
+            query = eval_case.input.get("query", "")
+            answers = [sample.get("answer", "") for sample in eval_case.outputs]
 
             if is_ties:
                 # Identify correct and incorrect answers
                 correct_indices = []
                 incorrect_indices = []
-                for i, sample in enumerate(data_sample.samples):
+                for i, sample in enumerate(eval_case.outputs):
                     if sample.get("preference") == "chosen":
                         correct_indices.append(i)
                     else:
@@ -249,18 +249,18 @@ class RewardBench2Runner(EvaluationRunner):
                 )
 
                 return EvaluationResult(
-                    unique_id=data_sample.data.get("unique_id", ""),
+                    unique_id=eval_case.input.get("unique_id", ""),
                     scores=result.get("scores"),
                     metadata={
                         **result.get("metadata", {}),
-                        "subset": data_sample.data.get("subset", ""),
+                        "subset": eval_case.input.get("subset", ""),
                         "reasoning": result.get("reasoning", ""),
                     },
                 )
             else:
                 # Find chosen index for four-way comparison
                 chosen_index = 0
-                for i, sample in enumerate(data_sample.samples):
+                for i, sample in enumerate(eval_case.outputs):
                     if sample.get("preference") == "chosen":
                         chosen_index = i
                         break
@@ -272,12 +272,12 @@ class RewardBench2Runner(EvaluationRunner):
                 )
 
                 return EvaluationResult(
-                    unique_id=data_sample.data.get("unique_id", ""),
+                    unique_id=eval_case.input.get("unique_id", ""),
                     predicted_index=result["predicted_index"],
                     ground_truth_index=result["ground_truth_index"],
                     metadata={
                         **result.get("metadata", {}),
-                        "subset": data_sample.data.get("subset", ""),
+                        "subset": eval_case.input.get("subset", ""),
                         "reasoning": result.get("reasoning", ""),
                         "is_ties": False,
                     },
@@ -286,29 +286,29 @@ class RewardBench2Runner(EvaluationRunner):
         except Exception as e:
             logger.error(f"Failed to evaluate sample: {str(e)}")
             return EvaluationResult(
-                unique_id=data_sample.data.get("unique_id", ""),
+                unique_id=eval_case.input.get("unique_id", ""),
                 error=str(e),
             )
 
     async def _execute_evaluation(
         self,
-        data_samples: List[DataSample],
+        eval_cases: List[EvalCase],
         *args: Any,
         **kwargs: Any,
     ) -> dict:
         """Execute evaluation with parallel processing."""
-        if not data_samples:
+        if not eval_cases:
             return {"error": "No samples to evaluate"}
 
-        logger.info(f"Processing {len(data_samples)} samples")
+        logger.info(f"Processing {len(eval_cases)} samples")
 
         # Evaluate all samples
-        all_tasks = [self._evaluate_single_sample(sample) for sample in data_samples]
+        all_tasks = [self._evaluate_single_sample(sample) for sample in eval_cases]
         results = await asyncio.gather(*all_tasks)
 
         return {
             "model": self.model.model_name,
-            "total_samples": len(data_samples),
+            "total_samples": len(eval_cases),
             "results": [r.model_dump() for r in results],
         }
 
@@ -435,7 +435,7 @@ class TiesAccuracyMetric(BaseMetric):
         )
 
 
-def load_rewardbench2_data(file_path: str, max_samples: int = -1) -> List[DataSample]:
+def load_rewardbench2_data(file_path: str, max_samples: int = -1) -> List[EvalCase]:
     """Load RewardBench2 data from parquet file."""
     import pandas as pd
 
@@ -450,7 +450,7 @@ def load_rewardbench2_data(file_path: str, max_samples: int = -1) -> List[DataSa
     if max_samples > 0:
         df = df.head(max_samples)
 
-    data_samples = []
+    eval_cases = []
 
     for _, row in df.iterrows():
         subset = row["subset"]
@@ -466,8 +466,8 @@ def load_rewardbench2_data(file_path: str, max_samples: int = -1) -> List[DataSa
             for ans in rejected_answers:
                 samples.append({"answer": ans, "preference": "rejected"})
 
-            data_sample = DataSample(
-                data={
+            eval_case = EvalCase(
+                input={
                     "unique_id": row["id"],
                     "query": row["prompt"],
                     "subset": subset,
@@ -493,8 +493,8 @@ def load_rewardbench2_data(file_path: str, max_samples: int = -1) -> List[DataSa
                     {"answer": ans, "preference": "chosen" if i == 0 else "rejected"},
                 )
 
-            data_sample = DataSample(
-                data={
+            eval_case = EvalCase(
+                input={
                     "unique_id": row["id"],
                     "query": row["prompt"],
                     "subset": subset,
@@ -502,10 +502,10 @@ def load_rewardbench2_data(file_path: str, max_samples: int = -1) -> List[DataSa
                 samples=samples,
             )
 
-        data_samples.append(data_sample)
+        eval_cases.append(eval_case)
 
-    logger.info(f"Successfully loaded {len(data_samples)} data samples")
-    return data_samples
+    logger.info(f"Successfully loaded {len(eval_cases)} data samples")
+    return eval_cases
 
 
 async def main(
@@ -523,13 +523,13 @@ async def main(
     try:
         # Load data
         print(f"Loading data from: {data_path}")
-        data_samples = load_rewardbench2_data(data_path, max_samples)
+        eval_cases = load_rewardbench2_data(data_path, max_samples)
 
-        if not data_samples:
+        if not eval_cases:
             print(f"No data samples loaded. Please check the data path: {data_path}")
             return
 
-        print(f"Loaded {len(data_samples)} samples")
+        print(f"Loaded {len(eval_cases)} samples")
 
         # Initialize model
         print(f"Initializing model: {model_name}")
@@ -551,7 +551,7 @@ async def main(
         )
 
         # Execute evaluation
-        report = await runner(data_samples)
+        report = await runner(eval_cases)
 
         # Print results
         print("\n" + "=" * 80)

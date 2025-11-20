@@ -85,19 +85,19 @@ v2框架是一个为AI模型评估而设计的下一代评估系统，具有灵�
 
 ```
 from rm_gallery.core.grader.base import FactualGrader
-from rm_gallery.core.schema.dataset import DataSample
+from rm_gallery.core.schema.dataset import EvalCase
 
 # 创建一个简单的事实评估器
 grader = FactualGrader()
 
 # 准备数据
-data_sample = DataSample(
-    data={"query": "法国的首都是什么？"},
-    samples=[{"answer": "巴黎"}, {"answer": "伦敦"}]
+eval_case = EvalCase(
+    input={"query": "法国的首都是什么？"},
+    outputs=[{"answer": "巴黎"}, {"answer": "伦敦"}]
 )
 
 # 执行评估
-results = await grader.aevaluate(data_sample)
+results = await grader.aevaluate(eval_case)
 ```
 
 ### 使用策略
@@ -105,7 +105,7 @@ results = await grader.aevaluate(data_sample)
 ```
 from rm_gallery.core.grader.base import FactualGrader
 from rm_gallery.core.strategy.repeat import RepeatOptimizer
-from rm_gallery.core.schema.dataset import DataSample
+from rm_gallery.core.schema.dataset import EvalCase
 
 # 创建一个评估器
 grader = FactualGrader()
@@ -114,13 +114,13 @@ grader = FactualGrader()
 optimized_grader = RepeatOptimizer(grader, num_repeats=5)
 
 # 准备数据
-data_sample = DataSample(
-    data={"query": "法国的首都是什么？"},
-    samples=[{"answer": "巴黎"}, {"answer": "伦敦"}]
+eval_case = EvalCase(
+    input={"query": "法国的首都是什么？"},
+    outputs=[{"answer": "巴黎"}, {"answer": "伦敦"}]
 )
 
 # 执行优化后的评估
-results = await optimized_grader.aevaluate(data_sample)
+results = await optimized_grader.aevaluate(eval_case)
 ```
 
 ### 运行完整实验
@@ -132,7 +132,7 @@ from rm_gallery.core.grader.base import FactualGrader
 
 # 创建数据集
 dataset = EvaluationDataset(
-    data_sample_schema={
+    eval_case_schema={
         "type": "object",
         "properties": {
             "query": {"type": "string"},
@@ -140,7 +140,7 @@ dataset = EvaluationDataset(
         },
         "required": ["query", "answer"]
     },
-    data_samples=[
+    eval_cases=[
         {
             "data": {"query": "法国的首都是什么？"},
             "samples": [{"answer": "巴黎"}, {"answer": "马赛"}]
@@ -237,7 +237,7 @@ llm_grader = LLMGrader(
 
 #### 方法
 - `evaluate(**kwargs)`: 执行评估的核心方法，需要子类实现
-- `__call__(data_sample)`: 调用评估器，处理数据样本
+- `__call__(eval_case)`: 调用评估器，处理数据样本
 
 ### GraderOptimizer（评估器优化器基类）
 
@@ -247,7 +247,7 @@ llm_grader = LLMGrader(
 - `grader` (Grader | Callable): 被优化的评估器
 
 #### 方法
-- `__call__(data_sample)`: 执行优化逻辑
+- `__call__(eval_case)`: 执行优化逻辑
 
 ### Chat（聊天模板）
 

@@ -151,7 +151,7 @@ class ImageEditingGrader(Grader):
             logger.error(f"Error evaluating perceptual quality: {e}")
             return [5.0, 5.0], f"Error during evaluation: {str(e)}"
 
-    async def _a_compute(
+    async def _acompute(
         self,
         original_image: MLLMImage,
         edit_instruction: str,
@@ -264,7 +264,7 @@ class ImageEditingGrader(Grader):
                 metadata={"error": "Images must be MLLMImage"},
             )
 
-        score, details = await self._a_compute(
+        score, details = await self._acompute(
             original_image,
             edit_instruction,
             edited_image,

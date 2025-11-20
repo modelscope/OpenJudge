@@ -19,7 +19,7 @@ from rm_gallery.core.runner.evaluation import (
     EvaluationRunner,
     MetricResult,
 )
-from rm_gallery.core.schema.data import DataSample
+from rm_gallery.core.schema.data import EvalCase
 
 
 class RMBenchRunner(EvaluationRunner):
@@ -139,7 +139,7 @@ Please provide your analysis and then output your verdict in the format: \
 
     async def _evaluate_single_sample(
         self,
-        data_sample: DataSample,
+        eval_case: EvalCase,
     ) -> EvaluationResult:
         """
         Evaluate a single sample with 3 chosen and 3 rejected responses.
@@ -147,13 +147,13 @@ Please provide your analysis and then output your verdict in the format: \
         Creates a 3x3 comparison matrix between chosen and rejected responses.
         """
         try:
-            query = data_sample.data.get("query", "")
+            query = eval_case.input.get("query", "")
 
             # Separate chosen and rejected responses
             chosen_responses = []
             rejected_responses = []
 
-            for sample in data_sample.samples:
+            for sample in eval_case.outputs:
                 if sample.get("preference") == "chosen":
                     chosen_responses.append(sample.get("answer", ""))
                 elif sample.get("preference") == "rejected":
@@ -166,7 +166,7 @@ Please provide your analysis and then output your verdict in the format: \
                     f"{len(rejected_responses)} rejected",
                 )
                 return EvaluationResult(
-                    unique_id=data_sample.data.get("unique_id", ""),
+                    unique_id=eval_case.input.get("unique_id", ""),
                     error="Invalid number of responses",
                 )
 
@@ -189,39 +189,39 @@ Please provide your analysis and then output your verdict in the format: \
                 comparison_matrix[i][j] = float(score)
 
             return EvaluationResult(
-                unique_id=data_sample.data.get("unique_id", ""),
+                unique_id=eval_case.input.get("unique_id", ""),
                 comparison_matrix=comparison_matrix,
                 metadata={
-                    "domain": data_sample.data.get("domain", "unknown"),
+                    "domain": eval_case.input.get("domain", "unknown"),
                 },
             )
 
         except Exception as e:
             logger.error(f"Failed to evaluate sample: {str(e)}")
             return EvaluationResult(
-                unique_id=data_sample.data.get("unique_id", ""),
+                unique_id=eval_case.input.get("unique_id", ""),
                 error=str(e),
             )
 
     async def _execute_evaluation(
         self,
-        data_samples: List[DataSample],
+        eval_cases: List[EvalCase],
         *args: Any,
         **kwargs: Any,
     ) -> dict:
         """Execute evaluation with parallel processing."""
-        if not data_samples:
+        if not eval_cases:
             return {"error": "No samples to evaluate"}
 
-        logger.info(f"Processing {len(data_samples)} samples")
+        logger.info(f"Processing {len(eval_cases)} samples")
 
         # Evaluate all samples
-        all_tasks = [self._evaluate_single_sample(sample) for sample in data_samples]
+        all_tasks = [self._evaluate_single_sample(sample) for sample in eval_case]
         results = await asyncio.gather(*all_tasks)
 
         return {
             "model": self.model.model_name,
-            "total_samples": len(data_samples),
+            "total_samples": len(eval_cases),
             "results": [r.model_dump() for r in results],
         }
 
@@ -326,16 +326,16 @@ class RMBenchAccuracyMetric(BaseMetric):
         )
 
 
-def load_data_samples(file_path: str, max_samples: int = -1) -> List[DataSample]:
+def load_eval_casefile_path: str, max_samples: int = -1) -> List[EvalCase]:
     """Load RM-Bench data samples from JSON file."""
     import json
 
     logger.info(f"Loading data from {file_path}")
-    data_samples = []
+    eval_case= []
 
     if not os.path.exists(file_path):
         logger.warning(f"Data file not found: {file_path}")
-        return data_samples
+        return eval_cases
 
     try:
         with open(file_path, "r", encoding="utf-8") as f:
@@ -368,23 +368,23 @@ def load_data_samples(file_path: str, max_samples: int = -1) -> List[DataSample]
                 for response in rejected_responses:
                     samples.append({"answer": response, "preference": "rejected"})
 
-                # Create DataSample
-                data_sample = DataSample(
-                    data={
+                # Create EvalCase
+                eval_case EvalCase(
+                    input={
                         "unique_id": item.get("id", f"sample_{i}"),
                         "query": query,
                         "domain": item.get("domain", "unknown"),
                     },
                     samples=samples,
                 )
-                data_samples.append(data_sample)
+                eval_caseappend(eval_case
 
             except Exception as e:
                 logger.error(f"Failed to process item {i}: {e}")
                 continue
 
-        logger.info(f"Successfully loaded {len(data_samples)} data samples")
-        return data_samples
+        logger.info(f"Successfully loaded {len(eval_case} data samples")
+        return eval_cases
 
     except Exception as e:
         logger.error(f"Failed to load data file: {e}")
@@ -408,13 +408,13 @@ def main(
     try:
         # Load data
         print(f"Loading data from: {data_path}")
-        data_samples = load_data_samples(data_path, max_samples)
+        eval_cases = load_eval_cases(data_path, max_samples)
 
-        if not data_samples:
+        if not eval_cases:
             print(f"No data samples loaded. Please check the data path: {data_path}")
             return
 
-        print(f"Loaded {len(data_samples)} samples")
+        print(f"Loaded {len(eval_cases)} samples")
 
         # Initialize model
         print(f"Initializing model: {model_name}")
@@ -433,7 +433,7 @@ def main(
         )
 
         # Execute evaluation
-        report = asyncio.run(runner(data_samples))
+        report = asyncio.run(runner(eval_cases))
 
         # Print results
         print("\n" + "=" * 80)

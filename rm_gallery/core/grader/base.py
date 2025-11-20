@@ -11,9 +11,9 @@ from loguru import logger
 
 from rm_gallery.core.model.openai_llm import OpenAIChatModel
 from rm_gallery.core.schema.data import (
-    DataSample,
-    DataSampleParser,
-    parse_data_sample,
+    EvalCase,
+    EvalCaseParser,
+    parse_eval_case,
 )
 from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.schema.template import LanguageEnum
@@ -190,40 +190,40 @@ class Grader(ABC):
             _evaluate_task(),
         )
 
-    async def _aevaluate_data_sample(
+    async def aevaluate_case(
         self,
-        data_sample: DataSample,
-        parser: DataSampleParser | None = None,
+        eval_case: EvalCase,
+        parser: EvalCaseParser | None = None,
         *args,
         **kwargs,
     ) -> List[GraderScore]:
-        """Evaluate a data sample using this grader.
+        """Evaluate an eval case using this grader.
 
-        This method evaluates a data sample based on the grader's mode (pointwise or listwise).
+        This method evaluates an eval case based on the grader's mode (pointwise or listwise).
         In pointwise mode, each sample is evaluated individually. In listwise mode, all samples
         are evaluated together in one call.
 
         Args:
-            data_sample (DataSample): The data sample to evaluate.
-            parser (DataSampleParser | None, optional): Optional parser to transform the
-                data sample before evaluation. Defaults to None.
+            eval_case (EvalCase): The eval case to evaluate.
+            parser (EvalCaseParser | None, optional): Optional parser to transform the
+                eval case before evaluation. Defaults to None.
             *args: Additional positional arguments.
             **kwargs: Additional keyword arguments.
 
         Returns:
-            List[GraderScore]: A list of grader scores, one for each sample in the data sample.
+            List[GraderScore]: A list of grader scores, one for each sample in the eval case.
 
         Raises:
             ValueError: If the grader mode is invalid.
         """
         if parser is not None:
-            data_sample = parse_data_sample(data_sample, parser)
+            eval_case = parse_eval_case(eval_case, parser)
 
         if self.mode == GraderMode.POINTWISE:
             # Pointwise: Evaluate each sample individually
             coroutines = [
-                self._a_safe_evaluate(**data_sample.data, **sample)
-                for sample in data_sample.samples
+                self._a_safe_evaluate(**eval_case.input, **output)
+                for output in eval_case.outputs
             ]
             results: List[GraderScore] = await asyncio.gather(*coroutines)  # type: ignore
             _results = []
@@ -245,12 +245,12 @@ class Grader(ABC):
         elif self.mode == GraderMode.LISTWISE:
             # Listwise: Evaluate all samples together in one call
             params = {key: value for key, value in kwargs.items()}
-            params.update(data_sample.data)
-            if len(data_sample.samples) > 1:
-                if data_sample.samples:
-                    for key in data_sample.samples[0].keys():
+            params.update(eval_case.input)
+            if len(eval_case.outputs) > 1:
+                if eval_case.outputs:
+                    for key in eval_case.outputs[0].keys():
                         params[key] = [
-                            sample[key] for sample in data_sample.samples
+                            output[key] for output in eval_case.outputs
                         ]
 
             result = await self._a_safe_evaluate(**params)
@@ -279,32 +279,32 @@ class Grader(ABC):
         else:
             raise ValueError(f"Invalid grader mode: {self.mode}")
 
-    async def aevaluate_data_samples(
+    async def aevaluate_batch(
         self,
-        data_samples: List[DataSample] | DataSample,
-        parser: DataSampleParser | Callable | None = None,
+        eval_cases: List[EvalCase],
+        parser: EvalCaseParser | Callable | None = None,
         *args,
         **kwargs,
-    ) -> List[List[GraderScore]] | List[GraderScore]:
-        """Main entry point to evaluate data sample.
+    ) -> List[List[GraderScore]]:
+        """Main entry point to evaluate eval case.
 
-        Evaluates one data samples using the  grader.
+        Evaluates one eval cases using the  grader.
 
         Args:
-            data_sample (DataSample):
-                The data sample to evaluate.
-                DataSample consists of:
+            eval_case (EvalCase):
+                The eval case to evaluate.
+                EvalCase consists of:
                     - data: A dictionary containing shared data for all samples
                     - samples: A list of dictionaries, each representing an individual
                     sample to evaluate
 
-            parser (DataSampleParser | Callable | None, optional):
-                Optional parser to transform the data sample before evaluation. This
+            parser (EvalCaseParser | Callable | None, optional):
+                Optional parser to transform the eval case before evaluation. This
                 allows for mapping field names between the data structure and what the
                 grader expects. Can be:
                 1. A dictionary with direct field mappings where paths start with "data" or "sample"
-                2. A callable function that takes a DataSample and returns a DataSample
-                3. None, in which case the data sample is used as is
+                2. A callable function that takes a EvalCase and returns a EvalCase
+                3. None, in which case the eval case is used as is
                 Defaults to None.
             *args:
                 Additional positional arguments to pass to the grader.
@@ -313,12 +313,12 @@ class Grader(ABC):
 
         Returns:
             List[GraderScore] | List[List[GraderScore]]:
-                For a single DataSample: a list of GraderScore objects, one for each
-                sample within the DataSample.
+                For a single EvalCase: a list of GraderScore objects, one for each
+                sample within the EvalCase.
 
-                For a list of DataSamples: a list of lists of GraderScore objects,
+                For a list of EvalCases: a list of lists of GraderScore objects,
                 where each inner list contains the scores for the corresponding
-                DataSample in the input list.
+                EvalCase in the input list.
 
                 Each GraderScore contains:
                     - score: A numerical score assigned by the grader
@@ -329,13 +329,13 @@ class Grader(ABC):
             ValueError: If grader function signature is invalid.
 
         Example:
-            >>> from rm_gallery.core.schema.data import DataSample
+            >>> from rm_gallery.core.schema.data import EvalCase
             >>> from rm_gallery.core.grader.base import LLMGrader, evaluate
             >>>
-            >>> # Create data sample
-            >>> data_sample = DataSample(
-            ...     data={"query": "What is the capital of France?"},
-            ...     samples=[
+            >>> # Create eval case
+            >>> eval_case = EvalCase(
+            ...     input={"query": "What is the capital of France?"},
+            ...     outputs=[
             ...         {"answer": "Paris"},
             ...         {"answer": "London"}
             ...     ]
@@ -358,28 +358,106 @@ class Grader(ABC):
             ... )
             >>>
             >>> # Evaluate
-            >>> results = await grader.aevaluate_data_samples(data_sample=data_sample)
+            >>> results = await grader.aevaluate_batch(eval_cases=[eval_case])
             >>> print(results)
         """
-        if isinstance(data_samples, list):
-            corutines: List = [
-                self._aevaluate_data_sample(
-                    data_sample=_data_sample,
-                    parser=parser,
-                    *args,
-                    **kwargs,
-                )
-                for _data_sample in data_samples
-            ]
-            results = await asyncio.gather(*corutines)
-            return list(results)  # type: ignore
-        else:
-            return await self._aevaluate_data_sample(
-                data_sample=data_samples,
+        coroutines: List = [
+            self.aevaluate_case(
+                eval_case=_eval_case,
                 parser=parser,
                 *args,
                 **kwargs,
             )
+            for _eval_case in eval_cases
+        ]
+        results = await asyncio.gather(*coroutines)
+        return list(results)  # type: ignore
+
+    def evaluate_batch(
+        self,
+        eval_cases: List[EvalCase],
+        parser: EvalCaseParser | Callable | None = None,
+        *args,
+        **kwargs,
+    ) -> List[List[GraderScore]]:
+        """Main entry point to evaluate eval case.
+
+        Evaluates one eval cases using the  grader.
+
+        Args:
+            eval_case (EvalCase):
+                The eval case to evaluate.
+                EvalCase consists of:
+                    - data: A dictionary containing shared data for all samples
+                    - samples: A list of dictionaries, each representing an individual
+                    sample to evaluate
+
+            parser (EvalCaseParser | Callable | None, optional):
+                Optional parser to transform the eval case before evaluation. This
+                allows for mapping field names between the data structure and what the
+                grader expects. Can be:
+                1. A dictionary with direct field mappings where paths start with "data" or "sample"
+                2. A callable function that takes a EvalCase and returns a EvalCase
+                3. None, in which case the eval case is used as is
+                Defaults to None.
+            *args:
+                Additional positional arguments to pass to the grader.
+            **kwargs:
+                Additional keyword arguments to pass to the grader.
+
+        Returns:
+            List[GraderScore] | List[List[GraderScore]]:
+                For a single EvalCase: a list of GraderScore objects, one for each
+                sample within the EvalCase.
+
+                For a list of EvalCases: a list of lists of GraderScore objects,
+                where each inner list contains the scores for the corresponding
+                EvalCase in the input list.
+
+                Each GraderScore contains:
+                    - score: A numerical score assigned by the grader
+                    - reason: Explanation of how the score was determined
+                    - metadata: Optional additional information from the evaluation
+
+        Raises:
+            ValueError: If grader function signature is invalid.
+
+        Example:
+            >>> from rm_gallery.core.schema.data import EvalCase
+            >>> from rm_gallery.core.grader.base import LLMGrader, evaluate
+            >>>
+            >>> # Create eval case
+            >>> eval_case = EvalCase(
+            ...     input={"query": "What is the capital of France?"},
+            ...     outputs=[
+            ...         {"answer": "Paris"},
+            ...         {"answer": "London"}
+            ...     ]
+            ... )
+            >>>
+            >>> # Create grader
+            >>> grader = LLMGrader(
+            ...     name="factual_accuracy",
+            ...     template=[
+            ...         {
+            ...             "role": "system",
+            ...             "content": "You are evaluating factual accuracy."
+            ...         },
+            ...         {
+            ...             "role": "user",
+            ...             "content": "Question: {query}\\nAnswer: {answer}\\nRate accuracy (0-1):"
+            ...         }
+            ...     ],
+            ...     model={"model_name": "qwen-plus"}
+            ... )
+            >>>
+            >>> # Evaluate
+            >>> results = grader.evaluate_batch(eval_cases=[eval_case])
+            >>> print(results)
+        """
+        return asyncio.run(
+            self.aevaluate_batch(eval_cases, parser, *args, **kwargs),
+        )
 
     @classmethod
     def from_config(

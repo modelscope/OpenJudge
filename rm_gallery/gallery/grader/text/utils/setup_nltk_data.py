@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 NLTK Data Setup Script
 
@@ -29,7 +30,3 @@ def download_nltk_data():
             logger.error(f"✗ {package} download failed: {e}")
 
     logger.success("NLTK data packages download completed!")
-
-
-if __name__ == "__main__":
-    download_nltk_data()

@@ -121,7 +121,7 @@ class ImageReferenceGrader(Grader):
             logger.error(f"Error evaluating image reference: {e}")
             return 0.0, f"Evaluation error: {str(e)}"
 
-    async def _a_compute(
+    async def _acompute(
         self,
         actual_output: List[Union[str, MLLMImage]],
         **_kwargs: Any,
@@ -198,7 +198,7 @@ class ImageReferenceGrader(Grader):
             ...     ]
             ... )
         """
-        score, details = await self._a_compute(actual_output, **kwargs)
+        score, details = await self._acompute(actual_output, **kwargs)
 
         if "error" in details:
             return GraderScore(

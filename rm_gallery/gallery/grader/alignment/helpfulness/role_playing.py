@@ -19,15 +19,11 @@ Contextual Appropriateness: Responses should be appropriate to the scenario's se
 Engagement Quality: The interaction should be engaging and maintain the role-playing scenario's momentum, with the character responding naturally to prompts while adding depth to the narrative."""
 
 
-ROLE_PLAYING_SCORE_TEMPLATE = Template(
-    messages=[
-        ChatMessage(
-            role="system",
-            content="You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words.",
-        ),
-        ChatMessage(
-            role="user",
-            content="""# Task Description
+# Role Playing Score System Prompt
+ROLE_PLAYING_POINTWISE_SYSTEM_PROMPT = "You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words."
+
+# Role Playing Score User Prompt
+ROLE_PLAYING_POINTWISE_USER_PROMPT = """# Task Description
 Please act as an impartial judge and evaluate the quality of a role playing response.
 You should assess the response based on character consistency, contextual appropriateness, and engagement quality.
 Be as objective as possible.
@@ -48,20 +44,24 @@ Be as objective as possible.
     "reason": "The reason for the score."
 }
 ```
-""",
+"""
+
+ROLE_PLAYING_POINTWISE_TEMPLATE = Template(
+    messages=[
+        ChatMessage(
+            role="system",
+            content=ROLE_PLAYING_POINTWISE_SYSTEM_PROMPT,
+        ),
+        ChatMessage(
+            role="user",
+            content=ROLE_PLAYING_POINTWISE_USER_PROMPT,
         ),
     ],
 )
 
-ROLE_PLAYING_RANK_TEMPLATE = Template(
-    messages=[
-        ChatMessage(
-            role="system",
-            content="You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words.",
-        ),
-        ChatMessage(
-            role="user",
-            content="""# Task Description
+ROLE_PLAYING_LISTWISE_SYSTEM_PROMPT = """You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words."""
+
+ROLE_PLAYING_LISTWISE_USER_PROMPT = """# Task Description
 Your role is that of a professional evaluation expert. I will provide you with a question and several candidate answers. Your task is to select the single best answer from the candidates.
 I will also provide you with a set of rubrics, listed under the heading #Rubrics. These rubrics are ordered from highest to lowest importance.These rubrics can serve as supplementary knowledge for your judgment, though not necessarily required. First, think independently. Use these rubrics only when unsure about certain answers, selecting specific ones based on the questions and answers.
 
@@ -81,27 +81,55 @@ I will also provide you with a set of rubrics, listed under the heading #Rubrics
     "reason": "The reason for the score."
 }
 ```
-""",
+"""
+
+ROLE_PLAYING_LISTWISE_TEMPLATE = Template(
+    messages=[
+        ChatMessage(
+            role="system",
+            content=ROLE_PLAYING_LISTWISE_SYSTEM_PROMPT,
+        ),
+        ChatMessage(
+            role="user",
+            content=ROLE_PLAYING_LISTWISE_USER_PROMPT,
         ),
     ],
 )
 
 
 class RolePlayingGrader(BaseHelpfulnessGrader):
-    """Role Playing: Embodies distinct characters or personas to create immersive, contextually appropriate interactions."""
+    """Role Playing: Engages in immersive roleplay scenarios with consistent character portrayal and contextual awareness."""
 
-    _point_template = ROLE_PLAYING_SCORE_TEMPLATE
-    _list_template = ROLE_PLAYING_RANK_TEMPLATE
+    _point_template = ROLE_PLAYING_POINTWISE_TEMPLATE
+    _list_template = ROLE_PLAYING_LISTWISE_TEMPLATE
     _rubrics = RUBRICS
 
-    def __init__(self, model: ChatModelBase | dict, template: Template | None = None, mode: GraderMode = GraderMode.LISTWISE, **kwargs):
-        """Initialize the SafetyGrader."""
+    def __init__(
+        self,
+        model: ChatModelBase | dict,
+        template: Template | None = None,
+        mode: GraderMode = GraderMode.POINTWISE,
+        rubrics: str | None = None,
+        **kwargs,
+    ):
+        """Initialize the RolePlayingGrader.
+
+        Args:
+            model: The language model used for evaluation. Can be either a ChatModelBase
+                   instance or a dictionary configuration. If a dict is provided, it will
+                   be used to initialize an OpenAIChatModel.
+            template: The template for generating prompts. If None, a default template will be used.
+            mode: The grader mode. Defaults to POINTWISE.
+            rubrics: Custom rubrics for evaluation. If None, default rubrics will be used.
+            **kwargs: Additional keyword arguments.
+        """
         super().__init__(
             name="role_playing",
             mode=mode,
             model=model,
             template=template,
-            description="Embodies distinct characters or personas to create immersive, contextually appropriate interactions.",
+            rubrics=rubrics,
+            description="Engages in immersive roleplay scenarios with consistent character portrayal and contextual awareness.",
             **kwargs,
         )
 
@@ -111,16 +139,16 @@ class RolePlayingGrader(BaseHelpfulnessGrader):
         answer: str | List[str],
         **kwargs,
     ) -> GraderScore | GraderRank:
-        """Evaluate the role playing quality of the response based on the query.
+        """Evaluate the quality of the role playing response based on the query.
 
-        Evaluates role playing responses for their ability to embody distinct
-        characters or personas to create immersive, contextually appropriate
-        interactions. The grader focuses on character consistency, contextual
-        appropriateness, and engagement quality.
+        Evaluates role playing responses for their ability to engage in immersive
+        roleplay scenarios with consistent character portrayal and contextual awareness.
+        The grader focuses on character consistency, contextual awareness, and
+        immersive engagement.
 
         Args:
-            query (str): The query to evaluate.
-            answer (str | List[str]): The answer(s) to evaluate. For POINTWISE mode,
+            query (str): The role playing scenario or prompt.
+            answer (str | List[str]): The role playing response(s) to evaluate. For POINTWISE mode,
                 this should be a single string. For LISTWISE mode, this should be
                 a list of strings.
             **kwargs: Additional arguments for the evaluation.
@@ -128,16 +156,30 @@ class RolePlayingGrader(BaseHelpfulnessGrader):
         Returns:
             GraderScore | GraderRank: The evaluation result.
 
-                Each GraderScore contains:
-                    - score: A numerical score assigned by the grader
-                    - reason: Explanation of how the score was determined
-                    - metadata: Optional additional information from the evaluation
+            In pointwise mode:
+                GraderScore: Contains a numerical score and explanation.
+                    - score (float): Numerical role playing quality score (0.0-1.0)
+                    - reason (str): Explanation of how the score was determined
+                    - metadata (Dict[str, Any]): Additional evaluation information
+
+            In listwise mode:
+                GraderRank: Contains a ranked list and explanation.
+                    - rank (List[int]): Ranking of responses by quality
+                    - reason (str): Explanation of how the ranking was determined
+                    - metadata (Dict[str, Any]): Additional evaluation information
 
         Example:
-            >>> grader = RolePlayingGrader()
-            >>> result = await grader.aevaluate(
-            ...     query="Greetings, wise wizard!",
-            ...     answer="Ah, greetings young traveler! What brings you to my tower this eve?"
-            ... )
+            >>> # Example for pointwise role playing grader
+            >>> import asyncio
+            >>> from rm_gallery.core.model.openai_llm import OpenAIChatModel
+            >>> from rm_gallery.core.grader.base import GraderMode
+            >>> model = OpenAIChatModel(model_name="gpt-3.5-turbo")
+            >>> grader = RolePlayingGrader(mode=GraderMode.POINTWISE, model=model)
+            >>> result = asyncio.run(grader.aevaluate(
+            ...     query="You are a medieval blacksmith. A knight approaches requesting a sword.",
+            ...     answer="Ah, good sir knight! I shall forge you a blade worthy of your noble quest. What specifications would you desire in your weapon?"
+            ... ))
+            >>> print(result.score, result.reason)
+            0.9 The response maintains character consistency and appropriately engages with the scenario.
         """
         return await super().aevaluate(query=query, answer=answer, **kwargs)

@@ -19,15 +19,11 @@ Structural Coherence and Logical Organization: Prefer completions that present i
 """
 
 
-BRAINSTORMING_SCORE_TEMPLATE = Template(
-    messages=[
-        ChatMessage(
-            role="system",
-            content="You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words.",
-        ),
-        ChatMessage(
-            role="user",
-            content="""# Task Description
+# Brainstorming Score System Prompt
+BRAINSTORMING_POINTWISE_SYSTEM_PROMPT = "You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words."
+
+# Brainstorming Score User Prompt
+BRAINSTORMING_POINTWISE_USER_PROMPT = """# Task Description
 Please act as an impartial judge and evaluate the creativity and usefulness of brainstorming ideas.
 You should critically and accurately assess the ideas with the key rubrics that are presented from most important to least important.
 Avoid any position biases and ensure that the order in which the responses were presented does not influence your decision.
@@ -50,20 +46,13 @@ Be as objective as possible.
     "reason": "The reason for the score."
 }
 ```
-""",
-        ),
-    ],
-)
+"""
 
-BRAINSTORMING_RANK_TEMPLATE = Template(
-    messages=[
-        ChatMessage(
-            role="system",
-            content="You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words.",
-        ),
-        ChatMessage(
-            role="user",
-            content="""# Task Description
+# Brainstorming Rank System Prompt
+BRAINSTORMING_LISTWISE_SYSTEM_PROMPT = "You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words."
+
+# Brainstorming Rank User Prompt
+BRAINSTORMING_LISTWISE_USER_PROMPT = """# Task Description
 Your role is that of a professional evaluation expert. I will provide you with a question and several candidate answers. Your task is to select the single best answer from the candidates.
 
 # Rubrics
@@ -82,7 +71,30 @@ Your role is that of a professional evaluation expert. I will provide you with a
     "reason": "The reason for the score."
 }
 ```
-""",
+"""
+
+BRAINSTORMING_POINTWISE_TEMPLATE = Template(
+    messages=[
+        ChatMessage(
+            role="system",
+            content=BRAINSTORMING_POINTWISE_SYSTEM_PROMPT,
+        ),
+        ChatMessage(
+            role="user",
+            content=BRAINSTORMING_POINTWISE_USER_PROMPT,
+        ),
+    ],
+)
+
+BRAINSTORMING_LISTWISE_TEMPLATE = Template(
+    messages=[
+        ChatMessage(
+            role="system",
+            content=BRAINSTORMING_LISTWISE_SYSTEM_PROMPT,
+        ),
+        ChatMessage(
+            role="user",
+            content=BRAINSTORMING_LISTWISE_USER_PROMPT,
         ),
     ],
 )
@@ -91,18 +103,36 @@ Your role is that of a professional evaluation expert. I will provide you with a
 class BrainstormingGrader(BaseHelpfulnessGrader):
     """Brainstorming: Generates creative ideas and suggestions to address user challenges."""
 
-    _point_template = BRAINSTORMING_SCORE_TEMPLATE
-    _list_template = BRAINSTORMING_RANK_TEMPLATE
+    _point_template = BRAINSTORMING_POINTWISE_TEMPLATE
+    _list_template = BRAINSTORMING_LISTWISE_TEMPLATE
     _rubrics = RUBRICS
 
-    def __init__(self, model: ChatModelBase | dict, template: Template | None = None, mode: GraderMode = GraderMode.LISTWISE, **kwargs):
-        """Initialize the SafetyGrader."""
+    def __init__(
+        self,
+        model: ChatModelBase | dict,
+        template: Template | None = None,
+        mode: GraderMode = GraderMode.LISTWISE,
+        rubrics: str | None = None,
+        **kwargs,
+    ):
+        """Initialize the BrainstormingGrader.
+
+        Args:
+            model: The language model used for evaluation. Can be either a ChatModelBase
+                   instance or a dictionary configuration. If a dict is provided, it will
+                   be used to initialize an OpenAIChatModel.
+            template: The template for generating prompts. If None, a default template will be used.
+            mode: The grader mode. Defaults to LISTWISE.
+            rubrics: Custom rubrics for evaluation. If None, default rubrics will be used.
+            **kwargs: Additional keyword arguments.
+        """
         super().__init__(
             name="brainstorming",
             mode=mode,
             model=model,
             template=template,
-            description="Brainstorming: Generates creative ideas and suggestions to address user challenges.",
+            rubrics=rubrics,
+            description="Generates creative ideas and suggestions to address user challenges.",
             **kwargs,
         )
 

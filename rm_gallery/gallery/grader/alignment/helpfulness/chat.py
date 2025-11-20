@@ -18,16 +18,11 @@ Provide Actionable, Context-Specific Guidance: Offer concrete, practical steps o
 Ensure Factual Accuracy and Contextual Nuance: Correct misconceptions, clarify complexities, and ground responses in precise details or evidence while avoiding oversimplification or speculative interpretations.
 """
 
+# Chat Score System Prompt
+CHAT_POINTWISE_SYSTEM_PROMPT = "You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words."
 
-CHAT_SCORE_TEMPLATE = Template(
-    messages=[
-        ChatMessage(
-            role="system",
-            content="You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words.",
-        ),
-        ChatMessage(
-            role="user",
-            content="""# Task Description
+# Chat Score User Prompt
+CHAT_POINTWISE_USER_PROMPT = """# Task Description
 Please act as an impartial judge and evaluate the quality of a chat response.
 You should critically and accurately assess the response with the key rubrics that are presented from most important to least important.
 Avoid any position biases and ensure that the order in which the responses were presented does not influence your decision.
@@ -46,24 +41,17 @@ Be as objective as possible.
 # Output Requirement
 ```json
 {
-    "score": "A numerical score from 0.0 to 1.0 representing the quality of the chat response."
+    "score": "A numerical score from 0.0 to 1.0 representing the quality of the chat response.",
     "reason": "The reason for the score."
 }
 ```
-""",
-        ),
-    ],
-)
+"""
 
-CHAT_RANK_TEMPLATE = Template(
-    messages=[
-        ChatMessage(
-            role="system",
-            content="You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words.",
-        ),
-        ChatMessage(
-            role="user",
-            content="""# Task Description
+# Chat Rank System Prompt
+CHAT_LISTWISE_SYSTEM_PROMPT = "You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words."
+
+# Chat Rank User Prompt
+CHAT_LISTWISE_USER_PROMPT = """# Task Description
 Your role is that of a professional evaluation expert. I will provide you with a question and several candidate answers. Your task is to select the single best answer from the candidates.
 I will also provide you with a set of rubrics, listed under the heading #Rubrics. These rubrics are ordered from highest to lowest importance. You must check each candidate answer in turn to see if it violates any rubric, and provide reasons for any violations you find. These reasons should be used as references for ranking the answers.
 You may organize your reasoning as you see fit, but keep your thought process as concise as possible.
@@ -84,28 +72,59 @@ You may organize your reasoning as you see fit, but keep your thought process as
     "reason": "The reason for the score."
 }
 ```
-""",
+"""
+
+CHAT_POINTWISE_TEMPLATE = Template(
+    messages=[
+        ChatMessage(
+            role="system",
+            content=CHAT_POINTWISE_SYSTEM_PROMPT,
+        ),
+        ChatMessage(
+            role="user",
+            content=CHAT_POINTWISE_USER_PROMPT,
+        ),
+    ],
+)
+
+CHAT_LISTWISE_TEMPLATE = Template(
+    messages=[
+        ChatMessage(
+            role="system",
+            content=CHAT_LISTWISE_SYSTEM_PROMPT,
+        ),
+        ChatMessage(
+            role="user",
+            content=CHAT_LISTWISE_USER_PROMPT,
         ),
     ],
 )
 
 
 class ChatGrader(BaseHelpfulnessGrader):
-    """Chat: Simulates human conversation and communicates a variety of topics through text understanding and generation, emphasizing coherence and natural flow of interaction."""
+    """Chat: Maintains natural, engaging conversations while providing accurate information."""
 
-    _point_template = CHAT_SCORE_TEMPLATE
-    _list_template = CHAT_RANK_TEMPLATE
+    _point_template = CHAT_POINTWISE_TEMPLATE
+    _list_template = CHAT_LISTWISE_TEMPLATE
     _rubrics = RUBRICS
 
-    def __init__(self, model: ChatModelBase | dict, template: Template | None = None, mode: GraderMode = GraderMode.LISTWISE, **kwargs):
+    def __init__(
+        self,
+        model: ChatModelBase | dict,
+        template: Template | None = None,
+        mode: GraderMode = GraderMode.LISTWISE,
+        rubrics: str | None = None,
+        **kwargs,
+    ):
         """Initialize the ChatGrader.
 
         Args:
-            model: The language model used for evaluation. Can be either a ChatModelBase 
+            model: The language model used for evaluation. Can be either a ChatModelBase
                    instance or a dictionary configuration. If a dict is provided, it will
                    be used to initialize an OpenAIChatModel.
             template: The template for generating prompts. If None, a default template will be used.
             mode: The grader mode. Defaults to LISTWISE.
+            rubrics: Custom rubrics for evaluation. If None, default rubrics will be used.
             **kwargs: Additional keyword arguments.
         """
         super().__init__(
@@ -113,7 +132,8 @@ class ChatGrader(BaseHelpfulnessGrader):
             mode=mode,
             model=model,
             template=template,
-            description="Simulates human conversation and communicates a variety of topics through text understanding and generation, emphasizing coherence and natural flow of interaction.",
+            rubrics=rubrics,
+            description="Maintains natural, engaging conversations while providing accurate information.",
             **kwargs,
         )
 

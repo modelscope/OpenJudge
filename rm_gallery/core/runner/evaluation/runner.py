@@ -14,7 +14,7 @@ from rm_gallery.core.runner.evaluation.schema import (
     EvaluationResult,
     MetricResult,
 )
-from rm_gallery.core.schema.data import DataSample
+from rm_gallery.core.schema.data import EvalCase
 
 
 class EvaluationRunner(BaseRunner):
@@ -29,15 +29,15 @@ class EvaluationRunner(BaseRunner):
         from rm_gallery.core import EvaluationRunner, AccuracyMetric
 
         class MyCustomRunner(EvaluationRunner):
-            async def _execute_evaluation(self, data_samples, *args, **kwargs):
+            async def _execute_evaluation(self, eval_cases, *args, **kwargs):
                 # Implement custom evaluation logic
                 results = []
-                for sample in data_samples:
+                for sample in eval_cases:
                     result = await self._evaluate_single_sample(sample)
                     results.append(result)
                 return {
                     "model": self.model.model_name,
-                    "total_samples": len(data_samples),
+                    "total_samples": len(eval_cases),
                     "results": [r.model_dump() for r in results],
                 }
 
@@ -45,7 +45,7 @@ class EvaluationRunner(BaseRunner):
         runner = MyCustomRunner(model=my_model, metrics=[AccuracyMetric()])
 
         # Run evaluation (returns EvaluationReport)
-        report = await runner(data_samples)
+        report = await runner(eval_cases)
         print(f"Accuracy: {report.get_metric_value('accuracy')}")
         ```
     """
@@ -66,7 +66,7 @@ class EvaluationRunner(BaseRunner):
     @abstractmethod
     async def _execute_evaluation(
         self,
-        data_samples: List[DataSample],
+        eval_cases: List[EvalCase],
         *args: Any,
         **kwargs: Any,
     ) -> dict:
@@ -76,7 +76,7 @@ class EvaluationRunner(BaseRunner):
         Subclasses must implement this method to define their specific evaluation logic.
 
         Args:
-            data_samples: List of data samples to evaluate
+            eval_cases: List of data samples to evaluate
             *args: Additional positional arguments
             **kwargs: Additional keyword arguments
 
@@ -102,9 +102,9 @@ class EvaluationRunner(BaseRunner):
         self.metrics.append(metric)
         return self
 
-    async def __call__(
+    async def aevaluate_batch(
         self,
-        data_samples: List[DataSample],
+        eval_cases: List[EvalCase],
         *args: Any,
         **kwargs: Any,
     ) -> EvaluationReport:
@@ -112,7 +112,7 @@ class EvaluationRunner(BaseRunner):
         Execute the evaluation and compute metrics.
 
         Args:
-            data_samples: List of data samples to evaluate
+            eval_cases: List of data samples to evaluate
             *args: Additional positional arguments for evaluation
             **kwargs: Additional keyword arguments for evaluation
 
@@ -121,17 +121,17 @@ class EvaluationRunner(BaseRunner):
         """
         self.errors = []  # Reset errors for new run
 
-        logger.info(f"Starting evaluation with {len(data_samples)} samples")
+        logger.info(f"Starting evaluation with {len(eval_cases)} samples")
 
         # Step 1: Execute evaluation
         logger.info("Running evaluation...")
         try:
-            runner_output = await self._execute_evaluation(data_samples, *args, **kwargs)
+            runner_output = await self._execute_evaluation(eval_cases, *args, **kwargs)
         except Exception as e:
             error_msg = f"Evaluation execution failed: {str(e)}"
             logger.error(error_msg)
             self.errors.append(error_msg)
-            return self._build_error_report(data_samples, error_msg)
+            return self._build_error_report(eval_cases, error_msg)
 
         # Step 2: Parse runner output into EvaluationResult list
         logger.info("Parsing evaluation results...")
@@ -141,7 +141,7 @@ class EvaluationRunner(BaseRunner):
             error_msg = f"Failed to parse runner output: {str(e)}"
             logger.error(error_msg)
             self.errors.append(error_msg)
-            return self._build_error_report(data_samples, error_msg)
+            return self._build_error_report(eval_cases, error_msg)
 
         # Step 3: Compute metrics
         logger.info(f"Computing {len(self.metrics)} metrics...")
@@ -247,14 +247,14 @@ class EvaluationRunner(BaseRunner):
 
     def _build_error_report(
         self,
-        data_samples: List[DataSample],
+        eval_cases: List[EvalCase],
         error_message: str,
     ) -> EvaluationReport:
         """
         Build an error report when evaluation fails early.
 
         Args:
-            data_samples: Original data samples
+            eval_cases: Original data samples
             error_message: Error message describing the failure
 
         Returns:
@@ -262,7 +262,7 @@ class EvaluationRunner(BaseRunner):
         """
         return EvaluationReport(
             model_name="unknown",
-            total_samples=len(data_samples),
+            total_samples=len(eval_cases),
             valid_samples=0,
             results=[],
             metrics={},

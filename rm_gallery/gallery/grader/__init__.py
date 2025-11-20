@@ -14,7 +14,7 @@ This module provides a comprehensive collection of evaluation graders:
 
 Quick Start:
     >>> from rm_gallery.gallery.grader import get_grader, list_available_graders
-    >>> from rm_gallery.core.schema.data import DataSample
+    >>> from rm_gallery.core.schema.data import EvalCase
     >>>
     >>> # List all available graders
     >>> graders = list_available_graders()
@@ -22,12 +22,12 @@ Quick Start:
     >>>
     >>> # Use a text grader
     >>> grader = get_grader("exact_match")
-    >>> data_sample = DataSample(
-    ...     data={"reference": "hello"},
-    ...     samples=[{"candidate": "hello"}, {"candidate": "world"}]
+    >>> eval_case = EvalCase(
+    ...     input={"reference": "hello"},
+    ...     outputs=[{"candidate": "hello"}, {"candidate": "world"}]
     ... )
     >>> import asyncio
-    >>> results = asyncio.run(grader(data_sample))
+    >>> results = asyncio.run(grader(eval_case))
     >>>
     >>> # Use a multimodal grader
     >>> from rm_gallery.gallery.grader.multimodal import ImageCoherenceGrader

@@ -93,17 +93,35 @@ class FactualityGrader(BaseHelpfulnessGrader):
     _list_template = FACTUALITY_LISTWISE_TEMPLATE
     _rubrics = RUBRICS
 
-    def __init__(self, model: ChatModelBase | dict, template: Template | None = None, mode: GraderMode = GraderMode.LISTWISE, **kwargs):
-        """Initialize the SafetyGrader."""
+    def __init__(
+        self,
+        model: ChatModelBase | dict,
+        template: Template | None = None,
+        mode: GraderMode = GraderMode.LISTWISE,
+        rubrics: str | None = None,
+        **kwargs,
+    ):
+        """Initialize the FactualityGrader.
+
+        Args:
+            model: The language model used for evaluation. Can be either a ChatModelBase
+                   instance or a dictionary configuration. If a dict is provided, it will
+                   be used to initialize an OpenAIChatModel.
+            template: The template for generating prompts. If None, a default template will be used.
+            mode: The grader mode. Defaults to LISTWISE.
+            rubrics: Custom rubrics for evaluation. If None, default rubrics will be used.
+            **kwargs: Additional keyword arguments.
+        """
         super().__init__(
             name="factuality",
             mode=mode,
             model=model,
             template=template,
+            rubrics=rubrics,
             description="Detects hallucinations and other basic errors in completions.",
             **kwargs,
         )
-    
+
     async def aevaluate(
         self,
         query: str,
@@ -139,19 +157,16 @@ class FactualityGrader(BaseHelpfulnessGrader):
 
         Example:
             >>> # Example for pointwise factuality grader
-            >>> grader = FactualityGrader(mode=GraderMode.POINTWISE)
-            >>> result = await grader.aevaluate(
-            ...     query="What is the capital of France?",
-            ...     answer="The capital of France is Paris."
-            ... )
+            >>> import asyncio
+            >>> from rm_gallery.core.model.openai_llm import OpenAIChatModel
+            >>> from rm_gallery.core.grader.base import GraderMode
+            >>> model = OpenAIChatModel(model_name="gpt-3.5-turbo")
+            >>> grader = FactualityGrader(mode=GraderMode.POINTWISE, model=model)
+            >>> result = asyncio.run(grader.aevaluate(
+            ...     query="Who was the first person to walk on the moon?",
+            ...     answer="Neil Armstrong was the first person to walk on the moon."
+            ... ))
             >>> print(result.score, result.reason)
-
-            >>> # Example for listwise factuality grader
-            >>> ranking_grader = FactualityGrader(mode=GraderMode.LISTWISE)
-            >>> result = await ranking_grader.aevaluate(
-            ...     query="What is the capital of France?",
-            ...     answer=["The capital of France is Paris.", "The capital of France is London."]
-            ... )
-            >>> print(result.rank, result.reason)
+            1.0 The response correctly identifies Neil Armstrong as the first person to walk on the moon.
         """
         return await super().aevaluate(query=query, answer=answer, **kwargs)

@@ -22,7 +22,7 @@ Example:
     )
 
     # Run evaluation
-    report = await eval_runner(data_samples)
+    report = await eval_runner(eval_cases)
     print(report.summary())
     ```
 """

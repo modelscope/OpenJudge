@@ -20,15 +20,11 @@ Evidence-Based Conclusions: Base conclusions on solid evidence, clearly distingu
 Comprehensiveness: Address all aspects of the problem or question, considering alternative approaches and potential edge cases where relevant."""
 
 
-REASONING_SCORE_TEMPLATE = Template(
-    messages=[
-        ChatMessage(
-            role="system",
-            content="You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words.",
-        ),
-        ChatMessage(
-            role="user",
-            content="""# Task Description
+# Reasoning Score System Prompt
+REASONING_POINTWISE_SYSTEM_PROMPT = "You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words."
+
+# Reasoning Score User Prompt
+REASONING_POINTWISE_USER_PROMPT = """# Task Description
 Please act as an impartial judge and evaluate the quality of a reasoning response.
 You should assess the response based on logical soundness, step-by-step clarity, and evidence-based conclusions.
 Be as objective as possible.
@@ -49,20 +45,13 @@ Be as objective as possible.
     "reason": "The reason for the score."
 }
 ```
-""",
-        ),
-    ],
-)
+"""
 
-REASONING_RANK_TEMPLATE = Template(
-    messages=[
-        ChatMessage(
-            role="system",
-            content="You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words.",
-        ),
-        ChatMessage(
-            role="user",
-            content="""# Task Description
+# Reasoning Rank System Prompt
+REASONING_LISTWISE_SYSTEM_PROMPT = "You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words."
+
+# Reasoning Rank User Prompt
+REASONING_LISTWISE_USER_PROMPT = """# Task Description
 Your role is that of a professional evaluation expert. I will provide you with a question and several candidate answers. Your task is to select the single best answer from the candidates.
 
 # Rubrics
@@ -81,7 +70,30 @@ Your role is that of a professional evaluation expert. I will provide you with a
     "reason": "The reason for the score."
 }
 ```
-""",
+"""
+
+REASONING_POINTWISE_TEMPLATE = Template(
+    messages=[
+        ChatMessage(
+            role="system",
+            content=REASONING_POINTWISE_SYSTEM_PROMPT,
+        ),
+        ChatMessage(
+            role="user",
+            content=REASONING_POINTWISE_USER_PROMPT,
+        ),
+    ],
+)
+
+REASONING_LISTWISE_TEMPLATE = Template(
+    messages=[
+        ChatMessage(
+            role="system",
+            content=REASONING_LISTWISE_SYSTEM_PROMPT,
+        ),
+        ChatMessage(
+            role="user",
+            content=REASONING_LISTWISE_USER_PROMPT,
         ),
     ],
 )
@@ -90,21 +102,39 @@ Your role is that of a professional evaluation expert. I will provide you with a
 class ReasoningGrader(BaseHelpfulnessGrader):
     """Reasoning: Applies logical thinking and systematic approaches to solve problems and answer questions."""
 
-    _point_template = REASONING_SCORE_TEMPLATE
-    _list_template = REASONING_RANK_TEMPLATE
+    _point_template = REASONING_POINTWISE_TEMPLATE
+    _list_template = REASONING_LISTWISE_TEMPLATE
     _rubrics = RUBRICS
 
-    def __init__(self, model: ChatModelBase | dict, template: Template | None = None, mode: GraderMode = GraderMode.LISTWISE, **kwargs):
-        """Initialize the SafetyGrader."""
+    def __init__(
+        self,
+        model: ChatModelBase | dict,
+        template: Template | None = None,
+        mode: GraderMode = GraderMode.LISTWISE,
+        rubrics: str | None = None,
+        **kwargs,
+    ):
+        """Initialize the ReasoningGrader.
+
+        Args:
+            model: The language model used for evaluation. Can be either a ChatModelBase
+                   instance or a dictionary configuration. If a dict is provided, it will
+                   be used to initialize an OpenAIChatModel.
+            template: The template for generating prompts. If None, a default template will be used.
+            mode: The grader mode. Defaults to LISTWISE.
+            rubrics: Custom rubrics for evaluation. If None, default rubrics will be used.
+            **kwargs: Additional keyword arguments.
+        """
         super().__init__(
             name="reasoning",
             mode=mode,
             model=model,
             template=template,
+            rubrics=rubrics,
             description="Applies logical thinking and systematic approaches to solve problems and answer questions.",
             **kwargs,
         )
-        
+
     async def aevaluate(
         self,
         query: str,
@@ -128,16 +158,30 @@ class ReasoningGrader(BaseHelpfulnessGrader):
         Returns:
             GraderScore | GraderRank: The evaluation result.
 
-                Each GraderScore contains:
-                    - score: A numerical score assigned by the grader
-                    - reason: Explanation of how the score was determined
-                    - metadata: Optional additional information from the evaluation
+            In pointwise mode:
+                GraderScore: Contains a numerical score and explanation.
+                    - score (float): Numerical reasoning quality score (0.0-1.0)
+                    - reason (str): Explanation of how the score was determined
+                    - metadata (Dict[str, Any]): Additional evaluation information
+
+            In listwise mode:
+                GraderRank: Contains a ranked list and explanation.
+                    - rank (List[int]): Ranking of responses by reasoning quality
+                    - reason (str): Explanation of how the ranking was determined
+                    - metadata (Dict[str, Any]): Additional evaluation information
 
         Example:
-            >>> grader = ReasoningGrader()
-            >>> result = await grader.aevaluate(
+            >>> # Example for pointwise reasoning grader
+            >>> import asyncio
+            >>> from rm_gallery.core.model.openai_llm import OpenAIChatModel
+            >>> from rm_gallery.core.grader.base import GraderMode
+            >>> model = OpenAIChatModel(model_name="gpt-3.5-turbo")
+            >>> grader = ReasoningGrader(mode=GraderMode.POINTWISE, model=model)
+            >>> result = asyncio.run(grader.aevaluate(
             ...     query="If all roses are flowers and some flowers are red, is it true that some roses are red?",
             ...     answer="This is undetermined because we don't know which flowers are red."
-            ... )
+            ... ))
+            >>> print(result.score, result.reason)
+            0.9 The response demonstrates logical reasoning by correctly identifying the undetermined nature of the statement.
         """
         return await super().aevaluate(query=query, answer=answer, **kwargs)

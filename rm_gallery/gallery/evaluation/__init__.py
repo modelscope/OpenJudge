@@ -19,7 +19,7 @@ Example:
     )
 
     # Run evaluation
-    report = await runner(data_samples)
+    report = await runner(eval_cases)
     print(report.model_name, report.metrics)
     ```
 """

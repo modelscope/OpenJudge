@@ -7,25 +7,26 @@ from typing import Any, Callable, Dict, List, Tuple, TypedDict
 
 from loguru import logger
 
-from rm_gallery.core.grader.base import Grader, GraderScore
-from rm_gallery.core.model.openai_llm import OpenAIChatModel
-from rm_gallery.core.registry import GR
-from rm_gallery.core.runner.base import BaseRunner
+from rm_gallery.core.runner.strategy.base import GraderStrategy
 from rm_gallery.core.schema.data import (
-    DataSample,
-    DataSampleParser,
-    validate_data_samples,
+    EvalCase,
+    EvalCaseParser,
+    validate_eval_cases,
 )
 from rm_gallery.core.utils.concurrency import ConcurrencyManager
 from rm_gallery.core.utils.instance import init_instance_by_config
+from rm_gallery.gallery.grader.alignment.honesty.factuality import (
+    FactualityGrader,
+)
 
 
 class GradingConfig(TypedDict, total=False):
     """Configuration for a grader."""
 
-    grader: str | dict | Callable | Grader
-    parser: dict | Callable
-    weight: float
+    grader: Grader
+    parser: EvalCaseParser | None
+    strategy: GraderStrategy | None
+    weight: float | None
 
 
 class GradingResult(TypedDict):
@@ -37,19 +38,22 @@ class GradingResult(TypedDict):
 
 def parse_grading_config(
     config: GradingConfig,
-) -> Tuple[Grader | Callable | None, DataSampleParser | Callable | None]:
+) -> Tuple[
+    Grader | Callable | None,
+    EvalCaseParser | Callable | None,
+    GraderStrategy | None,
+]:
     """Parse config into grader and parser."""
     grader_config = config.get("grader")  # type: ignore
     grader = None
-    if isinstance(grader_config, str):
-        grader = GR.get(grader_config)
-    elif grader_config is not None:
+    if grader_config is not None:
         grader = init_instance_by_config(grader_config, accept_type=Grader)
     else:
         raise ValueError("Grader config must be a string or a dict")
 
+    strategy = config.get("strategy", None)
     parser = config.get("parser", None)
-    return grader, parser
+    return grader, parser, strategy
 
 
 class GradingRunner(BaseRunner):
@@ -72,11 +76,11 @@ class GradingRunner(BaseRunner):
         concurrency_manager = ConcurrencyManager()
         concurrency_manager.set_max_concurrent(max_concurrent)
 
-    async def aevaluate(self, data_sample: DataSample) -> GradingResult:
+    async def aevaluate(self, eval_case: EvalCase) -> GradingResult:
         """Run experiment for a single sample.
 
         Args:
-            data_sample: The data sample to evaluate
+            eval_case: The eval case to evaluate
 
         Returns:
             Grading result with scores for each dimension
@@ -86,20 +90,23 @@ class GradingRunner(BaseRunner):
         keys = []
 
         for key, config in self.grading_configs.items():
-            grader, parser = parse_grading_config(config)
+            grader, parser, strategy = parse_grading_config(config)
             if grader is not None:
-                coro = grader.aevaluate_data_samples(
-                    parser=parser,
-                    data_sample=data_sample,
-                )
-                coroutines.append(coro)
+                if strategy is not None:
+                    coroutine = strategy.aevaluate_batch(grader, [eval_case])
+                else:
+                    coroutine = grader.aevaluate_batch(
+                        parser=parser,
+                        eval_cases=[eval_case],
+                    )
+                coroutines.append(coroutine)
                 keys.append(key)
 
         scores = await asyncio.gather(*coroutines)
 
         total_score = 0.0
         for key, score in zip(keys, scores):
-            results[key] = score
+            results[key] = score[0]
             config = self.grading_configs[key]
             weight = config.get("weight", 1.0) if "weight" in config else 1.0
             total_score += score.score * weight
@@ -108,9 +115,9 @@ class GradingRunner(BaseRunner):
 
     async def __call__(
         self,
-        data_samples: List[DataSample],
-        *args: Any,
-        **kwargs: Any,
+        eval_cases: List[EvalCase],
+        *args,
+        **kwargs,
     ) -> dict:
         """Run experiment.
 
@@ -123,9 +130,9 @@ class GradingRunner(BaseRunner):
         results = []
         coroutines = []
 
-        # Create async tasks for each data sample
-        for data_sample in data_samples:
-            coroutines.append(self.aevaluate(data_sample))
+        # Create async tasks for each eval case
+        for eval_case in eval_cases:
+            coroutines.append(self.aevaluate(eval_case))
 
         # Execute all tasks in parallel
         results = await asyncio.gather(*coroutines)
@@ -135,56 +142,3 @@ class GradingRunner(BaseRunner):
         return {
             "results": results,
         }
-
-
-if __name__ == "__main__":
-    data_sample_schema = {
-        "type": "object",
-        "properties": {
-            "data": {
-                "type": "object",
-                "properties": {
-                    "query": {"type": "string"},
-                },
-                "required": ["query"],
-            },
-            "samples": {
-                "type": "array",
-                "items": {
-                    "type": "object",
-                    "properties": {"answer": {"type": "string"}},
-                    "required": ["answer"],
-                },
-            },
-        },
-        "required": ["data", "samples"],
-    }
-    test_samples = [
-        {
-            "data": {
-                "query": "What is the capital of France?",
-            },
-            "samples": [{"answer": "Paris"}, {"answer": "Marseille"}],
-        },
-        {
-            "data": {
-                "query": "What is the capital of Germany?",
-            },
-            "samples": [{"answer": "Berlin"}, {"answer": "Munich"}],
-        },
-    ]
-    test_samples = validate_data_samples(test_samples, data_sample_schema)
-    from rm_gallery.gallery.grader.alignment.honesty.factuality import FactualityGrader
-
-    model = OpenAIChatModel(model_name="qwen-plus")
-
-    runner = GradingRunner(
-        grading_configs={
-            "factual_grader": {
-                "grader": FactualityGrader(model=model),
-                "weight": 1.0,
-            },
-        },
-    )
-    # Run using async method
-    result = asyncio.run(runner(data_samples=test_samples))

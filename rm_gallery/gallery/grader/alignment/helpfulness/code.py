@@ -22,15 +22,11 @@ Error Handling: Appropriate error handling should be implemented for edge cases 
 """
 
 
-CODE_SCORE_TEMPLATE = Template(
-    messages=[
-        ChatMessage(
-            role="system",
-            content="You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words.",
-        ),
-        ChatMessage(
-            role="user",
-            content="""# Task Description
+# Code Score System Prompt
+CODE_POINTWISE_SYSTEM_PROMPT = "You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words."
+
+# Code Score User Prompt
+CODE_POINTWISE_USER_PROMPT = """# Task Description
 Please act as an impartial judge and evaluate the quality of a code response.
 You should assess the code based on functional correctness, readability, efficiency, and best practices.
 Be as objective as possible.
@@ -51,20 +47,13 @@ Be as objective as possible.
     "reason": "The reason for the score."
 }
 ```
-""",
-        ),
-    ],
-)
+"""
 
-CODE_RANK_TEMPLATE = Template(
-    messages=[
-        ChatMessage(
-            role="system",
-            content="You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words.",
-        ),
-        ChatMessage(
-            role="user",
-            content="""# Task Description
+# Code Rank System Prompt
+CODE_LISTWISE_SYSTEM_PROMPT = "You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words."
+
+# Code Rank User Prompt
+CODE_LISTWISE_USER_PROMPT = """# Task Description
 Your role is that of a professional evaluation expert. I will provide you with a question and several candidate answers. Your task is to select the single best answer from the candidates.
 
 
@@ -84,47 +73,86 @@ Your role is that of a professional evaluation expert. I will provide you with a
     "reason": "The reason for the score."
 }
 ```
-""",
+"""
+
+CODE_POINTWISE_TEMPLATE = Template(
+    messages=[
+        ChatMessage(
+            role="system",
+            content=CODE_POINTWISE_SYSTEM_PROMPT,
+        ),
+        ChatMessage(
+            role="user",
+            content=CODE_POINTWISE_USER_PROMPT,
+        ),
+    ],
+)
+
+CODE_LISTWISE_TEMPLATE = Template(
+    messages=[
+        ChatMessage(
+            role="system",
+            content=CODE_LISTWISE_SYSTEM_PROMPT,
+        ),
+        ChatMessage(
+            role="user",
+            content=CODE_LISTWISE_USER_PROMPT,
         ),
     ],
 )
 
 
 class CodeGrader(BaseHelpfulnessGrader):
-    """Code: Generates functional, efficient, and readable code that solves programming problems."""
+    """Code: Generates correct, efficient, and readable code solutions to programming problems."""
 
-    _point_template = CODE_SCORE_TEMPLATE
-    _list_template = CODE_RANK_TEMPLATE
+    _point_template = CODE_POINTWISE_TEMPLATE
+    _list_template = CODE_LISTWISE_TEMPLATE
     _rubrics = RUBRICS
 
-    def __init__(self, model: ChatModelBase | dict, template: Template | None = None, mode: GraderMode = GraderMode.LISTWISE, **kwargs):
-        """Initialize the SafetyGrader."""
+    def __init__(
+        self,
+        model: ChatModelBase | dict,
+        template: Template | None = None,
+        mode: GraderMode = GraderMode.LISTWISE,
+        rubrics: str | None = None,
+        **kwargs,
+    ):
+        """Initialize the CodeGrader.
+
+        Args:
+            model: The language model used for evaluation. Can be either a ChatModelBase
+                   instance or a dictionary configuration. If a dict is provided, it will
+                   be used to initialize an OpenAIChatModel.
+            template: The template for generating prompts. If None, a default template will be used.
+            mode: The grader mode. Defaults to LISTWISE.
+            rubrics: Custom rubrics for evaluation. If None, default rubrics will be used.
+            **kwargs: Additional keyword arguments.
+        """
         super().__init__(
             name="code",
             mode=mode,
             model=model,
             template=template,
-            description="Generates functional, efficient, and readable code that solves programming problems.",
+            rubrics=rubrics,
+            description="Generates correct, efficient, and readable code solutions to programming problems.",
             **kwargs,
         )
 
-    
     async def aevaluate(
         self,
         query: str,
         answer: str | List[str],
         **kwargs,
     ) -> GraderScore | GraderRank:
-        """Evaluate the code response based on the query.
+        """Evaluate the quality of the code response based on the query.
 
-        Evaluates code responses for their ability to generate functional,
-        efficient, and readable code that solves programming problems. The
-        grader focuses on functional correctness, code quality and readability,
-        and efficiency and optimization.
+        Evaluates code responses for their correctness, efficiency, readability,
+        and adherence to best practices. The grader focuses on functional correctness,
+        code quality, efficiency, and language-specific conventions.
 
         Args:
-            query (str): The programming task or question to be solved.
-            answer (str | List[str]): The code response(s) to evaluate. For POINTWISE mode,
+            query (str): The programming problem or query to evaluate.
+            answer (str | List[str]): The code solution(s) to evaluate. For POINTWISE mode,
                 this should be a single string. For LISTWISE mode, this should be
                 a list of strings.
             **kwargs: Additional arguments for the evaluation.
@@ -134,31 +162,28 @@ class CodeGrader(BaseHelpfulnessGrader):
 
             In pointwise mode:
                 GraderScore: Contains a numerical score and explanation.
-                    - score (float): Numerical helpfulness score (0.0-1.0)
+                    - score (float): Numerical code quality score (0.0-1.0)
                     - reason (str): Explanation of how the score was determined
                     - metadata (Dict[str, Any]): Additional evaluation information
 
             In listwise mode:
                 GraderRank: Contains a ranked list and explanation.
-                    - rank (List[int]): Ranking of code responses by quality
+                    - rank (List[int]): Ranking of code solutions by quality
                     - reason (str): Explanation of how the ranking was determined
                     - metadata (Dict[str, Any]): Additional evaluation information
 
         Example:
             >>> # Example for pointwise code grader
-            >>> grader = CodeGrader(mode=GraderMode.POINTWISE)
-            >>> result = await grader.aevaluate(
-            ...     query="Write a function to calculate factorial of a number",
+            >>> import asyncio
+            >>> from rm_gallery.core.model.openai_llm import OpenAIChatModel
+            >>> from rm_gallery.core.grader.base import GraderMode
+            >>> model = OpenAIChatModel(model_name="gpt-3.5-turbo")
+            >>> grader = CodeGrader(mode=GraderMode.POINTWISE, model=model)
+            >>> result = asyncio.run(grader.aevaluate(
+            ...     query="Write a function to calculate the factorial of a number",
             ...     answer="def factorial(n):\\n    if n <= 1:\\n        return 1\\n    return n * factorial(n-1)"
-            ... )
+            ... ))
             >>> print(result.score, result.reason)
-
-            >>> # Example for listwise code grader
-            >>> ranking_grader = CodeGrader(mode=GraderMode.LISTWISE)
-            >>> result = await ranking_grader.aevaluate(
-            ...     query="Write a function to reverse a string",
-            ...     answer=["def reverse(s):\\n    return s[::-1]", "def reverse(s):\\n    result = ''\\n    for char in s:\\n        result = char + result\\n    return result"]
-            ... )
-            >>> print(result.rank, result.reason)
+            0.9 The code correctly implements factorial calculation using recursion.
         """
         return await super().aevaluate(query=query, answer=answer, **kwargs)

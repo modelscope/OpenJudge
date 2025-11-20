@@ -3,7 +3,7 @@
 RM-Gallery Core Module
 
 This module contains the core abstractions for building evaluation systems:
-- Schema: Standard data structures (DataSample, EvaluationResult, EvaluationReport, MetricResult)
+- Schema: Standard data structures (EvalCase, EvaluationResult, EvaluationReport, MetricResult)
 - Runner: Execute evaluation logic (BaseRunner, EvaluationRunner)
 - Metric: Compute metrics from results (BaseMetric, AccuracyMetric, ConflictMetric)
 
@@ -13,12 +13,12 @@ Example:
         EvaluationRunner,
         AccuracyMetric,
         ConflictMetric,
-        DataSample,
+        EvalCase,
     )
 
     # Define your runner by inheriting from EvaluationRunner
     class MyRunner(EvaluationRunner):
-        async def _execute_evaluation(self, data_samples, **kwargs):
+        async def _execute_evaluation(self, eval_cases, **kwargs):
             # Implement evaluation logic
             return {"model": "my_model", "results": [...]}
 
@@ -26,7 +26,7 @@ Example:
     runner = MyRunner(metrics=[AccuracyMetric(), ConflictMetric()])
 
     # Run evaluation
-    report = await runner(data_samples)
+    report = await runner(eval_cases)
     print(f"Accuracy: {report.metrics['accuracy'].value}")
     ```
 """
@@ -46,11 +46,11 @@ from rm_gallery.core.runner.evaluation import (
 )
 
 # Core schema
-from rm_gallery.core.schema import DataSample
+from rm_gallery.core.schema import EvalCase
 
 __all__ = [
     # Schema
-    "DataSample",
+    "EvalCase",
     "EvaluationResult",
     "EvaluationReport",
     "MetricResult",

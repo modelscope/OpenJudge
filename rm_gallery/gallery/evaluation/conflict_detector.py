@@ -21,7 +21,7 @@ from rm_gallery.core.runner.evaluation import (
     EvaluationRunner,
 )
 from rm_gallery.core.runner.evaluation.schema import EvaluationResult
-from rm_gallery.core.schema.data import DataSample
+from rm_gallery.core.schema.data import EvalCase
 
 
 class PairwiseComparisonRunner(EvaluationRunner):
@@ -29,7 +29,7 @@ class PairwiseComparisonRunner(EvaluationRunner):
     Runner that performs pairwise comparisons between all responses.
 
     This runner:
-    1. Takes DataSample with multiple answers
+    1. Takes EvalCase with multiple answers
     2. Compares all pairs of answers
     3. Builds a comparison matrix
     4. Returns standardized EvaluationResult
@@ -90,16 +90,16 @@ Which is better? Reply with [[BEST: A]], [[BEST: B]], or [[TIE]].
 
     async def _evaluate_single_sample(
         self,
-        data_sample: DataSample,
+        eval_case: EvalCase,
     ) -> EvaluationResult:
         """Evaluate a single sample and build comparison matrix."""
         try:
-            query = data_sample.data.get("query", "")
-            answers = [sample.get("answer", "") for sample in data_sample.samples]
+            query = eval_case.input.get("query", "")
+            answers = [sample.get("answer", "") for sample in eval_case.outputs]
 
             if len(answers) < 2:
                 return EvaluationResult(
-                    unique_id=data_sample.data.get("unique_id", ""),
+                    unique_id=eval_case.input.get("unique_id", ""),
                     error="Insufficient answers",
                 )
 
@@ -121,7 +121,7 @@ Which is better? Reply with [[BEST: A]], [[BEST: B]], or [[TIE]].
 
             # Find ground truth (chosen) index for accuracy calculation
             ground_truth_index = None
-            for i, sample in enumerate(data_sample.samples):
+            for i, sample in enumerate(eval_case.outputs):
                 if sample.get("preference") == "chosen":
                     ground_truth_index = i
                     break
@@ -131,7 +131,7 @@ Which is better? Reply with [[BEST: A]], [[BEST: B]], or [[TIE]].
             predicted_index = row_sums.index(max(row_sums)) if row_sums else None
 
             return EvaluationResult(
-                unique_id=data_sample.data.get("unique_id", ""),
+                unique_id=eval_case.input.get("unique_id", ""),
                 comparison_matrix=comparison_matrix,
                 predicted_index=predicted_index,
                 ground_truth_index=ground_truth_index,
@@ -144,42 +144,42 @@ Which is better? Reply with [[BEST: A]], [[BEST: B]], or [[TIE]].
         except Exception as e:
             logger.error(f"Evaluation failed: {str(e)}")
             return EvaluationResult(
-                unique_id=data_sample.data.get("unique_id", ""),
+                unique_id=eval_case.input.get("unique_id", ""),
                 error=str(e),
             )
 
     async def _execute_evaluation(
         self,
-        data_samples: List[DataSample],
+        eval_cases: List[EvalCase],
         *args: Any,
         **kwargs: Any,
     ) -> dict:
         """Execute pairwise comparison evaluation."""
-        if not data_samples:
+        if not eval_cases:
             return {"error": "No samples to evaluate"}
 
-        logger.info(f"Processing {len(data_samples)} samples")
+        logger.info(f"Processing {len(eval_cases)} samples")
 
-        tasks = [self._evaluate_single_sample(sample) for sample in data_samples]
+        tasks = [self._evaluate_single_sample(sample) for sample in eval_cases]
         results = await asyncio.gather(*tasks)
 
         return {
             "model": self.model.model_name,
-            "total_samples": len(data_samples),
+            "total_samples": len(eval_cases),
             "results": [r.model_dump() for r in results],
         }
 
 
-def load_data_samples(file_path: str, max_samples: int = -1) -> List[DataSample]:
+def load_eval_cases(file_path: str, max_samples: int = -1) -> List[EvalCase]:
     """Load data samples from JSONL file."""
     import json
 
     logger.info(f"Loading data from {file_path}")
-    data_samples = []
+    eval_cases = []
 
     if not os.path.exists(file_path):
         logger.warning(f"Data file not found: {file_path}")
-        return data_samples
+        return eval_cases
 
     with open(file_path, "r", encoding="utf-8") as f:
         for i, line in enumerate(f):
@@ -188,18 +188,18 @@ def load_data_samples(file_path: str, max_samples: int = -1) -> List[DataSample]
                 break
             try:
                 data = json.loads(line.strip())
-                sample = DataSample(**data)
-                data_samples.append(sample)
+                sample = EvalCase(**data)
+                eval_cases.append(sample)
             except Exception as e:
                 logger.error(f"Failed to parse line {i+1}: {e}")
                 continue
 
-    logger.info(f"Successfully loaded {len(data_samples)} data samples")
-    return data_samples
+    logger.info(f"Successfully loaded {len(eval_cases)} data samples")
+    return eval_cases
 
 
 async def evaluate_async(
-    data_samples: List[DataSample],
+    eval_cases: List[EvalCase],
     model: OpenAIChatModel,
     metrics: List[str] | None = None,
 ) -> dict:
@@ -207,7 +207,7 @@ async def evaluate_async(
     Run evaluation with specified metrics.
 
     Args:
-        data_samples: Data to evaluate
+        eval_cases: Data to evaluate
         model: Model to use for evaluation
         metrics: List of metric names to compute (e.g., ["accuracy", "conflict_rate"])
                 If None, computes both accuracy and conflict rate
@@ -232,7 +232,7 @@ async def evaluate_async(
     runner = PairwiseComparisonRunner(model=model, metrics=metric_objects)
 
     # Run evaluation
-    report = await runner(data_samples)
+    report = await runner(eval_cases)
 
     return report.model_dump()
 
@@ -262,13 +262,13 @@ def main(
 
     try:
         print(f"Loading data from: {data_path}")
-        data_samples = load_data_samples(file_path=data_path, max_samples=max_samples)
+        eval_cases = load_eval_cases(file_path=data_path, max_samples=max_samples)
 
-        if not data_samples:
+        if not eval_cases:
             print(f"No data samples loaded. Please check the data path: {data_path}")
             return
 
-        print(f"Loaded {len(data_samples)} samples")
+        print(f"Loaded {len(eval_cases)} samples")
 
         # Initialize model
         model = OpenAIChatModel(
@@ -282,7 +282,7 @@ def main(
         metric_list = [m.strip() for m in metrics.split(",") if m.strip()]
 
         # Run evaluation
-        report = asyncio.run(evaluate_async(data_samples, model, metric_list))
+        report = asyncio.run(evaluate_async(eval_cases, model, metric_list))
 
         # Print results
         print("\n" + "=" * 80)

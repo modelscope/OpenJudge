@@ -89,20 +89,38 @@ You may organize your reasoning as you see fit, but keep your thought process as
 
 
 class RewriteGrader(BaseHelpfulnessGrader):
-    """Rewrite: Improves existing text by enhancing clarity, style, or format while preserving meaning."""
+    """Rewrite: Improves text quality by correcting errors and enhancing clarity, fluency, and style."""
 
     _point_template = REWRITE_POINTWISE_TEMPLATE
     _list_template = REWRITE_LISTWISE_TEMPLATE
     _rubrics = RUBRICS
 
-    def __init__(self, model: ChatModelBase | dict, template: Template | None = None, mode: GraderMode = GraderMode.LISTWISE, **kwargs):
-        """Initialize the SafetyGrader."""
+    def __init__(
+        self,
+        model: ChatModelBase | dict,
+        template: Template | None = None,
+        mode: GraderMode = GraderMode.LISTWISE,
+        rubrics: str | None = None,
+        **kwargs,
+    ):
+        """Initialize the RewriteGrader.
+
+        Args:
+            model: The language model used for evaluation. Can be either a ChatModelBase
+                   instance or a dictionary configuration. If a dict is provided, it will
+                   be used to initialize an OpenAIChatModel.
+            template: The template for generating prompts. If None, a default template will be used.
+            mode: The grader mode. Defaults to LISTWISE.
+            rubrics: Custom rubrics for evaluation. If None, default rubrics will be used.
+            **kwargs: Additional keyword arguments.
+        """
         super().__init__(
             name="rewrite",
             mode=mode,
             model=model,
             template=template,
-            description="Rewrite: Improves existing text by enhancing clarity, style, or format while preserving meaning.",
+            rubrics=rubrics,
+            description="Improves text quality by correcting errors and enhancing clarity, fluency, and style.",
             **kwargs,
         )
 
@@ -112,17 +130,17 @@ class RewriteGrader(BaseHelpfulnessGrader):
         answer: str | List[str],
         **kwargs,
     ) -> GraderScore | GraderRank:
-        """Evaluate the rewrite quality of the response based on the query.
+        """Evaluate the quality of the rewritten text based on the query.
 
-        Evaluates rewrite responses for their ability to improve existing text by
-        enhancing clarity, style, or format while preserving meaning. The grader
-        focuses on preservation of meaning, enhancement of clarity, and appropriate
-        style adaptation.
+        Evaluates rewrite responses for their ability to improve text quality by
+        correcting errors and enhancing clarity, fluency, and style. The grader
+        focuses on error correction, clarity improvement, and stylistic enhancement.
 
         Args:
             query (str): The original text to be rewritten.
-            answer (str | List[str]): The rewritten text to evaluate. For pointwise evaluation,
-                this is a single string. For listwise evaluation, this is a list of rewritten versions.
+            answer (str | List[str]): The rewritten text(s) to evaluate. For POINTWISE mode,
+                this should be a single string. For LISTWISE mode, this should be
+                a list of strings.
             **kwargs: Additional arguments for the evaluation.
 
         Returns:
@@ -136,28 +154,22 @@ class RewriteGrader(BaseHelpfulnessGrader):
 
             In listwise mode:
                 GraderRank: Contains a ranked list and explanation.
-                    - rank (List[int]): Ranking of rewritten versions by quality
+                    - rank (List[int]): Ranking of rewritten texts by quality
                     - reason (str): Explanation of how the ranking was determined
                     - metadata (Dict[str, Any]): Additional evaluation information
 
         Example:
             >>> # Example for pointwise rewrite grader
-            >>> grader = RewriteGrader(mode=GraderMode.POINTWISE)
-            >>> result = await grader.aevaluate(
-            ...     query="Photosynthesis is the process by which plants convert light energy into chemical energy.",
-            ...     answer="Plants use sunlight to make their own food."
-            ... )
+            >>> import asyncio
+            >>> from rm_gallery.core.model.openai_llm import OpenAIChatModel
+            >>> from rm_gallery.core.grader.base import GraderMode
+            >>> model = OpenAIChatModel(model_name="gpt-3.5-turbo")
+            >>> grader = RewriteGrader(mode=GraderMode.POINTWISE, model=model)
+            >>> result = asyncio.run(grader.aevaluate(
+            ...     query="This is a bad writen sentance with alot of erors.",
+            ...     answer="This is a poorly written sentence with many errors."
+            ... ))
             >>> print(result.score, result.reason)
-
-            >>> # Example for listwise rewrite grader
-            >>> ranking_grader = RewriteGrader(mode=GraderMode.LISTWISE)
-            >>> result = await ranking_grader.aevaluate(
-            ...     query="Photosynthesis is the process by which plants convert light energy into chemical energy.",
-            ...     answer=[
-            ...         "Plants use sunlight to make their own food.",
-            ...         "The process where plants transform light into chemical energy is called photosynthesis."
-            ...     ]
-            ... )
-            >>> print(result.rank, result.reason)
+            1.0 The rewrite correctly fixes grammar and spelling errors while improving clarity.
         """
         return await super().aevaluate(query=query, answer=answer, **kwargs)

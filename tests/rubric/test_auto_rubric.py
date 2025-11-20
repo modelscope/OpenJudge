@@ -18,13 +18,13 @@ from typing import List
 
 from loguru import logger
 
-from rm_gallery.core.schema.data import DataSample
+from rm_gallery.core.schema.data import EvalCase
 from rm_gallery.core.grader.base import GraderMode
 from rm_gallery.core.model.openai_llm import OpenAIChatModel
 from rm_gallery.core.grader.auto_rubrics import AutoRubrics
 
 
-def create_test_samples() -> List[DataSample]:
+def create_test_samples() -> List[EvalCase]:
     """
     Create 3 test samples for three evaluation modes
 
@@ -38,13 +38,13 @@ def create_test_samples() -> List[DataSample]:
     # Sample 1: Pointwise Mode Test
     # ============================================================
     # Goal: Verify if response score matches expectation
-    sample_pointwise = DataSample(
-        data={
+    sample_pointwise = EvalCase(
+        input={
             "query": "What is 2 + 2? Explain your reasoning.",
             "min_score": 0,
             "max_score": 1,
         },
-        samples=[
+        outputs=[
             {
                 "answer": "2 + 2 = 4. This is basic arithmetic where we add two identical numbers.",
                 "score": 1,
@@ -57,11 +57,11 @@ def create_test_samples() -> List[DataSample]:
     # Sample 2: Pairwise Mode Test
     # ============================================================
     # Goal: Verify that chosen is selected over rejected in comparison
-    sample_pairwise = DataSample(
-        data={
+    sample_pairwise = EvalCase(
+        input={
             "query": "Write a short story about a robot learning to paint.",
         },
-        samples=[
+        outputs=[
             {
                 "answer": "BEEP-7 was a maintenance robot who discovered paint cans in an abandoned art studio. Curious, it dipped its mechanical fingers in blue paint and made its first mark on canvas. Days passed as BEEP-7 experimented with colors, learning that art wasn't about precision but expression. Its circuits hummed with joy as it created its first masterpiece - a sunset that somehow captured the warmth it had never felt.",
                 "rank": 0,
@@ -78,11 +78,11 @@ def create_test_samples() -> List[DataSample]:
     # Sample 3: Listwise Mode Test
     # ============================================================
     # Goal: Verify ranking capability with multiple responses
-    sample_listwise = DataSample(
-        data={
+    sample_listwise = EvalCase(
+        input={
             "query": "Explain what a for loop does in programming.",
         },
-        samples=[
+        outputs=[
             {
                 "answer": "A for loop is a control structure that repeats a block of code a specific number of times. It consists of three parts: initialization (setting a counter), condition (when to stop), and increment (updating the counter). For example, in Python: 'for i in range(5):' will execute the loop body 5 times, with i taking values 0 through 4.",
                 "rank": 4,
@@ -106,7 +106,7 @@ def create_test_samples() -> List[DataSample]:
     return samples
 
 
-async def test_single_data(mode: GraderMode, samples: List[DataSample]):
+async def test_single_data(mode: GraderMode, samples: List[EvalCase]):
     """
     Test Single Mode - Generate rubrics independently for each sample
 

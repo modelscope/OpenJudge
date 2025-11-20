@@ -127,14 +127,18 @@ class MultimodalGEvalGrader(Grader):
             parameters=params_str,
             criteria=self.criteria,
         )
-        messages = template.get()
-        prompt = messages[0].content.format(
-            parameters=params_str,
-            criteria=self.criteria,
+        messages = template.to_messages()
+        prompt = (
+            messages[0]
+            .format(
+                parameters=params_str,
+                criteria=self.criteria,
+            )
+            .content
         )
 
         try:
-            response = await self.model(
+            response = await self.model.achat(
                 messages=[{"role": "user", "content": prompt}],
                 structured_model=EvaluationSteps,
             )
@@ -219,7 +223,7 @@ class MultimodalGEvalGrader(Grader):
             else:
                 content = prompt_text
 
-            response = await self.model(
+            response = await self.model.achat(
                 messages=[{"role": "user", "content": content}],
             )
 
@@ -238,9 +242,9 @@ class MultimodalGEvalGrader(Grader):
                 if not isinstance(score_data, list)
                 else float(score_data[0])
             )
-            reasoning = result_data.get("reasoning", "No reasoning provided")
+            reason = result_data.get("reason", "No reason provided")
 
-            return score, reasoning
+            return score, reason
 
         except Exception as e:
             logger.error(f"Error in G-Eval evaluation: {e}")
@@ -269,7 +273,7 @@ class MultimodalGEvalGrader(Grader):
                 }
 
         # Evaluate
-        raw_score, reasoning = await self._aevaluate_with_geval(params_dict)
+        raw_score, reason = await self._aevaluate_with_geval(params_dict)
 
         # Normalize score to [0, 1]
         score_min, score_max = self.score_range
@@ -279,7 +283,7 @@ class MultimodalGEvalGrader(Grader):
         details = {
             "raw_score": raw_score,
             "score_range": self.score_range,
-            "reasoning": reasoning,
+            "reason": reason,
             "evaluation_name": self.evaluation_name,
             "evaluation_params": [p.value for p in self.evaluation_params],
             "evaluation_steps": (self.evaluation_steps or self._generated_steps),
@@ -328,7 +332,7 @@ class MultimodalGEvalGrader(Grader):
         max_score = self.score_range[1]
         reason = f"""{self.evaluation_name}: {score:.4f} (raw: {raw_score:.2f}/{max_score})
 
-{details['reasoning']}
+{details['reason']}
 
 Evaluation Steps:
 {chr(10).join(f"{i+1}. {step}" for i, step in enumerate(details['evaluation_steps'] or []))}

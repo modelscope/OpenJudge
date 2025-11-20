@@ -1,6 +1,16 @@
 # -*- coding: utf-8 -*-
+"""
+General Purpose Graders
+
+This module provides general-purpose graders for common evaluation tasks including:
+- AccuracyGrader: Exact match comparison between generated and reference text
+- LengthGrader: Evaluates response length against a target
+- KeywordPresenceGrader: Checks for presence of specific keywords
+- RegexGrader: Validates response against regex patterns
+"""
+
 import re
-from typing import List, Literal
+from typing import Any, List, Literal
 
 from rm_gallery.core.grader.base import Grader, GraderScore
 from rm_gallery.core.schema.grader import GraderMode
@@ -32,7 +42,8 @@ class AccuracyGrader(Grader):
         >>> print(result.score)
         0.0
     """
-    def __init__(self):
+
+    def __init__(self) -> None:
         super().__init__(
             name="accuracy",
             mode=GraderMode.POINTWISE,
@@ -108,17 +119,15 @@ class F1ScoreGrader(Grader):
         tokenizer_type: Literal["tiktoken", "jieba", "simple"] = "tiktoken",
         encoding_name: str = "cl100k_base",
         chinese_only: bool = False,
-        **kwargs
+        **kwargs: Any,
     ):
-        """
-        """
+        """ """
         super().__init__(
             name="f1_score",
             mode=GraderMode.POINTWISE,
             description="Calculate F1 score between generated content and reference answer at word level",
             **kwargs,
         )
-
 
         # Initialize tokenizer
         self.tokenizer_type = tokenizer_type
@@ -130,7 +139,7 @@ class F1ScoreGrader(Grader):
             chinese_only=chinese_only,
         )
 
-    async def aevaluate(self, generated, reference) -> GraderScore:
+    async def aevaluate(self, generated: str, reference: str) -> GraderScore:
         """
         Calculate F1 score between generated content and reference answer at word level.
 
@@ -236,7 +245,7 @@ class RougeLGrader(Grader):
         0.727
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(
             name="rouge_l",
             mode=GraderMode.POINTWISE,
@@ -364,7 +373,8 @@ class NumberAccuracyGrader(Grader):
         >>> print(result.score)
         0.0
     """
-    def __init__(self, tolerance: float = 1e-6, **kwargs):
+
+    def __init__(self, tolerance: float = 1e-6, **kwargs: Any) -> None:
         """"""
         super().__init__(
             name="number_accuracy",
@@ -381,7 +391,7 @@ class NumberAccuracyGrader(Grader):
         numbers = re.findall(number_pattern, text)
         return [float(n) for n in numbers if n]
 
-    async def aevaluate(self, generated, reference) -> GraderScore:
+    async def aevaluate(self, generated: str, reference: str) -> GraderScore:
         """
         Calculate number accuracy by comparing extracted numbers from both texts.
 
@@ -456,15 +466,10 @@ class NumberAccuracyGrader(Grader):
         total = min(len(generated_numbers), len(reference_numbers))
 
         for i in range(total):
-            if (
-                abs(generated_numbers[i] - reference_numbers[i])
-                <= self.tolerance
-            ):
+            if abs(generated_numbers[i] - reference_numbers[i]) <= self.tolerance:
                 correct += 1
 
-        accuracy = (
-            correct / len(reference_numbers) if reference_numbers else 0.0
-        )
+        accuracy = correct / len(reference_numbers) if reference_numbers else 0.0
 
         return GraderScore(
             name=self.name,

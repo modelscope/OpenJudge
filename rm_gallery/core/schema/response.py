@@ -17,16 +17,14 @@ from rm_gallery.core.schema.usage import ChatUsage
 class ChatResponse(BaseModel):
     """The response of chat models, compatible with AgentScope ChatResponse."""
 
-    content: Sequence[
-        TextBlock | ToolUseBlock | ThinkingBlock | AudioBlock
-    ] = Field(
+    content: Sequence[TextBlock | ToolUseBlock | ThinkingBlock | AudioBlock] = Field(
         default_factory=list,
         description="The content of the chat response, which can include text blocks, tool use blocks, or thinking blocks.",
     )
 
     id: str = Field(
         default_factory=lambda: datetime.now().strftime(
-            "%Y-%m-%d %H:%M:%S.%f"
+            "%Y-%m-%d %H:%M:%S.%f",
         )[:-3]
         + "_"
         + shortuuid.uuid()[:6],
@@ -35,7 +33,7 @@ class ChatResponse(BaseModel):
 
     created_at: str = Field(
         default_factory=lambda: datetime.now().strftime(
-            "%Y-%m-%d %H:%M:%S.%f"
+            "%Y-%m-%d %H:%M:%S.%f",
         )[:-3],
         description="When the response was created",
     )

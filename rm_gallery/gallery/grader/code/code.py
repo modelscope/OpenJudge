@@ -246,8 +246,7 @@ class CodeStyleGrader(Grader):
         return GraderScore(
             name=self.name,
             score=average_score,
-            reason=f"Code style score: {average_score:.3f}; "
-            + "; ".join(details),
+            reason=f"Code style score: {average_score:.3f}; " + "; ".join(details),
             metadata={
                 "code_blocks": code_blocks,
                 "average_score": average_score,
@@ -335,7 +334,7 @@ class CodeExecutionGrader(Grader):
         timeout: int = 10,
         test_framework_available: bool = True,
         compute_score: Any = None,
-        **kwargs,
+        **kwargs: Any,
     ):
         super().__init__(
             name="code_execution",
@@ -343,7 +342,7 @@ class CodeExecutionGrader(Grader):
             description="Executes code against test cases and evaluates correctness based on test case results",
             **kwargs,
         )
-        
+
         self.continuous = continuous
         self.timeout = timeout
         self.test_framework_available = test_framework_available

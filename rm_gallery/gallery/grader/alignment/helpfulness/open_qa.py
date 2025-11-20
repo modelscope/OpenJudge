@@ -1,23 +1,30 @@
 # -*- coding: utf-8 -*-
-from typing import List
-from rm_gallery.core.grader.base import (
-    GraderMode,
-    LLMGrader,
-    GraderScore,
-    GraderRank,
-)
+from typing import Any, List
+
+from rm_gallery.core.grader.base import GraderMode, GraderRank, GraderScore
 from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import Template
-from rm_gallery.gallery.grader.alignment.helpfulness import (
-    BaseHelpfulnessGrader,
+from rm_gallery.gallery.grader.alignment.helpfulness import BaseHelpfulnessGrader
+
+RUBRICS = (
+    "Comprehensive Coverage:\n    "
+    "Address all aspects of the question thoroughly, providing a well-rounded "
+    "response that considers multiple angles and relevant factors without "
+    "omitting significant points.\n"
+    "Source Reliability and Citation:\n    "
+    "Base information on credible, up-to-date sources and clearly attribute "
+    "facts or claims to their origins when appropriate, particularly for "
+    "contentious or specialized topics.\n"
+    "Nuanced Understanding:\n    "
+    "Demonstrate sophisticated comprehension of the topic by acknowledging "
+    "complexities, uncertainties, or trade-offs rather than presenting overly "
+    "simplified or one-sided views.\n"
+    "Clarity and Organization:\n    "
+    "Present information in a clear, logically structured format that enhances "
+    "readability and facilitates understanding, using appropriate headings, "
+    "paragraphs, and transitions."
 )
-
-
-RUBRICS = """Comprehensive Coverage: Address all aspects of the question thoroughly, providing a well-rounded response that considers multiple angles and relevant factors without omitting significant points.
-Source Reliability and Citation: Base information on credible, up-to-date sources and clearly attribute facts or claims to their origins when appropriate, particularly for contentious or specialized topics.
-Nuanced Understanding: Demonstrate sophisticated comprehension of the topic by acknowledging complexities, uncertainties, or trade-offs rather than presenting overly simplified or one-sided views.
-Clarity and Organization: Present information in a clear, logically structured format that enhances readability and facilitates understanding, using appropriate headings, paragraphs, and transitions."""
 
 
 # Open QA Score System Prompt
@@ -52,8 +59,14 @@ OPEN_QA_LISTWISE_SYSTEM_PROMPT = "You are a helpful assistant skilled in reward 
 
 # Open QA Rank User Prompt
 OPEN_QA_LISTWISE_USER_PROMPT = """# Task Description
-Your role is that of a professional evaluation expert. I will provide you with a question and several candidate answers. Your task is to select the single best answer from the candidates.
-I will also provide you with a set of rubrics, listed under the heading #Rubrics. These rubrics are ordered from highest to lowest importance. You must check each candidate answer in turn to see if it violates any rubric, and provide reasons for any violations you find. These reasons should be used as references for ranking the answers.
+Your role is that of a professional evaluation expert. I will provide you with a \
+question and several candidate answers. Your task is to select the single best answer \
+from the candidates.
+I will also provide you with a set of rubrics, listed under the heading #Rubrics. \
+These rubrics are ordered from highest to lowest importance. You must check each \
+candidate answer in turn to see if it violates any rubric, and provide reasons for \
+any violations you find. These reasons should be used as references for ranking \
+the answers.
 You may organize your reasoning as you see fit, but keep your thought process as concise as possible.
 
 # Rubrics
@@ -114,7 +127,7 @@ class OpenQAGrader(BaseHelpfulnessGrader):
         template: Template | None = None,
         mode: GraderMode = GraderMode.LISTWISE,
         rubrics: str | None = None,
-        **kwargs,
+        **kwargs: Any,
     ):
         """Initialize the OpenQAGrader.
 
@@ -141,7 +154,7 @@ class OpenQAGrader(BaseHelpfulnessGrader):
         self,
         query: str,
         answer: str | List[str],
-        **kwargs,
+        **kwargs: Any,
     ) -> GraderScore | GraderRank:
         """Evaluate the quality of the open QA response based on the query.
 

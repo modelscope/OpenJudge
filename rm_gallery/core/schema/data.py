@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-from typing import Any, Callable, Dict, List, Union
+from typing import Callable, Dict, List, Union
 
 from jsonschema import ValidationError, validate
 from pydantic import BaseModel, Field
 
-from rm_gallery.core.utils import get_value_by_mapping, get_value_by_path
+from rm_gallery.core.utils import get_value_by_path
 
 
 class EvalCase(BaseModel):

@@ -1,22 +1,24 @@
 # -*- coding: utf-8 -*-
-from typing import List
-from rm_gallery.core.grader.base import (
-    GraderScore,
-    GraderRank,
-)
+from typing import Any, List
+
+from rm_gallery.core.grader.base import GraderRank, GraderScore
 from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.schema.grader import GraderMode
 from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import Template
-from rm_gallery.gallery.grader.alignment.helpfulness import (
-    BaseHelpfulnessGrader,
-)
+from rm_gallery.gallery.grader.alignment.helpfulness import BaseHelpfulnessGrader
 
-RUBRICS = """Comprehensive Coverage of Core Content: A superior summary captures all critical elements, themes, and details central to the source material without omitting key information.
-Avoidance of Irrelevant or Tangential Information: Focuses exclusively on the primary subject, eliminating extraneous details that distract from the core narrative or argument.
-Logical Structure and Coherence: Information is organized in a clear, hierarchical, or chronological sequence to ensure readability and logical progression of ideas.
-Factual Accuracy and Neutral Objectivity: The summary must faithfully represent the source material without introducing distortions, opinions, or subjective interpretations, maintaining a neutral tone throughout.
-"""
+RUBRICS = (
+    "Comprehensive Coverage of Core Content: A superior summary captures all critical "
+    "elements, themes, and details central to the source material without omitting key "
+    "information. Avoidance of Irrelevant or Tangential Information: Focuses exclusively "
+    "on the primary subject, eliminating extraneous details that distract from the core "
+    "narrative or argument. Logical Structure and Coherence: Information is organized in "
+    "a clear, hierarchical, or chronological sequence to ensure readability and logical "
+    "progression of ideas. Factual Accuracy and Neutral Objectivity: The summary must "
+    "faithfully represent the source material without introducing distortions, opinions, "
+    "or subjective interpretations, maintaining a neutral tone throughout."
+)
 
 # Summarization Score System Prompt
 SUMMARIZATION_POINTWISE_SYSTEM_PROMPT = "You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words."
@@ -51,8 +53,14 @@ SUMMARIZATION_LISTWISE_SYSTEM_PROMPT = "You are a helpful assistant skilled in r
 # Summarization Rank User Prompt
 SUMMARIZATION_LISTWISE_USER_PROMPT = """# Task Description
 
-Your role is that of a professional evaluation expert. I will provide you with a question and several candidate answers. Your task is to select the single best answer from the candidates.
-I will also provide you with a set of rubrics, listed under the heading #Rubrics. These rubrics are ordered from highest to lowest importance. You must check each candidate answer in turn to see if it violates any rubric, and provide reasons for any violations you find. These reasons should be used as references for ranking the answers.
+Your role is that of a professional evaluation expert. I will provide you with a \
+question and several candidate answers. Your task is to select the single best answer \
+from the candidates.
+I will also provide you with a set of rubrics, listed under the heading #Rubrics. \
+These rubrics are ordered from highest to lowest importance. You must check each \
+candidate answer in turn to see if it violates any rubric, and provide reasons for \
+any violations you find. These reasons should be used as references for ranking \
+the answers.
 You may organize your reasoning as you see fit, but keep your thought process as concise as possible.
 
 # Rubrics
@@ -113,7 +121,7 @@ class SummarizationGrader(BaseHelpfulnessGrader):
         template: Template | None = None,
         mode: GraderMode = GraderMode.LISTWISE,
         rubrics: str | None = None,
-        **kwargs,
+        **kwargs: Any,
     ):
         """Initialize the SummarizationGrader.
 
@@ -140,7 +148,7 @@ class SummarizationGrader(BaseHelpfulnessGrader):
         self,
         query: str,
         answer: str | List[str],
-        **kwargs,
+        **kwargs: Any,
     ) -> GraderScore | GraderRank:
         """Evaluate the quality of the summary based on the query.
 

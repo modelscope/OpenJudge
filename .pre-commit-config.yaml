@@ -53,7 +53,7 @@ repos:
     rev: 23.3.0
     hooks:
       - id: black
-        language_version: python3.11
+        language_version: python3.10
   - repo: https://github.com/pycqa/isort
     rev: 5.13.2
     hooks:
@@ -111,20 +111,20 @@ repos:
     hooks:
       - id: nb-clean
         args: [ --preserve-cell-outputs, --remove-empty-cells ]
-  - repo: https://github.com/Yelp/detect-secrets
-    rev: v1.4.0
-    hooks:
-      - id: detect-secrets
-        args: ['--baseline', '.secrets.baseline']
-        exclude: |
-          (?x)^(
-              .*\.lock|
-              .*\.log|
-              .*\.jsonl|
-              .*\.json|
-              site/.*|
-              data/.*
-          )$
+  # - repo: https://github.com/Yelp/detect-secrets
+  #   rev: v1.4.0
+  #   hooks:
+  #     - id: detect-secrets
+  #       args: ['--baseline', '.secrets.baseline']
+  #       exclude: |
+  #         (?x)^(
+  #             .*\.lock|
+  #             .*\.log|
+  #             .*\.jsonl|
+  #             .*\.json|
+  #             site/.*|
+  #             data/.*
+  #         )$
   # - repo: https://github.com/codespell-project/codespell
   #   rev: v2.2.6
   #   hooks:

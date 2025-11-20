@@ -1,32 +1,27 @@
 # -*- coding: utf-8 -*-
 import asyncio
+import os
 
 # import inspect
 from abc import ABC, abstractmethod
 from functools import partial
-import os
-from typing import Callable, List
+from typing import Any, Callable, List
 
 from loguru import logger
 
-from rm_gallery.core.model.openai_llm import OpenAIChatModel
-from rm_gallery.core.schema.data import (
-    EvalCase,
-    EvalCaseParser,
-    parse_eval_case,
-)
 from rm_gallery.core.model.base import ChatModelBase
-from rm_gallery.core.schema.template import LanguageEnum
+from rm_gallery.core.model.openai_llm import OpenAIChatModel
+from rm_gallery.core.schema.data import EvalCase, EvalCaseParser, parse_eval_case
 from rm_gallery.core.schema.grader import (
-    _GraderRank,
-    _GraderScore,
     GraderError,
     GraderInfo,
     GraderMode,
     GraderRank,
     GraderScore,
+    _GraderRank,
+    _GraderScore,
 )
-from rm_gallery.core.schema.template import Chat, Template
+from rm_gallery.core.schema.template import Chat, LanguageEnum, Template
 from rm_gallery.core.utils.concurrency import ConcurrencyManager
 
 
@@ -47,7 +42,7 @@ class Grader(ABC):
         name: str = "",
         mode: GraderMode = GraderMode.POINTWISE,
         description: str = "",
-        **kwargs,
+        **kwargs: Any,
     ):
         """Initialize a Grader.
 
@@ -155,7 +150,7 @@ class Grader(ABC):
 
     async def _a_safe_evaluate(
         self,
-        **kwargs,
+        **kwargs: Any,
     ) -> GraderScore | GraderRank | GraderError:
         """Safely evaluate, handling exceptions gracefully and control concurrency.
 
@@ -195,7 +190,7 @@ class Grader(ABC):
         eval_case: EvalCase,
         parser: EvalCaseParser | None = None,
         *args,
-        **kwargs,
+        **kwargs: Any,
     ) -> List[GraderScore]:
         """Evaluate an eval case using this grader.
 
@@ -249,9 +244,7 @@ class Grader(ABC):
             if len(eval_case.outputs) > 1:
                 if eval_case.outputs:
                     for key in eval_case.outputs[0].keys():
-                        params[key] = [
-                            output[key] for output in eval_case.outputs
-                        ]
+                        params[key] = [output[key] for output in eval_case.outputs]
 
             result = await self._a_safe_evaluate(**params)
             if isinstance(result, GraderRank):
@@ -284,7 +277,7 @@ class Grader(ABC):
         eval_cases: List[EvalCase],
         parser: EvalCaseParser | Callable | None = None,
         *args,
-        **kwargs,
+        **kwargs: Any,
     ) -> List[List[GraderScore]]:
         """Main entry point to evaluate eval case.
 
@@ -378,7 +371,7 @@ class Grader(ABC):
         eval_cases: List[EvalCase],
         parser: EvalCaseParser | Callable | None = None,
         *args,
-        **kwargs,
+        **kwargs: Any,
     ) -> List[List[GraderScore]]:
         """Main entry point to evaluate eval case.
 
@@ -531,7 +524,7 @@ class LLMGrader(Grader):
         template: dict | Template = {},
         callback: Callable | None = None,
         rubrics: str = "",
-        **kwargs,
+        **kwargs: Any,
     ):
         """Initialize an LLMGrader.
 
@@ -571,18 +564,14 @@ class LLMGrader(Grader):
             self.language = language
 
         self.template = (
-            template
-            if isinstance(template, Template)
-            else Template(**template)
+            template if isinstance(template, Template) else Template(**template)
         )
 
         if callback:
             self.callback = callback
         else:
             self.callback = (
-                _GraderScore
-                if self.mode == GraderMode.POINTWISE
-                else _GraderRank
+                _GraderScore if self.mode == GraderMode.POINTWISE else _GraderRank
             )
 
         if isinstance(model, dict):
@@ -793,7 +782,7 @@ class FunctionGrader(Grader):
         name: str = "",
         mode: GraderMode = GraderMode.POINTWISE,
         description: str = "",
-        **kwargs,
+        **kwargs: Any,
     ):
         """Initialize a FunctionGrader.
 

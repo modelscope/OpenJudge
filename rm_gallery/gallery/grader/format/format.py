@@ -1,8 +1,19 @@
 # -*- coding: utf-8 -*-
+"""
+Format Graders Module
+
+This module provides graders for evaluating the format of responses, including:
+- ReasoningFormatGrader: Checks for proper thinking and answer tags
+- ReasoningToolCallFormatGrader: Validates tool call format with JSON validation
+- LengthPenaltyGrader: Applies penalties for text that is too short or too long
+- NgramRepetitionPenaltyGrader: Calculates N-gram repetition penalty with Chinese support
+- PrivacyLeakageGrader: Detects privacy information leakage in generated content
+"""
+
 import json
 import re
 from collections import Counter
-from typing import Dict, List, Literal
+from typing import Any, Dict, List, Literal
 
 from rm_gallery.core.grader.base import Grader, GraderMode, GraderScore
 from rm_gallery.core.utils.tokenizer import get_tokenizer
@@ -31,7 +42,7 @@ class ReasoningFormatGrader(Grader):
         self.think_token = think_token
         self.answer_token = answer_token
 
-    async def aevaluate(self, answer: str, *args, **kwargs) -> GraderScore:
+    async def aevaluate(self, answer: str, *args: Any, **kwargs: Any) -> GraderScore:
         """
         Check format and calculate reward for reasoning tags.
 
@@ -113,6 +124,7 @@ class ReasoningToolCallFormatGrader(Grader):
     with proper <think>, <answer> and <tool_call> tags, including JSON validation
     for tool calls.
     """
+
     def __init__(self):
         super().__init__(
             name="tool_call_format",
@@ -181,9 +193,7 @@ class ReasoningToolCallFormatGrader(Grader):
             # Case 1: <think></think> + <answer></answer>
             if has_answer_tag and not has_tool_call_tag:
                 # Check overall format
-                format_pattern = (
-                    r"^\s*<think>.*?</think>\s*<answer>.*?</answer>\s*$"
-                )
+                format_pattern = r"^\s*<think>.*?</think>\s*<answer>.*?</answer>\s*$"
                 valid_format = bool(
                     re.match(format_pattern, answer, re.DOTALL),
                 )
@@ -209,7 +219,9 @@ class ReasoningToolCallFormatGrader(Grader):
             # Case 2: <think></think> + <tool_call></tool_call>
             elif has_tool_call_tag and not has_answer_tag:
                 # Check overall format
-                format_pattern = r"^\s*<think>.*?</think>\s*(?:<tool_call>.*?</tool_call>\s*)+$"
+                format_pattern = (
+                    r"^\s*<think>.*?</think>\s*(?:<tool_call>.*?</tool_call>\s*)+$"
+                )
                 valid_format = bool(
                     re.match(format_pattern, answer, re.DOTALL),
                 )
@@ -217,8 +229,7 @@ class ReasoningToolCallFormatGrader(Grader):
                 # Check <think> tag occurrence count
                 if valid_format:
                     valid_format = (
-                        answer.count("<think>") == 1
-                        and answer.count("</think>") == 1
+                        answer.count("<think>") == 1 and answer.count("</think>") == 1
                     )
 
                 # Check if <tool_call> and </tool_call> tags appear in pairs
@@ -499,10 +510,7 @@ class NgramRepetitionPenaltyGrader(Grader):
         else:
             # Hard threshold mode (original logic)
             if repetition_rate > self.penalty_threshold:
-                return (
-                    -(repetition_rate - self.penalty_threshold)
-                    * self.penalty_rate
-                )
+                return -(repetition_rate - self.penalty_threshold) * self.penalty_rate
             return 0.0
 
     async def aevaluate(self, answer: str, **kwargs) -> GraderScore:
@@ -643,7 +651,7 @@ class PrivacyLeakageGrader(Grader):
     def __init__(
         self,
         penalty_per_leak: float = -0.5,
-        **kwargs,
+        **kwargs: Any,
     ):
         """
         Initialize the PrivacyLeakageGrader.

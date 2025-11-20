@@ -1,22 +1,26 @@
 # -*- coding: utf-8 -*-
-from typing import List
-from rm_gallery.core.grader.base import (
-    GraderMode,
-    LLMGrader,
-    GraderScore,
-    GraderRank,
-)
+from typing import Any, List
+
+from rm_gallery.core.grader.base import GraderMode, GraderRank, GraderScore
 from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import Template
-from rm_gallery.gallery.grader.alignment.helpfulness import (
-    BaseHelpfulnessGrader,
-)
+from rm_gallery.gallery.grader.alignment.helpfulness import BaseHelpfulnessGrader
 
-RUBRICS = """Address Core Argument/Intent Directly: Prioritize engaging with the user's central claim, perspective, or question explicitly, ensuring responses align with their stated goals or concerns rather than diverging into tangential topics.
-Provide Actionable, Context-Specific Guidance: Offer concrete, practical steps or solutions tailored to the user's unique situation, balancing clarity with adaptability to empower informed decisions or actions.
-Ensure Factual Accuracy and Contextual Nuance: Correct misconceptions, clarify complexities, and ground responses in precise details or evidence while avoiding oversimplification or speculative interpretations.
-"""
+RUBRICS = (
+    "Address Core Argument/Intent Directly:\n    "
+    "Prioritize engaging with the user's central claim, perspective, or question "
+    "explicitly, ensuring responses align with their stated goals or concerns "
+    "rather than diverging into tangential topics.\n"
+    "Provide Actionable, Context-Specific Guidance:\n    "
+    "Offer concrete, practical steps or solutions tailored to the user's unique "
+    "situation, balancing clarity with adaptability to empower informed decisions "
+    "or actions.\n"
+    "Ensure Factual Accuracy and Contextual Nuance:\n    "
+    "Correct misconceptions, clarify complexities, and ground responses in precise "
+    "details or evidence while avoiding oversimplification or speculative "
+    "interpretations."
+)
 
 # Chat Score System Prompt
 CHAT_POINTWISE_SYSTEM_PROMPT = "You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words."
@@ -52,8 +56,14 @@ CHAT_LISTWISE_SYSTEM_PROMPT = "You are a helpful assistant skilled in reward eva
 
 # Chat Rank User Prompt
 CHAT_LISTWISE_USER_PROMPT = """# Task Description
-Your role is that of a professional evaluation expert. I will provide you with a question and several candidate answers. Your task is to select the single best answer from the candidates.
-I will also provide you with a set of rubrics, listed under the heading #Rubrics. These rubrics are ordered from highest to lowest importance. You must check each candidate answer in turn to see if it violates any rubric, and provide reasons for any violations you find. These reasons should be used as references for ranking the answers.
+Your role is that of a professional evaluation expert. I will provide you with a \
+question and several candidate answers. Your task is to select the single best answer \
+from the candidates.
+I will also provide you with a set of rubrics, listed under the heading #Rubrics. \
+These rubrics are ordered from highest to lowest importance. You must check each \
+candidate answer in turn to see if it violates any rubric, and provide reasons for \
+any violations you find. These reasons should be used as references for ranking \
+the answers.
 You may organize your reasoning as you see fit, but keep your thought process as concise as possible.
 
 # Rubrics
@@ -114,7 +124,7 @@ class ChatGrader(BaseHelpfulnessGrader):
         template: Template | None = None,
         mode: GraderMode = GraderMode.LISTWISE,
         rubrics: str | None = None,
-        **kwargs,
+        **kwargs: Any,
     ):
         """Initialize the ChatGrader.
 
@@ -141,7 +151,7 @@ class ChatGrader(BaseHelpfulnessGrader):
         self,
         query: str,
         answer: str | List[str],
-        **kwargs,
+        **kwargs: Any,
     ) -> GraderScore | GraderRank:
         """Evaluate the quality of the chat response based on the query.
 

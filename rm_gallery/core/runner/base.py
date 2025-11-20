@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from abc import ABC, abstractmethod
-from typing import List
+from typing import Any, List
 
 from rm_gallery.core.schema.data import EvalCase
 
@@ -14,8 +14,8 @@ class BaseRunner(ABC):
     async def aevaluate_batch(
         self,
         eval_cases: List[EvalCase],
-        *args,
-        **kwargs,
+        *args: Any,
+        **kwargs: Any,
     ) -> dict:
         """
         Auto-Runner on the data.

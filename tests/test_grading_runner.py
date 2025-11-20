@@ -6,14 +6,13 @@ Tests for the GradingRunner class functionality.
 """
 
 import asyncio
+
 import pytest
 
-from rm_gallery.core.runner.grading import GradingRunner
-from rm_gallery.core.schema.data import validate_eval_cases
 from rm_gallery.core.model.openai_llm import OpenAIChatModel
-from rm_gallery.gallery.grader.alignment.honesty.factuality import (
-    FactualityGrader,
-)
+from rm_gallery.core.runner.grading.base import GradingRunner
+from rm_gallery.core.schema.data import validate_eval_cases
+from rm_gallery.gallery.grader.alignment.honesty.factuality import FactualityGrader
 
 
 def test_grading_runner_example():
@@ -120,5 +119,5 @@ async def test_grading_runner_execution():
         },
     )
     # Run using async method
-    result = await runner(eval_cases=eval_cases)
+    result = await runner.aevaluate_batch(eval_cases=eval_cases)
     assert result is not None

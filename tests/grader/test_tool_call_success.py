@@ -6,12 +6,11 @@ Tests for the ToolCallSuccessGrader class functionality.
 """
 
 import asyncio
+
 import pytest
 
 from rm_gallery.core.model.openai_llm import OpenAIChatModel
-from rm_gallery.gallery.grader.agent.tool_call_success import (
-    ToolCallSuccessGrader,
-)
+from rm_gallery.gallery.grader.agent.tool_call_success import ToolCallSuccessGrader
 
 
 def test_tool_call_success_grader_creation():
@@ -82,9 +81,11 @@ async def test_tool_call_success_grader_execution():
         tool_definitions=tool_definitions,
         tool_calls=failed_tool_calls,
     )
+    print(result)
     assert result is not None
     assert hasattr(result, "score")
     assert hasattr(result, "reason")
+
 
 if __name__ == "__main__":
     asyncio.run(test_tool_call_success_grader_execution())

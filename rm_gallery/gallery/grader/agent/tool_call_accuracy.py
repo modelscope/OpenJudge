@@ -5,19 +5,21 @@ import json
 import re
 from typing import Any, Dict, List, Union
 
-from rm_gallery.core.grader.base import GraderScore, LLMGrader, GraderMode
+from rm_gallery.core.grader.base import GraderMode, GraderScore, LLMGrader
 from rm_gallery.core.model.base import ChatModelBase
-from rm_gallery.core.model.openai_llm import OpenAIChatModel
 from rm_gallery.core.schema.message import ChatMessage
-from rm_gallery.core.schema.template import Template, PromptDict
-
+from rm_gallery.core.schema.template import Template
 
 TOOL_CALL_ACCURACY_SYSTEM_PROMPT = """# Instruction
 ## Goal
-Your are an expert in evaluating the accuracy of a tool call considering relevance and potential usefulness including syntactic and semantic correctness of a proposed tool call from an intelligent system based on provided definition and data. Your goal will involve answering the questions below using the information provided.
+Your are an expert in evaluating the accuracy of a tool call considering relevance and \
+potential usefulness including syntactic and semantic correctness of a proposed tool call \
+from an intelligent system based on provided definition and data. Your goal will involve \
+answering the questions below using the information provided.
 
 # Definition
-**Tool Call Accuracy** refers to the overall effectiveness of ALL TOOL CALLS made by an agent in response to a user's query within an ongoing CONVERSATION.
+**Tool Call Accuracy** refers to the overall effectiveness of ALL TOOL CALLS made by an \
+agent in response to a user's query within an ongoing CONVERSATION.
 
 # EVALUATION CRITERIA
 Evaluate based on these factors:
@@ -39,18 +41,22 @@ Evaluate based on these factors:
 Tool calls were not relevant to the user's query, resulting in an irrelevant or unhelpful final output.
 
 ## [Tool Call Accuracy: 2] (Partially Relevant - Wrong Execution)
-Tool calls were somewhat related to the user's query, but the agent was not able to reach information that helps address the user query due to one or more of the following:
+Tool calls were somewhat related to the user's query, but the agent was not able to reach \
+information that helps address the user query due to one or more of the following:
   • Parameters passed to the tool were incorrect.
   • Not enough tools (available in the tool definitions) were called to fully help address the query (missing tool calls).
   • Tools returned errors, and no retrials for the tool call were successful.
 
 ## [Tool Call Accuracy: 3] (Relevant but Inefficient)
-Tool calls were relevant, correct and grounded parameters were passed so that led to a correct output. However, multiple excessive, unnecessary tool calls were made.
+Tool calls were relevant, correct and grounded parameters were passed so that led to a \
+correct output. However, multiple excessive, unnecessary tool calls were made.
 
 ## [Tool Call Accuracy: 4] (Correct with Retrials)
 Tool calls were fully relevant and efficient:
-• Correct tools were called with the correct and grounded parameters, whether they are extracted from the conversation history or the current user query.
-• A tool returned an error, but the agent retried calling the tool and successfully got an output.
+• Correct tools were called with the correct and grounded parameters, whether they are \
+extracted from the conversation history or the current user query.
+• A tool returned an error, but the agent retried calling the tool and successfully got \
+an output.
 
 ## [Tool Call Accuracy: 5] (Optimal Solution)
 Tool calls were fully relevant and efficient:
@@ -130,7 +136,7 @@ class ToolCallAccuracyGrader(LLMGrader):
     def __init__(
         self,
         model: ChatModelBase | dict,
-        **kwargs,
+        **kwargs: Any,
     ):
         """Initialize the ToolCallAccuracyGrader.
 
@@ -196,7 +202,7 @@ class ToolCallAccuracyGrader(LLMGrader):
         tool_definitions: Union[Dict[str, Any], List[Dict[str, Any]]],
         tool_calls: Union[Dict[str, Any], List[Dict[str, Any]]] = None,
         response: Union[str, List[Dict[str, Any]]] = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> GraderScore:
         """Evaluate tool call accuracy. Accepts a query, tool definitions, and tool calls for evaluation.
 

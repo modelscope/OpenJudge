@@ -9,7 +9,7 @@ import nltk
 from loguru import logger
 
 
-def download_nltk_data():
+def download_nltk_data() -> None:
     """Download necessary NLTK data packages"""
 
     packages = [

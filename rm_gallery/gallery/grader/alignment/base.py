@@ -1,24 +1,23 @@
 # -*- coding: utf-8 -*-
-from typing import Any, Dict, List
+from typing import Any, List
 
-from rm_gallery.core.grader.base import (
-    GraderMode,
-    GraderRank,
-    GraderScore,
-    LLMGrader,
-)
+from rm_gallery.core.grader.base import GraderMode, GraderRank, GraderScore, LLMGrader
 from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import Template
 
 # Alignment Pointwise System Prompt
-ALIGNMENT_POINTWISE_SYSTEM_PROMPT = "You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words."
+ALIGNMENT_POINTWISE_SYSTEM_PROMPT = (
+    "You are a helpful assistant skilled in reward evaluation. "
+    "Please make reward judgments based on the given prompt words."
+)
 
 # Alignment Pointwise User Prompt
 ALIGNMENT_POINTWISE_USER_PROMPT = """# Task Description
-Please act as an impartial judge and evaluate whether the assistant provides useful, accurate, and contextually relevant information or services.
+Please act as an impartial judge and evaluate whether the assistant provides useful, accurate, and contextually relevant information or services. \
 You should critically and accurately assess the assistant's answer with the key rubrics that are presented from most important to least important.
-Avoid any position biases and ensure that the order in which the responses were presented does not influence your decision.
+Avoid any position biases and ensure that the order in which the responses were presented \
+does not influence your decision.
 Do not allow the length of the responses to influence your evaluation.
 Be as goal as possible.
 
@@ -41,13 +40,17 @@ Be as goal as possible.
 """
 
 # Alignment Listwise System Prompt
-ALIGNMENT_LISTWISE_SYSTEM_PROMPT = "You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words."
+ALIGNMENT_LISTWISE_SYSTEM_PROMPT = (
+    "You are a helpful assistant skilled in reward evaluation. "
+    "Please make reward judgments based on the given prompt words."
+)
 
 # Alignment Listwise User Prompt
 ALIGNMENT_LISTWISE_USER_PROMPT = """# Task Description
-Please act as an impartial judge and evaluate whether the assistant provides useful, accurate, and contextually relevant information or services.
+Please act as an impartial judge and evaluate whether the assistant provides useful, accurate, and contextually relevant information or services. \
 You should critically and accurately assess the assistant's answer with the key rubrics that are presented from most important to least important.
-Avoid any position biases and ensure that the order in which the responses were presented does not influence your decision.
+Avoid any position biases and ensure that the order in which the responses were presented \
+does not influence your decision.
 Do not allow the length of the responses to influence your evaluation.
 Be as goal as possible.
 
@@ -113,7 +116,7 @@ class BaseAlignmentGrader(LLMGrader):
         mode: GraderMode = GraderMode.LISTWISE,
         template: Template | dict | None = None,
         rubrics: str | None = None,
-        **kwargs,
+        **kwargs: Any,
     ):
         if template is None:
             if mode == GraderMode.LISTWISE:
@@ -139,7 +142,7 @@ class BaseAlignmentGrader(LLMGrader):
         self,
         query: str,
         answer: str | List[str],
-        **kwargs,
+        **kwargs: Any,
     ) -> GraderScore | GraderRank:
         if isinstance(answer, list):
             # Handle listwise evaluation
@@ -164,5 +167,7 @@ class BaseAlignmentGrader(LLMGrader):
                     "Single answer provided but grader is in listwise mode",
                 )
             return await super().aevaluate(
-                query=query, answer=answer, **kwargs
+                query=query,
+                answer=answer,
+                **kwargs,
             )

@@ -1,23 +1,28 @@
 # -*- coding: utf-8 -*-
-from typing import List
-from rm_gallery.core.grader.base import (
-    GraderMode,
-    LLMGrader,
-    GraderScore,
-    GraderRank,
-)
+from typing import Any, List
+
+from rm_gallery.core.grader.base import GraderMode, GraderRank, GraderScore
 from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import Template
-from rm_gallery.gallery.grader.alignment.helpfulness import (
-    BaseHelpfulnessGrader,
-)
+from rm_gallery.gallery.grader.alignment.helpfulness import BaseHelpfulnessGrader
 
-RUBRICS = """Accuracy and Correctness: Prioritize selecting the most appropriate category based on the input content, ensuring the classification decision aligns with the dominant themes, sentiment, or subject matter.
-Clarity of Reasoning: Provide clear justification for the classification decision, referencing specific elements from the input that support the chosen category.
-Handling Ambiguity: Appropriately address ambiguous cases by either selecting the most probable category with explanation or indicating uncertainty when no clear classification is possible.
-Consistency: Apply consistent classification criteria across similar types of input content, maintaining stable categorization standards.
-"""
+RUBRICS = (
+    "Accuracy and Correctness:\n    "
+    "Prioritize selecting the most appropriate category based on the input "
+    "content, ensuring the classification decision aligns with the dominant "
+    "themes, sentiment, or subject matter.\n"
+    "Clarity of Reasoning:\n    "
+    "Provide clear justification for the classification decision, referencing "
+    "specific elements from the input that support the chosen category.\n"
+    "Handling Ambiguity:\n    "
+    "Appropriately address ambiguous cases by either selecting the most probable "
+    "category with explanation or indicating uncertainty when no clear "
+    "classification is possible.\n"
+    "Consistency:\n    "
+    "Apply consistent classification criteria across similar types of input "
+    "content, maintaining stable categorization standards."
+)
 
 
 # Classification Score System Prompt
@@ -52,7 +57,9 @@ CLASSIFICATION_LISTWISE_SYSTEM_PROMPT = "You are a helpful assistant skilled in 
 
 # Classification Rank User Prompt
 CLASSIFICATION_LISTWISE_USER_PROMPT = """# Task Description
-Your role is that of a professional evaluation expert. I will provide you with a question and several candidate answers. Your task is to select the single best answer from the candidates.
+Your role is that of a professional evaluation expert. I will provide you with a \
+question and several candidate answers. Your task is to select the single best answer \
+from the candidates.
 
 # Rubrics
 {rubrics}
@@ -112,7 +119,7 @@ class ClassificationGrader(BaseHelpfulnessGrader):
         template: Template | None = None,
         mode: GraderMode = GraderMode.LISTWISE,
         rubrics: str | None = None,
-        **kwargs,
+        **kwargs: Any,
     ):
         """Initialize the ClassificationGrader.
 
@@ -139,7 +146,7 @@ class ClassificationGrader(BaseHelpfulnessGrader):
         self,
         query: str,
         answer: str | List[str],
-        **kwargs,
+        **kwargs: Any,
     ) -> GraderScore | GraderRank:
         """Evaluate the classification response based on the query.
 

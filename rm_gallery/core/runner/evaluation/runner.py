@@ -269,5 +269,3 @@ class EvaluationRunner(BaseRunner):
             errors=[error_message],
             metadata={"evaluation_failed": True},
         )
-
-

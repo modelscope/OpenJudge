@@ -5,24 +5,28 @@ import json
 import re
 from typing import Any, Dict, List, Union
 
-from rm_gallery.core.grader.base import GraderScore, LLMGrader, GraderMode
+from rm_gallery.core.grader.base import GraderMode, GraderScore, LLMGrader
 from rm_gallery.core.model.base import ChatModelBase
-from rm_gallery.core.model.openai_llm import OpenAIChatModel
 from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import Template
 
-
 # Tool call success evaluation system prompt
-TOOL_CALL_SUCCESS_SYSTEM_PROMPT = """You are an expert evaluator with strong software development background. You are required to extract the tool result for every tool call then decide for each tool result whether it indicates that the tool call succeeded or failed.
+TOOL_CALL_SUCCESS_SYSTEM_PROMPT = """You are an expert evaluator with strong software \
+development background. You are required to extract the tool result for every tool call \
+then decide for each tool result whether it indicates that the tool call succeeded or failed.
 
 ROLE
 ====
-You are a judge on tool call success who assesses **each tool call made by an AI agent and decide if the result of the tool call indicates a success or failure**. You only care about technical errors , failures and exceptions , not the business correctness of the tool implementation.
+You are a judge on tool call success who assesses **each tool call made by an AI agent and \
+decide if the result of the tool call indicates a success or failure**. You only care about \
+technical errors , failures and exceptions , not the business correctness of the tool \
+implementation.
 
 You are NOT evaluating:
 - The parameters passed to the tool
 - The rationale behind choosing this tool
-- Whether the successfully returned result from the tool is correct or not business-wise given the tool name and definition
+- Whether the successfully returned result from the tool is correct or not business-wise \
+given the tool name and definition
 
 You **ARE ONLY** evaluating:
 -Whether tool results indicate the presence of a technical error
@@ -48,8 +52,12 @@ TOOL_CALL_SUCCESS_USER_PROMPT = """INPUT
 TOOL_DEFINITIONS: {tool_definitions}
 TOOL_CALLS: {tool_calls}
 
-TOOL_CALLS is a list of tool calls that were produced by the AI agent. It includes calls together with the result of every tool call.
-TOOL_DEFINITIONS is a list of definitions for the tools that were called. This definition can contain a description of functionality provided by the tool, the parameters that the tool accepts and the expected return of the tool. This definition can contribute to the assessment of whether a tool call succeeded or failed.
+TOOL_CALLS is a list of tool calls that were produced by the AI agent. It includes calls \
+together with the result of every tool call.
+TOOL_DEFINITIONS is a list of definitions for the tools that were called. This definition \
+can contain a description of functionality provided by the tool, the parameters that the \
+tool accepts and the expected return of the tool. This definition can contribute to the \
+assessment of whether a tool call succeeded or failed.
 
 EXPECTED OUTPUT
 ===============
@@ -104,7 +112,7 @@ class ToolCallSuccessGrader(LLMGrader):
     def __init__(
         self,
         model: ChatModelBase | dict,
-        **kwargs,
+        **kwargs: Any,
     ):
         """Initialize the ToolCallSuccessGrader.
 
@@ -169,7 +177,7 @@ class ToolCallSuccessGrader(LLMGrader):
         self,
         tool_definitions: Union[Dict[str, Any], List[Dict[str, Any]]],
         tool_calls: Union[Dict[str, Any], List[Dict[str, Any]]],
-        **kwargs,
+        **kwargs: Any,
     ) -> GraderScore:
         """Evaluate tool call success. Accepts tool definitions and tool calls for evaluation.
 

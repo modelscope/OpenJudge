@@ -1,11 +1,16 @@
+# -*- coding: utf-8 -*-
 """
 Core Utilities Module
 
 Utility functions for RM-Gallery core.
 """
+from typing import Any, Dict, List, Optional, Union
 
 
-def get_value_by_path(data, path):
+def get_value_by_path(
+    data: Union[Dict[str, Any], List[Any]],
+    path: str,
+) -> Optional[Any]:
     """Get value from dictionary by path, supporting list indexing.
 
     Args:
@@ -31,7 +36,10 @@ def get_value_by_path(data, path):
         return None
 
 
-def get_value_by_mapping(data, mapping) -> dict:
+def get_value_by_mapping(
+    data: Dict[str, Any],
+    mapping: Dict[str, str],
+) -> Dict[str, Any]:
     """Get values from dictionary according to mapping.
 
     Args:
@@ -41,13 +49,13 @@ def get_value_by_mapping(data, mapping) -> dict:
     Returns:
         dict: Mapped dictionary
     """
-    result = {}
+    result: Dict[str, Any] = {}
     for field, path in mapping.items():
         result[field] = get_value_by_path(data, path)
     return result
 
 
 __all__ = [
-    "get_value_by_mapping",
     "get_value_by_path",
+    "get_value_by_mapping",
 ]

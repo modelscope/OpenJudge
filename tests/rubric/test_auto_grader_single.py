@@ -9,8 +9,7 @@ with single eval cases and different configurations.
 import asyncio
 
 import pytest
-from rm_gallery.core.model import OpenAIChatModel
-from rm_gallery.core.schema.data import EvalCase
+
 from rm_gallery.core.grader.auto_grader import AutoGrader
 from rm_gallery.core.grader.auto_rubrics import AutoRubricsConfig
 from rm_gallery.core.model import OpenAIChatModel

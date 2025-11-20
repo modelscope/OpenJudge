@@ -18,11 +18,13 @@ from aioitertools import iter as giter
 from loguru import logger
 from pydantic import BaseModel
 
-from .base import ChatModelBase
+from rm_gallery.core.schema.message import ChatMessage
+
 from ..schema.block import TextBlock, ThinkingBlock, ToolUseBlock
 from ..schema.response import ChatResponse
 from ..schema.usage import ChatUsage
 from ..utils.utils import _create_tool_from_base_model, _json_loads_with_repair
+from .base import ChatModelBase
 
 if TYPE_CHECKING:
     from dashscope.api_entities.dashscope_response import (
@@ -30,12 +32,9 @@ if TYPE_CHECKING:
         MultiModalConversationResponse,
     )
 else:
-    GenerationResponse = (
-        "dashscope.api_entities.dashscope_response.GenerationResponse"
-    )
+    GenerationResponse = "dashscope.api_entities.dashscope_response.GenerationResponse"
     MultiModalConversationResponse = (
-        "dashscope.api_entities.dashscope_response."
-        "MultiModalConversationResponse"
+        "dashscope.api_entities.dashscope_response." "MultiModalConversationResponse"
     )
 
 
@@ -92,13 +91,11 @@ class DashScopeChatModel(ChatModelBase):
 
             dashscope.base_http_api_url = base_http_api_url
 
-    async def __call__(
+    async def achat(
         self,
-        messages: list[dict[str, Any]],
+        messages: list[dict[str, Any] | ChatMessage],
         tools: list[dict] | None = None,
-        tool_choice: Literal["auto", "none", "any", "required"]
-        | str
-        | None = None,
+        tool_choice: Literal["auto", "none", "any", "required"] | str | None = None,
         structured_model: Type[BaseModel] | None = None,
         **kwargs: Any,
     ) -> ChatResponse | AsyncGenerator[ChatResponse, None]:
@@ -143,6 +140,12 @@ class DashScopeChatModel(ChatModelBase):
         """
         import dashscope
 
+        assert isinstance(messages, list), "messages must be a list"
+        messages = [
+            message if isinstance(message, dict) else message.to_dict()
+            for message in messages
+        ]
+
         # For qvq and qwen-vl models, the content field cannot be `None` or
         # `[{"text": None}]`, so we need to convert it to an empty list.
         if self.model_name.startswith("qvq") or "-vl" in self.model_name:
@@ -171,10 +174,7 @@ class DashScopeChatModel(ChatModelBase):
             self._validate_tool_choice(tool_choice, tools)
             kwargs["tool_choice"] = self._format_tool_choice(tool_choice)
 
-        if (
-            self.enable_thinking is not None
-            and "enable_thinking" not in kwargs
-        ):
+        if self.enable_thinking is not None and "enable_thinking" not in kwargs:
             kwargs["enable_thinking"] = self.enable_thinking
 
         if structured_model:
@@ -285,9 +285,7 @@ class DashScopeChatModel(ChatModelBase):
             for tool_call in message.get("tool_calls", []):
                 index = tool_call.get("index", 0)
 
-                if "id" in tool_call and tool_call["id"] != acc_tool_calls[
-                    index
-                ].get(
+                if "id" in tool_call and tool_call["id"] != acc_tool_calls[index].get(
                     "id",
                 ):
                     acc_tool_calls[index]["id"] = (
@@ -298,8 +296,7 @@ class DashScopeChatModel(ChatModelBase):
                     func = tool_call["function"]
                     if "name" in func:
                         acc_tool_calls[index]["name"] = (
-                            acc_tool_calls[index].get("name", "")
-                            + func["name"]
+                            acc_tool_calls[index].get("name", "") + func["name"]
                         )
 
                     if "arguments" in func:

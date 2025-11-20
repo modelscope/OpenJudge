@@ -8,20 +8,20 @@ from typing import Any
 from urllib.parse import urlparse
 
 import requests
-
-from .truncated import TruncatedFormatterBase
 from loguru import logger
-from ...schema.message import ChatMessage
+
 from ...schema.block import (
-    URLSource,
-    TextBlock,
-    ImageBlock,
     AudioBlock,
     Base64Source,
-    ToolUseBlock,
+    ImageBlock,
+    TextBlock,
     ToolResultBlock,
+    ToolUseBlock,
+    URLSource,
 )
+from ...schema.message import ChatMessage
 from ..token import TokenCounterBase
+from .truncated import TruncatedFormatterBase
 
 
 def _to_openai_image_url(url: str) -> str:

@@ -43,8 +43,7 @@ class SuperFastAdaptiveMCR2:
 
                 if rsp.status_code == 200:
                     embeddings = [
-                        record["embedding"]
-                        for record in rsp.output["embeddings"]
+                        record["embedding"] for record in rsp.output["embeddings"]
                     ]
                     all_embeddings.extend(embeddings)
                 else:
@@ -163,9 +162,7 @@ class SuperFastAdaptiveMCR2:
             0  # MCR internal patience, separate from pipeline level
         )
 
-        while (
-            len(selected_indices) < max_samples and len(candidate_indices) > 0
-        ):
+        while len(selected_indices) < max_samples and len(candidate_indices) > 0:
             batch_num += 1
             current_batch_size = min(
                 batch_size,
@@ -213,9 +210,7 @@ class SuperFastAdaptiveMCR2:
                 break
 
             # Calculate increment
-            new_selected = (
-                selected_indices + batch_result["best_batch_indices"]
-            )
+            new_selected = selected_indices + batch_result["best_batch_indices"]
             new_X = X[new_selected]
             R_new = self.fast_coding_rate_svd(new_X, eps)
             batch_increment = R_new - R_current
@@ -251,9 +246,7 @@ class SuperFastAdaptiveMCR2:
 
         # 5. Result analysis
         selected_texts = [texts[i] for i in selected_indices]
-        final_coding_rate = (
-            coding_rate_history[-1] if coding_rate_history else 0.0
-        )
+        final_coding_rate = coding_rate_history[-1] if coding_rate_history else 0.0
 
         analysis = self._analyze_curve(
             cumulative_samples,

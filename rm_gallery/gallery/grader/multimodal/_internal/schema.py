@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Multimodal Evaluation Schema Definitions
 
@@ -67,11 +68,11 @@ class Rubric(BaseModel):
         start, end = value
         if not (0 <= start <= 10 and 0 <= end <= 10):
             raise ValueError(
-                "Both Rubric's 'score_range' values must be between 0 and 10 inclusive."
+                "Both Rubric's 'score_range' values must be between 0 and 10 inclusive.",
             )
         if start > end:
             raise ValueError(
-                "Rubric's 'score_range' start must be less than or equal to end."
+                "Rubric's 'score_range' start must be less than or equal to end.",
             )
         return value
 

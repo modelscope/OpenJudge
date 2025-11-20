@@ -3,16 +3,10 @@
 messages."""
 from abc import ABC
 from copy import deepcopy
-from typing import (
-    Any,
-    Tuple,
-    Literal,
-    AsyncGenerator,
-)
+from typing import Any, AsyncGenerator, Literal, Tuple
 
-from .base import FormatterBase
-from .base import ChatMessage
 from ..token import TokenCounterBase
+from .base import ChatMessage, FormatterBase
 
 
 class TruncatedFormatterBase(FormatterBase, ABC):
@@ -38,9 +32,7 @@ class TruncatedFormatterBase(FormatterBase, ABC):
         """
         self.token_counter = token_counter
 
-        assert (
-            max_tokens is None or 0 < max_tokens
-        ), "max_tokens must be greater than 0"
+        assert max_tokens is None or 0 < max_tokens, "max_tokens must be greater than 0"
         self.max_tokens = max_tokens
 
     async def format(

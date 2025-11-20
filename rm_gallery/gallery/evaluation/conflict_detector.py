@@ -9,7 +9,6 @@ import asyncio
 import os
 from typing import Any, Dict, List, Optional
 
-import fire
 import numpy as np
 from loguru import logger
 
@@ -57,7 +56,9 @@ Response B: {answer_b}
 Which is better? Reply with [[BEST: A]], [[BEST: B]], or [[TIE]].
 """
 
-            response = await self.model(messages=[{"role": "user", "content": prompt}])
+            response = await self.model.achat(
+                messages=[{"role": "user", "content": prompt}]
+            )
 
             # Extract text from ChatResponse
             response_text = ""
@@ -235,78 +236,3 @@ async def evaluate_async(
     report = await runner(eval_cases)
 
     return report.model_dump()
-
-
-def main(
-    data_path: str,
-    result_path: str = "data/results/conflict_detector.json",
-    model_name: str = "gpt-4o",
-    api_key: str | None = None,
-    base_url: str | None = None,
-    max_samples: int = 10,
-    metrics: str = "accuracy,conflict_rate",
-) -> None:
-    """
-    Main execution function.
-
-    Args:
-        data_path: Path to JSONL data file
-        result_path: Path to save results
-        model_name: Name of the model to use
-        api_key: OpenAI API key (optional, reads from env if not provided)
-        base_url: Base URL for API (optional)
-        max_samples: Maximum number of samples to evaluate (-1 for all)
-        metrics: Comma-separated list of metrics to compute
-    """
-    import json
-
-    try:
-        print(f"Loading data from: {data_path}")
-        eval_cases = load_eval_cases(file_path=data_path, max_samples=max_samples)
-
-        if not eval_cases:
-            print(f"No data samples loaded. Please check the data path: {data_path}")
-            return
-
-        print(f"Loaded {len(eval_cases)} samples")
-
-        # Initialize model
-        model = OpenAIChatModel(
-            model_name=model_name,
-            api_key=api_key,
-            base_url=base_url,
-            generate_kwargs={"temperature": 0.1},
-        )
-
-        # Parse metrics
-        metric_list = [m.strip() for m in metrics.split(",") if m.strip()]
-
-        # Run evaluation
-        report = asyncio.run(evaluate_async(eval_cases, model, metric_list))
-
-        # Print results
-        print("\n" + "=" * 80)
-        print("EVALUATION RESULTS (using new framework)")
-        print("=" * 80)
-        print(f"\nModel: {report.get('model_name', 'Unknown')}")
-        print(f"Total samples: {report.get('total_samples', 0)}")
-        print(f"Valid samples: {report.get('valid_samples', 0)}")
-
-        for metric_name, metric_result in report.get("metrics", {}).items():
-            print(f"\n{metric_name}: {metric_result.get('value', 0):.4f}")
-            print(f"  Details: {metric_result.get('details', {})}")
-
-        # Save results
-        os.makedirs(os.path.dirname(result_path), exist_ok=True)
-        with open(result_path, "w", encoding="utf-8") as f:
-            json.dump(report, f, indent=2)
-
-        print(f"\nResults saved to: {result_path}")
-
-    except Exception as e:
-        print(f"Evaluation failed: {e}")
-        raise
-
-
-if __name__ == "__main__":
-    fire.Fire(main)

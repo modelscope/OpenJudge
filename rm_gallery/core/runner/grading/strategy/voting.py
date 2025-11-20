@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 import asyncio
-from typing import List
+from typing import Any, List
 
-
+from rm_gallery.core.grader.base import Grader, GraderScore
 from rm_gallery.core.runner.strategy.base import GraderStrategy
 from rm_gallery.core.schema.data import EvalCase
-from rm_gallery.core.grader.base import Grader, GraderScore
 
 
 class VotingStrategy(GraderStrategy):
@@ -16,7 +15,7 @@ class VotingStrategy(GraderStrategy):
     def __init__(
         self,
         num_repeats: int = 5,
-        **kwargs,
+        **kwargs: Any,
     ):
         """Initialize VotingStrategy.
 
@@ -32,7 +31,7 @@ class VotingStrategy(GraderStrategy):
         grader: Grader,
         eval_case: EvalCase,
         *args,
-        **kwargs,
+        **kwargs: Any,
     ) -> List[GraderScore]:
         """Optimize reward results by voting (repeating execution and averaging).
 
@@ -79,8 +78,7 @@ class VotingStrategy(GraderStrategy):
                     reason=f"Voting optimization over {self.num_repeats} runs. "
                     f"Individual scores: {scores}, reasons: {reasons}",
                     metadata={
-                        f"attempt_{j+1}": result[i]
-                        for j, result in enumerate(results)
+                        f"attempt_{j+1}": result[i] for j, result in enumerate(results)
                     },
                 ),
             )

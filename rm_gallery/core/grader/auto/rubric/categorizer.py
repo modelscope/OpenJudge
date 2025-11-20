@@ -21,9 +21,9 @@ from typing import List
 from loguru import logger
 from pydantic import BaseModel, Field
 
+from rm_gallery.core.grader.auto.rubric.prompts import RubricCategorizationTemplate
 from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.schema.template import LanguageEnum
-from rm_gallery.core.grader.rubric.prompts import RubricCategorizationTemplate
 
 
 class RubricCategory(BaseModel):
@@ -52,10 +52,8 @@ class LLMRubricCategorizer:
         self.model = model
 
         # Initialize categorization template
-        self.categorization_template = (
-            RubricCategorizationTemplate.categorization(
-                self.model,
-            )
+        self.categorization_template = RubricCategorizationTemplate.categorization(
+            self.model,
         )
 
     async def categorize_rubrics(
@@ -90,10 +88,7 @@ class LLMRubricCategorizer:
             )
 
             # Get structured data from metadata
-            if (
-                not response_obj.metadata
-                or "categories" not in response_obj.metadata
-            ):
+            if not response_obj.metadata or "categories" not in response_obj.metadata:
                 raise ValueError("No categories in structured response")
 
             categories = response_obj.metadata["categories"]
@@ -107,10 +102,7 @@ class LLMRubricCategorizer:
                 # Assemble into single string: Theme + Tips
                 theme_str = f"Theme: {theme}"
                 tips_str = "\n".join(
-                    [
-                        f"- Tip{i}: {tip}"
-                        for i, tip in enumerate(tips, start=1)
-                    ],
+                    [f"- Tip{i}: {tip}" for i, tip in enumerate(tips, start=1)],
                 )
 
                 # Combine into complete evaluation rubric string

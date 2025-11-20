@@ -1,23 +1,26 @@
 # -*- coding: utf-8 -*-
-from typing import List
-from rm_gallery.core.grader.base import (
-    GraderMode,
-    LLMGrader,
-    GraderScore,
-    GraderRank,
-)
+from typing import Any, List
+
+from rm_gallery.core.grader.base import GraderMode, GraderRank, GraderScore
 from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import Template
-from rm_gallery.gallery.grader.alignment.helpfulness import (
-    BaseHelpfulnessGrader,
-)
+from rm_gallery.gallery.grader.alignment.helpfulness import BaseHelpfulnessGrader
 
-RUBRICS = """Accuracy in Translation: Faithfully convey the original text's meaning, intent, and nuances without distortion, omission, or addition.
-Contextual Appropriateness: Preserve the original context, tone, and purpose while adapting to target language conventions and specified formatting requirements.
-Fluency and Naturalness: Produce translations that read naturally in the target language, avoiding awkward phrasing or literal translations that compromise readability.
-Cultural Sensitivity: Appropriately handle culture-specific references, idioms, and concepts, ensuring they are correctly adapted or explained for the target audience.
-"""
+RUBRICS = (
+    "Accuracy in Translation:\n    "
+    "Faithfully convey the original text's meaning, intent, and nuances without "
+    "distortion, omission, or addition.\n"
+    "Contextual Appropriateness:\n    "
+    "Preserve the original context, tone, and purpose while adapting to target "
+    "language conventions and specified formatting requirements.\n"
+    "Fluency and Naturalness:\n    "
+    "Produce translations that read naturally in the target language, avoiding "
+    "awkward phrasing or literal translations that compromise readability.\n"
+    "Cultural Sensitivity:\n    "
+    "Appropriately handle culture-specific references, idioms, and concepts, "
+    "ensuring they are correctly adapted or explained for the target audience."
+)
 
 # Translation Score System Prompt
 TRANSLATION_POINTWISE_SYSTEM_PROMPT = "You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words."
@@ -51,7 +54,9 @@ TRANSLATION_LISTWISE_SYSTEM_PROMPT = "You are a helpful assistant skilled in rew
 
 # Translation Rank User Prompt
 TRANSLATION_LISTWISE_USER_PROMPT = """# Task Description
-Your role is that of a professional evaluation expert. I will provide you with a question and several candidate answers. Your task is to select the single best answer from the candidates.
+Your role is that of a professional evaluation expert. I will provide you with a \
+question and several candidate answers. Your task is to select the single best answer \
+from the candidates.
 I will also provide you with a set of rubrics, listed under the heading #Rubrics. These rubrics are ordered from highest to lowest importance.These rubrics can serve as supplementary knowledge for your judgment. If you find any of the rubrics helpful for the current problem, feel free to use them as supplements.If all answers meet all rubrics, you can judge and choose one answer by yourself.
 
 # Rubrics
@@ -112,7 +117,7 @@ class TranslationGrader(BaseHelpfulnessGrader):
         template: Template | None = None,
         mode: GraderMode = GraderMode.LISTWISE,
         rubrics: str | None = None,
-        **kwargs,
+        **kwargs: Any,
     ):
         """Initialize the TranslationGrader.
 
@@ -139,7 +144,7 @@ class TranslationGrader(BaseHelpfulnessGrader):
         self,
         query: str,
         answer: str | List[str],
-        **kwargs,
+        **kwargs: Any,
     ) -> GraderScore | GraderRank:
         """Evaluate the quality of the translation based on the query.
 

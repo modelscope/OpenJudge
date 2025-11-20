@@ -222,3 +222,11 @@ class ChatMessage(BaseModel):
     #         f"timestamp='{self.timestamp}', "
     #         f"invocation_id='{self.invocation_id}')"
     #     )
+
+    def format(self, **kwargs) -> "ChatMessage":
+        message = self.model_copy()
+        if isinstance(message.content, str):
+            message.content = message.content.format(**kwargs)
+        else:
+            message.content = [block.format(**kwargs) for block in message.content]
+        return message

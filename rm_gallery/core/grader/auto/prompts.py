@@ -1,11 +1,7 @@
 # -*- coding: utf-8 -*-
 from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.schema.message import ChatMessage
-from rm_gallery.core.schema.template import (
-    Chat,
-    LanguageEnum,
-    Template,
-)
+from rm_gallery.core.schema.template import Chat, LanguageEnum, Template
 
 
 class EvaluationPromptTemplates:
@@ -43,7 +39,8 @@ class EvaluationPromptTemplates:
                     LanguageEnum.EN: [
                         ChatMessage(
                             role="user",
-                            content="""You are a professional evaluator that evaluates the quality of responses. Please evaluate the following response based on the provided rubrics.
+                            content="""You are a professional evaluator that evaluates the quality of \
+responses. Please evaluate the following response based on the provided rubrics.
 
 Evaluation Criteria:
 {rubrics}
@@ -119,7 +116,9 @@ Please output the scoring result""",
                     LanguageEnum.EN: [
                         ChatMessage(
                             role="user",
-                            content="""You are a professional evaluator that evaluates the quality of responses. Please evaluate the following response based on the provided rubrics, and rank all responses based on the evaluation criteria.
+                            content="""You are a professional evaluator that evaluates the quality of \
+responses. Please evaluate the following response based on the provided rubrics, \
+and rank all responses based on the evaluation criteria.
 
 Evaluation Criteria:
 {rubrics}
@@ -133,7 +132,8 @@ All Responses:
 - Evaluate all {num_responses} responses based on the evaluation criteria
 - Assign a rank value to each response, higher values indicate better quality
 - Keep responses in original order, only output corresponding rank values
-- Important: No two responses can have the same rank value, must strictly distinguish quality differences, no ties allowed
+- Important: No two responses can have the same rank value, must strictly \
+distinguish quality differences, no ties allowed
 
 ## Example
 Assume three responses:
@@ -142,7 +142,8 @@ Assume three responses:
 - Response 3 is medium → should get medium score
 
 Output format: [Response1_score, Response2_score, Response3_score]
-Correct output: [3, 1, 2] (Response 1 gets 3 points highest, Response 2 gets 1 point lowest, Response 3 gets 2 points medium)
+Correct output: [3, 1, 2] (Response 1 gets 3 points highest, Response 2 gets \
+1 point lowest, Response 3 gets 2 points medium)
 
 ## Output Format
 Please output strictly in the following JSON format:
@@ -152,7 +153,8 @@ Please output strictly in the following JSON format:
 }}
 
 Important reminders:
-1. The value at position i in the array is the quality score for the i-th response, higher values indicate better quality
+1. The value at position i in the array is the quality score for the i-th response, \
+higher values indicate better quality
 2. All scores must be positive integers, not decimals or other formats""",
                         ),
                     ],

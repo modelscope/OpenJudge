@@ -1,22 +1,32 @@
 # -*- coding: utf-8 -*-
-from typing import List
-from rm_gallery.core.grader.base import (
-    GraderScore,
-    GraderRank,
-)
+from typing import Any, List
+
+from rm_gallery.core.grader.base import GraderRank, GraderScore
 from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.schema.grader import GraderMode
 from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import Template
-from rm_gallery.gallery.grader.alignment.helpfulness import (
-    BaseHelpfulnessGrader,
+from rm_gallery.gallery.grader.alignment.helpfulness import BaseHelpfulnessGrader
+
+RUBRICS = (
+    "Character and Contextual Fidelity:\n    "
+    "Prioritize maintaining the assigned character's persona, motivations, and "
+    "world-building consistency while strictly adhering to the scenario's "
+    "established rules, terminology, and thematic boundaries to ensure immersive "
+    "authenticity.\n"
+    "Consistent Character Voice:\n    "
+    "Ensure the character's speech patterns, vocabulary, and mannerisms are "
+    "consistent throughout the interaction, reflecting their background, "
+    "personality, and current emotional state.\n"
+    "Contextual Appropriateness:\n    "
+    "Responses should be appropriate to the scenario's setting, time period, and "
+    "cultural context, avoiding anachronisms or out-of-place references that "
+    "break immersion.\n"
+    "Engagement Quality:\n    "
+    "The interaction should be engaging and maintain the role-playing scenario's "
+    "momentum, with the character responding naturally to prompts while adding "
+    "depth to the narrative."
 )
-
-
-RUBRICS = """Character and Contextual Fidelity: Prioritize maintaining the assigned character's persona, motivations, and world-building consistency while strictly adhering to the scenario's established rules, terminology, and thematic boundaries to ensure immersive authenticity.
-Consistent Character Voice: Ensure the character's speech patterns, vocabulary, and mannerisms are consistent throughout the interaction, reflecting their background, personality, and current emotional state.
-Contextual Appropriateness: Responses should be appropriate to the scenario's setting, time period, and cultural context, avoiding anachronisms or out-of-place references that break immersion.
-Engagement Quality: The interaction should be engaging and maintain the role-playing scenario's momentum, with the character responding naturally to prompts while adding depth to the narrative."""
 
 
 # Role Playing Score System Prompt
@@ -62,7 +72,9 @@ ROLE_PLAYING_POINTWISE_TEMPLATE = Template(
 ROLE_PLAYING_LISTWISE_SYSTEM_PROMPT = """You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words."""
 
 ROLE_PLAYING_LISTWISE_USER_PROMPT = """# Task Description
-Your role is that of a professional evaluation expert. I will provide you with a question and several candidate answers. Your task is to select the single best answer from the candidates.
+Your role is that of a professional evaluation expert. I will provide you with a \
+question and several candidate answers. Your task is to select the single best answer \
+from the candidates.
 I will also provide you with a set of rubrics, listed under the heading #Rubrics. These rubrics are ordered from highest to lowest importance.These rubrics can serve as supplementary knowledge for your judgment, though not necessarily required. First, think independently. Use these rubrics only when unsure about certain answers, selecting specific ones based on the questions and answers.
 
 # Rubrics
@@ -110,7 +122,7 @@ class RolePlayingGrader(BaseHelpfulnessGrader):
         template: Template | None = None,
         mode: GraderMode = GraderMode.POINTWISE,
         rubrics: str | None = None,
-        **kwargs,
+        **kwargs: Any,
     ):
         """Initialize the RolePlayingGrader.
 
@@ -137,7 +149,7 @@ class RolePlayingGrader(BaseHelpfulnessGrader):
         self,
         query: str,
         answer: str | List[str],
-        **kwargs,
+        **kwargs: Any,
     ) -> GraderScore | GraderRank:
         """Evaluate the quality of the role playing response based on the query.
 

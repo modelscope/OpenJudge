@@ -73,7 +73,7 @@ class TextToImageGrader(Grader):
         self.threshold = threshold
         self.evaluation_cost = 0.0
 
-    async def _a_evaluate_semantic_consistency(
+    async def _aevaluate_semantic_consistency(
         self,
         text_prompt: str,
         generated_image: MLLMImage,
@@ -108,7 +108,7 @@ class TextToImageGrader(Grader):
             logger.error(f"Error evaluating semantic consistency: {e}")
             return [5.0], f"Error during evaluation: {str(e)}"
 
-    async def _a_evaluate_perceptual_quality(
+    async def _aevaluate_perceptual_quality(
         self,
         generated_image: MLLMImage,
     ) -> Tuple[List[float], str]:

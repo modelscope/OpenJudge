@@ -74,14 +74,14 @@ class StringMatchGrader(Grader):
         >>> grader = StringMatchGrader(case_sensitive=False)
         >>>
         >>> # Use exact match algorithm
-        >>> result = await grader.evaluate(
+        >>> result = await grader.aevaluate(
         ...     reference="Hello World",
         ...     candidate="hello world",
         ...     algorithm="exact_match"
         ... )
         >>>
         >>> # Use substring match algorithm with override
-        >>> result = await grader.evaluate(
+        >>> result = await grader.aevaluate(
         ...     reference="cat",
         ...     candidate="The cat sat on the mat",
         ...     algorithm="substring_match",
@@ -89,14 +89,14 @@ class StringMatchGrader(Grader):
         ... )
         >>>
         >>> # Use regex match algorithm
-        >>> result = await grader.evaluate(
+        >>> result = await grader.aevaluate(
         ...     reference=r"\\d{3}-\\d{4}",
         ...     candidate="My phone is 123-4567",
         ...     algorithm="regex_match"
         ... )
         >>>
         >>> # Use contains all algorithm
-        >>> result = await grader.evaluate(
+        >>> result = await grader.aevaluate(
         ...     reference="",
         ...     candidate="The cat sat on the mat",
         ...     algorithm="contains_all",
@@ -128,7 +128,7 @@ class StringMatchGrader(Grader):
         self.case_sensitive = case_sensitive
         self.ignore_whitespace = ignore_whitespace
 
-    async def evaluate(
+    async def aevaluate(
         self,
         reference: str = "",
         candidate: str = "",
@@ -178,12 +178,18 @@ class StringMatchGrader(Grader):
         # Handle errors
         if "error" in details:
             error_msg = details.get("message", details["error"])
-            return GraderScore(score=0.0, reason=error_msg, metadata=details)
+            return GraderScore(
+                name=self.name,
+                score=0.0,
+                reason=error_msg,
+                metadata=details,
+            )
 
         # Format reason based on algorithm
         reason = self._format_reason(algorithm, score, details)
 
         return GraderScore(
+            name=self.name,
             score=score,
             reason=reason,
             metadata={**details, "algorithm": algorithm},

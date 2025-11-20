@@ -81,7 +81,7 @@ class ImageReferenceGrader(Grader):
         self.threshold = threshold
         self.evaluation_cost = 0.0
 
-    async def _a_evaluate_single_image(
+    async def _aevaluate_single_image(
         self,
         image: MLLMImage,
         context_above: Optional[str],

@@ -17,7 +17,7 @@ class TestROUGEBasic:
     async def test_rouge_perfect_match(self):
         """Test perfect match returns score of 1.0"""
         grader = SimilarityGrader()
-        result = await grader.evaluate(
+        result = await grader.aevaluate(
             reference="the cat is on the mat",
             candidate="the cat is on the mat",
             algorithm="rouge",
@@ -29,7 +29,7 @@ class TestROUGEBasic:
     async def test_rouge_complete_mismatch(self):
         """Test completely different text"""
         grader = SimilarityGrader()
-        result = await grader.evaluate(
+        result = await grader.aevaluate(
             reference="the cat is on the mat",
             candidate="hello world foo bar",
             algorithm="rouge",
@@ -41,7 +41,7 @@ class TestROUGEBasic:
     async def test_rouge_partial_match(self):
         """Test partial overlapping text"""
         grader = SimilarityGrader()
-        result = await grader.evaluate(
+        result = await grader.aevaluate(
             reference="the cat is on the mat",
             candidate="the dog is on the rug",
             algorithm="rouge",
@@ -58,7 +58,7 @@ class TestROUGE1:
     async def test_rouge1_perfect_match(self):
         """Test ROUGE-1 perfect match"""
         grader = SimilarityGrader()
-        result = await grader.evaluate(
+        result = await grader.aevaluate(
             reference="the cat sat",
             candidate="the cat sat",
             algorithm="rouge",
@@ -70,7 +70,7 @@ class TestROUGE1:
     async def test_rouge1_word_order_independent(self):
         """Test that ROUGE-1 is independent of word order"""
         grader = SimilarityGrader()
-        result = await grader.evaluate(
+        result = await grader.aevaluate(
             reference="the cat sat",
             candidate="sat cat the",
             algorithm="rouge1",
@@ -83,7 +83,7 @@ class TestROUGE1:
     async def test_rouge1_extra_words(self):
         """Test ROUGE-1 with extra words in candidate"""
         grader = SimilarityGrader()
-        result = await grader.evaluate(
+        result = await grader.aevaluate(
             reference="the cat sat",
             candidate="the big cat sat down",
             algorithm="rouge",
@@ -100,7 +100,7 @@ class TestROUGE2:
     async def test_rouge2_perfect_match(self):
         """Test ROUGE-2 perfect match"""
         grader = SimilarityGrader()
-        result = await grader.evaluate(
+        result = await grader.aevaluate(
             reference="the cat is on the mat",
             candidate="the cat is on the mat",
             algorithm="rouge",
@@ -112,7 +112,7 @@ class TestROUGE2:
     async def test_rouge2_word_order_matters(self):
         """Test that ROUGE-2 is sensitive to word order"""
         grader = SimilarityGrader()
-        result = await grader.evaluate(
+        result = await grader.aevaluate(
             reference="the cat is on the mat",
             candidate="the mat is on the cat",
             algorithm="rouge",
@@ -125,7 +125,7 @@ class TestROUGE2:
     async def test_rouge2_no_bigram_overlap(self):
         """Test ROUGE-2 with no bigram overlap"""
         grader = SimilarityGrader()
-        result = await grader.evaluate(
+        result = await grader.aevaluate(
             reference="a b c d",
             candidate="b a d c",
             algorithm="rouge2",
@@ -142,7 +142,7 @@ class TestROUGEL:
     async def test_rougeL_perfect_match(self):
         """Test ROUGE-L perfect match"""
         grader = SimilarityGrader()
-        result = await grader.evaluate(
+        result = await grader.aevaluate(
             reference="the cat is on the mat",
             candidate="the cat is on the mat",
             algorithm="rouge",
@@ -154,7 +154,7 @@ class TestROUGEL:
     async def test_rougeL_subsequence(self):
         """Test ROUGE-L with common subsequence"""
         grader = SimilarityGrader()
-        result = await grader.evaluate(
+        result = await grader.aevaluate(
             reference="a b c d e f",
             candidate="a x b x c x d x e x f",
             algorithm="rougeL",
@@ -192,7 +192,7 @@ class TestROUGENGram:
     async def test_rouge3_perfect_match(self):
         """Test ROUGE-3 perfect match"""
         grader = SimilarityGrader()
-        result = await grader.evaluate(
+        result = await grader.aevaluate(
             reference="the cat sat on the mat",
             candidate="the cat sat on the mat",
             algorithm="rouge",
@@ -204,7 +204,7 @@ class TestROUGENGram:
     async def test_rouge4_perfect_match(self):
         """Test ROUGE-4 perfect match"""
         grader = SimilarityGrader()
-        result = await grader.evaluate(
+        result = await grader.aevaluate(
             reference="the cat sat on the mat",
             candidate="the cat sat on the mat",
             algorithm="rouge",
@@ -216,7 +216,7 @@ class TestROUGENGram:
     async def test_rouge5_perfect_match(self):
         """Test ROUGE-5 perfect match"""
         grader = SimilarityGrader()
-        result = await grader.evaluate(
+        result = await grader.aevaluate(
             reference="the cat sat on the mat",
             candidate="the cat sat on the mat",
             algorithm="rouge",
@@ -258,7 +258,7 @@ class TestROUGEEdgeCases:
     async def test_empty_candidate(self):
         """Test handling of empty candidate"""
         grader = SimilarityGrader()
-        result = await grader.evaluate(
+        result = await grader.aevaluate(
             reference="the cat",
             candidate="",
             algorithm="rouge",
@@ -270,7 +270,7 @@ class TestROUGEEdgeCases:
     async def test_empty_reference(self):
         """Test handling of empty reference"""
         grader = SimilarityGrader()
-        result = await grader.evaluate(
+        result = await grader.aevaluate(
             reference="",
             candidate="the cat",
             algorithm="rouge",
@@ -282,7 +282,7 @@ class TestROUGEEdgeCases:
     async def test_single_word(self):
         """Test single word texts"""
         grader = SimilarityGrader()
-        result = await grader.evaluate(
+        result = await grader.aevaluate(
             reference="cat",
             candidate="cat",
             algorithm="rouge1",
@@ -294,7 +294,7 @@ class TestROUGEEdgeCases:
     async def test_repeated_words(self):
         """Test handling of repeated words"""
         grader = SimilarityGrader()
-        result = await grader.evaluate(
+        result = await grader.aevaluate(
             reference="cat cat cat",
             candidate="cat dog cat",
             algorithm="rouge1",
@@ -311,7 +311,7 @@ class TestROUGEWithStemming:
     async def test_with_stemming(self):
         """Test ROUGE with stemming enabled"""
         grader = SimilarityGrader()
-        result = await grader.evaluate(
+        result = await grader.aevaluate(
             reference="the cats are running",
             candidate="the cat is running",
             algorithm="rouge",
@@ -325,7 +325,7 @@ class TestROUGEWithStemming:
     async def test_without_stemming(self):
         """Test ROUGE without stemming"""
         grader = SimilarityGrader()
-        result = await grader.evaluate(
+        result = await grader.aevaluate(
             reference="the cats are running",
             candidate="the cat is running",
             algorithm="rouge",

@@ -1,25 +1,19 @@
 # -*- coding: utf-8 -*-
+"""template."""
+from __future__ import annotations
+
 import asyncio
 import json
 from abc import ABC
 from enum import Enum
-from typing import (
-    Any,
-    AsyncGenerator,
-    Callable,
-    Dict,
-    List,
-    Type,
-    TypedDict,
-    Union,
-)
+from typing import Any, AsyncGenerator, Callable, Dict, List, Type, TypedDict, Union
 
 import yaml
 from pydantic import BaseModel, Field
 
 from rm_gallery.core.model.base import ChatModelBase
-from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.model.openai_llm import OpenAIChatModel
+from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.response import ChatResponse
 from rm_gallery.core.utils.instance import init_instance_by_config
 
@@ -53,6 +47,29 @@ class PromptDict(TypedDict, total=False):
 
     system: str | ChatMessage
     user: str | ChatMessage
+
+
+class RequiredField(BaseModel):
+    """Represents a required input field in a template schema.
+
+    This class defines the metadata for a field that must be provided
+    when instantiating or validating a template. It is typically used
+    within template definitions to specify what data is expected from users
+    or upstream components.
+
+    Attributes:
+        name (str): The unique identifier of the field (e.g., "context", "query").
+        type (str): The expected data type as a string (e.g., "str", "int", "List[str]").
+            Note: This is a descriptive type hint, not enforced by Pydantic.
+        position (str): Where the field is expected to appear, such as "data" (main payload),
+            "metadata", or "config".
+        description (str): A human-readable explanation of the field's purpose and usage.
+    """
+
+    name: str
+    type: str
+    position: str
+    description: str
 
 
 Prompt = Union[str, PromptDict, List[ChatMessage]]
@@ -131,7 +148,10 @@ class Template(BaseModel):
         description="messages for generating chat",
     )
 
-    def to_messages(self, language: LanguageEnum | None = LanguageEnum.EN):
+    def to_messages(
+        self,
+        language: LanguageEnum | None = LanguageEnum.EN,
+    ) -> List[ChatMessage]:
         """Extract messages for the specified language.
 
         For monolingual templates, returns the messages directly.
@@ -154,7 +174,8 @@ class Template(BaseModel):
             >>> template.to_messages()
             [ChatMessage(role="user", content="Hello")]
 
-            >>> template = Template(messages={LanguageEnum.EN: [ChatMessage(role="user", content="Hello")]})
+            >>> messages = {LanguageEnum.EN: [ChatMessage(role="user", content="Hello")]}
+            >>> template = Template(messages=messages)
             >>> template.to_messages(LanguageEnum.EN)
             [ChatMessage(role="user", content="Hello")]
         """
@@ -191,7 +212,8 @@ class Template(BaseModel):
             >>> template.to_messages()
             [ChatMessage(role='user', content='Hello')]
 
-            >>> template = Template.from_prompt([ChatMessage(role='system', content='You are a bot')])
+            >>> messages = [ChatMessage(role='system', content='You are a bot')]
+            >>> template = Template.from_prompt(messages=messages)
             >>> template.to_messages()
             [ChatMessage(role='system', content='You are a bot')]
         """
@@ -253,16 +275,14 @@ class Chat(ABC):
                 that can be used to create a chat model.
         """
         self.template = (
-            template
-            if isinstance(template, Template)
-            else Template(**template)
+            template if isinstance(template, Template) else Template(**template)
         )
         self.model = init_instance_by_config(model, accept_type=ChatModelBase)
 
     def format(
         self,
         language: LanguageEnum | None = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> List[Dict[str, Any]]:
         """Format messages with provided keyword arguments.
 
@@ -294,7 +314,7 @@ class Chat(ABC):
         self,
         callback: Type[BaseModel] | Callable | None = None,
         language: LanguageEnum | None = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> ChatResponse:
         """Generate chat response using the template.
 
@@ -322,11 +342,7 @@ class Chat(ABC):
         """
         messages = self.format(language=language, **kwargs)
         # Check if callback is a Pydantic BaseModel class
-        if (
-            callback
-            and isinstance(callback, type)
-            and issubclass(callback, BaseModel)
-        ):
+        if callback and isinstance(callback, type) and issubclass(callback, BaseModel):
             # If callback is a Pydantic class, pass it as structured_model
             response = await self.model(
                 messages=messages,
@@ -360,18 +376,14 @@ class Chat(ABC):
             )
 
         # If callback is a function, call it with the response
-        if (
-            callback
-            and not isinstance(callback, type)
-            and isinstance(callback, Callable)
-        ):
+        if callback and not isinstance(callback, type) and callable(callback):
             response.metadata = response.metadata or {}
             response.metadata.update(callback(response))
 
         return response
 
     @classmethod
-    def load(cls, path: str):
+    def load(cls, path: str) -> Chat:
         """Load a Chat instance from a JSON or YAML file.
 
         This method loads a Chat configuration from a file and creates a Chat
@@ -402,7 +414,7 @@ class Chat(ABC):
 
 
 if __name__ == "__main__":
-    template = Template(
+    en_template = Template(
         messages={
             LanguageEnum.EN: [
                 {"role": "system", "content": "You are a helpful assistant."},
@@ -410,12 +422,12 @@ if __name__ == "__main__":
             ],
         },
     )
-    model = OpenAIChatModel(model_name="qwen-plus", stream=False)
-    chat = Chat(template=template, model=model)
-    messages = chat.format(
-        language="en",
+    openai_model = OpenAIChatModel(model_name="qwen-plus", stream=False)
+    chat = Chat(template=en_template, model=openai_model)
+    chat_messages = chat.format(
+        language=LanguageEnum.EN,
         question="What is the capital of France?",
     )
-    print(messages)
+    print(chat_messages)
     result = asyncio.run(chat(question="What is the capital of France?"))
     print(result)

@@ -72,7 +72,7 @@ class GradingRunner(BaseRunner):
         concurrency_manager = ConcurrencyManager()
         concurrency_manager.set_max_concurrent(max_concurrent)
 
-    async def evaluate(self, data_sample: DataSample) -> GradingResult:
+    async def aevaluate(self, data_sample: DataSample) -> GradingResult:
         """Run experiment for a single sample.
 
         Args:

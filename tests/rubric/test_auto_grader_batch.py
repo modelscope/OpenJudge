@@ -14,18 +14,18 @@ Features:
 import asyncio
 import json
 from pathlib import Path
-from typing import List, Dict, Any, Optional
+from typing import Any, Dict, List, Optional
 
 import pytest
-
 from loguru import logger
 
-from rm_gallery.core.schema.data import DataSample
-from rm_gallery.core.grader.base import GraderMode
-from rm_gallery.core.model import OpenAIChatModel
 from rm_gallery.core.grader.auto_grader import AutoGrader
 from rm_gallery.core.grader.auto_rubrics import AutoRubricsConfig
+from rm_gallery.core.grader.base import GraderMode
+from rm_gallery.core.model import OpenAIChatModel
+from rm_gallery.core.schema.data import DataSample
 
+# pylint: disable=line-too-long,too-many-nested-blocks,redefined-outer-name
 
 # ============================================================================
 # Utility Classes and Functions
@@ -73,9 +73,7 @@ class AccuracyCalculator:
                     if expected_score is not None:
                         pred_result = result_list[idx]
                         predicted_score = (
-                            pred_result.score
-                            if hasattr(pred_result, "score")
-                            else None
+                            pred_result.score if hasattr(pred_result, "score") else None
                         )
                         if predicted_score is not None:
                             total += 1
@@ -270,7 +268,7 @@ class AutoGraderBatchTester:
 
         # Evaluate test samples
         logger.info("Evaluating test samples...")
-        results = await grader.a_evaluate_data_samples(test_samples)
+        results = await grader.aevaluate_data_samples(test_samples)
 
         # Calculate accuracy
         accuracy_metrics = self.accuracy_calculator.calculate_accuracy(

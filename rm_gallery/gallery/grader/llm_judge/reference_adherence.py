@@ -12,9 +12,9 @@ from typing import Any, Optional
 from loguru import logger
 
 from rm_gallery.core.grader.base import Grader
-from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.model.openai_llm import OpenAIChatModel
 from rm_gallery.core.schema.grader import GraderMode, GraderScore
+from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import LanguageEnum, RequiredField, Template
 
 # pylint: disable=line-too-long
@@ -176,7 +176,7 @@ class ReferenceAdherenceGrader(Grader):
         ... )
         >>> grader = ReferenceAdherenceGrader(model=api, threshold=0.7)
         >>>
-        >>> result = await grader.evaluate(
+        >>> result = await grader.aevaluate(
         ...     reference="The product was launched in Q1 2023 in Europe.",
         ...     input="When and where was the product launched?",
         ...     output="The product was launched in early 2023 in European markets."
@@ -233,7 +233,7 @@ class ReferenceAdherenceGrader(Grader):
         self.language = language
         self.evaluation_cost = 0.0
 
-    async def evaluate(  # pylint: disable=redefined-builtin,unused-argument
+    async def aevaluate(  # pylint: disable=redefined-builtin,unused-argument
         self,
         reference: str,
         input: str,
@@ -257,7 +257,7 @@ class ReferenceAdherenceGrader(Grader):
                         where 1.0 means perfect adherence, 0.0 means complete failure
 
         Example:
-            >>> result = await grader.evaluate(
+            >>> result = await grader.aevaluate(
             ...     reference="The capital of France is Paris, with a population of 2.2M.",
             ...     input="What is the capital of France?",
             ...     output="Paris is the capital of France.",
@@ -330,6 +330,7 @@ Evaluate adherence accordingly.
         reason = f"Reference adherence score: {normalized_score:.4f}\n{reasoning}"
 
         return GraderScore(
+            name=self.name,
             score=normalized_score,
             reason=reason,
             metadata=metadata,

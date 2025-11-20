@@ -7,6 +7,8 @@ import pytest
 
 from rm_gallery.gallery.grader.text.string_match import StringMatchGrader
 
+# pylint: disable=too-many-public-methods
+
 
 @pytest.mark.asyncio
 class TestStringMatchGrader:
@@ -19,7 +21,7 @@ class TestStringMatchGrader:
 
     async def test_exact_match_case_sensitive(self, grader):
         """Test exact match with case sensitivity"""
-        result = await grader.evaluate(
+        result = await grader.aevaluate(
             reference="Hello World",
             candidate="Hello World",
             algorithm="exact_match",
@@ -30,7 +32,7 @@ class TestStringMatchGrader:
 
     async def test_exact_match_case_insensitive(self, grader):
         """Test exact match without case sensitivity"""
-        result = await grader.evaluate(
+        result = await grader.aevaluate(
             reference="Hello World",
             candidate="hello world",
             algorithm="exact_match",
@@ -41,7 +43,7 @@ class TestStringMatchGrader:
 
     async def test_exact_match_ignore_whitespace(self, grader):
         """Test exact match ignoring whitespace"""
-        result = await grader.evaluate(
+        result = await grader.aevaluate(
             reference="Hello World",
             candidate="HelloWorld",
             algorithm="exact_match",
@@ -52,7 +54,7 @@ class TestStringMatchGrader:
 
     async def test_prefix_match_success(self, grader):
         """Test prefix match success"""
-        result = await grader.evaluate(
+        result = await grader.aevaluate(
             reference="Hello",
             candidate="Hello World",
             algorithm="prefix_match",
@@ -62,7 +64,7 @@ class TestStringMatchGrader:
 
     async def test_prefix_match_failure(self, grader):
         """Test prefix match failure"""
-        result = await grader.evaluate(
+        result = await grader.aevaluate(
             reference="World",
             candidate="Hello World",
             algorithm="prefix_match",
@@ -72,7 +74,7 @@ class TestStringMatchGrader:
 
     async def test_suffix_match_success(self, grader):
         """Test suffix match success"""
-        result = await grader.evaluate(
+        result = await grader.aevaluate(
             reference="World",
             candidate="Hello World",
             algorithm="suffix_match",
@@ -82,7 +84,7 @@ class TestStringMatchGrader:
 
     async def test_suffix_match_failure(self, grader):
         """Test suffix match failure"""
-        result = await grader.evaluate(
+        result = await grader.aevaluate(
             reference="Hello",
             candidate="Hello World",
             algorithm="suffix_match",
@@ -92,7 +94,7 @@ class TestStringMatchGrader:
 
     async def test_regex_match_success(self, grader):
         """Test regex match success"""
-        result = await grader.evaluate(
+        result = await grader.aevaluate(
             reference=r"\d{3}-\d{4}",
             candidate="My phone is 123-4567",
             algorithm="regex_match",
@@ -102,7 +104,7 @@ class TestStringMatchGrader:
 
     async def test_regex_match_with_pattern_param(self, grader):
         """Test regex match with pattern parameter"""
-        result = await grader.evaluate(
+        result = await grader.aevaluate(
             reference="",
             candidate="test@example.com",
             algorithm="regex_match",
@@ -113,7 +115,7 @@ class TestStringMatchGrader:
 
     async def test_regex_match_invalid_pattern(self, grader):
         """Test regex match with invalid pattern"""
-        result = await grader.evaluate(
+        result = await grader.aevaluate(
             reference="[invalid(",
             candidate="test",
             algorithm="regex_match",
@@ -123,7 +125,7 @@ class TestStringMatchGrader:
 
     async def test_substring_match_success(self, grader):
         """Test substring match success"""
-        result = await grader.evaluate(
+        result = await grader.aevaluate(
             reference="cat",
             candidate="The cat sat on the mat",
             algorithm="substring_match",
@@ -133,7 +135,7 @@ class TestStringMatchGrader:
 
     async def test_substring_match_failure(self, grader):
         """Test substring match failure"""
-        result = await grader.evaluate(
+        result = await grader.aevaluate(
             reference="dog",
             candidate="The cat sat on the mat",
             algorithm="substring_match",
@@ -143,7 +145,7 @@ class TestStringMatchGrader:
 
     async def test_substring_match_bidirectional(self, grader):
         """Test substring match bidirectional"""
-        result = await grader.evaluate(
+        result = await grader.aevaluate(
             reference="The cat sat on the mat",
             candidate="cat",
             algorithm="substring_match",
@@ -154,7 +156,7 @@ class TestStringMatchGrader:
 
     async def test_contains_all_success(self, grader):
         """Test contains all success"""
-        result = await grader.evaluate(
+        result = await grader.aevaluate(
             reference="",
             candidate="The cat sat on the mat",
             algorithm="contains_all",
@@ -166,7 +168,7 @@ class TestStringMatchGrader:
 
     async def test_contains_all_partial(self, grader):
         """Test contains all partial match"""
-        result = await grader.evaluate(
+        result = await grader.aevaluate(
             reference="",
             candidate="The cat sat on the mat",
             algorithm="contains_all",
@@ -178,7 +180,7 @@ class TestStringMatchGrader:
 
     async def test_contains_any_success(self, grader):
         """Test contains any success"""
-        result = await grader.evaluate(
+        result = await grader.aevaluate(
             reference="",
             candidate="The cat sat on the mat",
             algorithm="contains_any",
@@ -190,7 +192,7 @@ class TestStringMatchGrader:
 
     async def test_contains_any_failure(self, grader):
         """Test contains any failure"""
-        result = await grader.evaluate(
+        result = await grader.aevaluate(
             reference="",
             candidate="The cat sat on the mat",
             algorithm="contains_any",
@@ -201,7 +203,7 @@ class TestStringMatchGrader:
 
     async def test_word_overlap(self, grader):
         """Test word overlap"""
-        result = await grader.evaluate(
+        result = await grader.aevaluate(
             reference="the cat sat on the mat",
             candidate="the dog sat on the rug",
             algorithm="word_overlap",
@@ -213,7 +215,7 @@ class TestStringMatchGrader:
 
     async def test_char_overlap(self, grader):
         """Test character overlap"""
-        result = await grader.evaluate(
+        result = await grader.aevaluate(
             reference="hello",
             candidate="helo",
             algorithm="char_overlap",
@@ -224,7 +226,7 @@ class TestStringMatchGrader:
     async def test_invalid_algorithm(self, grader):
         """Test invalid algorithm"""
         with pytest.raises(ValueError, match="Unknown algorithm"):
-            await grader.evaluate(
+            await grader.aevaluate(
                 reference="test",
                 candidate="test",
                 algorithm="invalid_algorithm",
@@ -232,10 +234,9 @@ class TestStringMatchGrader:
 
     async def test_algorithm_metadata(self, grader):
         """Test that algorithm is included in metadata"""
-        result = await grader.evaluate(
+        result = await grader.aevaluate(
             reference="test",
             candidate="test",
             algorithm="exact_match",
         )
         assert result.metadata["algorithm"] == "exact_match"
-

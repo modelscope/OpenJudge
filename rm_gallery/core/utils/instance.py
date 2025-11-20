@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
+"""instance."""
 import importlib
 from typing import Any, Type, TypedDict
 
 
 class InstDict(TypedDict, total=False):
+    """instance param."""
+
     class_name: str
     """Name of the class to instantiate."""
     module_path: str
@@ -16,7 +19,8 @@ Inst = InstDict | object
 
 
 def init_instance_by_config(
-    config: Inst, accept_type: Type | None = None
+    config: Inst,
+    accept_type: Type | None = None,
 ) -> Any:
     """Initialize an instance from configuration dictionary or check existing instance.
 
@@ -41,14 +45,14 @@ def init_instance_by_config(
     Example:
         >>> # From config dict
         >>> config = {
-        ...     'class': 'ExactMatchGrader',
-        ...     'module': 'rm_gallery.gallery.grader.string.exact_match',
+        ...     'class': 'StringMatchGrader',
+        ...     'module': 'rm_gallery.gallery.grader.text.string_match',
         ...     'kwargs': {'ignore_case': True}
         ... }
         >>> instance = init_instance_by_config(config)
         >>>
         >>> # With existing instance
-        >>> existing_instance = ExactMatchGrader(ignore_case=True)
+        >>> existing_instance = StringMatchGrader(ignore_case=True)
         >>> instance = init_instance_by_config(existing_instance)
         >>>
         >>> # With type checking
@@ -60,7 +64,8 @@ def init_instance_by_config(
         instance = config
         if accept_type is not None and not isinstance(instance, accept_type):
             raise TypeError(
-                f"Provided instance {instance.__class__.__name__} is not an instance of {accept_type.__name__}",
+                f"Provided instance {instance.__class__.__name__} "
+                f"is not an instance of {accept_type.__name__}",
             )
         return instance
 

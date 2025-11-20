@@ -75,7 +75,7 @@ class ImageEditingGrader(Grader):
         self.threshold = threshold
         self.evaluation_cost = 0.0
 
-    async def _a_evaluate_semantic_consistency(
+    async def _aevaluate_semantic_consistency(
         self,
         original_image: MLLMImage,
         edit_instruction: str,
@@ -111,7 +111,7 @@ class ImageEditingGrader(Grader):
             logger.error(f"Error evaluating semantic consistency: {e}")
             return [5.0], f"Error during evaluation: {str(e)}"
 
-    async def _a_evaluate_perceptual_quality(
+    async def _aevaluate_perceptual_quality(
         self,
         edited_image: MLLMImage,
     ) -> Tuple[List[float], str]:

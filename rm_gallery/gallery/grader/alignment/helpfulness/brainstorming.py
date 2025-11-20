@@ -1,22 +1,26 @@
 # -*- coding: utf-8 -*-
-from typing import List
-from rm_gallery.core.grader.base import (
-    GraderMode,
-    LLMGrader,
-    GraderScore,
-    GraderRank,
-)
+from typing import Any, List
+
+from rm_gallery.core.grader.base import GraderMode, GraderRank, GraderScore
 from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import Template
-from rm_gallery.gallery.grader.alignment.helpfulness import (
-    BaseHelpfulnessGrader,
-)
+from rm_gallery.gallery.grader.alignment.helpfulness import BaseHelpfulnessGrader
 
-RUBRICS = """Creative Relevance and Contextual Alignment: Prioritize completions that balance novel ideas with direct ties to the scenario's core context, ensuring ideas are both imaginative and grounded in the specific problem or theme.
-Practical Feasibility and Actionable Detail: Favor completions that offer concrete, implementable solutions or insights, avoiding abstract or overly speculative suggestions that lack real-world applicability.
-Structural Coherence and Logical Organization: Prefer completions that present ideas in a clear, logically sequenced framework (e.g., categorized sections, step-by-step processes) to enhance readability and development potential.
-"""
+RUBRICS = (
+    "Creative Relevance and Contextual Alignment:\n    "
+    "Prioritize completions that balance novel ideas with direct ties to the "
+    "scenario's core context, ensuring ideas are both imaginative and grounded "
+    "in the specific problem or theme.\n"
+    "Practical Feasibility and Actionable Detail:\n    "
+    "Favor completions that offer concrete, implementable solutions or insights, "
+    "avoiding abstract or overly speculative suggestions that lack real-world "
+    "applicability.\n"
+    "Structural Coherence and Logical Organization:\n    "
+    "Prefer completions that present ideas in a clear, logically sequenced "
+    "framework (e.g., categorized sections, step-by-step processes) to enhance "
+    "readability and development potential."
+)
 
 
 # Brainstorming Score System Prompt
@@ -53,7 +57,9 @@ BRAINSTORMING_LISTWISE_SYSTEM_PROMPT = "You are a helpful assistant skilled in r
 
 # Brainstorming Rank User Prompt
 BRAINSTORMING_LISTWISE_USER_PROMPT = """# Task Description
-Your role is that of a professional evaluation expert. I will provide you with a question and several candidate answers. Your task is to select the single best answer from the candidates.
+Your role is that of a professional evaluation expert. I will provide you with a \
+question and several candidate answers. Your task is to select the single best answer \
+from the candidates.
 
 # Rubrics
 {rubrics}
@@ -113,7 +119,7 @@ class BrainstormingGrader(BaseHelpfulnessGrader):
         template: Template | None = None,
         mode: GraderMode = GraderMode.LISTWISE,
         rubrics: str | None = None,
-        **kwargs,
+        **kwargs: Any,
     ):
         """Initialize the BrainstormingGrader.
 
@@ -140,7 +146,7 @@ class BrainstormingGrader(BaseHelpfulnessGrader):
         self,
         query: str,
         answer: str | List[str],
-        **kwargs,
+        **kwargs: Any,
     ) -> GraderScore | GraderRank:
         """Evaluate the brainstorming response based on the query.
 

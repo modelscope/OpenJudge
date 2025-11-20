@@ -7,17 +7,13 @@ from typing import Any, Callable, Dict, List, Tuple, TypedDict
 
 from loguru import logger
 
-from rm_gallery.core.runner.strategy.base import GraderStrategy
-from rm_gallery.core.schema.data import (
-    EvalCase,
-    EvalCaseParser,
-    validate_eval_cases,
-)
+from rm_gallery.core.grader.base import Grader
+from rm_gallery.core.runner.base import BaseRunner
+from rm_gallery.core.runner.grading.strategy.base import GraderStrategy
+from rm_gallery.core.schema.data import EvalCase, EvalCaseParser
+from rm_gallery.core.schema.grader import GraderScore
 from rm_gallery.core.utils.concurrency import ConcurrencyManager
 from rm_gallery.core.utils.instance import init_instance_by_config
-from rm_gallery.gallery.grader.alignment.honesty.factuality import (
-    FactualityGrader,
-)
 
 
 class GradingConfig(TypedDict, total=False):
@@ -113,11 +109,11 @@ class GradingRunner(BaseRunner):
 
         return {"total_score": total_score, "dimensions": results}
 
-    async def __call__(
+    async def aevaluate_batch(
         self,
         eval_cases: List[EvalCase],
-        *args,
-        **kwargs,
+        *args: Any,
+        **kwargs: Any,
     ) -> dict:
         """Run experiment.
 

@@ -5,13 +5,10 @@ Test Tool Call Accuracy Grader
 Tests for the ToolCallAccuracyGrader class functionality.
 """
 
-import asyncio
 import pytest
 
 from rm_gallery.core.model.openai_llm import OpenAIChatModel
-from rm_gallery.gallery.grader.agent.tool_call_accuracy import (
-    ToolCallAccuracyGrader,
-)
+from rm_gallery.gallery.grader.agent.tool_call_accuracy import ToolCallAccuracyGrader
 
 
 def test_tool_call_accuracy_grader_creation():
@@ -72,13 +69,15 @@ async def test_tool_call_accuracy_grader_execution():
         },
     ]
 
-    # Evaluate the tool calls
+    # Execute the grader
     result = await grader.aevaluate(
         query=conversation,
         tool_definitions=tool_definitions,
         tool_calls=tool_calls,
     )
 
+    # Verify the result
     assert result is not None
     assert hasattr(result, "score")
     assert hasattr(result, "reason")
+    assert hasattr(result, "metadata")

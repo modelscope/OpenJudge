@@ -16,11 +16,7 @@ All prompts support both English and Chinese.
 
 from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.schema.message import ChatMessage
-from rm_gallery.core.schema.template import (
-    Chat,
-    LanguageEnum,
-    Template,
-)
+from rm_gallery.core.schema.template import Chat, LanguageEnum, Template
 
 
 class RubricPromptTemplates:
@@ -69,12 +65,14 @@ class RubricPromptTemplates:
                         ),
                         ChatMessage(
                             role="user",
-                            content="""Based on the following sample content and annotations, generate {generate_number} targeted evaluation rubrics.
+                            content="""Based on the following sample content and annotations, \
+generate {generate_number} targeted evaluation rubrics.
 
 {sample_content}
 
 ## Task Requirements
-- Evaluation Mode: Pointwise (score individual responses independently, range {min_score}-{max_score}, must be integers)
+- Evaluation Mode: Pointwise (score individual responses independently, \
+range {min_score}-{max_score}, must be integers)
 - Carefully analyze the differences between single response and score range
 - Generate evaluation criteria that can distinguish single response and score range
 - Criteria should be clear, specific, and actionable
@@ -139,13 +137,15 @@ Please generate evaluation criteria:""",
                         ),
                         ChatMessage(
                             role="user",
-                            content="""Based on the following sample content and annotations, generate {generate_number} targeted ranking rubrics.
+                            content="""Based on the following sample content and annotations, \
+generate {generate_number} targeted ranking rubrics.
 
 {sample_content}
 
 ## Task Requirements
 - Evaluation Mode: Listwise (rank multiple responses holistically)
-- Carefully analyze the differences between multiple responses, including "High-quality" and "Low-quality" responses
+- Carefully analyze the differences between multiple responses, including \
+"High-quality" and "Low-quality" responses
 - Generate ranking criteria that can correctly order response quality
 - Criteria should determine the relative quality order of responses
 - Note: Higher rank values indicate better quality, sort in descending order
@@ -294,7 +294,8 @@ All Responses:
 - Evaluate all {num_responses} responses based on the evaluation criteria
 - Assign a rank value to each response, higher values indicate better quality
 - Keep responses in original order, only output corresponding rank values
-- Important: No two responses can have the same rank value, must strictly distinguish quality differences, no ties allowed
+- Important: No two responses can have the same rank value, must strictly \
+distinguish quality differences, no ties allowed
 
 ## Example
 Assume three responses:
@@ -303,7 +304,8 @@ Assume three responses:
 - Response 3 is medium → should get medium score
 
 Output format: [Response1_score, Response2_score, Response3_score]
-Correct output: [3, 1, 2] (Response 1 gets 3 points highest, Response 2 gets 1 point lowest, Response 3 gets 2 points medium)
+Correct output: [3, 1, 2] (Response 1 gets 3 points highest, Response 2 gets \
+1 point lowest, Response 3 gets 2 points medium)
 
 ## Output Format
 Please output strictly in the following JSON format:
@@ -313,7 +315,8 @@ Please output strictly in the following JSON format:
 }}
 
 Important reminders:
-1. The value at position i in the array is the quality score for the i-th response, higher values indicate better quality
+1. The value at position i in the array is the quality score for the i-th response, \
+higher values indicate better quality
 2. All scores must be positive integers, not decimals or other formats""",
                         ),
                     ],
@@ -384,7 +387,9 @@ Important reminders:
                         ),
                         ChatMessage(
                             role="user",
-                            content="""The previously generated Pointwise scoring criteria failed validation. Please generate {generate_number} improved scoring criteria based on detailed feedback.
+                            content="""The previously generated Pointwise scoring criteria failed \
+validation. Please generate {generate_number} improved scoring criteria based on \
+detailed feedback.
 
 {sample_content}
 
@@ -493,7 +498,9 @@ Please generate improved Pointwise scoring criteria:""",
                         ),
                         ChatMessage(
                             role="user",
-                            content="""The previously generated Listwise ranking criteria failed validation. Please generate {generate_number} improved ranking criteria based on detailed feedback.
+                            content="""The previously generated Listwise ranking criteria failed \
+validation. Please generate {generate_number} improved ranking criteria based on \
+detailed feedback.
 
 {sample_content}
 
@@ -505,7 +512,8 @@ Please generate improved Pointwise scoring criteria:""",
 
 ## Improvement Requirements for Listwise Mode
 1. Analyze Failure Reasons:
-   - Why didn't the current criteria produce the correct ranking or comparison results?
+   - Why didn't the current criteria produce the correct ranking or comparison \
+results?
    - Which positions in the ranking were incorrect?
    - Were different quality levels of responses confused?
 
@@ -524,7 +532,8 @@ Please generate improved Pointwise scoring criteria:""",
 - Assign a rank value to each response, higher values indicate better quality
 - Rank values must be positive integers
 - Keep responses in original order, only output corresponding rank values
-- Important: No two responses can have the same rank value, must strictly distinguish quality differences, no ties allowed
+- Important: No two responses can have the same rank value, must strictly \
+distinguish quality differences, no ties allowed
 
 ## Output Format
 Please output strictly in the following JSON format:
@@ -605,17 +614,21 @@ class RubricCategorizationTemplate:
                     LanguageEnum.EN: [
                         ChatMessage(
                             role="system",
-                            content="You are a professional evaluation criteria aggregation expert, skilled at integrating multiple scattered evaluation criteria into structured Theme-Tips format.",
+                            content="You are a professional evaluation criteria aggregation expert, "
+                            "skilled at integrating multiple scattered evaluation criteria into "
+                            "structured Theme-Tips format.",
                         ),
                         ChatMessage(
                             role="user",
-                            content="""Please aggregate the following evaluation suggestions into {num_categories} or fewer structured evaluation rubrics.
+                            content="""Please aggregate the following evaluation suggestions into \
+{num_categories} or fewer structured evaluation rubrics.
 
 ## Input Evaluation Suggestions
 {rubrics}
 
 ## Task Requirements
-- Rubrics must be fully self-contained so that non-expert readers need not consult any external information
+- Rubrics must be fully self-contained so that non-expert readers need not \
+consult any external information
 - Each rubric should assess an independent dimension and be non-contradictory with others
 - Ensure overall judgment remains aligned and consistent for all examples
 

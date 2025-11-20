@@ -1,23 +1,28 @@
 # -*- coding: utf-8 -*-
-from typing import List
-from rm_gallery.core.grader.base import (
-    GraderMode,
-    LLMGrader,
-    GraderScore,
-    GraderRank,
-)
+from typing import Any, List
+
+from rm_gallery.core.grader.base import GraderMode, GraderRank, GraderScore
 from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import Template
-from rm_gallery.gallery.grader.alignment.helpfulness import (
-    BaseHelpfulnessGrader,
-)
+from rm_gallery.gallery.grader.alignment.helpfulness import BaseHelpfulnessGrader
 
-RUBRICS = """Preservation of Meaning: The rewritten text must accurately preserve the original meaning without introducing factual errors or distortions.
-Enhancement of Clarity: The rewritten text should be clearer and easier to understand than the original, with improved logical flow.
-Style and Format Adaptation: The rewritten text should appropriately adapt its style and format to better suit the target audience or purpose.
-Elimination of Redundancy: Remove unnecessary repetition while retaining essential information.
-Improved Readability: Enhance sentence structure, vocabulary, and overall readability appropriate to the target audience."""
+RUBRICS = (
+    "Preservation of Meaning:\n    "
+    "The rewritten text must accurately preserve the original meaning without "
+    "introducing factual errors or distortions.\n"
+    "Enhancement of Clarity:\n    "
+    "The rewritten text should be clearer and easier to understand than the "
+    "original, with improved logical flow.\n"
+    "Style and Format Adaptation:\n    "
+    "The rewritten text should appropriately adapt its style and format to better "
+    "suit the target audience or purpose.\n"
+    "Elimination of Redundancy:\n    "
+    "Remove unnecessary repetition while retaining essential information.\n"
+    "Improved Readability:\n    "
+    "Enhance sentence structure, vocabulary, and overall readability appropriate "
+    "to the target audience."
+)
 
 REWRITE_POINTWISE_TEMPLATE = Template(
     messages=[
@@ -101,7 +106,7 @@ class RewriteGrader(BaseHelpfulnessGrader):
         template: Template | None = None,
         mode: GraderMode = GraderMode.LISTWISE,
         rubrics: str | None = None,
-        **kwargs,
+        **kwargs: Any,
     ):
         """Initialize the RewriteGrader.
 
@@ -128,7 +133,7 @@ class RewriteGrader(BaseHelpfulnessGrader):
         self,
         query: str,
         answer: str | List[str],
-        **kwargs,
+        **kwargs: Any,
     ) -> GraderScore | GraderRank:
         """Evaluate the quality of the rewritten text based on the query.
 

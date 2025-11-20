@@ -156,9 +156,7 @@ def _calculate_tokens_for_tools(
                 func_token_count += prop_key
                 p_name = key
                 p_type = properties[key]["type"]
-                p_desc = (
-                    properties[key].get("description", "").removesuffix(".")
-                )
+                p_desc = properties[key].get("description", "").removesuffix(".")
 
                 if "enum" in properties[key].keys():
                     func_token_count += enum_init
@@ -341,12 +339,10 @@ class OpenAITokenCounter(TokenCounterBase):
             for key, value in message.items():
                 # Considering vision models
                 if key == "content" and isinstance(value, list):
-                    num_tokens += (
-                        _count_content_tokens_for_openai_vision_model(
-                            self.model_name,
-                            value,
-                            encoding,
-                        )
+                    num_tokens += _count_content_tokens_for_openai_vision_model(
+                        self.model_name,
+                        value,
+                        encoding,
                     )
 
                 elif isinstance(value, str):
@@ -367,8 +363,7 @@ class OpenAITokenCounter(TokenCounterBase):
 
                 else:
                     raise TypeError(
-                        f"Invalid type {type(value)} in the {key} field: "
-                        f"{value}",
+                        f"Invalid type {type(value)} in the {key} field: " f"{value}",
                     )
 
                 if key == "name":

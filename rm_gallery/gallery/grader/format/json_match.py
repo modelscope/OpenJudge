@@ -136,7 +136,7 @@ class JsonMatchGrader(Grader):
         self,
         reference: str,
         candidate: str,
-        **kwargs,
+        **kwargs: Any,
     ) -> GraderScore:
         """Evaluate JSON match"""
         matched, details = self._compute(reference, candidate)
@@ -219,7 +219,7 @@ class JsonValidatorGrader(Grader):
         self,
         reference: str = "",
         candidate: str = "",
-        **kwargs,
+        **kwargs: Any,
     ) -> GraderScore:
         """Validate JSON format"""
         is_valid, details = self._compute(candidate)

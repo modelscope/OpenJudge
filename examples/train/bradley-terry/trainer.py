@@ -1,15 +1,12 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 FSDP Bradley-Terry Trainer for Reward Models
 Based on the VERL FSDP SFT Trainer architecture
 """
 
-import os
-
-os.environ["NCCL_DEBUG"] = "WARN"
-os.environ["TOKENIZERS_PARALLELISM"] = "true"
-
 import logging
+import os
 from typing import Any, Dict, List
 
 import hydra
@@ -48,6 +45,10 @@ from verl.utils.torch_functional import (
     get_wsd_schedule_with_warmup,
 )
 from verl.utils.tracking import Tracking
+
+os.environ["NCCL_DEBUG"] = "WARN"
+os.environ["TOKENIZERS_PARALLELISM"] = "true"
+
 
 logger = logging.getLogger(__file__)
 logger.setLevel(os.getenv("VERL_BT_LOGGING_LEVEL", "WARN"))
@@ -161,7 +162,8 @@ class FSDPBTTrainer:
 
     def _build_model_optimizer(self):
         local_model_path = copy_to_local(
-            src=self.config.model.partial_pretrain, verbose=True
+            src=self.config.model.partial_pretrain,
+            verbose=True,
         )
 
         if self.config.model.external_lib is not None:
@@ -177,7 +179,8 @@ class FSDPBTTrainer:
 
         # Load config first
         config = AutoConfig.from_pretrained(
-            local_model_path, trust_remote_code=trust_remote_code
+            local_model_path,
+            trust_remote_code=trust_remote_code,
         )
         config.pad_token_id = self.tokenizer.pad_token_id
         config.num_labels = 1  # Single reward score
@@ -191,7 +194,8 @@ class FSDPBTTrainer:
 
         # Use init context manager
         init_context = get_init_weight_context_manager(
-            use_meta_tensor=not config.tie_word_embeddings, mesh=self.device_mesh
+            use_meta_tensor=not config.tie_word_embeddings,
+            mesh=self.device_mesh,
         )
 
         with init_context():
@@ -214,7 +218,7 @@ class FSDPBTTrainer:
 
         if self.config.model.enable_gradient_checkpointing:
             self.model.gradient_checkpointing_enable(
-                gradient_checkpointing_kwargs={"use_reentrant": False}
+                gradient_checkpointing_kwargs={"use_reentrant": False},
             )
 
         log_gpu_memory_usage("After model allocation", logger=logger)
@@ -236,7 +240,10 @@ class FSDPBTTrainer:
             cpu_offload = None
         else:
             cpu_offload = CPUOffload(
-                offload_params=self.config.model.fsdp_config.get("offload_params", True)
+                offload_params=self.config.model.fsdp_config.get(
+                    "offload_params",
+                    True,
+                ),
             )
 
         fsdp_strategy = self.config.model.strategy
@@ -273,7 +280,10 @@ class FSDPBTTrainer:
             full_state = self.model.state_dict()
             apply_fsdp2(self.model, fsdp_kwargs, self.config.model.fsdp_config)
             fsdp2_load_full_state_dict(
-                self.model, full_state, self.device_mesh, cpu_offload
+                self.model,
+                full_state,
+                self.device_mesh,
+                cpu_offload,
             )
             self.fsdp_model = self.model
         else:
@@ -297,7 +307,7 @@ class FSDPBTTrainer:
 
         if self.device_mesh.get_rank() == 0:
             print(
-                f"Steps/epoch: {self.steps_per_epoch}, epochs: {self.config.trainer.total_epochs}, total steps: {self.total_steps}"
+                f"Steps/epoch: {self.steps_per_epoch}, epochs: {self.config.trainer.total_epochs}, total steps: {self.total_steps}",
             )
 
         num_warmup_steps = int(self.total_steps * self.config.optim.warmup_steps_ratio)
@@ -324,10 +334,11 @@ class FSDPBTTrainer:
 
         with torch.autocast(device_type=self.device_name, dtype=torch.bfloat16):
             outputs = self.fsdp_model(
-                input_ids=input_ids, attention_mask=attention_mask
+                input_ids=input_ids,
+                attention_mask=attention_mask,
             )
             logits = outputs.logits.squeeze(
-                -1
+                -1,
             )  # Shape: (batch_size, 1) -> (batch_size,)
 
             # Split into chosen and rejected pairs
@@ -345,15 +356,17 @@ class FSDPBTTrainer:
             # Check if we have valid pairs
             if batch_size == 0:
                 logger.error(
-                    "ERROR: batch_size is 0, cannot compute Bradley-Terry loss!"
+                    "ERROR: batch_size is 0, cannot compute Bradley-Terry loss!",
                 )
                 return torch.tensor(
-                    0.0, device=logits.device, requires_grad=True
+                    0.0,
+                    device=logits.device,
+                    requires_grad=True,
                 ), torch.tensor(0.0, device=logits.device)
 
             # Bradley-Terry loss: -log(sigmoid(r_chosen - r_rejected))
             loss = -torch.nn.functional.logsigmoid(
-                chosen_rewards - rejected_rewards
+                chosen_rewards - rejected_rewards,
             ).mean()
 
             # Accuracy
@@ -392,15 +405,16 @@ class FSDPBTTrainer:
         # Gradient clipping
         if self.config.model.strategy == "fsdp":
             grad_norm = self.fsdp_model.clip_grad_norm_(
-                max_norm=self.config.optim.clip_grad
+                max_norm=self.config.optim.clip_grad,
             )
         elif self.config.model.strategy == "fsdp2":
             grad_norm = fsdp2_clip_grad_norm_(
-                self.fsdp_model.parameters(), max_norm=self.config.optim.clip_grad
+                self.fsdp_model.parameters(),
+                max_norm=self.config.optim.clip_grad,
             )
         else:
             raise NotImplementedError(
-                f"Strategy {self.config.model.strategy} not implemented"
+                f"Strategy {self.config.model.strategy} not implemented",
             )
 
         log_gpu_memory_usage("Before optimizer step", logger=logger)
@@ -424,7 +438,8 @@ class FSDPBTTrainer:
         if is_cuda_available:
             torch.distributed.all_reduce(step_loss, op=torch.distributed.ReduceOp.AVG)
             torch.distributed.all_reduce(
-                step_accuracy, op=torch.distributed.ReduceOp.AVG
+                step_accuracy,
+                op=torch.distributed.ReduceOp.AVG,
             )
 
         return {
@@ -441,14 +456,16 @@ class FSDPBTTrainer:
             if is_cuda_available:
                 torch.distributed.all_reduce(loss, op=torch.distributed.ReduceOp.AVG)
                 torch.distributed.all_reduce(
-                    accuracy, op=torch.distributed.ReduceOp.AVG
+                    accuracy,
+                    op=torch.distributed.ReduceOp.AVG,
                 )
 
         return {"val/loss": loss.item(), "val/accuracy": accuracy.item()}
 
     def save_checkpoint(self, step):
         path = os.path.join(
-            self.config.trainer.default_local_dir, f"global_step_{step}"
+            self.config.trainer.default_local_dir,
+            f"global_step_{step}",
         )
 
         fsdp_strategy = self.config.model.strategy
@@ -457,7 +474,9 @@ class FSDPBTTrainer:
 
             cfg = FullStateDictConfig(offload_to_cpu=True, rank0_only=True)
             with FSDP.state_dict_type(
-                self.fsdp_model, StateDictType.FULL_STATE_DICT, cfg
+                self.fsdp_model,
+                StateDictType.FULL_STATE_DICT,
+                cfg,
             ):
                 state_dict = self.fsdp_model.state_dict()
 
@@ -487,7 +506,9 @@ class FSDPBTTrainer:
 
             hdfs_io.makedirs(self.config.trainer.default_hdfs_dir, exist_ok=True)
             hdfs_io.copy(
-                src=path, dst=self.config.trainer.default_hdfs_dir, dirs_exist_ok=True
+                src=path,
+                dst=self.config.trainer.default_hdfs_dir,
+                dirs_exist_ok=True,
             )
 
         torch.distributed.barrier()
@@ -526,7 +547,7 @@ class FSDPBTTrainer:
                 # Bradley-Terry training: each preference pair becomes 2 samples (chosen + rejected)
                 actual_batch_size = self.config.data.train_batch_size * 2
                 data = TensorDict(data, batch_size=actual_batch_size).to(
-                    self.device_name
+                    self.device_name,
                 )
                 metric = self.training_step(data)
 
@@ -539,7 +560,7 @@ class FSDPBTTrainer:
                             "acc": f"{metric['train/accuracy']:.3f}",
                             "lr": f"{metric['train/lr(1e-3)']:.3f}",
                             "epoch": f"{epoch + 1}/{self.config.trainer.total_epochs}",
-                        }
+                        },
                     )
                     pbar.update(1)
 
@@ -561,14 +582,15 @@ class FSDPBTTrainer:
                             self.config.data.micro_batch_size_per_gpu * 2
                         )
                         val_data = TensorDict(
-                            val_data, batch_size=val_actual_batch_size
+                            val_data,
+                            batch_size=val_actual_batch_size,
                         ).to(self.device_name)
                         val_metric = self.validation_step(val_data)
                         val_metrics.append(val_metric)
 
                     if rank == 0:
                         avg_val_loss = sum(m["val/loss"] for m in val_metrics) / len(
-                            val_metrics
+                            val_metrics,
                         )
                         avg_val_accuracy = sum(
                             m["val/accuracy"] for m in val_metrics
@@ -592,7 +614,7 @@ class FSDPBTTrainer:
                                 {
                                     "loss": f"{latest_train_metric['train/loss']:.3f}",
                                     "acc": f"{latest_train_metric['train/accuracy']:.3f}",
-                                }
+                                },
                             )
                         pbar.set_postfix(postfix_dict)
 
@@ -616,10 +638,11 @@ def create_bt_dataset(train_files, val_files, data_config, tokenizer):
     if data_config.custom_cls.get("path", None):
         # Load custom dataset class from external module
         dataset_cls = load_extern_type(
-            data_config.custom_cls.path, data_config.custom_cls.name
+            data_config.custom_cls.path,
+            data_config.custom_cls.name,
         )
         print(
-            f"Using custom dataset class: {data_config.custom_cls.name} from {data_config.custom_cls.path}"
+            f"Using custom dataset class: {data_config.custom_cls.name} from {data_config.custom_cls.path}",
         )
     else:
         # Default to built-in BTDataset
@@ -630,10 +653,14 @@ def create_bt_dataset(train_files, val_files, data_config, tokenizer):
 
     # Create datasets
     train_dataset = dataset_cls(
-        parquet_files=train_files, tokenizer=tokenizer, config=data_config
+        parquet_files=train_files,
+        tokenizer=tokenizer,
+        config=data_config,
     )
     val_dataset = dataset_cls(
-        parquet_files=val_files, tokenizer=tokenizer, config=data_config
+        parquet_files=val_files,
+        tokenizer=tokenizer,
+        config=data_config,
     )
 
     return train_dataset, val_dataset
@@ -645,7 +672,9 @@ def run_bt_training(config):
     local_rank, rank, world_size = initialize_global_process_group()
 
     device_mesh = init_device_mesh(
-        device_type=device_name, mesh_shape=(world_size,), mesh_dim_names=("fsdp",)
+        device_type=device_name,
+        mesh_shape=(world_size,),
+        mesh_dim_names=("fsdp",),
     )
 
     # Build tokenizer and datasets
@@ -653,7 +682,8 @@ def run_bt_training(config):
 
     local_model_path = copy_to_local(src=config.model.partial_pretrain, verbose=True)
     tokenizer = hf_tokenizer(
-        local_model_path, trust_remote_code=config.model.trust_remote_code
+        local_model_path,
+        trust_remote_code=config.model.trust_remote_code,
     )
 
     # Ensure pad token exists
@@ -662,7 +692,10 @@ def run_bt_training(config):
 
     # Create datasets
     train_dataset, val_dataset = create_bt_dataset(
-        config.data.train_files, config.data.val_files, config.data, tokenizer
+        config.data.train_files,
+        config.data.val_files,
+        config.data,
+        tokenizer,
     )
 
     # Create trainer

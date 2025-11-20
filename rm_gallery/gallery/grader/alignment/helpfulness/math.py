@@ -1,18 +1,30 @@
 # -*- coding: utf-8 -*-
-from typing import List
-from rm_gallery.core.grader.base import GraderMode, GraderScore, GraderRank
+from typing import Any, List
+
+from rm_gallery.core.grader.base import GraderMode, GraderRank, GraderScore
 from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import Template
-from rm_gallery.gallery.grader.alignment.helpfulness import (
-    BaseHelpfulnessGrader,
+from rm_gallery.gallery.grader.alignment.helpfulness import BaseHelpfulnessGrader
+
+RUBRICS = (
+    "Mathematical Accuracy:\n    "
+    "Ensure all calculations, formula applications, and logical steps are "
+    "error-free, as even minor inaccuracies (e.g., arithmetic mistakes, "
+    "misapplied rules) invalidate results despite otherwise correct "
+    "methodologies.\n"
+    "Logical Coherence:\n    "
+    "Present solutions with clear, sequential reasoning where each step follows "
+    "logically from the previous one, enabling easy verification and "
+    "understanding of the problem-solving process.\n"
+    "Notational Clarity:\n    "
+    "Use appropriate mathematical notation, symbols, and formatting consistently "
+    "throughout the solution to avoid ambiguity and enhance readability.\n"
+    "Problem-Specific Precision:\n    "
+    "Address all aspects of the given problem completely, providing exact "
+    "solutions in the required format without omitting critical details or "
+    "providing extraneous information."
 )
-
-
-RUBRICS = """Mathematical Accuracy: Ensure all calculations, formula applications, and logical steps are error-free, as even minor inaccuracies (e.g., arithmetic mistakes, misapplied rules) invalidate results despite otherwise correct methodologies.
-Logical Coherence: Present solutions with clear, sequential reasoning where each step follows logically from the previous one, enabling easy verification and understanding of the problem-solving process.
-Notational Clarity: Use appropriate mathematical notation, symbols, and formatting consistently throughout the solution to avoid ambiguity and enhance readability.
-Problem-Specific Precision: Address all aspects of the given problem completely, providing exact solutions in the required format without omitting critical details or providing extraneous information."""
 
 
 # Math Score System Prompt
@@ -47,8 +59,14 @@ MATH_LISTWISE_SYSTEM_PROMPT = "You are a helpful assistant skilled in reward eva
 
 # Math Rank User Prompt
 MATH_LISTWISE_USER_PROMPT = """# Task Description
-Your role is that of a professional evaluation expert. I will provide you with a question and several candidate answers. Your task is to select the single best answer from the candidates.
-I will also provide you with a set of rubrics, listed under the heading #Rubrics. These rubrics are ordered from highest to lowest importance. You must check each candidate answer in turn to see if it violates any rubric, and provide reasons for any violations you find. These reasons should be used as references for ranking the answers.
+Your role is that of a professional evaluation expert. I will provide you with a \
+question and several candidate answers. Your task is to select the single best answer \
+from the candidates.
+I will also provide you with a set of rubrics, listed under the heading #Rubrics. \
+These rubrics are ordered from highest to lowest importance. You must check each \
+candidate answer in turn to see if it violates any rubric, and provide reasons for \
+any violations you find. These reasons should be used as references for ranking \
+the answers.
 You may organize your reasoning as you see fit, but keep your thought process as concise as possible.
 
 # Rubrics
@@ -109,7 +127,7 @@ class MathGrader(BaseHelpfulnessGrader):
         template: Template | None = None,
         mode: GraderMode = GraderMode.LISTWISE,
         rubrics: str | None = None,
-        **kwargs,
+        **kwargs: Any,
     ):
         """Initialize the MathGrader.
 
@@ -136,7 +154,7 @@ class MathGrader(BaseHelpfulnessGrader):
         self,
         query: str,
         answer: str | List[str],
-        **kwargs,
+        **kwargs: Any,
     ) -> GraderScore | GraderRank:
         """Evaluate the mathematical correctness of the response based on the query.
 

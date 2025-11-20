@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import json
 from typing import Any, Dict, List, Optional, Union
 
@@ -28,10 +29,12 @@ class HelpSteer3Dataset(Dataset):
 
         # Keys for data columns - for complex nested data
         self.input_key = config.get(
-            "input_key", "input"
+            "input_key",
+            "input",
         )  # Column containing conversation
         self.output_key = config.get(
-            "output_key", "output"
+            "output_key",
+            "output",
         )  # Column containing response candidates
 
         assert self.truncation in ["error", "left", "right"]
@@ -53,7 +56,8 @@ class HelpSteer3Dataset(Dataset):
             self.parquet_files[i] = copy_to_local(parquet_file)
 
     def _clean_conversation(
-        self, conversation: List[Dict[str, Any]]
+        self,
+        conversation: List[Dict[str, Any]],
     ) -> List[Dict[str, str]]:
         """
         Clean conversation by keeping only 'role' and 'content' fields.
@@ -89,7 +93,8 @@ class HelpSteer3Dataset(Dataset):
         return cleaned_conversation
 
     def _convert_to_preference_format(
-        self, data_item: Dict[str, Any]
+        self,
+        data_item: Dict[str, Any],
     ) -> Optional[Dict[str, str]]:
         """
         Convert complex nested data format to simple preference format.
@@ -167,10 +172,14 @@ class HelpSteer3Dataset(Dataset):
 
             # Convert to text using chat template
             chosen_text = self.tokenizer.apply_chat_template(
-                chosen_conversation, tokenize=False, add_generation_prompt=False
+                chosen_conversation,
+                tokenize=False,
+                add_generation_prompt=False,
             )
             rejected_text = self.tokenizer.apply_chat_template(
-                rejected_conversation, tokenize=False, add_generation_prompt=False
+                rejected_conversation,
+                tokenize=False,
+                add_generation_prompt=False,
             )
 
             return {"chosen": chosen_text, "rejected": rejected_text}
@@ -211,7 +220,8 @@ class HelpSteer3Dataset(Dataset):
         print(f"Final dataset size: {len(self.samples)} samples")
 
     def _tokenize_preference_pair(
-        self, sample: Dict[str, str]
+        self,
+        sample: Dict[str, str],
     ) -> Optional[Dict[str, torch.Tensor]]:
         """
         Tokenize a preference pair (chosen vs rejected).

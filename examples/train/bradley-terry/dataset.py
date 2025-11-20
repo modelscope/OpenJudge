@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Bradley-Terry Dataset for Reward Model Training
 - Loads preference data from parquet files
@@ -27,7 +28,12 @@ class BTDataset(Dataset):
     without any complex message format conversion.
     """
 
-    def __init__(self, parquet_files: Union[str, List[str]], tokenizer, config):
+    def __init__(
+        self,
+        parquet_files: Union[str, List[str]],
+        tokenizer: Union[str, PreTrainedTokenizer],
+        config: Dict[str, Any],
+    ) -> None:
         self.max_length = config.get("max_length", 4096)
         self.truncation = config.get("truncation", "left")
         self.use_shm = config.get("use_shm", False)
@@ -49,12 +55,12 @@ class BTDataset(Dataset):
         self._download()
         self._read_files_and_process()
 
-    def _download(self):
+    def _download(self) -> None:
         """Download parquet files to local if needed"""
         for i, parquet_file in enumerate(self.parquet_files):
             self.parquet_files[i] = copy_to_local(parquet_file, verbose=True)
 
-    def _read_files_and_process(self):
+    def _read_files_and_process(self) -> None:
         """Read and concatenate all parquet files"""
         dataframes = []
         for parquet_file in self.parquet_files:
@@ -72,10 +78,10 @@ class BTDataset(Dataset):
         self.rejected_texts = [str(text) for text in self.rejected_texts]
 
         print(
-            f"Loaded {len(self.chosen_texts)} preference pairs from {len(self.parquet_files)} files"
+            f"Loaded {len(self.chosen_texts)} preference pairs from {len(self.parquet_files)} files",
         )
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.chosen_texts)
 
     def _tokenize_text(self, text: str) -> Dict[str, torch.Tensor]:
@@ -104,12 +110,14 @@ class BTDataset(Dataset):
             )
             padded_input_ids = (
                 torch.ones(
-                    size=(self.max_length - sequence_length,), dtype=input_ids.dtype
+                    size=(self.max_length - sequence_length,),
+                    dtype=input_ids.dtype,
                 )
                 * pad_token_id
             )
             padded_attention_mask = torch.zeros(
-                size=(self.max_length - sequence_length,), dtype=attention_mask.dtype
+                size=(self.max_length - sequence_length,),
+                dtype=attention_mask.dtype,
             )
 
             input_ids = torch.cat((input_ids, padded_input_ids))
@@ -124,12 +132,12 @@ class BTDataset(Dataset):
                 attention_mask = attention_mask[: self.max_length]
             elif self.truncation == "error":
                 raise ValueError(
-                    f"Sequence length {sequence_length} > max_length {self.max_length}"
+                    f"Sequence length {sequence_length} > max_length {self.max_length}",
                 )
 
         return {"input_ids": input_ids, "attention_mask": attention_mask}
 
-    def __getitem__(self, item) -> Dict[str, Any]:
+    def __getitem__(self, item: int) -> Dict[str, Any]:
         """
         Get a preference pair
 

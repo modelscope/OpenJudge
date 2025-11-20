@@ -11,11 +11,11 @@ from typing import Any, Optional
 
 from loguru import logger
 
-from rm_gallery.core.grader.base import Grader
-from rm_gallery.core.model.openai_llm import OpenAIChatModel
+from rm_gallery.core.grader.base import LLMGrader
+from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.schema.grader import GraderMode, GraderScore
 from rm_gallery.core.schema.message import ChatMessage
-from rm_gallery.core.schema.template import LanguageEnum, RequiredField, Template
+from rm_gallery.core.schema.template import LanguageEnum, Template
 
 # pylint: disable=line-too-long
 
@@ -63,7 +63,7 @@ Use the following context to help you evaluate whether there are hallucinations 
 Provide your evaluation in the following structured JSON format:
 {{
     "score": <integer between 0 and 10, where 10 means no hallucinations and 0 means severe hallucinations>,
-    "reasoning": "<brief explanation for the assigned score, specifically mentioning any hallucinations found or confirming factual accuracy>"
+    "reason": "<brief explanation for the assigned score, specifically mentioning any hallucinations found or confirming factual accuracy>"
 }}
 
 JSON:
@@ -113,14 +113,32 @@ HALLUCINATION_PROMPT_ZH = """
 请按以下结构化 JSON 格式提供你的评估：
 {{
     "score": <0到10之间的整数，其中10表示无幻觉，0表示严重幻觉>,
-    "reasoning": "<对所给分数的简要解释，特别提到发现的任何幻觉或确认事实准确性>"
+    "reason": "<对所给分数的简要解释，特别提到发现的任何幻觉或确认事实准确性>"
 }}
 
 JSON:
 """
 
+# Build default template from prompts
+DEFAULT_HALLUCINATION_TEMPLATE = Template(
+    messages={
+        LanguageEnum.EN: [
+            ChatMessage(
+                role="user",
+                content=textwrap.dedent(HALLUCINATION_PROMPT_EN),
+            ),
+        ],
+        LanguageEnum.ZH: [
+            ChatMessage(
+                role="user",
+                content=textwrap.dedent(HALLUCINATION_PROMPT_ZH),
+            ),
+        ],
+    },
+)
 
-class HallucinationGrader(Grader):
+
+class HallucinationGrader(LLMGrader):
     """
     Hallucination Grader
 
@@ -167,52 +185,23 @@ class HallucinationGrader(Grader):
 
     def __init__(
         self,
-        model: OpenAIChatModel,
-        name: str = "hallucination",
+        model: ChatModelBase | dict,
         threshold: float = 0.7,
-        description: str = "Evaluate whether output contains hallucinations",
-        template: Optional[Template] = None,
+        template: Optional[Template] = DEFAULT_HALLUCINATION_TEMPLATE,
         language: LanguageEnum = LanguageEnum.EN,
     ):
         super().__init__(
-            name=name,
+            name="hallucination",
             mode=GraderMode.POINTWISE,
-            description=description,
-            required_fields=[
-                RequiredField(
-                    name="context",
-                    type="str",
-                    position="data",
-                    description="Context information to verify against",
-                ),
-                RequiredField(
-                    name="input",
-                    type="str",
-                    position="data",
-                    description="Input question or prompt",
-                ),
-                RequiredField(
-                    name="output",
-                    type="str",
-                    position="data",
-                    description="Model output to evaluate",
-                ),
-                RequiredField(
-                    name="reference_output",
-                    type="str",
-                    position="data",
-                    description="Reference output for comparison (optional)",
-                    required=False,
-                ),
-            ],
+            description="Evaluate whether output contains hallucinations",
+            model=model,
+            template=template,
+            language=language,
         )
-        self.model = model
         self.threshold = threshold
         self.template = (
             template if template is not None else DEFAULT_HALLUCINATION_TEMPLATE
         )
-        self.language = language
-        self.evaluation_cost = 0.0
 
     async def aevaluate(  # pylint: disable=redefined-builtin,unused-argument
         self,
@@ -244,7 +233,6 @@ class HallucinationGrader(Grader):
             ...     reference_output="The product launched in 2023."
             ... )
         """
-        self.evaluation_cost = 0.0
 
         # Prepare reference section based on language
         reference_section = ""
@@ -260,50 +248,32 @@ class HallucinationGrader(Grader):
 {reference_output}
 </reference_output>"""
 
-        # Get template and format prompt
-        messages = self.template.get(self.language)
-        prompt = messages[0].content.format(
-            context=context,
-            input=input,
-            output=output,
-            reference_section=reference_section,
-        )
-
         try:
-            # Call LLM for evaluation
-            response = await self.model(
-                messages=[{"role": "user", "content": prompt}],
+            result = await super().aevaluate(
+                context=context,
+                input=input,
+                output=output,
+                reference_section=reference_section,
             )
-
-            # Parse response from text content
-            import json
-
-            text_content = "".join(
-                [block.text for block in response.content if hasattr(block, "text")],
-            )
-
-            # Parse JSON response
-            result_data = json.loads(text_content.strip())
-            raw_score = float(result_data.get("score", 0))
-            reasoning = result_data.get("reasoning", "No reasoning provided")
-
+            score = result.score
+            reason = result.reason
             # Normalize score from 0-10 to 0-1
-            normalized_score = raw_score / 10.0
+            normalized_score = score / 10.0
 
         except Exception as e:
             logger.error(f"Error evaluating hallucination: {e}")
             normalized_score = 0.0
-            reasoning = f"Evaluation error: {str(e)}"
+            score = 0.0
+            reason = f"Evaluation error: {str(e)}"
 
         # Prepare metadata
         metadata = {
-            "evaluation_cost": self.evaluation_cost,
             "threshold": self.threshold,
-            "raw_score": raw_score if "raw_score" in locals() else 0,
+            "raw_score": score,
         }
 
         # Generate final reason
-        reason = f"Hallucination evaluation score: {normalized_score:.4f}\n{reasoning}"
+        reason = f"Hallucination evaluation score: {normalized_score:.4f}\n{reason}"
 
         return GraderScore(
             name=self.name,
@@ -311,53 +281,6 @@ class HallucinationGrader(Grader):
             reason=reason,
             metadata=metadata,
         )
-
-
-# Build default template from prompts
-DEFAULT_HALLUCINATION_TEMPLATE = Template(
-    messages={
-        LanguageEnum.EN: [
-            ChatMessage(
-                role="user",
-                content=textwrap.dedent(HALLUCINATION_PROMPT_EN),
-                name="User",
-            ),
-        ],
-        LanguageEnum.ZH: [
-            ChatMessage(
-                role="user",
-                content=textwrap.dedent(HALLUCINATION_PROMPT_ZH),
-                name="User",
-            ),
-        ],
-    },
-    required_fields=[
-        RequiredField(
-            name="context",
-            type="str",
-            position="data",
-            description="Context information",
-        ),
-        RequiredField(
-            name="input",
-            type="str",
-            position="data",
-            description="Input question/prompt",
-        ),
-        RequiredField(
-            name="output",
-            type="str",
-            position="data",
-            description="Output to evaluate",
-        ),
-        RequiredField(
-            name="reference_section",
-            type="str",
-            position="data",
-            description="Optional reference output section",
-        ),
-    ],
-)
 
 
 __all__ = ["HallucinationGrader", "DEFAULT_HALLUCINATION_TEMPLATE"]

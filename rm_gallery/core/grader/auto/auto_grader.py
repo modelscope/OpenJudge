@@ -1,17 +1,16 @@
 # -*- coding: utf-8 -*-
 from typing import Any, Callable, List, Optional
 
-from pydantic import BaseModel, Field
 from loguru import logger
+from pydantic import BaseModel, Field
 
-from rm_gallery.core.schema.data import EvalCase, EvalCaseParser
-from rm_gallery.core.grader.base import LLMGrader, GraderMode
+from rm_gallery.core.grader.auto.auto_rubrics import AutoRubrics, AutoRubricsConfig
+from rm_gallery.core.grader.auto.prompts import EvaluationPromptTemplates
+from rm_gallery.core.grader.base import GraderMode, LLMGrader
 from rm_gallery.core.model import OpenAIChatModel
 from rm_gallery.core.runner.base import BaseRunner
-from rm_gallery.core.grader.prompts import EvaluationPromptTemplates
-from rm_gallery.core.schema.template import Template, ChatMessage
-
-from rm_gallery.core.grader.auto_rubrics import AutoRubrics, AutoRubricsConfig
+from rm_gallery.core.schema.data import EvalCase, EvalCaseParser
+from rm_gallery.core.schema.template import ChatMessage, Template
 
 
 class AutoGraderConfig(BaseModel):
@@ -66,7 +65,8 @@ class AutoGrader(BaseRunner):
         self.rubric_generator = self._create_rubric_generator()
 
         logger.info(
-            f"AutoGrader initialized with method='{self.config.method}', grader_mode={self.config.method_config.grader_mode.value}",
+            f"AutoGrader initialized with method='{self.config.method}', "
+            f"grader_mode={self.config.method_config.grader_mode.value}",
         )
 
     def _create_rubric_generator(self):
@@ -85,8 +85,8 @@ class AutoGrader(BaseRunner):
     async def aevaluate_batch(
         self,
         eval_cases: List[EvalCase],
-        *args,
-        **kwargs,
+        *args: Any,
+        **kwargs: Any,
     ) -> LLMGrader:
         """Generate rubrics and create LLMGrader.
 
@@ -100,10 +100,7 @@ class AutoGrader(BaseRunner):
         rubrics_result = await self.rubric_generator(eval_cases)
 
         # Extract the final rubrics from the result
-        if (
-            isinstance(rubrics_result, dict)
-            and "final_rubrics" in rubrics_result
-        ):
+        if isinstance(rubrics_result, dict) and "final_rubrics" in rubrics_result:
             rubrics = "\n".join(rubrics_result["final_rubrics"])
         else:
             rubrics = str(rubrics_result)

@@ -18,10 +18,10 @@ from typing import List
 
 from loguru import logger
 
-from rm_gallery.core.schema.data import EvalCase
+from rm_gallery.core.grader.auto_rubrics import AutoRubrics
 from rm_gallery.core.grader.base import GraderMode
 from rm_gallery.core.model.openai_llm import OpenAIChatModel
-from rm_gallery.core.grader.auto_rubrics import AutoRubrics
+from rm_gallery.core.schema.data import EvalCase
 
 
 def create_test_samples() -> List[EvalCase]:

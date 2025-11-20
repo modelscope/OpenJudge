@@ -66,6 +66,12 @@ pytest = ">=8.3.5,<9.0.0"
 sphinx-gallery = "*"
 furo = "*"
 myst_parser = "*"
+anyio = "*"
+pytest-asyncio = "*"
+pytest-tornasync = "*"
+pytest-trio = "*"
+pytest-twisted = "*"
+twisted="*"
 
 [tool.poetry.group.optional.dependencies]
 bitsandbytes = {version = ">=0.46.1", optional = true}

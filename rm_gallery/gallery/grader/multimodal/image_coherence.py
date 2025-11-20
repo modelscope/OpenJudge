@@ -13,7 +13,7 @@ from loguru import logger
 
 from rm_gallery.core.grader.base import Grader
 from rm_gallery.core.model.openai_llm import OpenAIChatModel
-from rm_gallery.core.schema.grader import GraderMode, GraderScore
+from rm_gallery.core.schema.grader import GraderMode, GraderScore, _GraderScore
 from rm_gallery.gallery.grader.multimodal._internal import (
     ImageCoherenceTemplate,
     MLLMImage,
@@ -80,8 +80,8 @@ class ImageCoherenceGrader(Grader):
     ) -> Tuple[float, str]:
         """Async evaluation of single image coherence"""
         template = ImageCoherenceTemplate.evaluate_image_coherence()
-        messages = template.get()
-        prompt = messages[0].content.format(
+        messages = template.to_messages()
+        prompt = messages[0].format(
             context_above=context_above or "",
             context_below=context_below or "",
         )
@@ -99,29 +99,14 @@ class ImageCoherenceGrader(Grader):
                 content.append({"type": "image_url", "image_url": {"url": data_url}})
 
             # Call model without structured output
-            response = await self.model(
+            response = await self.model.achat(
                 messages=[{"role": "user", "content": content}],
+                structured_model=_GraderScore,
             )
+            score = response.metadata["score"]
+            reason = response.metadata["reason"]
+            return score, reason
 
-            # Parse response from text content
-            import json
-
-            text_content = "".join(
-                [block.text for block in response.content if hasattr(block, "text")],
-            )
-
-            # Parse JSON response
-            result_data = json.loads(text_content.strip())
-            score = float(result_data.get("score", 0))
-            reasoning = result_data.get("reasoning", "No reasoning provided")
-
-            # Track usage if available
-            if response.usage:
-                # Estimate cost (example rates, adjust as needed)
-                # For Qwen VL, approximate cost tracking
-                pass
-
-            return score, reasoning
         except Exception as e:
             logger.error(f"Error evaluating image coherence: {e}")
             return 0.0, f"Evaluation error: {str(e)}"

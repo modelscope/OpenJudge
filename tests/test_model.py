@@ -10,7 +10,7 @@ if __name__ == "__main__":
     )
 
     response = asyncio.run(
-        model(
+        model.achat(
             messages=[
                 {"role": "system", "content": "You are a helpful assistant."},
                 {

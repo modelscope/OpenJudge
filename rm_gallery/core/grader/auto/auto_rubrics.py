@@ -22,11 +22,10 @@ from loguru import logger
 from pydantic import BaseModel, Field
 from tqdm import tqdm
 
-from rm_gallery.core.schema.data import EvalCase, EvalCaseParser
+from rm_gallery.core.grader.auto.rubric.categorizer import LLMRubricCategorizer
+from rm_gallery.core.grader.auto.rubric.generator import QuerySpecificRubricGenerator
+from rm_gallery.core.grader.auto.rubric.mcr_selector import SuperFastAdaptiveMCR2
 from rm_gallery.core.grader.base import GraderMode
-from rm_gallery.core.grader.rubric.categorizer import LLMRubricCategorizer
-from rm_gallery.core.grader.rubric.generator import QuerySpecificRubricGenerator
-from rm_gallery.core.grader.rubric.mcr_selector import SuperFastAdaptiveMCR2
 from rm_gallery.core.model.openai_llm import OpenAIChatModel
 from rm_gallery.core.runner.base import BaseRunner
 from rm_gallery.core.schema.data import EvalCase, EvalCaseParser
@@ -646,9 +645,7 @@ class AutoRubrics(BaseRunner):
                 failed_samples += 1
 
         success_rate = (
-            (successful_eval_cases / total_eval_cases * 100)
-            if total_eval_cases
-            else 0
+            (successful_eval_cases / total_eval_cases * 100) if total_eval_cases else 0
         )
 
         stats = {

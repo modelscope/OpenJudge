@@ -14,7 +14,7 @@ from loguru import logger
 
 from rm_gallery.core.grader.base import Grader
 from rm_gallery.core.model.openai_llm import OpenAIChatModel
-from rm_gallery.core.schema.grader import GraderMode, GraderScore
+from rm_gallery.core.schema.grader import GraderMode, GraderScore, _GraderScore
 from rm_gallery.gallery.grader.multimodal._internal import (
     MLLMImage,
     TextToImageTemplate,
@@ -80,12 +80,12 @@ class TextToImageGrader(Grader):
     ) -> Tuple[List[float], str]:
         """Evaluate semantic consistency asynchronously"""
         template = TextToImageTemplate.generate_semantic_consistency_prompt()
-        messages = template.get()
-        prompt = messages[0].content.format(text_prompt=text_prompt)
+        messages = template.to_messages()
+        prompt = messages[0].format(text_prompt=text_prompt).content
 
         try:
             content = format_image_content(prompt, [generated_image])
-            response = await self.model(
+            response = await self.model.achat(
                 messages=[{"role": "user", "content": content}],
             )
 
@@ -100,9 +100,9 @@ class TextToImageGrader(Grader):
             result_data = json.loads(text_content.strip())
             score_data = result_data.get("score", 0)
             scores = score_data if isinstance(score_data, list) else [score_data]
-            reasoning = result_data.get("reasoning", "No reasoning provided")
+            reason = result_data.get("reason", "No reason provided")
 
-            return scores, reasoning
+            return scores, reason
 
         except Exception as e:
             logger.error(f"Error evaluating semantic consistency: {e}")
@@ -114,35 +114,19 @@ class TextToImageGrader(Grader):
     ) -> Tuple[List[float], str]:
         """Evaluate perceptual quality asynchronously"""
         template = TextToImageTemplate.generate_perceptual_quality_prompt()
-        messages = template.get()
+        messages = template.to_messages()
         prompt = messages[0].content
 
         try:
             content = format_image_content(prompt, [generated_image])
-            response = await self.model(
+            response = await self.model.achat(
                 messages=[{"role": "user", "content": content}],
+                structured_model=_GraderScore,
             )
-
-            # Parse response from text content
-            import json
-
-            text_content = "".join(
-                [block.text for block in response.content if hasattr(block, "text")],
-            )
-
-            # Parse JSON response
-            result_data = json.loads(text_content.strip())
-            score_data = result_data.get("score", 0)
-            reasoning = result_data.get("reasoning", "No reasoning provided")
-
-            # Ensure score is a list with 2 elements
-            scores = (
-                score_data if isinstance(score_data, list) else [score_data, score_data]
-            )
-            if len(scores) < 2:
-                scores = [scores[0], scores[0]]
-
-            return scores[:2], reasoning
+            score = response.metadata["score"]
+            score = score[:2] if isinstance(score, list) else [score, score]
+            reason = response.metadata["reason"]
+            return score, reason
 
         except Exception as e:
             logger.error(f"Error evaluating perceptual quality: {e}")
@@ -167,9 +151,9 @@ class TextToImageGrader(Grader):
         self.evaluation_cost = 0.0
 
         # Evaluate semantic consistency and perceptual quality in parallel
-        (sc_scores, sc_reasoning), (
+        (sc_scores, sc_reason), (
             pq_scores,
-            pq_reasoning,
+            pq_reason,
         ) = await asyncio.gather(
             self._aevaluate_semantic_consistency(
                 text_prompt,
@@ -189,9 +173,9 @@ class TextToImageGrader(Grader):
 
         details = {
             "semantic_consistency_scores": sc_scores,
-            "semantic_consistency_reasoning": sc_reasoning,
+            "semantic_consistency_reason": sc_reason,
             "perceptual_quality_scores": pq_scores,
-            "perceptual_quality_reasoning": pq_reasoning,
+            "perceptual_quality_reason": pq_reason,
             "min_sc": min(sc_scores) if sc_scores else 0.0,
             "min_pq": min(pq_scores) if pq_scores else 0.0,
             "evaluation_cost": self.evaluation_cost,
@@ -248,12 +232,12 @@ class TextToImageGrader(Grader):
         reason = f"""Text-to-Image Quality Score: {score:.4f}
 
 Semantic Consistency: {details['min_sc']:.2f}/10
-{details['semantic_consistency_reasoning']}
+{details['semantic_consistency_reason']}
 
 Perceptual Quality: {details['min_pq']:.2f}/10
 - Naturalness: {details['perceptual_quality_scores'][0]:.2f}/10
 - Artifacts: {details['perceptual_quality_scores'][1]:.2f}/10
-{details['perceptual_quality_reasoning']}
+{details['perceptual_quality_reason']}
 
 The score combines semantic consistency and perceptual quality using geometric mean.
 """

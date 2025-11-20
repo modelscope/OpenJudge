@@ -2,7 +2,6 @@
 """template."""
 from __future__ import annotations
 
-import asyncio
 import json
 from abc import ABC
 from enum import Enum
@@ -12,7 +11,6 @@ import yaml
 from pydantic import BaseModel, Field
 
 from rm_gallery.core.model.base import ChatModelBase
-from rm_gallery.core.model.openai_llm import OpenAIChatModel
 from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.response import ChatResponse
 from rm_gallery.core.utils.instance import init_instance_by_config
@@ -47,29 +45,6 @@ class PromptDict(TypedDict, total=False):
 
     system: str | ChatMessage
     user: str | ChatMessage
-
-
-class RequiredField(BaseModel):
-    """Represents a required input field in a template schema.
-
-    This class defines the metadata for a field that must be provided
-    when instantiating or validating a template. It is typically used
-    within template definitions to specify what data is expected from users
-    or upstream components.
-
-    Attributes:
-        name (str): The unique identifier of the field (e.g., "context", "query").
-        type (str): The expected data type as a string (e.g., "str", "int", "List[str]").
-            Note: This is a descriptive type hint, not enforced by Pydantic.
-        position (str): Where the field is expected to appear, such as "data" (main payload),
-            "metadata", or "config".
-        description (str): A human-readable explanation of the field's purpose and usage.
-    """
-
-    name: str
-    type: str
-    position: str
-    description: str
 
 
 Prompt = Union[str, PromptDict, List[ChatMessage]]
@@ -304,10 +279,11 @@ class Chat(ABC):
             [{'role': 'user', 'content': 'Hello World'}]
         """
         messages = self.template.to_messages(language)
-        messages = [message.to_dict() for message in messages]
-
-        for message in messages:
-            message["content"] = message.get("content", "").format(**kwargs)
+        messages = [
+            ChatMessage(**message) if not isinstance(message, ChatMessage) else message
+            for message in messages
+        ]
+        messages = [message.format(**kwargs).to_dict() for message in messages]
         return messages
 
     async def __call__(
@@ -344,13 +320,13 @@ class Chat(ABC):
         # Check if callback is a Pydantic BaseModel class
         if callback and isinstance(callback, type) and issubclass(callback, BaseModel):
             # If callback is a Pydantic class, pass it as structured_model
-            response = await self.model(
+            response = await self.model.achat(
                 messages=messages,
                 structured_model=callback,
             )
         else:
             # If callback is not a Pydantic class or is None, don't pass structured_model
-            response = await self.model(
+            response = await self.model.achat(
                 messages=messages,
             )
 

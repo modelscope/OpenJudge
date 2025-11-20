@@ -8,7 +8,6 @@ import os
 import random
 from typing import Any, List, Optional
 
-import fire
 import numpy as np
 from loguru import logger
 
@@ -20,6 +19,7 @@ from rm_gallery.core.runner.evaluation import (
     MetricResult,
 )
 from rm_gallery.core.schema.data import EvalCase
+from rm_gallery.gallery.evaluation.conflict_detector import load_eval_cases
 
 
 class RMBenchRunner(EvaluationRunner):
@@ -76,7 +76,9 @@ Please provide your analysis and then output your verdict in the format: \
         prompt = self._format_comparison_prompt(query, answers)
 
         # Get LLM judgment
-        response = await self.model(messages=[{"role": "user", "content": prompt}])
+        response = await self.model.achat(
+            messages=[{"role": "user", "content": prompt}]
+        )
 
         # Extract text from ChatResponse
         response_text = ""
@@ -216,7 +218,7 @@ Please provide your analysis and then output your verdict in the format: \
         logger.info(f"Processing {len(eval_cases)} samples")
 
         # Evaluate all samples
-        all_tasks = [self._evaluate_single_sample(sample) for sample in eval_case]
+        all_tasks = [self._evaluate_single_sample(sample) for sample in eval_cases]
         results = await asyncio.gather(*all_tasks)
 
         return {
@@ -326,17 +328,16 @@ class RMBenchAccuracyMetric(BaseMetric):
         )
 
 
-def load_eval_casefile_path: str, max_samples: int = -1) -> List[EvalCase]:
+def load_eval_case(file_path: str, max_samples: int = -1) -> List[EvalCase]:
     """Load RM-Bench data samples from JSON file."""
     import json
 
     logger.info(f"Loading data from {file_path}")
-    eval_case= []
+    eval_cases = []
 
     if not os.path.exists(file_path):
         logger.warning(f"Data file not found: {file_path}")
         return eval_cases
-
     try:
         with open(file_path, "r", encoding="utf-8") as f:
             raw_data = json.load(f)
@@ -346,7 +347,6 @@ def load_eval_casefile_path: str, max_samples: int = -1) -> List[EvalCase]:
             # pylint: disable=chained-comparison
             if max_samples > 0 and i >= max_samples:
                 break
-
             try:
                 # Extract query and responses
                 query = item.get("prompt", "")
@@ -362,107 +362,30 @@ def load_eval_casefile_path: str, max_samples: int = -1) -> List[EvalCase]:
                     continue
 
                 # Create samples list with preference labels
-                samples = []
+                outputs = []
                 for response in chosen_responses:
-                    samples.append({"answer": response, "preference": "chosen"})
+                    outputs.append({"answer": response, "preference": "chosen"})
                 for response in rejected_responses:
-                    samples.append({"answer": response, "preference": "rejected"})
+                    outputs.append({"answer": response, "preference": "rejected"})
 
                 # Create EvalCase
-                eval_case EvalCase(
+                eval_case = EvalCase(
                     input={
                         "unique_id": item.get("id", f"sample_{i}"),
                         "query": query,
                         "domain": item.get("domain", "unknown"),
                     },
-                    samples=samples,
+                    outputs=outputs,
                 )
-                eval_caseappend(eval_case
+                eval_cases.append(eval_case)
 
             except Exception as e:
                 logger.error(f"Failed to process item {i}: {e}")
                 continue
 
-        logger.info(f"Successfully loaded {len(eval_case} data samples")
+        logger.info(f"Successfully loaded {len(eval_case)} data samples")
         return eval_cases
 
     except Exception as e:
         logger.error(f"Failed to load data file: {e}")
         return []
-
-
-def main(
-    data_path: str = "data/benchmarks/RM-Bench/total_dataset.json",
-    result_path: str = "data/results/rmbench.json",
-    max_samples: int = 10,
-    model_name: str = "gpt-4o",
-    api_key: str | None = None,
-    base_url: str | None = None,
-    max_workers: int = 8,
-) -> None:
-    """
-    Main execution function for RM-Bench evaluation using new framework.
-    """
-    import json
-
-    try:
-        # Load data
-        print(f"Loading data from: {data_path}")
-        eval_cases = load_eval_cases(data_path, max_samples)
-
-        if not eval_cases:
-            print(f"No data samples loaded. Please check the data path: {data_path}")
-            return
-
-        print(f"Loaded {len(eval_cases)} samples")
-
-        # Initialize model
-        print(f"Initializing model: {model_name}")
-        model = OpenAIChatModel(
-            model_name=model_name,
-            api_key=api_key,
-            base_url=base_url,
-            generate_kwargs={"temperature": 0.1},
-        )
-
-        # Create runner with RM-Bench specific metric
-        runner = RMBenchRunner(
-            model=model,
-            max_workers=max_workers,
-            metrics=[RMBenchAccuracyMetric()],
-        )
-
-        # Execute evaluation
-        report = asyncio.run(runner(eval_cases))
-
-        # Print results
-        print("\n" + "=" * 80)
-        print("RM-BENCH EVALUATION RESULTS (using new framework)")
-        print("=" * 80)
-        print(f"\nModel: {report.model_name}")
-        print(f"Total samples: {report.total_samples}")
-        print(f"Valid samples: {report.valid_samples}")
-
-        # Print RM-Bench specific metrics
-        rmbench_metric = report.metrics.get("rmbench_accuracy")
-        if rmbench_metric:
-            details = rmbench_metric.details
-            print(f"\nHard Accuracy: {details.get('hard_acc', 0):.4f}")
-            print(f"Normal Accuracy: {details.get('normal_acc', 0):.4f}")
-            print(f"Easy Accuracy: {details.get('easy_acc', 0):.4f}")
-            print(f"Overall Accuracy: {details.get('overall_acc', 0):.4f}")
-
-        # Save results
-        os.makedirs(os.path.dirname(result_path), exist_ok=True)
-        with open(result_path, "w", encoding="utf-8") as f:
-            json.dump(report.model_dump(), f, indent=2)
-
-        print(f"\nResults saved to: {result_path}")
-
-    except Exception as e:
-        print(f"Evaluation failed: {e}")
-        raise
-
-
-if __name__ == "__main__":
-    fire.Fire(main)

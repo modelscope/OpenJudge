@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from enum import Enum
-from typing import Any, Dict, List, Literal
+from typing import Any, Dict, List
+
 from pydantic import BaseModel, Field
 
 
@@ -27,6 +28,7 @@ class GraderResult(BaseModel):
         reason (str): The reason for the result.
         metadata (Dict[str, Any]): The metadata of the grader result.
     """
+
     name: str = Field(default=..., description="The name of the grader")
     reason: str = Field(default=..., description="The reason for the result")
     metadata: Dict[str, Any] = Field(

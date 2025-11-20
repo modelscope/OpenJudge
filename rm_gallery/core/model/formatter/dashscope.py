@@ -6,17 +6,18 @@ import json
 import os.path
 from typing import Any
 
-from .truncated import TruncatedFormatterBase
 from loguru import logger
-from ...schema.message import ChatMessage
+
 from ...schema.block import (
-    TextBlock,
-    ImageBlock,
     AudioBlock,
-    ToolUseBlock,
+    ImageBlock,
+    TextBlock,
     ToolResultBlock,
+    ToolUseBlock,
 )
+from ...schema.message import ChatMessage
 from ..token import TokenCounterBase
+from .truncated import TruncatedFormatterBase
 
 
 def _is_accessible_local_file(url: str) -> bool:
@@ -360,8 +361,7 @@ class DashScopeMultiAgentFormatter(TruncatedFormatterBase):
                         if _is_accessible_local_file(url):
                             conversation_blocks.append(
                                 {
-                                    block["type"]: "file://"
-                                    + os.path.abspath(url),
+                                    block["type"]: "file://" + os.path.abspath(url),
                                 },
                             )
                         else:
@@ -380,8 +380,7 @@ class DashScopeMultiAgentFormatter(TruncatedFormatterBase):
 
                     else:
                         logger.warning(
-                            "Unsupported block type %s in the message, "
-                            "skipped.",
+                            "Unsupported block type %s in the message, " "skipped.",
                             block["type"],
                         )
 

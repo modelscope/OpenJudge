@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from typing import Callable, Dict, List, Type, Union
+from typing import Any, Callable, Dict, Type, Union
 
 from loguru import logger
 
@@ -19,7 +19,7 @@ class GraderRegistry:
         description: str,
         grader: Grader | Callable | Type[Grader] | None = None,
         namespace: str | None = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> Union[None, Callable, Grader]:
         """Register a grader function with a given name, optionally under a namespace.
         Can be used as a decorator, direct function call, or to initialize and register a grader.
@@ -179,10 +179,7 @@ class GraderRegistry:
                 dict,
             ):
                 namespace_dict = cls._graders[namespace]
-                if (
-                    isinstance(namespace_dict, dict)
-                    and sub_name in namespace_dict
-                ):
+                if isinstance(namespace_dict, dict) and sub_name in namespace_dict:
                     return namespace_dict[sub_name]
             return None
         else:
@@ -210,10 +207,7 @@ class GraderRegistry:
                 dict,
             ):
                 namespace_dict = cls._graders[namespace]
-                if (
-                    isinstance(namespace_dict, dict)
-                    and sub_name in namespace_dict
-                ):
+                if isinstance(namespace_dict, dict) and sub_name in namespace_dict:
                     del namespace_dict[sub_name]
                     # Clean up empty namespace
                     if not namespace_dict:
@@ -277,11 +271,7 @@ class GraderRegistry:
         Returns:
             A list of namespace names
         """
-        return [
-            key
-            for key, value in cls._graders.items()
-            if isinstance(value, dict)
-        ]
+        return [key for key, value in cls._graders.items() if isinstance(value, dict)]
 
     @classmethod
     def clear(cls) -> None:

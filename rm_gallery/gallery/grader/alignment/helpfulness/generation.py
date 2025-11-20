@@ -1,21 +1,26 @@
 # -*- coding: utf-8 -*-
-from typing import List
-from rm_gallery.core.grader.base import (
-    GraderMode,
-    LLMGrader,
-    GraderScore,
-    GraderRank,
-)
+from typing import Any, List
+
+from rm_gallery.core.grader.base import GraderMode, GraderRank, GraderScore
 from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import Template
-from rm_gallery.gallery.grader.alignment.helpfulness import (
-    BaseHelpfulnessGrader,
-)
+from rm_gallery.gallery.grader.alignment.helpfulness import BaseHelpfulnessGrader
 
-RUBRICS = """Adherence to Instructional Specificity: Prioritize addressing all explicit requirements (e.g., format, content scope, tone) with precise alignment to ensure completeness and fidelity to the task's intent.
-Depth and Originality in Content: Deliver nuanced, actionable insights or creative elements that exceed generic responses through specific examples, contextual relevance, and imaginative elaboration.
-Structural Coherence and Logical Flow: Maintain organized progression (e.g., clear hierarchy, thematic sequencing) to enhance readability while avoiding contradictions or deviations from established frameworks."""
+RUBRICS = (
+    "Adherence to Instructional Specificity:\n    "
+    "Prioritize addressing all explicit requirements (e.g., format, content scope, "
+    "tone) with precise alignment to ensure completeness and fidelity to the "
+    "task's intent.\n"
+    "Depth and Originality in Content:\n    "
+    "Deliver nuanced, actionable insights or creative elements that exceed generic "
+    "responses through specific examples, contextual relevance, and imaginative "
+    "elaboration.\n"
+    "Structural Coherence and Logical Flow:\n    "
+    "Maintain organized progression (e.g., clear hierarchy, thematic sequencing) "
+    "to enhance readability while avoiding contradictions or deviations from "
+    "established frameworks."
+)
 
 # Generation Score System Prompt
 GENERATION_POINTWISE_SYSTEM_PROMPT = "You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words."
@@ -49,7 +54,9 @@ GENERATION_LISTWISE_SYSTEM_PROMPT = "You are a helpful assistant skilled in rewa
 
 # Generation Rank User Prompt
 GENERATION_LISTWISE_USER_PROMPT = """# Task Description
-Your role is that of a professional evaluation expert. I will provide you with a question and several candidate answers. Your task is to select the single best answer from the candidates.
+Your role is that of a professional evaluation expert. I will provide you with a \
+question and several candidate answers. Your task is to select the single best answer \
+from the candidates.
 I will also provide you with a set of rubrics, listed under the heading #Rubrics. These rubrics are ordered from highest to lowest importance.These rubrics can serve as supplementary knowledge for your judgment. If you find any of the rubrics helpful for the current problem, feel free to use them as supplements.
 
 # Rubrics
@@ -110,7 +117,7 @@ class GenerationGrader(BaseHelpfulnessGrader):
         template: Template | None = None,
         mode: GraderMode = GraderMode.LISTWISE,
         rubrics: str | None = None,
-        **kwargs,
+        **kwargs: Any,
     ):
         """Initialize the GenerationGrader.
 
@@ -137,7 +144,7 @@ class GenerationGrader(BaseHelpfulnessGrader):
         self,
         query: str,
         answer: str | List[str],
-        **kwargs,
+        **kwargs: Any,
     ) -> GraderScore | GraderRank:
         """Evaluate the quality of the generated content based on the query.
 

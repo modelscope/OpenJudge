@@ -1,23 +1,27 @@
 # -*- coding: utf-8 -*-
-from typing import List
-from rm_gallery.core.grader.base import (
-    GraderMode,
-    LLMGrader,
-    GraderScore,
-    GraderRank,
-)
+from typing import Any, List
+
+from rm_gallery.core.grader.base import GraderMode, GraderRank, GraderScore
 from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import Template
-from rm_gallery.gallery.grader.alignment.helpfulness import (
-    BaseHelpfulnessGrader,
+from rm_gallery.gallery.grader.alignment.helpfulness import BaseHelpfulnessGrader
+
+RUBRICS = (
+    "Direct Relevance to Core Query:\n    "
+    "Prioritize completions that explicitly address the specific question, task, "
+    "or scenario posed in the query without introducing tangential concepts, "
+    "unnecessary details, or unrelated analysis.\n"
+    "Maintaining Central Theme:\n    "
+    "Ensure the response stays focused on the main topic throughout, avoiding "
+    "digressions or shifts to peripheral subjects.\n"
+    "Filtering Irrelevant Information:\n    "
+    "Eliminate or avoid including information that does not directly contribute "
+    "to answering the core query or completing the primary task.\n"
+    "Adhering to Length Constraints:\n    "
+    "Provide responses that are appropriately detailed without unnecessary "
+    "elaboration, keeping the focus sharp and concise."
 )
-
-
-RUBRICS = """Direct Relevance to Core Query: Prioritize completions that explicitly address the specific question, task, or scenario posed in the query without introducing tangential concepts, unnecessary details, or unrelated analysis.
-Maintaining Central Theme: Ensure the response stays focused on the main topic throughout, avoiding digressions or shifts to peripheral subjects.
-Filtering Irrelevant Information: Eliminate or avoid including information that does not directly contribute to answering the core query or completing the primary task.
-Adhering to Length Constraints: Provide responses that are appropriately detailed without unnecessary elaboration, keeping the focus sharp and concise."""
 
 
 # Focus Score System Prompt
@@ -52,8 +56,14 @@ FOCUS_LISTWISE_SYSTEM_PROMPT = "You are a helpful assistant skilled in reward ev
 
 # Focus Rank User Prompt
 FOCUS_LISTWISE_USER_PROMPT = """# Task Description
-Your role is that of a professional evaluation expert. I will provide you with a question and several candidate answers. Your task is to select the single best answer from the candidates.
-I will also provide you with a set of rubrics, listed under the heading #Rubrics. These rubrics are ordered from highest to lowest importance. You must check each candidate answer in turn to see if it violates any rubric, and provide reasons for any violations you find. These reasons should be used as references for ranking the answers.
+Your role is that of a professional evaluation expert. I will provide you with a \
+question and several candidate answers. Your task is to select the single best answer \
+from the candidates.
+I will also provide you with a set of rubrics, listed under the heading #Rubrics. \
+These rubrics are ordered from highest to lowest importance. You must check each \
+candidate answer in turn to see if it violates any rubric, and provide reasons for \
+any violations you find. These reasons should be used as references for ranking \
+the answers.
 You may organize your reasoning as you see fit, but keep your thought process as concise as possible.
 
 # Rubrics
@@ -114,7 +124,7 @@ class FocusGrader(BaseHelpfulnessGrader):
         template: Template | None = None,
         mode: GraderMode = GraderMode.LISTWISE,
         rubrics: str | None = None,
-        **kwargs,
+        **kwargs: Any,
     ):
         """Initialize the FocusGrader.
 
@@ -141,7 +151,7 @@ class FocusGrader(BaseHelpfulnessGrader):
         self,
         query: str,
         answer: str | List[str],
-        **kwargs,
+        **kwargs: Any,
     ) -> GraderScore | GraderRank:
         """Evaluate the focus quality of the response based on the query.
 

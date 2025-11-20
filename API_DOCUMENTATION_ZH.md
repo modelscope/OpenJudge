@@ -97,7 +97,7 @@ class Grader(ABC):
         eval_case: EvalCase,
         parser: EvalCaseParser | None = None,
         *args,
-        **kwargs,
+        **kwargs: Any,
     ) -> List[GraderScore]:
         """Main entry point to evaluate eval case.
 
@@ -505,7 +505,7 @@ class GradingRunner(BaseRunner):
         self,
         eval_cases: List[EvalCase],
         *args,
-        **kwargs,
+        **kwargs: Any,
     ) -> dict:
         """Run experiment.
 
@@ -664,7 +664,7 @@ class AutoGrader(BaseRunner):
         self,
         eval_cases: List[EvalCase],
         *args,
-        **kwargs,
+        **kwargs: Any,
     ) -> LLMGrader:
         """Generate an LLMGrader based on automatically generated rubrics
 

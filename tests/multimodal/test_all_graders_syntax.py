@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Syntax check for all multimodal graders
 

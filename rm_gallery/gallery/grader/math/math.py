@@ -1,4 +1,11 @@
 # -*- coding: utf-8 -*-
+"""
+Math Verification Graders
+
+This module provides graders for evaluating mathematical problem solving capabilities
+using the math_verify library to parse and verify mathematical expressions.
+"""
+
 from math_verify import parse, verify
 from math_verify.parser import ExprExtractionConfig, LatexExtractionConfig
 
@@ -10,7 +17,7 @@ class MathVerifyGrader(Grader):
     Verifies mathematical expressions using the math_verify library, supporting both LaTeX and plain expressions
     """
 
-    def __init__(self, timeout_score: float = 1.0, **kwargs):
+    def __init__(self, timeout_score: float = 1.0, **kwargs: Any):
         """
         Initialize the MathVerifyGrader.
 
@@ -25,7 +32,7 @@ class MathVerifyGrader(Grader):
         )
         self.timeout_score = timeout_score
 
-    async def aevaluate(self, generated, reference) -> GraderScore:
+    async def aevaluate(self, generated: str, reference: str) -> GraderScore:
         """
         Verify mathematical expressions for accuracy by parsing and comparing the generated answer
         against a reference answer using the math_verify library.

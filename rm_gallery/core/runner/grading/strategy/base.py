@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-from abc import ABC, abstractmethod
 import asyncio
-from typing import List
+from abc import ABC, abstractmethod
+from typing import Any, List
 
-from rm_gallery.core.schema.data import EvalCase
 from rm_gallery.core.grader.base import Grader, GraderScore
+from rm_gallery.core.schema.data import EvalCase
 
 
 class GraderStrategy(ABC):
@@ -20,7 +20,7 @@ class GraderStrategy(ABC):
         grader: Grader,
         eval_case: EvalCase,
         *args,
-        **kwargs,
+        **kwargs: Any,
     ) -> List[GraderScore]:
         """Core method for optimizing grader functions.
 
@@ -39,7 +39,7 @@ class GraderStrategy(ABC):
         grader: Grader,
         eval_cases: List[EvalCase],
         *args,
-        **kwargs,
+        **kwargs: Any,
     ) -> List[List[GraderScore]]:
         """Evaluate a batch of eval cases using the optimized grader function.
 

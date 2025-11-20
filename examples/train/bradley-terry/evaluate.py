@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Simple Reward Model Evaluation Script
 
@@ -6,7 +7,7 @@ It takes simple text inputs and returns reward scores.
 
 """
 from argparse import ArgumentParser
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 import torch
 from transformers import AutoTokenizer, pipeline
@@ -38,14 +39,21 @@ class SimpleRewardEvaluator:
         """
         # Convert conversation to model input format
         model_input = self.tokenizer.apply_chat_template(
-            conversation, tokenize=False, add_generation_prompt=False
+            conversation,
+            tokenize=False,
+            add_generation_prompt=False,
         )
 
         # Get model prediction
         output = self.pipeline(model_input, top_k=1, function_to_apply="none")
         return output[0]["score"]
 
-    def compare_responses(self, user_message: str, response_a: str, response_b: str):
+    def compare_responses(
+        self,
+        user_message: str,
+        response_a: str,
+        response_b: str,
+    ) -> Tuple[float, float, str]:
         """Compare two responses to the same user message.
 
         Args:
@@ -92,11 +100,14 @@ class SimpleRewardEvaluator:
         return self.get_reward(conversation)
 
 
-def main():
+def main() -> None:
     """Main function - simple test example."""
     parser = ArgumentParser(description="Simple Bradley-Terry reward model test")
     parser.add_argument(
-        "--model_path", type=str, required=True, help="Path to trained reward model"
+        "--model_path",
+        type=str,
+        required=True,
+        help="Path to trained reward model",
     )
     args = parser.parse_args()
 
@@ -123,7 +134,9 @@ def main():
     # Test 2: Compare two responses
     print("\n=== Response Comparison ===")
     score_a, score_b, preferred = evaluator.compare_responses(
-        user_msg, response1, response2
+        user_msg,
+        response1,
+        response2,
     )
     print(f"Score A: {score_a:.4f}, Score B: {score_b:.4f}")
     print(f"Preferred response: {preferred}")

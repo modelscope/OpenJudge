@@ -1,23 +1,26 @@
 # -*- coding: utf-8 -*-
-from typing import List
-from rm_gallery.core.grader.base import (
-    GraderMode,
-    LLMGrader,
-    GraderScore,
-    GraderRank,
-)
+from typing import Any, List
+
+from rm_gallery.core.grader.base import GraderMode, GraderRank, GraderScore
 from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import Template
-from rm_gallery.gallery.grader.alignment.helpfulness import (
-    BaseHelpfulnessGrader,
+from rm_gallery.gallery.grader.alignment.helpfulness import BaseHelpfulnessGrader
+
+RUBRICS = (
+    "Logical Soundness:\n    "
+    "Ensure all reasoning steps follow logically from premises and established "
+    "rules of inference, avoiding logical fallacies or invalid conclusions.\n"
+    "Step-by-Step Clarity:\n    "
+    "Present the reasoning process in a clear, sequential manner that allows for "
+    "easy verification and understanding of how conclusions are reached.\n"
+    "Evidence-Based Conclusions:\n    "
+    "Base conclusions on solid evidence, clearly distinguishing between facts, "
+    "assumptions, and inferences.\n"
+    "Comprehensiveness:\n    "
+    "Address all aspects of the problem or question, considering alternative "
+    "approaches and potential edge cases where relevant."
 )
-
-
-RUBRICS = """Logical Soundness: Ensure all reasoning steps follow logically from premises and established rules of inference, avoiding logical fallacies or invalid conclusions.
-Step-by-Step Clarity: Present the reasoning process in a clear, sequential manner that allows for easy verification and understanding of how conclusions are reached.
-Evidence-Based Conclusions: Base conclusions on solid evidence, clearly distinguishing between facts, assumptions, and inferences.
-Comprehensiveness: Address all aspects of the problem or question, considering alternative approaches and potential edge cases where relevant."""
 
 
 # Reasoning Score System Prompt
@@ -52,7 +55,9 @@ REASONING_LISTWISE_SYSTEM_PROMPT = "You are a helpful assistant skilled in rewar
 
 # Reasoning Rank User Prompt
 REASONING_LISTWISE_USER_PROMPT = """# Task Description
-Your role is that of a professional evaluation expert. I will provide you with a question and several candidate answers. Your task is to select the single best answer from the candidates.
+Your role is that of a professional evaluation expert. I will provide you with a \
+question and several candidate answers. Your task is to select the single best answer \
+from the candidates.
 
 # Rubrics
 {rubrics}
@@ -112,7 +117,7 @@ class ReasoningGrader(BaseHelpfulnessGrader):
         template: Template | None = None,
         mode: GraderMode = GraderMode.LISTWISE,
         rubrics: str | None = None,
-        **kwargs,
+        **kwargs: Any,
     ):
         """Initialize the ReasoningGrader.
 
@@ -139,7 +144,7 @@ class ReasoningGrader(BaseHelpfulnessGrader):
         self,
         query: str,
         answer: str | List[str],
-        **kwargs,
+        **kwargs: Any,
     ) -> GraderScore | GraderRank:
         """Evaluate the reasoning quality of the response based on the query.
 

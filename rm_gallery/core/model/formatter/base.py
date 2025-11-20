@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 """The formatter module."""
 
-from abc import abstractmethod
 import base64
 import tempfile
+from abc import abstractmethod
 from typing import Any, List
 
-
-from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.block import AudioBlock, ImageBlock, TextBlock
+from rm_gallery.core.schema.message import ChatMessage
 
 
 def _save_base64_data(

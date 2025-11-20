@@ -18,11 +18,11 @@ from loguru import logger
 from pydantic import BaseModel, Field
 from tenacity import retry, stop_after_attempt, wait_fixed
 
-from rm_gallery.core.schema.data import EvalCase, EvalCaseParser
+from rm_gallery.core.grader.auto.rubric.prompts import RubricPromptTemplates
 from rm_gallery.core.grader.base import GraderMode, GraderRank, GraderScore
 from rm_gallery.core.model.base import ChatModelBase
+from rm_gallery.core.schema.data import EvalCase, EvalCaseParser
 from rm_gallery.core.schema.template import LanguageEnum
-from rm_gallery.core.grader.rubric.prompts import RubricPromptTemplates
 
 
 class RubricGenerationOutput(BaseModel):
@@ -102,29 +102,21 @@ class QuerySpecificRubricGenerator:
         """Initialize ChatTemplate objects"""
         # Generation templates
         if self.grader_mode == "pointwise":
-            self.generation_template = (
-                RubricPromptTemplates.pointwise_generation(
-                    self.model,
-                )
+            self.generation_template = RubricPromptTemplates.pointwise_generation(
+                self.model,
             )
-            self.evaluation_template = (
-                RubricPromptTemplates.pointwise_evaluation(
-                    self.model,
-                )
+            self.evaluation_template = RubricPromptTemplates.pointwise_evaluation(
+                self.model,
             )
             self.revision_template = RubricPromptTemplates.pointwise_revision(
                 self.model,
             )
         else:  # listwise (includes former pairwise)
-            self.generation_template = (
-                RubricPromptTemplates.listwise_generation(
-                    self.model,
-                )
+            self.generation_template = RubricPromptTemplates.listwise_generation(
+                self.model,
             )
-            self.evaluation_template = (
-                RubricPromptTemplates.listwise_evaluation(
-                    self.model,
-                )
+            self.evaluation_template = RubricPromptTemplates.listwise_evaluation(
+                self.model,
             )
             self.revision_template = RubricPromptTemplates.listwise_revision(
                 self.model,

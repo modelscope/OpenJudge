@@ -1,11 +1,7 @@
 # -*- coding: utf-8 -*-
-from rm_gallery.core.grader.base import (
-    Grader,
-    GraderMode,
-    GraderScore,
-    GraderRank,
-)
-from typing import Union
+from typing import Any, Union
+
+from rm_gallery.core.grader.base import Grader, GraderMode, GraderRank, GraderScore
 
 
 class DetoxifyGrader(Grader):
@@ -14,7 +10,7 @@ class DetoxifyGrader(Grader):
     def __init__(
         self,
         detoxify_model_name: str = "unbiased",
-        **kwargs,
+        **kwargs: Any,
     ):
         """Initialize DetoxifyGrader.
 
@@ -24,14 +20,20 @@ class DetoxifyGrader(Grader):
             detoxify_model_name (str): Name of the detoxify model to use. Defaults to "unbiased".
             **kwargs: Additional arguments passed to the parent class.
         """
-        super().__init__(name="detoxify", mode=GraderMode.POINTWISE, description="Detoxify: Detecting different types of of toxicity like threats, obscenity, insults ans so on.", **kwargs)
+        super().__init__(
+            name="detoxify",
+            mode=GraderMode.POINTWISE,
+            description="Detoxify: Detecting different types of of toxicity like threats, obscenity, insults ans so on.",
+            **kwargs,
+        )
         from detoxify import Detoxify
+
         self._model = Detoxify(detoxify_model_name)
 
     async def aevaluate(
         self,
         answer: str,
-        **kwargs,
+        **kwargs: Any,
     ) -> Union[GraderScore, GraderRank]:
         """Evaluate text toxicity using Detoxify model.
 

@@ -1,25 +1,31 @@
 # -*- coding: utf-8 -*-
-from typing import List
-from rm_gallery.core.grader.base import (
-    GraderMode,
-    LLMGrader,
-    GraderScore,
-    GraderRank,
-)
+from typing import Any, List
+
+from rm_gallery.core.grader.base import GraderMode, GraderRank, GraderScore
 from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import Template
-from rm_gallery.gallery.grader.alignment.helpfulness import (
-    BaseHelpfulnessGrader,
+from rm_gallery.gallery.grader.alignment.helpfulness import BaseHelpfulnessGrader
+
+RUBRICS = (
+    "Functional Correctness:\n    "
+    "The code must correctly implement the required functionality without syntax "
+    "errors or logical flaws. It should pass basic test cases related to the "
+    "problem.\n"
+    "Code Quality and Readability:\n    "
+    "The code should be well-structured, readable, and follow common programming "
+    "conventions. Variable names should be meaningful, and complex logic should "
+    "be appropriately commented.\n"
+    "Efficiency and Optimization:\n    "
+    "The solution should be reasonably efficient in terms of time and space "
+    "complexity. Avoid unnecessary computations or memory usage.\n"
+    "Language-Specific Best Practices:\n    "
+    "The code should follow language-specific conventions and idioms, making it "
+    "appear as if written by an experienced developer in that language.\n"
+    "Error Handling:\n    "
+    "Appropriate error handling should be implemented for edge cases and invalid "
+    "inputs, making the code robust and production-ready."
 )
-
-
-RUBRICS = """Functional Correctness: The code must correctly implement the required functionality without syntax errors or logical flaws. It should pass basic test cases related to the problem.
-Code Quality and Readability: The code should be well-structured, readable, and follow common programming conventions. Variable names should be meaningful, and complex logic should be appropriately commented.
-Efficiency and Optimization: The solution should be reasonably efficient in terms of time and space complexity. Avoid unnecessary computations or memory usage.
-Language-Specific Best Practices: The code should follow language-specific conventions and idioms, making it appear as if written by an experienced developer in that language.
-Error Handling: Appropriate error handling should be implemented for edge cases and invalid inputs, making the code robust and production-ready.
-"""
 
 
 # Code Score System Prompt
@@ -54,7 +60,9 @@ CODE_LISTWISE_SYSTEM_PROMPT = "You are a helpful assistant skilled in reward eva
 
 # Code Rank User Prompt
 CODE_LISTWISE_USER_PROMPT = """# Task Description
-Your role is that of a professional evaluation expert. I will provide you with a question and several candidate answers. Your task is to select the single best answer from the candidates.
+Your role is that of a professional evaluation expert. I will provide you with a \
+question and several candidate answers. Your task is to select the single best answer \
+from the candidates.
 
 
 # Rubrics
@@ -115,7 +123,7 @@ class CodeGrader(BaseHelpfulnessGrader):
         template: Template | None = None,
         mode: GraderMode = GraderMode.LISTWISE,
         rubrics: str | None = None,
-        **kwargs,
+        **kwargs: Any,
     ):
         """Initialize the CodeGrader.
 
@@ -142,7 +150,7 @@ class CodeGrader(BaseHelpfulnessGrader):
         self,
         query: str,
         answer: str | List[str],
-        **kwargs,
+        **kwargs: Any,
     ) -> GraderScore | GraderRank:
         """Evaluate the quality of the code response based on the query.
 

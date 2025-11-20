@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Core Computation Functions for Graders
 
@@ -28,7 +29,7 @@ def compute_bleu_score(
         from sacrebleu.metrics import BLEU
     except ImportError:
         return 0.0, {
-            "error": "sacrebleu not installed. Please install: pip install sacrebleu"
+            "error": "sacrebleu not installed. Please install: pip install sacrebleu",
         }
 
     bleu = BLEU(
@@ -395,7 +396,7 @@ def compute_fuzzy_match(
         import Levenshtein
     except ImportError:
         return 0.0, {
-            "error": "python-Levenshtein not installed. Please install: pip install python-Levenshtein"
+            "error": "python-Levenshtein not installed. Please install: pip install python-Levenshtein",
         }
 
     if method == "ratio":
@@ -406,7 +407,7 @@ def compute_fuzzy_match(
         score = _token_sort_ratio(candidate, reference)
     else:
         raise ValueError(
-            f"Unknown method: {method}. Use 'ratio', 'partial_ratio', or 'token_sort_ratio'"
+            f"Unknown method: {method}. Use 'ratio', 'partial_ratio', or 'token_sort_ratio'",
         )
 
     matched = score >= threshold
@@ -462,7 +463,7 @@ def compute_edit_distance(
         import Levenshtein
     except ImportError:
         return 0.0, {
-            "error": "python-Levenshtein not installed. Please install: pip install python-Levenshtein"
+            "error": "python-Levenshtein not installed. Please install: pip install python-Levenshtein",
         }
 
     raw_distance = Levenshtein.distance(candidate, reference)
@@ -523,7 +524,10 @@ def _cosine_similarity_vectors(vec1: np.ndarray, vec2: np.ndarray) -> float:
 
 
 def _cosine_tfidf(
-    text1: str, text2: str, ngram_range: tuple, max_features: Optional[int]
+    text1: str,
+    text2: str,
+    ngram_range: tuple,
+    max_features: Optional[int],
 ) -> float:
     """TF-IDF based cosine similarity"""
     try:

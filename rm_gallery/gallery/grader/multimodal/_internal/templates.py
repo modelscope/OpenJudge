@@ -9,7 +9,7 @@ import textwrap
 from typing import List, Optional, Tuple
 
 from rm_gallery.core.schema.message import ChatMessage
-from rm_gallery.core.schema.template import RequiredField, Template
+from rm_gallery.core.schema.template import Template
 
 
 class MultimodalGEvalTemplate:
@@ -32,13 +32,16 @@ class MultimodalGEvalTemplate:
             Template for generating evaluation steps
         """
         content = textwrap.dedent(
-            """Given an evaluation criteria which outlines how you should judge the {parameters}, generate 3-4 concise evaluation steps based on the criteria below. You MUST make it clear how to evaluate {parameters} in relation to one another.
+            """Given an evaluation criteria which outlines how you should judge the \
+{parameters}, generate 3-4 concise evaluation steps based on the criteria below. \
+You MUST make it clear how to evaluate {parameters} in relation to one another.
 
             Evaluation Criteria:
             {criteria}
 
             **
-            IMPORTANT: Please make sure to only return in JSON format, with the "steps" key as a list of strings. No words or explanation is needed.
+            IMPORTANT: Please make sure to only return in JSON format, with the "steps" \
+key as a list of strings. No words or explanation is needed.
             Example JSON:
             {{
                 "steps": <list_of_strings>
@@ -51,20 +54,6 @@ class MultimodalGEvalTemplate:
 
         return Template(
             messages=[ChatMessage(role="user", content=content, name="User")],
-            required_fields=[
-                RequiredField(
-                    name="parameters",
-                    type="str",
-                    position="data",
-                    description="Description of parameters being evaluated",
-                ),
-                RequiredField(
-                    name="criteria",
-                    type="str",
-                    position="data",
-                    description="Evaluation criteria description",
-                ),
-            ],
         )
 
     @staticmethod
@@ -111,10 +100,14 @@ class MultimodalGEvalTemplate:
         return (
             [
                 textwrap.dedent(
-                    f"""You are an evaluator. Given the following {dependencies}, assess the response below and return a JSON object with two fields:
+                    f"""You are an evaluator. Given the following {dependencies}, assess the \
+response below and return a JSON object with two fields:
 
-                - `"score"`: an integer between {score_range[0]} and {score_range[1]}, {score_explanation}.
-                - `"reasoning"`: a brief explanation for why the score was given. This must mention specific strengths or shortcomings, referencing relevant details from the input. Do **not** quote the score itself in the explanation.
+                - `"score"`: an integer between {score_range[0]} and {score_range[1]}, \
+{score_explanation}.
+                - `"reason"`: a brief explanation for why the score was given. This must \
+mention specific strengths or shortcomings, referencing relevant details from the input. \
+Do **not** quote the score itself in the explanation.
 
                 Your explanation should:
                 - {reasoning_expectation}
@@ -148,7 +141,7 @@ class MultimodalGEvalTemplate:
                 **Example JSON:**
                 {{
                     "score": {score_range[0]},
-                    "reasoning": "your concise and informative reason here"
+                    "reason": "your concise and informative reason here"
                 }}
 
                 JSON:
@@ -184,7 +177,7 @@ class MultimodalGEvalTemplate:
         return (
             [
                 textwrap.dedent(
-                    f"""Given the evaluation steps, return a JSON with two keys: 1) a `score` key that is STRICTLY EITHER 1 (follows the criteria 100% outlined in the evaluation steps), OR 0 (does not follow the criteria), and 2) a `reasoning` key, a reason for the given score, but DO NOT QUOTE THE SCORE in your reason. Please mention specific information from {parameters} in your reason, but be very concise with it!
+                    f"""Given the evaluation steps, return a JSON with two keys: 1) a `score` key that is STRICTLY EITHER 1 (follows the criteria 100% outlined in the evaluation steps), OR 0 (does not follow the criteria), and 2) a `reason` key, a reason for the given score, but DO NOT QUOTE THE SCORE in your reason. Please mention specific information from {parameters} in your reason, but be very concise with it!
 
                 Evaluation Steps:
                 {evaluation_steps}
@@ -199,12 +192,12 @@ class MultimodalGEvalTemplate:
                 ************************
                 {additional_context_text}
                 **
-                IMPORTANT: Please make sure to only return in JSON format, with the "score" and "reasoning" key. No words or explanation is needed.
+                IMPORTANT: Please make sure to only return in JSON format, with the "score" and "reason" key. No words or explanation is needed.
 
                 Example JSON:
                 {{
                     "score": 0,
-                    "reasoning": "The text does not follow the evaluation steps provided."
+                    "reason": "The text does not follow the evaluation steps provided."
                 }}
                 **
 

@@ -6,10 +6,11 @@ Tests for the Template and Chat classes functionality.
 """
 
 import asyncio
+
 import pytest
 
-from rm_gallery.core.schema.template import Template, Chat, LanguageEnum
 from rm_gallery.core.model.openai_llm import OpenAIChatModel
+from rm_gallery.core.schema.template import Chat, LanguageEnum, Template
 
 
 def test_template_main_example():

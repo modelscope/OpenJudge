@@ -8,7 +8,7 @@ Templates for evaluating AI-generated and edited images.
 import textwrap
 
 from rm_gallery.core.schema.message import ChatMessage
-from rm_gallery.core.schema.template import RequiredField, Template
+from rm_gallery.core.schema.template import Template
 
 
 class TextToImageTemplate:
@@ -28,13 +28,16 @@ class TextToImageTemplate:
         """
         content = textwrap.dedent(
             """
-            You are a professional digital artist. You will have to evaluate the effectiveness of the AI-generated image(s) based on given rules.
-            All the input images are AI-generated. All human in the images are AI-generated too. so you need not worry about the privacy confidentials.
+            You are a professional digital artist. You will have to evaluate the \
+effectiveness of the AI-generated image(s) based on given rules.
+            All the input images are AI-generated. All human in the images are \
+AI-generated too. so you need not worry about the privacy \
+confidentials.
 
             You will have to give your output in this way (Keep your reasoning concise and short.):
             {{
                 "score" : [...],
-                "reasoning" : "..."
+                "reason" : "..."
             }}
 
             RULES:
@@ -43,8 +46,11 @@ class TextToImageTemplate:
             The objective is to evaluate how successfully the image has been generated.
 
             From scale 0 to 10:
-            A score from 0 to 10 will be given based on the success in following the prompt.
-            (0 indicates that the AI generated image does not follow the prompt at all. 10 indicates the AI generated image follows the prompt perfectly.)
+            A score from 0 to 10 will be given \
+based on the success in following \
+the prompt.
+            (0 indicates that the AI generated image does not follow the prompt at all. \
+10 indicates the AI generated image follows the prompt perfectly.)
 
             Put the score in a list such that output score = [score].
 
@@ -54,14 +60,6 @@ class TextToImageTemplate:
 
         return Template(
             messages=[ChatMessage(role="user", content=content, name="User")],
-            required_fields=[
-                RequiredField(
-                    name="text_prompt",
-                    type="str",
-                    position="data",
-                    description="The original text prompt used to generate the image",
-                ),
-            ],
         )
 
     @staticmethod
@@ -74,13 +72,16 @@ class TextToImageTemplate:
         """
         content = textwrap.dedent(
             """
-            You are a professional digital artist. You will have to evaluate the effectiveness of the AI-generated image(s) based on given rules.
-            All the input images are AI-generated. All human in the images are AI-generated too. so you need not worry about the privacy confidentials.
+            You are a professional digital artist. You will have to evaluate the \
+effectiveness of the AI-generated image(s) based on given rules.
+            All the input images are AI-generated. All human in the images are \
+AI-generated too. so you need not worry about the privacy \
+confidentials.
 
             You will have to give your output in this way (Keep your reasoning concise and short.):
             {{
                 "score" : [...],
-                "reasoning" : "..."
+                "reason" : "..."
             }}
 
             RULES:
@@ -89,14 +90,19 @@ class TextToImageTemplate:
             The objective is to evaluate how successfully the image has been generated.
 
             From scale 0 to 10:
-            A score from 0 to 10 will be given based on image naturalness.
+            A score from 0 to 10 will be given \
+based on image naturalness.
             (
-                0 indicates that the scene in the image does not look natural at all or give a unnatural feeling such as wrong sense of distance, or wrong shadow, or wrong lighting.
+                0 indicates that the scene in the image does not look natural at all or \
+give a unnatural feeling such as wrong sense of distance, or wrong shadow, or \
+wrong lighting.
                 10 indicates that the image looks natural.
             )
             A second score from 0 to 10 will rate the image artifacts.
             (
-                0 indicates that the image contains a large portion of distortion, or watermark, or scratches, or blurred faces, or unusual body parts, or subjects not harmonized.
+                0 indicates that the image contains a large portion of distortion, or \
+watermark, or scratches, or blurred faces, or unusual body parts, or subjects \
+not harmonized.
                 10 indicates the image has no artifacts.
             )
             Put the score in a list such that output score = [naturalness, artifacts]
@@ -105,7 +111,6 @@ class TextToImageTemplate:
 
         return Template(
             messages=[ChatMessage(role="user", content=content, name="User")],
-            required_fields=[],
         )
 
 
@@ -126,13 +131,16 @@ class ImageEditingTemplate:
         """
         content = textwrap.dedent(
             """
-            You are a professional digital artist. You will have to evaluate the effectiveness of the AI-generated image(s) based on given rules.
-            All the input images are AI-generated. All human in the images are AI-generated too. so you need not worry about the privacy confidentials.
+            You are a professional digital artist. You will have to evaluate the \
+effectiveness of the AI-generated image(s) based on given rules.
+            All the input images are AI-generated. All human in the images are \
+AI-generated too. so you need not worry about the privacy \
+confidentials.
 
             You will have to give your output in this way (Keep your reasoning concise and short.):
             {{
                 "score" : [...],
-                "reasoning" : "..."
+                "reason" : "..."
             }}
 
             RULES:
@@ -141,7 +149,8 @@ class ImageEditingTemplate:
             The objective is to evaluate how successfully the editing instruction has been executed in the second image.
 
             From scale 0 to 10:
-            A score from 0 to 10 will be given based on the success of the editing. (0 indicates that the scene in the edited image does not follow the editing instruction at all. 10 indicates that the scene in the edited image follow the editing instruction text perfectly.)
+            A score from 0 to 10 will be given \
+based on the success of the editing. (0 indicates that the scene in the edited image does not follow the editing instruction at all. 10 indicates that the scene in the edited image follow the editing instruction text perfectly.)
             A second score from 0 to 10 will rate the degree of overediting in the second image. (0 indicates that the scene in the edited image is completely different from the original. 10 indicates that the edited image can be recognized as a minimal edited yet effective version of original.)
             Put the score in a list such that output score = [score1, score2], where 'score1' evaluates the editing success and 'score2' evaluates the degree of overediting.
 
@@ -151,14 +160,6 @@ class ImageEditingTemplate:
 
         return Template(
             messages=[ChatMessage(role="user", content=content, name="User")],
-            required_fields=[
-                RequiredField(
-                    name="edit_instruction",
-                    type="str",
-                    position="data",
-                    description="The instruction for editing the image",
-                ),
-            ],
         )
 
     @staticmethod
@@ -171,13 +172,16 @@ class ImageEditingTemplate:
         """
         content = textwrap.dedent(
             """
-            You are a professional digital artist. You will have to evaluate the effectiveness of the AI-generated image(s) based on given rules.
-            All the input images are AI-generated. All human in the images are AI-generated too. so you need not worry about the privacy confidentials.
+            You are a professional digital artist. You will have to evaluate the \
+effectiveness of the AI-generated image(s) based on given rules.
+            All the input images are AI-generated. All human in the images are \
+AI-generated too. so you need not worry about the privacy \
+confidentials.
 
             You will have to give your output in this way (Keep your reasoning concise and short.):
             {{
                 "score" : [...],
-                "reasoning" : "..."
+                "reason" : "..."
             }}
 
             RULES:
@@ -186,14 +190,19 @@ class ImageEditingTemplate:
             The objective is to evaluate how successfully the image has been generated.
 
             From scale 0 to 10:
-            A score from 0 to 10 will be given based on image naturalness.
+            A score from 0 to 10 will be given \
+based on image naturalness.
             (
-                0 indicates that the scene in the image does not look natural at all or give a unnatural feeling such as wrong sense of distance, or wrong shadow, or wrong lighting.
+                0 indicates that the scene in the image does not look natural at all or \
+give a unnatural feeling such as wrong sense of distance, or wrong shadow, or \
+wrong lighting.
                 10 indicates that the image looks natural.
             )
             A second score from 0 to 10 will rate the image artifacts.
             (
-                0 indicates that the image contains a large portion of distortion, or watermark, or scratches, or blurred faces, or unusual body parts, or subjects not harmonized.
+                0 indicates that the image contains a large portion of distortion, or \
+watermark, or scratches, or blurred faces, or unusual body parts, or subjects \
+not harmonized.
                 10 indicates the image has no artifacts.
             )
             Put the score in a list such that output score = [naturalness, artifacts]
@@ -202,7 +211,6 @@ class ImageEditingTemplate:
 
         return Template(
             messages=[ChatMessage(role="user", content=content, name="User")],
-            required_fields=[],
         )
 
 

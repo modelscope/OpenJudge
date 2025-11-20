@@ -1,23 +1,27 @@
 # -*- coding: utf-8 -*-
-from typing import List
-from rm_gallery.core.grader.base import (
-    GraderMode,
-    LLMGrader,
-    GraderScore,
-    GraderRank,
-)
+from typing import Any, List
+
+from rm_gallery.core.grader.base import GraderMode, GraderRank, GraderScore
 from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import Template
-from rm_gallery.gallery.grader.alignment.helpfulness import (
-    BaseHelpfulnessGrader,
-)
+from rm_gallery.gallery.grader.alignment.helpfulness import BaseHelpfulnessGrader
 
-RUBRICS = """Factual Accuracy: Prioritize completely accurate information without any factual errors or hallucinations. Every statement should be verifiable against authoritative sources.
-Precision and Conciseness: Provide responses that directly and precisely answer the question without unnecessary elaboration or ambiguity.
-Comprehensiveness within Scope: Include all relevant information required to fully answer the question, but avoid including tangential or excessive details.
-Logical Coherence: Structure responses in a clear, logical manner that enhances understanding and maintains focus on the core question.
-"""
+RUBRICS = (
+    "Factual Accuracy:\n    "
+    "Prioritize completely accurate information without any factual errors or "
+    "hallucinations. Every statement should be verifiable against authoritative "
+    "sources.\n"
+    "Precision and Conciseness:\n    "
+    "Provide responses that directly and precisely answer the question without "
+    "unnecessary elaboration or ambiguity.\n"
+    "Comprehensiveness within Scope:\n    "
+    "Include all relevant information required to fully answer the question, but "
+    "avoid including tangential or excessive details.\n"
+    "Logical Coherence:\n    "
+    "Structure responses in a clear, logical manner that enhances understanding "
+    "and maintains focus on the core question."
+)
 
 
 # Closed QA Score System Prompt
@@ -52,7 +56,9 @@ CLOSED_QA_LISTWISE_SYSTEM_PROMPT = "You are a helpful assistant skilled in rewar
 
 # Closed QA Rank User Prompt
 CLOSED_QA_LISTWISE_USER_PROMPT = """# Task Description
-Your role is that of a professional evaluation expert. I will provide you with a question and several candidate answers. Your task is to select the single best answer from the candidates.
+Your role is that of a professional evaluation expert. I will provide you with a \
+question and several candidate answers. Your task is to select the single best answer \
+from the candidates.
 
 # Rubrics
 {rubrics}
@@ -112,7 +118,7 @@ class ClosedQAGrader(BaseHelpfulnessGrader):
         template: Template | None = None,
         mode: GraderMode = GraderMode.LISTWISE,
         rubrics: str | None = None,
-        **kwargs,
+        **kwargs: Any,
     ):
         """Initialize the ClosedQAGrader.
 
@@ -139,7 +145,7 @@ class ClosedQAGrader(BaseHelpfulnessGrader):
         self,
         query: str,
         answer: str | List[str],
-        **kwargs,
+        **kwargs: Any,
     ) -> GraderScore | GraderRank:
         """Evaluate the closed QA response based on the query.
 

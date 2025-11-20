@@ -11,11 +11,11 @@ from typing import Any, Optional
 
 from loguru import logger
 
-from rm_gallery.core.grader.base import Grader
-from rm_gallery.core.model.openai_llm import OpenAIChatModel
+from rm_gallery.core.grader.base import LLMGrader
+from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.schema.grader import GraderMode, GraderScore
 from rm_gallery.core.schema.message import ChatMessage
-from rm_gallery.core.schema.template import LanguageEnum, RequiredField, Template
+from rm_gallery.core.schema.template import LanguageEnum, Template
 
 # pylint: disable=line-too-long
 
@@ -76,7 +76,7 @@ Evaluate the following:
 Provide your evaluation in the following structured JSON format:
 {{
     "score": <integer between 0 and 10, where 10 means perfect reference adherence and 0 means complete failure to adhere to reference>,
-    "reasoning": "<brief explanation for the assigned score, specifically mentioning how the output aligns with or deviates from the reference material>"
+    "reason": "<brief explanation for the assigned score, specifically mentioning how the output aligns with or deviates from the reference material>"
 }}
 
 JSON:
@@ -139,14 +139,32 @@ REFERENCE_ADHERENCE_PROMPT_ZH = """
 请按以下结构化 JSON 格式提供你的评估：
 {{
     "score": <0到10之间的整数，其中10表示完美遵循参考，0表示完全未能遵循参考>,
-    "reasoning": "<对所给分数的简要解释，特别提到输出如何与参考材料一致或偏离>"
+    "reason": "<对所给分数的简要解释，特别提到输出如何与参考材料一致或偏离>"
 }}
 
 JSON:
 """
 
+# Build default template from prompts
+DEFAULT_REFERENCE_ADHERENCE_TEMPLATE = Template(
+    messages={
+        LanguageEnum.EN: [
+            ChatMessage(
+                role="user",
+                content=textwrap.dedent(REFERENCE_ADHERENCE_PROMPT_EN),
+            ),
+        ],
+        LanguageEnum.ZH: [
+            ChatMessage(
+                role="user",
+                content=textwrap.dedent(REFERENCE_ADHERENCE_PROMPT_ZH),
+            ),
+        ],
+    },
+)
 
-class ReferenceAdherenceGrader(Grader):
+
+class ReferenceAdherenceGrader(LLMGrader):
     """
     Reference Adherence Grader
 
@@ -186,52 +204,20 @@ class ReferenceAdherenceGrader(Grader):
 
     def __init__(
         self,
-        model: OpenAIChatModel,
-        name: str = "reference_adherence",
+        model: ChatModelBase | dict,
         threshold: float = 0.7,
-        description: str = "Evaluate whether output adheres to provided reference materials",
-        template: Optional[Template] = None,
+        template: Optional[Template] = DEFAULT_REFERENCE_ADHERENCE_TEMPLATE,
         language: LanguageEnum = LanguageEnum.EN,
     ):
         super().__init__(
-            name=name,
+            name="reference_adherence",
             mode=GraderMode.POINTWISE,
-            description=description,
-            required_fields=[
-                RequiredField(
-                    name="reference",
-                    type="str",
-                    position="data",
-                    description="Reference material to adhere to",
-                ),
-                RequiredField(
-                    name="output",
-                    type="str",
-                    position="data",
-                    description="Model output to evaluate",
-                ),
-                RequiredField(
-                    name="input",
-                    type="str",
-                    position="data",
-                    description="Original user input or question",
-                ),
-                RequiredField(
-                    name="reference_type",
-                    type="str",
-                    position="data",
-                    description="Type of reference adherence required (optional)",
-                    required=False,
-                ),
-            ],
+            description="Evaluate whether output adheres to provided reference materials",
+            model=model,
+            template=template,
+            language=language,
         )
-        self.model = model
         self.threshold = threshold
-        self.template = (
-            template if template is not None else DEFAULT_REFERENCE_ADHERENCE_TEMPLATE
-        )
-        self.language = language
-        self.evaluation_cost = 0.0
 
     async def aevaluate(  # pylint: disable=redefined-builtin,unused-argument
         self,
@@ -264,7 +250,6 @@ class ReferenceAdherenceGrader(Grader):
             ...     reference_type="factual source"
             ... )
         """
-        self.evaluation_cost = 0.0
 
         # Prepare reference type section based on language
         reference_type_section = ""
@@ -282,33 +267,15 @@ Evaluate adherence accordingly.
 </reference_type>
 """
 
-        # Get template and format prompt
-        messages = self.template.get(self.language)
-        prompt = messages[0].content.format(
-            reference=reference,
-            input=input,
-            output=output,
-            reference_type_section=reference_type_section,
-        )
-
         try:
-            # Call LLM for evaluation
-            response = await self.model(
-                messages=[{"role": "user", "content": prompt}],
+            result = await super().aevaluate(
+                reference=reference,
+                input=input,
+                output=output,
+                reference_type_section=reference_type_section,
             )
-
-            # Parse response from text content
-            import json
-
-            text_content = "".join(
-                [block.text for block in response.content if hasattr(block, "text")],
-            )
-
-            # Parse JSON response
-            result_data = json.loads(text_content.strip())
-            score = float(result_data.get("score", 0))
-            reasoning = result_data.get("reasoning", "No reasoning provided")
-
+            score = result.score
+            reason = result.reason
             # Normalize score from 0-10 to 0-1
             normalized_score = score / 10.0
 
@@ -316,18 +283,17 @@ Evaluate adherence accordingly.
             logger.error(f"Error evaluating reference adherence: {e}")
             score = 0.0
             normalized_score = 0.0
-            reasoning = f"Evaluation error: {str(e)}"
+            reason = f"Evaluation error: {str(e)}"
 
         # Prepare metadata
         metadata = {
-            "evaluation_cost": self.evaluation_cost,
             "threshold": self.threshold,
             "raw_score": score,
             "reference_type": reference_type,
         }
 
         # Generate final reason
-        reason = f"Reference adherence score: {normalized_score:.4f}\n{reasoning}"
+        reason = f"Reference adherence score: {normalized_score:.4f}\n{reason}"
 
         return GraderScore(
             name=self.name,
@@ -335,53 +301,6 @@ Evaluate adherence accordingly.
             reason=reason,
             metadata=metadata,
         )
-
-
-# Build default template from prompts
-DEFAULT_REFERENCE_ADHERENCE_TEMPLATE = Template(
-    messages={
-        LanguageEnum.EN: [
-            ChatMessage(
-                role="user",
-                content=textwrap.dedent(REFERENCE_ADHERENCE_PROMPT_EN),
-                name="User",
-            ),
-        ],
-        LanguageEnum.ZH: [
-            ChatMessage(
-                role="user",
-                content=textwrap.dedent(REFERENCE_ADHERENCE_PROMPT_ZH),
-                name="User",
-            ),
-        ],
-    },
-    required_fields=[
-        RequiredField(
-            name="reference",
-            type="str",
-            position="data",
-            description="Reference material",
-        ),
-        RequiredField(
-            name="input",
-            type="str",
-            position="data",
-            description="Input question/prompt",
-        ),
-        RequiredField(
-            name="output",
-            type="str",
-            position="data",
-            description="Output to evaluate",
-        ),
-        RequiredField(
-            name="reference_type_section",
-            type="str",
-            position="data",
-            description="Optional reference type section",
-        ),
-    ],
-)
 
 
 __all__ = ["ReferenceAdherenceGrader", "DEFAULT_REFERENCE_ADHERENCE_TEMPLATE"]

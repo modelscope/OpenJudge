@@ -35,7 +35,7 @@ class ChatModelBase(ABC):
         self.stream = stream
 
     @abstractmethod
-    async def __call__(
+    async def achat(
         self,
         *args: Any,
         **kwargs: Any,

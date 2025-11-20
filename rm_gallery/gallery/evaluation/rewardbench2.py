@@ -8,7 +8,6 @@ import random
 import re
 from typing import Any, List, Optional
 
-import fire
 from loguru import logger
 
 from rm_gallery.core.model.openai_llm import OpenAIChatModel
@@ -125,7 +124,9 @@ class RewardBench2Runner(EvaluationRunner):
 
         # Get LLM judgment
         full_prompt = f"{REWARDBENCH2_SYSTEM_PROMPT}\n\n{prompt}"
-        response = await self.model(messages=[{"role": "user", "content": full_prompt}])
+        response = await self.model.achat(
+            messages=[{"role": "user", "content": full_prompt}]
+        )
 
         # Extract text from ChatResponse
         response_text = ""
@@ -178,7 +179,9 @@ class RewardBench2Runner(EvaluationRunner):
             prompt = TIES_RATING_PROMPT.format(prompt=query, completion=answer)
 
             # Get LLM rating
-            response = await self.model(messages=[{"role": "user", "content": prompt}])
+            response = await self.model.achat(
+                messages=[{"role": "user", "content": prompt}]
+            )
 
             # Extract text from ChatResponse
             response_text = ""
@@ -506,82 +509,3 @@ def load_rewardbench2_data(file_path: str, max_samples: int = -1) -> List[EvalCa
 
     logger.info(f"Successfully loaded {len(eval_cases)} data samples")
     return eval_cases
-
-
-async def main(
-    data_path: str = "data/benchmarks/reward-bench-2/data/test-00000-of-00001.parquet",
-    result_path: str = "data/results/rewardbench2.json",
-    max_samples: int = -1,
-    model_name: str = "gpt-4o",
-    api_key: str | None = None,
-    base_url: str | None = None,
-    max_workers: int = 8,
-) -> None:
-    """Main evaluation pipeline for RewardBench2 using new framework."""
-    import json
-
-    try:
-        # Load data
-        print(f"Loading data from: {data_path}")
-        eval_cases = load_rewardbench2_data(data_path, max_samples)
-
-        if not eval_cases:
-            print(f"No data samples loaded. Please check the data path: {data_path}")
-            return
-
-        print(f"Loaded {len(eval_cases)} samples")
-
-        # Initialize model
-        print(f"Initializing model: {model_name}")
-        model = OpenAIChatModel(
-            model_name=model_name,
-            api_key=api_key,
-            base_url=base_url,
-            generate_kwargs={"temperature": 0.1},
-        )
-
-        # Create runner with metrics
-        runner = RewardBench2Runner(
-            model=model,
-            max_workers=max_workers,
-            metrics=[
-                AccuracyMetric(name="overall_accuracy"),
-                TiesAccuracyMetric(name="ties_accuracy"),
-            ],
-        )
-
-        # Execute evaluation
-        report = await runner(eval_cases)
-
-        # Print results
-        print("\n" + "=" * 80)
-        print("REWARDBENCH2 EVALUATION RESULTS (using new framework)")
-        print("=" * 80)
-        print(f"\nModel: {report.model_name}")
-        print(f"Total samples: {report.total_samples}")
-        print(f"Valid samples: {report.valid_samples}")
-
-        for metric_name, metric_result in report.metrics.items():
-            print(f"\n{metric_name}: {metric_result.value:.4f}")
-            if metric_result.details:
-                print(f"  Details: {metric_result.details}")
-
-        # Save results
-        os.makedirs(os.path.dirname(result_path), exist_ok=True)
-        with open(result_path, "w", encoding="utf-8") as f:
-            json.dump(report.model_dump(), f, indent=2)
-
-        print(f"\nResults saved to: {result_path}")
-
-    except Exception as e:
-        print(f"Evaluation failed: {e}")
-        raise
-
-
-if __name__ == "__main__":
-    # Run with fire, but wrap in asyncio
-    def sync_main(**kwargs: Any) -> None:
-        """Synchronous wrapper for the main async function."""
-        asyncio.run(main(**kwargs))
-
-    fire.Fire(sync_main)

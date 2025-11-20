@@ -1,6 +1,7 @@
+# -*- coding: utf-8 -*-
 import re
 from abc import ABC, abstractmethod
-from typing import List
+from typing import Any, List
 
 from pydantic import BaseModel, Field
 
@@ -55,7 +56,8 @@ class TiktokenTokenizer(BaseTokenizer):
 
     name: str = Field(default="tiktoken", description="Tiktoken tokenizer")
     encoding_name: str = Field(
-        default="cl100k_base", description="Tiktoken encoding name"
+        default="cl100k_base",
+        description="Tiktoken encoding name",
     )
 
     def tokenize(self, text: str) -> List[str]:
@@ -91,7 +93,8 @@ class JiebaTokenizer(BaseTokenizer):
 
     name: str = Field(default="jieba", description="Jieba Chinese tokenizer")
     chinese_only: bool = Field(
-        default=False, description="Whether to keep only Chinese characters"
+        default=False,
+        description="Whether to keep only Chinese characters",
     )
 
     def _preserve_chinese(self, text: str) -> str:
@@ -128,7 +131,7 @@ class JiebaTokenizer(BaseTokenizer):
             return list(jieba.cut(text))
         except ImportError:
             raise ImportError(
-                "jieba library required for Chinese tokenization: pip install jieba"
+                "jieba library required for Chinese tokenization: pip install jieba",
             )
 
 
@@ -159,7 +162,7 @@ def get_tokenizer(
     tokenizer_type: str = "tiktoken",
     encoding_name: str = "cl100k_base",
     chinese_only: bool = False,
-    **kwargs,
+    **kwargs: Any,
 ) -> BaseTokenizer:
     """
     Factory function to create tokenizer instances.
@@ -185,5 +188,5 @@ def get_tokenizer(
     else:
         raise ValueError(
             f"Unsupported tokenizer type: {tokenizer_type}. "
-            f"Supported types: tiktoken, jieba, simple"
+            f"Supported types: tiktoken, jieba, simple",
         )

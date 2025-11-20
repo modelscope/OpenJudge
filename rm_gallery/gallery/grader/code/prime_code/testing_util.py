@@ -125,11 +125,7 @@ def run_test(in_outs, test=None, debug=False, timeout=15):
             signal.alarm(timeout)
             try:
                 tmp_sol = RuntimeModule.from_string("tmp_sol", "", sol)
-                tmp = (
-                    tmp_sol
-                    if "class Solution" not in test
-                    else tmp_sol.Solution()
-                )
+                tmp = tmp_sol if "class Solution" not in test else tmp_sol.Solution()
                 signal.alarm(0)
             except Exception as e:
                 signal.alarm(0)
@@ -153,10 +149,7 @@ def run_test(in_outs, test=None, debug=False, timeout=15):
                 last_block = astree.body[-1]
                 if isinstance(last_block, ast.If):
                     condition = last_block.test
-                    if (
-                        ast.unparse(condition).strip()
-                        == "__name__ == '__main__'"
-                    ):
+                    if ast.unparse(condition).strip() == "__name__ == '__main__'":
                         test = (
                             ast.unparse(astree.body[:-1])
                             + "\n"
@@ -169,9 +162,7 @@ def run_test(in_outs, test=None, debug=False, timeout=15):
 
             new_test = []
             for x in tmp_test:
-                if (not x.startswith("from ")) and (
-                    not x.startswith("import ")
-                ):
+                if (not x.startswith("from ")) and (not x.startswith("import ")):
                     new_test.append("\t" + x + "\n")
                 else:
                     new_test.append(x + "\n")
@@ -185,9 +176,7 @@ def run_test(in_outs, test=None, debug=False, timeout=15):
                     new_test += "def code():\n"
                     new_test += i
                     started = True
-                elif started and (
-                    (i.startswith("from ")) or (i.startswith("import "))
-                ):
+                elif started and ((i.startswith("from ")) or (i.startswith("import "))):
                     new_test += "\t" + i
                 else:
                     new_test += i
@@ -265,20 +254,14 @@ def run_test(in_outs, test=None, debug=False, timeout=15):
             try:
                 if isinstance(in_outs["outputs"][index], dict):
                     in_outs["outputs"][index] = [
-                        {
-                            int(k): v
-                            for k, v in in_outs["outputs"][index].items()
-                        },
+                        {int(k): v for k, v in in_outs["outputs"][index].items()},
                     ]
             except Exception:
                 pass
             try:
                 if isinstance(in_outs["outputs"][index][0], dict):
                     in_outs["outputs"][index] = [
-                        {
-                            int(k): v
-                            for k, v in in_outs["outputs"][index][0].items()
-                        },
+                        {int(k): v for k, v in in_outs["outputs"][index][0].items()},
                     ]
             except Exception:
                 pass
@@ -417,13 +400,10 @@ def run_test(in_outs, test=None, debug=False, timeout=15):
                 try:
                     tmp_result = output == [in_outs["outputs"][index]]
                     if isinstance(in_outs["outputs"][index], list):
-                        tmp_result = tmp_result or (
-                            output == in_outs["outputs"][index]
-                        )
+                        tmp_result = tmp_result or (output == in_outs["outputs"][index])
                         if isinstance(output[0], str):
                             tmp_result = tmp_result or (
-                                [e.strip() for e in output]
-                                == in_outs["outputs"][index]
+                                [e.strip() for e in output] == in_outs["outputs"][index]
                             )
                 except Exception as e:
                     if debug:
@@ -439,14 +419,10 @@ def run_test(in_outs, test=None, debug=False, timeout=15):
                     for tmp_index, i in enumerate(in_outs["outputs"][index]):
                         in_outs["outputs"][index][tmp_index] = i.split("\n")
                         in_outs["outputs"][index][tmp_index] = [
-                            x.strip()
-                            for x in in_outs["outputs"][index][tmp_index]
-                            if x
+                            x.strip() for x in in_outs["outputs"][index][tmp_index] if x
                         ]
                 else:
-                    in_outs["outputs"][index] = in_outs["outputs"][
-                        index
-                    ].split("\n")
+                    in_outs["outputs"][index] = in_outs["outputs"][index].split("\n")
                     in_outs["outputs"][index] = list(
                         filter(len, in_outs["outputs"][index]),
                     )
@@ -457,9 +433,7 @@ def run_test(in_outs, test=None, debug=False, timeout=15):
                 try:
                     tmp_result = output == [in_outs["outputs"][index]]
                     if isinstance(in_outs["outputs"][index], list):
-                        tmp_result = tmp_result or (
-                            output == in_outs["outputs"][index]
-                        )
+                        tmp_result = tmp_result or (output == in_outs["outputs"][index])
                 except Exception as e:
                     if debug:
                         print(f"Failed check2 exception = {e}")
@@ -490,9 +464,7 @@ def run_test(in_outs, test=None, debug=False, timeout=15):
                 try:
                     tmp_result = output == [in_outs["outputs"][index]]
                     if isinstance(in_outs["outputs"][index], list):
-                        tmp_result = tmp_result or (
-                            output == in_outs["outputs"][index]
-                        )
+                        tmp_result = tmp_result or (output == in_outs["outputs"][index])
                 except Exception as e:
                     if debug:
                         print(f"Failed check3 exception = {e}")
@@ -510,8 +482,7 @@ def run_test(in_outs, test=None, debug=False, timeout=15):
                         if debug:
                             print(
                                 [
-                                    combined_int_check(e1)
-                                    and combined_int_check(e2)
+                                    combined_int_check(e1) and combined_int_check(e2)
                                     for e1, e2 in zip(
                                         output,
                                         in_outs["outputs"][index],
@@ -519,9 +490,7 @@ def run_test(in_outs, test=None, debug=False, timeout=15):
                                 ],
                             )
                         output_float = [float(e) for e in output]
-                        gt_float = [
-                            float(e) for e in in_outs["outputs"][index]
-                        ]
+                        gt_float = [float(e) for e in in_outs["outputs"][index]]
                         tmp_result = tmp_result or (
                             (len(output_float) == len(gt_float))
                             and np.allclose(output_float, gt_float)
@@ -543,9 +512,7 @@ def run_test(in_outs, test=None, debug=False, timeout=15):
                         )
                         if not all_ints:
                             output_float = [float(e) for e in output[0]]
-                            gt_float = [
-                                float(e) for e in in_outs["outputs"][index][0]
-                            ]
+                            gt_float = [float(e) for e in in_outs["outputs"][index][0]]
                             tmp_result = tmp_result or (
                                 (len(output_float) == len(gt_float))
                                 and np.allclose(output_float, gt_float)

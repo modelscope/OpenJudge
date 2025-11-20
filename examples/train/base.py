@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright 2024 Bytedance Ltd. and/or its affiliates
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -50,8 +51,8 @@ class BaseTrainDataset(Dataset, ABC):
         data_files: Union[str, List[str]],
         tokenizer: PreTrainedTokenizer,
         config: DictConfig,
-        processor=None,  # keep for backward compatibility, but not used
-    ):
+        processor: None = None,  # keep for backward compatibility, but not used
+    ) -> None:
         # initialize basic attributes
         self.data_files = self._normalize_data_files(data_files)
         self.original_data_files = copy.deepcopy(self.data_files)
@@ -64,16 +65,16 @@ class BaseTrainDataset(Dataset, ABC):
         # load and process data
         self._load_dataset()
 
-    def _normalize_data_files(self, data_files):
+    def _normalize_data_files(self, data_files: Union[str, List[str]]) -> List[str]:
         """Convert data files to list format"""
         if not isinstance(data_files, (List, ListConfig)):
             data_files = [data_files]
         return copy.deepcopy(data_files)
 
-    def _load_config(self):
+    def _load_config(self) -> None:
         """Load config parameters - can be overridden by subclasses"""
         self.cache_dir = os.path.expanduser(
-            self.config.get("cache_dir", "~/.cache/verl/rlhf")
+            self.config.get("cache_dir", "~/.cache/verl/rlhf"),
         )
         self.prompt_key = self.config.get("prompt_key", "prompt")
         self.max_prompt_length = self.config.get("max_prompt_length", 1024)
@@ -82,21 +83,23 @@ class BaseTrainDataset(Dataset, ABC):
         self.filter_overlong_prompts = self.config.get("filter_overlong_prompts", True)
         self.num_workers = min(
             self.config.get(
-                "filter_overlong_prompts_workers", max(1, os.cpu_count() // 4)
+                "filter_overlong_prompts_workers",
+                max(1, os.cpu_count() // 4),
             ),
             os.cpu_count(),
         )
         self.serialize_dataset = False
 
-    def _download_files(self):
+    def _download_files(self) -> None:
         """Download files to local cache"""
         from verl.utils.fs import copy_to_local
 
         for i, file in enumerate(self.data_files):
             self.data_files[i] = copy_to_local(src=file, cache_dir=self.cache_dir)
 
-    def _load_dataset(self):
-        """Load and process dataset"""
+    def _load_dataset(self) -> None:
+        """Load and process dataset from parquet files"""
+        # Download files to local cache first
         self._download_files()
 
         # Load parquet files
@@ -112,7 +115,7 @@ class BaseTrainDataset(Dataset, ABC):
         if self.filter_overlong_prompts:
             self._filter_long_prompts()
 
-    def _filter_long_prompts(self):
+    def _filter_overlong_prompts(self) -> None:
         """Filter out overlong prompts using the same logic as runtime processing"""
 
         def is_prompt_valid(doc):
@@ -121,7 +124,8 @@ class BaseTrainDataset(Dataset, ABC):
                 messages = self._build_messages(doc)
                 raw_prompt = self._apply_chat_template(messages)
                 raw_prompt_ids = self.tokenizer.encode(
-                    raw_prompt, add_special_tokens=False
+                    raw_prompt,
+                    add_special_tokens=False,
                 )
                 return len(raw_prompt_ids) <= self.max_prompt_length
             except Exception as e:
@@ -156,7 +160,7 @@ class BaseTrainDataset(Dataset, ABC):
         """Get data source - can be overridden by subclasses"""
         pass
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: int) -> Dict[str, Any]:
         """Get an item from dataset"""
         row_dict = dict(self.dataframe[item])
         messages = self._build_messages(row_dict)
@@ -164,7 +168,9 @@ class BaseTrainDataset(Dataset, ABC):
 
         # Tokenize
         model_inputs = self.tokenizer(
-            raw_prompt, return_tensors="pt", add_special_tokens=False
+            raw_prompt,
+            return_tensors="pt",
+            add_special_tokens=False,
         )
         input_ids = model_inputs["input_ids"]
         attention_mask = model_inputs["attention_mask"]
@@ -191,7 +197,7 @@ class BaseTrainDataset(Dataset, ABC):
                 raw_prompt_ids = raw_prompt_ids[: self.max_prompt_length]
             elif self.truncation == "error":
                 raise RuntimeError(
-                    f"prompt length {len(raw_prompt_ids)} exceeds {self.max_prompt_length}"
+                    f"prompt length {len(raw_prompt_ids)} exceeds {self.max_prompt_length}",
                 )
 
         # Build result
@@ -211,10 +217,10 @@ class BaseTrainDataset(Dataset, ABC):
 
         return result
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.dataframe)
 
-    def resume_dataset_state(self):
+    def resume_dataset_state(self) -> None:
         """Resume dataset state for checkpoint"""
         self.serialize_dataset = not hasattr(self, "original_data_files")
         if not self.serialize_dataset:
@@ -222,7 +228,7 @@ class BaseTrainDataset(Dataset, ABC):
             self._load_dataset()
         else:
             print(
-                "use old dataset loader checkpoint file, it is recommended to train from scratch"
+                "use old dataset loader checkpoint file, it is recommended to train from scratch",
             )
 
     def __getstate__(self):

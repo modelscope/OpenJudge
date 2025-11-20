@@ -49,14 +49,6 @@ from rm_gallery.gallery.grader.llm_judge import (
     HelpfulnessGrader,
 )
 
-# Registry functions
-from rm_gallery.gallery.grader.registry import (
-    get_grader,
-    grader_registry,
-    list_available_graders,
-    register_grader,
-)
-
 # Text Graders
 from rm_gallery.gallery.grader.text.similarity import SimilarityGrader
 from rm_gallery.gallery.grader.text.string_match import StringMatchGrader
@@ -70,80 +62,6 @@ from rm_gallery.gallery.grader.text.string_match import StringMatchGrader
 #     MultimodalGEvalGrader,
 #     TextToImageGrader,
 # )
-
-
-# Auto-register all graders
-
-# Register StringMatchGrader (all string matching algorithms use this unified grader)
-# The specific algorithm is chosen at evaluate time via the 'algorithm' parameter
-register_grader("string_match")(StringMatchGrader)
-
-# For convenience, also register under common algorithm names
-# These all create the same StringMatchGrader, algorithm is specified at evaluate() time
-for algo_name in [
-    "exact_match",
-    "prefix_match",
-    "suffix_match",
-    "regex_match",
-    "substring_match",
-    "contains_all",
-    "contains_any",
-    "word_overlap",
-    "char_overlap",
-]:
-    register_grader(algo_name)(StringMatchGrader)
-
-# Register SimilarityGrader (all text similarity algorithms use this unified grader)
-# The specific algorithm is chosen at evaluate time via the 'algorithm' parameter
-register_grader("similarity")(SimilarityGrader)
-
-# For convenience, also register under common algorithm names
-# These all create the same SimilarityGrader, algorithm is specified at evaluate() time
-for algo_name in [
-    "bleu",
-    "sentence_bleu",
-    "gleu",
-    "chrf",
-    "meteor",
-    "rouge",
-    "rouge1",
-    "rouge2",
-    "rougeL",
-    "rouge3",
-    "rouge4",
-    "rouge5",
-    "rouge_ngram",
-    "f1_score",
-    "token_f1",
-    "fuzzy_match",
-    "edit_distance",
-    "cosine",
-    "jaccard",
-]:
-    register_grader(algo_name)(SimilarityGrader)
-
-register_grader("json_match")(JsonMatchGrader)
-register_grader("json_validator")(JsonValidatorGrader)
-
-# Register LLM judge graders
-register_grader("hallucination")(HallucinationGrader)
-register_grader("helpfulness")(HelpfulnessGrader)
-register_grader("harmfulness")(HarmfulnessGrader)
-
-
-# Register multimodal graders
-def _register_multimodal_graders():
-    """Register multimodal graders (lazy loading to avoid circular import)"""
-    try:
-        from rm_gallery.gallery.grader.multimodal import _register_graders
-
-        _register_graders()
-    except ImportError:
-        pass  # Multimodal module not available
-
-
-# Call registration
-_register_multimodal_graders()
 
 
 # Expose multimodal graders for convenience
@@ -179,19 +97,12 @@ def __getattr__(name):
             return _map[name]
         except ImportError:
             raise AttributeError(
-                f"Multimodal graders not available: {name}"
+                f"Multimodal graders not available: {name}",
             ) from None
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
-__version__ = "0.2.0"
-
 __all__ = [
-    # Registry
-    "grader_registry",
-    "register_grader",
-    "get_grader",
-    "list_available_graders",
     # Text Graders
     "StringMatchGrader",
     "SimilarityGrader",

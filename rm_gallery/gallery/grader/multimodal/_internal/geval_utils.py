@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Multimodal G-Eval Utility Functions
 
@@ -52,7 +53,7 @@ def validate_criteria_and_evaluation_steps(
     # Check if evaluation_steps is provided, it cannot be an empty list
     if evaluation_steps is not None and len(evaluation_steps) == 0:
         raise ValueError(
-            "'evaluation_steps' must not be an empty list. Either omit evaluation steps or include a non-empty list of steps."
+            "'evaluation_steps' must not be an empty list. Either omit evaluation steps or include a non-empty list of steps.",
         )
 
 
@@ -94,7 +95,7 @@ def validate_and_sort_rubrics(
             # Check if ranges overlap
             if a_end >= b_start:
                 raise ValueError(
-                    f"Overlapping score ranges: {sorted_rubrics[i].score_range} and {sorted_rubrics[j].score_range}"
+                    f"Overlapping score ranges: {sorted_rubrics[i].score_range} and {sorted_rubrics[j].score_range}",
                 )
 
     return sorted_rubrics

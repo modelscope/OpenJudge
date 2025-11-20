@@ -13,6 +13,12 @@ class TextBlock(BaseModel):
     )
     text: str = Field(default="", description="The text content")
 
+    def format(self, **kwargs) -> "TextBlock":
+        """Format the text block."""
+        block = self.model_copy()
+        block.text = block.text.format(**kwargs)
+        return block
+
 
 class ThinkingBlock(BaseModel):
     """The thinking block."""
@@ -22,6 +28,12 @@ class ThinkingBlock(BaseModel):
         description="The type of the block",
     )
     thinking: str = Field(default="", description="The thinking content")
+
+    def format(self, **kwargs) -> "ThinkingBlock":
+        """Format the thinking block."""
+        block = self.model_copy()
+        block.thinking = block.thinking.format(**kwargs)
+        return block
 
 
 class Base64Source(BaseModel):
@@ -40,6 +52,13 @@ class Base64Source(BaseModel):
         description="The base64 data, in format of RFC 2397",
     )
 
+    def format(self, **kwargs) -> "Base64Source":
+        """Format the base64 source."""
+        block = self.model_copy()
+        block.media_type = block.media_type.format(**kwargs)
+        block.data = block.data.format(**kwargs)
+        return block
+
 
 class URLSource(BaseModel):
     """The URL source"""
@@ -49,6 +68,12 @@ class URLSource(BaseModel):
         description="The type of the src, must be `url`",
     )
     url: str = Field(..., description="The URL of the image or audio")
+
+    def format(self, **kwargs) -> "URLSource":
+        """Format the URL source."""
+        block = self.model_copy()
+        block.url = block.url.format(**kwargs)
+        return block
 
 
 class ImageBlock(BaseModel):
@@ -63,6 +88,12 @@ class ImageBlock(BaseModel):
         description="The source of the image",
     )
 
+    def format(self, **kwargs) -> "ImageBlock":
+        """Format the image block."""
+        block = self.model_copy()
+        block.source = block.source.format(**kwargs)
+        return block
+
 
 class AudioBlock(BaseModel):
     """The audio block"""
@@ -76,6 +107,12 @@ class AudioBlock(BaseModel):
         description="The source of the audio",
     )
 
+    def format(self, **kwargs) -> "AudioBlock":
+        """Format the audio block."""
+        block = self.model_copy()
+        block.source = block.source.format(**kwargs)
+        return block
+
 
 class VideoBlock(BaseModel):
     """The video block"""
@@ -88,6 +125,12 @@ class VideoBlock(BaseModel):
         ...,
         description="The source of the video",
     )
+
+    def format(self, **kwargs) -> "VideoBlock":
+        """Format the video block."""
+        block = self.model_copy()
+        block.source = block.source.format(**kwargs)
+        return block
 
 
 class ToolUseBlock(BaseModel):
@@ -104,6 +147,10 @@ class ToolUseBlock(BaseModel):
         description="The input arguments of the tool function",
     )
 
+    def format(self, **kwargs) -> "ToolUseBlock":
+        """Format the tool use block."""
+        return self
+
 
 class ToolResultBlock(BaseModel):
     """The tool result block"""
@@ -118,6 +165,17 @@ class ToolResultBlock(BaseModel):
         description="The output of the tool function",
     )
     name: str = Field(..., description="The name of the tool function")
+
+    def format(self, **kwargs) -> "ToolResultBlock":
+        """Format the tool result block."""
+        block = self.model_copy()
+        if isinstance(block.output, str):
+            block.output = block.output.format(**kwargs)
+        else:
+            block.output = [
+                output_block.format(**kwargs) for output_block in block.output
+            ]
+        return block
 
 
 ContentBlock = (

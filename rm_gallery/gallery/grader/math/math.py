@@ -6,6 +6,8 @@ This module provides graders for evaluating mathematical problem solving capabil
 using the math_verify library to parse and verify mathematical expressions.
 """
 
+from typing import Any
+
 from math_verify import parse, verify
 from math_verify.parser import ExprExtractionConfig, LatexExtractionConfig
 

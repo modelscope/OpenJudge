@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Multimodal G-Eval Utility Functions
+Multimodal Custom Criteria Utility Functions
 
-Helper functions for multimodal G-Eval evaluation.
+Helper functions for multimodal custom criteria evaluation.
 """
 
 from typing import List, Optional, Tuple
@@ -11,7 +11,7 @@ from rm_gallery.gallery.grader.multimodal._internal.helpers import MLLMTestCaseP
 from rm_gallery.gallery.grader.multimodal._internal.schema import Rubric
 
 # Mapping for multimodal test case parameters
-MULTIMODAL_G_EVAL_PARAMS = {
+MULTIMODAL_CRITERIA_PARAMS = {
     MLLMTestCaseParams.INPUT: "Input",
     MLLMTestCaseParams.ACTUAL_OUTPUT: "Actual Output",
     MLLMTestCaseParams.EXPECTED_OUTPUT: "Expected Output",
@@ -134,7 +134,7 @@ def format_rubrics(rubrics: Optional[List[Rubric]]) -> Optional[str]:
     )
 
 
-def construct_g_eval_params_string(
+def construct_params_string(
     evaluation_params: List[MLLMTestCaseParams],
 ) -> str:
     """
@@ -151,19 +151,19 @@ def construct_g_eval_params_string(
         ...     MLLMTestCaseParams.INPUT,
         ...     MLLMTestCaseParams.ACTUAL_OUTPUT
         ... ]
-        >>> construct_g_eval_params_string(params)
+        >>> construct_params_string(params)
         'Input and Actual Output'
     """
-    g_eval_params = [MULTIMODAL_G_EVAL_PARAMS[param] for param in evaluation_params]
+    params = [MULTIMODAL_CRITERIA_PARAMS[param] for param in evaluation_params]
 
-    if len(g_eval_params) == 1:
-        g_eval_params_str = g_eval_params[0]
-    elif len(g_eval_params) == 2:
-        g_eval_params_str = " and ".join(g_eval_params)
+    if len(params) == 1:
+        params_str = params[0]
+    elif len(params) == 2:
+        params_str = " and ".join(params)
     else:
-        g_eval_params_str = ", ".join(g_eval_params[:-1]) + ", and " + g_eval_params[-1]
+        params_str = ", ".join(params[:-1]) + ", and " + params[-1]
 
-    return g_eval_params_str
+    return params_str
 
 
 def get_score_range(rubric: Optional[List[Rubric]]) -> Tuple[int, int]:
@@ -191,10 +191,10 @@ def get_score_range(rubric: Optional[List[Rubric]]) -> Tuple[int, int]:
 
 
 __all__ = [
-    "MULTIMODAL_G_EVAL_PARAMS",
+    "MULTIMODAL_CRITERIA_PARAMS",
     "validate_criteria_and_evaluation_steps",
     "validate_and_sort_rubrics",
     "format_rubrics",
-    "construct_g_eval_params_string",
+    "construct_params_string",
     "get_score_range",
 ]

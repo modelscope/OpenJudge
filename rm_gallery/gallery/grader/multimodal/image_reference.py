@@ -7,23 +7,117 @@ Restructured to work with Grader framework.
 """
 
 import asyncio
+import textwrap
 from typing import Any, List, Optional, Tuple, Union
 
 from loguru import logger
 
-from rm_gallery.core.grader.base import Grader
-from rm_gallery.core.model.openai_llm import OpenAIChatModel
+from rm_gallery.core.grader.base import LLMGrader
+from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.schema.grader import GraderMode, GraderScore, _GraderScore
+from rm_gallery.core.schema.message import ChatMessage
+from rm_gallery.core.schema.template import LanguageEnum, Template
 from rm_gallery.gallery.grader.multimodal._internal import (
-    ImageReferenceTemplate,
     MLLMImage,
     format_image_content,
     get_image_context,
     get_image_indices,
 )
 
+# pylint: disable=line-too-long
 
-class ImageReferenceGrader(Grader):
+# English Prompt
+IMAGE_REFERENCE_PROMPT_EN = """
+# Task Description
+You are a multi-modal document quality assessment assistant. You will receive an image and its accompanying textual context.
+Your task is to determine whether the image is explicitly referenced or explained within the surrounding text (both above and below the image).
+
+# Context Above
+{context_above}
+
+# Context Below
+{context_below}
+
+# Image
+[The image is provided below this section.]
+
+# Scoring Criteria
+Evaluate the extent to which the image is referenced or explained in the text, assigning a score from 0 to 10:
+- 0: The image is not mentioned or referenced in the context.
+- 1-3: The image is referenced implicitly, and the reference is improper or incorrect.
+- 4-6: The image is referenced explicitly but in an improper manner, or it is referenced implicitly.
+- 7-9: The image is referenced explicitly, with the reference being generally proper and correct.
+- 10: The image is referenced explicitly, with the placement and explanation being completely proper and correct.
+
+Be rigorous and discerning when assigning your score.
+
+# Output Instructions
+Provide your evaluation in the following structured JSON format:
+{{
+    "score": <integer between 0 and 10>,
+    "reason": "<brief explanation for the assigned score>"
+}}
+
+# Image
+[Insert Image Here]
+"""
+
+# Chinese Prompt
+IMAGE_REFERENCE_PROMPT_ZH = """
+# 任务描述
+你是一名多模态文档质量评估助手。你将收到一张图片及其伴随的文本背景。
+你的任务是判断图片是否在其周围文本（图片上方和下方）中被明确引用或解释。
+
+# 上文
+{context_above}
+
+# 下文
+{context_below}
+
+# 图片
+[图片将在本节下方提供。]
+
+# 评分标准
+评估图片在文本中被引用或解释的程度，给出0到10的分数：
+- 0：图片在上下文中未被提及或引用。
+- 1-3：图片被隐式引用，且引用不当或不正确。
+- 4-6：图片被明确引用但方式不当，或仅被隐式引用。
+- 7-9：图片被明确引用，引用总体上恰当且正确。
+- 10：图片被明确引用，位置和解释完全恰当且正确。
+
+请严格审慎地评分。
+
+# 输出指令
+请按以下结构化 JSON 格式提供你的评估：
+{{
+    "score": <0到10之间的整数>,
+    "reason": "<对所给分数的简要解释>"
+}}
+
+# 图片
+[在此插入图片]
+"""
+
+# Build default template from prompts
+DEFAULT_IMAGE_REFERENCE_TEMPLATE = Template(
+    messages={
+        LanguageEnum.EN: [
+            ChatMessage(
+                role="user",
+                content=textwrap.dedent(IMAGE_REFERENCE_PROMPT_EN),
+            ),
+        ],
+        LanguageEnum.ZH: [
+            ChatMessage(
+                role="user",
+                content=textwrap.dedent(IMAGE_REFERENCE_PROMPT_ZH),
+            ),
+        ],
+    },
+)
+
+
+class ImageReferenceGrader(LLMGrader):
     """
     Image Reference Grader
 
@@ -50,7 +144,7 @@ class ImageReferenceGrader(Grader):
         >>> from rm_gallery.core.model.openai_llm import OpenAIChatModel
         >>> from rm_gallery.gallery.grader.multimodal import MLLMImage
         >>>
-        >>> api = VisionModelAdapter.from_qwen(api_key="your-key", model="qwen-vl-plus")
+        >>> api = VisionModelAdapter.from_qwen(api_key="your-key", model_name="qwen-vl-plus")
         >>> grader = ImageReferenceGrader(model=api, threshold=0.7)
         >>>
         >>> result = await grader.aevaluate(
@@ -65,21 +159,22 @@ class ImageReferenceGrader(Grader):
 
     def __init__(
         self,
-        model: OpenAIChatModel,
-        name: str = "image_reference",
+        model: ChatModelBase | dict,
         max_context_size: int = 500,
         threshold: float = 0.7,
-        description: str = "Evaluate image reference quality in text",
+        template: Template = DEFAULT_IMAGE_REFERENCE_TEMPLATE,
+        language: LanguageEnum = LanguageEnum.EN,
     ):
         super().__init__(
-            name=name,
+            name="image_reference",
             grader_mode=GraderMode.POINTWISE,
-            description=description,
+            description="Evaluate image reference quality in text",
+            model=model,
+            template=template,
+            language=language,
         )
-        self.model = model
         self.max_context_size = max_context_size
         self.threshold = threshold
-        self.evaluation_cost = 0.0
 
     async def _aevaluate_single_image(
         self,
@@ -88,8 +183,7 @@ class ImageReferenceGrader(Grader):
         context_below: Optional[str],
     ) -> Tuple[float, str]:
         """Async evaluation of single image reference"""
-        template = ImageReferenceTemplate.evaluate_image_reference()
-        messages = template.to_messages()
+        messages = self.template.to_messages(self.language)
         prompt = (
             messages[0]
             .format(
@@ -118,7 +212,6 @@ class ImageReferenceGrader(Grader):
         **_kwargs: Any,
     ) -> Tuple[float, dict]:
         """Compute image reference score (asynchronous)"""
-        self.evaluation_cost = 0.0
 
         image_indices = get_image_indices(actual_output)
 
@@ -159,7 +252,6 @@ class ImageReferenceGrader(Grader):
             "num_images": len(image_indices),
             "individual_scores": scores,
             "individual_reasons": reasons,
-            "evaluation_cost": self.evaluation_cost,
             "threshold": self.threshold,
         }
 

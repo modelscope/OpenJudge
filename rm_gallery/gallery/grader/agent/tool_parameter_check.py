@@ -165,7 +165,7 @@ class ToolParameterCheckGrader(LLMGrader):
         >>>
         >>> api = OpenAIChatModel(
         ...     api_key="your-key",  # pragma: allowlist secret
-        ...     model_name="gpt-4o",
+        ...     model="gpt-4o",
         ...     generate_kwargs={"temperature": 0.1}
         ... )
         >>>
@@ -200,7 +200,7 @@ class ToolParameterCheckGrader(LLMGrader):
             template if template is not None else DEFAULT_TOOL_PARAMETER_CHECK_TEMPLATE
         )
 
-    async def aevaluate(
+    async def _aevaluate(
         self,
         query: Union[str, List[Dict[str, Any]]],
         tool_definitions: Union[Dict[str, Any], List[Dict[str, Any]]],
@@ -247,10 +247,12 @@ class ToolParameterCheckGrader(LLMGrader):
 
         # Format query as string for the prompt
         if isinstance(query, list):
-            user_query = "\n".join([
-                f"{msg.get('role', 'user')}: {msg.get('content', '')}"
-                for msg in query
-            ])
+            user_query = "\n".join(
+                [
+                    f"{msg.get('role', 'user')}: {msg.get('content', '')}"
+                    for msg in query
+                ],
+            )
         else:
             user_query = str(query)
 
@@ -261,7 +263,7 @@ class ToolParameterCheckGrader(LLMGrader):
         generated_tool_call = json.dumps(tool_calls, indent=2)
 
         try:
-            result = await super().aevaluate(
+            result = await super()._aevaluate(
                 user_query=user_query,
                 tool_definition=tool_definition,
                 generated_tool_call=generated_tool_call,
@@ -297,4 +299,3 @@ __all__ = [
     "ToolParameterCheckGrader",
     "DEFAULT_TOOL_PARAMETER_CHECK_TEMPLATE",
 ]
-

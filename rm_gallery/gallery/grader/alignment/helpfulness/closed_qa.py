@@ -153,7 +153,7 @@ class ClosedQAGrader(BaseHelpfulnessGrader):
             **kwargs,
         )
 
-    async def aevaluate(
+    async def _aevaluate(
         self,
         query: str,
         answer: str | List[str],
@@ -202,4 +202,4 @@ class ClosedQAGrader(BaseHelpfulnessGrader):
             >>> print(result.score, result.reason)
             1.0 The response correctly identifies Paris as the capital of France.
         """
-        return await super().aevaluate(query=query, answer=answer, **kwargs)
+        return await super()._aevaluate(query=query, answer=answer, **kwargs)

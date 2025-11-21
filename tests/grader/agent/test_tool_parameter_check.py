@@ -6,6 +6,7 @@ Tests for the ToolParameterCheckGrader class functionality.
 """
 
 import asyncio
+
 import pytest
 
 from rm_gallery.core.model.openai_llm import OpenAIChatModel
@@ -15,7 +16,7 @@ from rm_gallery.gallery.grader.agent import ToolParameterCheckGrader
 
 def test_tool_parameter_check_grader_creation():
     """Test creating a ToolParameterCheckGrader instance"""
-    model = OpenAIChatModel(model_name="qwen-plus", stream=False)
+    model = OpenAIChatModel(model="qwen-plus", stream=False)
     grader = ToolParameterCheckGrader(model=model)
 
     assert grader is not None
@@ -25,21 +26,21 @@ def test_tool_parameter_check_grader_creation():
 
 def test_tool_parameter_check_grader_chinese():
     """Test creating a Chinese grader instance"""
-    model = OpenAIChatModel(model_name="qwen-plus", stream=False)
+    model = OpenAIChatModel(model="qwen-plus", stream=False)
     grader = ToolParameterCheckGrader(
         model=model,
-        language=LanguageEnum.ZH
+        language=LanguageEnum.ZH,
     )
 
     assert grader is not None
     assert grader.language == LanguageEnum.ZH
 
 
-#@pytest.mark.skip(reason="Requires API key and network access")
+# @pytest.mark.skip(reason="Requires API key and network access")
 @pytest.mark.asyncio
 async def test_tool_parameter_correct():
     """Test with correct parameter extraction"""
-    model = OpenAIChatModel(model_name="qwen3-32b", stream=False)
+    model = OpenAIChatModel(model="qwen3-32b", stream=False)
     grader = ToolParameterCheckGrader(model=model)
 
     # Example conversation
@@ -98,7 +99,7 @@ async def test_tool_parameter_correct():
 @pytest.mark.asyncio
 async def test_tool_parameter_hallucinated():
     """Test detecting hallucinated parameters"""
-    model = OpenAIChatModel(model_name="qwen3-32b", stream=False)
+    model = OpenAIChatModel(model="qwen3-32b", stream=False)
     grader = ToolParameterCheckGrader(model=model)
 
     # Example conversation - note: user doesn't specify "recursive"
@@ -154,7 +155,7 @@ async def test_tool_parameter_hallucinated():
 @pytest.mark.asyncio
 async def test_tool_parameter_missing():
     """Test detecting missing required parameters"""
-    model = OpenAIChatModel(model_name="qwen3-32b", stream=False)
+    model = OpenAIChatModel(model="qwen3-32b", stream=False)
     grader = ToolParameterCheckGrader(model=model)
 
     # Example conversation - user mentions both pattern and directory
@@ -210,7 +211,7 @@ async def test_tool_parameter_missing():
 @pytest.mark.asyncio
 async def test_tool_parameter_with_conversation_history():
     """Test parameter check with conversation history"""
-    model = OpenAIChatModel(model_name="qwen3-32b", stream=False)
+    model = OpenAIChatModel(model="qwen3-32b", stream=False)
     grader = ToolParameterCheckGrader(model=model)
 
     # Conversation with history
@@ -273,6 +274,6 @@ async def test_tool_parameter_with_conversation_history():
     assert result is not None
     assert result.score == 1.0  # Parameters should be correct based on history
 
+
 if __name__ == "__main__":
     asyncio.run(test_tool_parameter_correct())
-

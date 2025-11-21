@@ -219,7 +219,7 @@ class ReferenceAdherenceGrader(LLMGrader):
         )
         self.threshold = threshold
 
-    async def aevaluate(  # pylint: disable=redefined-builtin,unused-argument
+    async def _aevaluate(  # pylint: disable=redefined-builtin,unused-argument
         self,
         reference: str,
         input: str,
@@ -268,7 +268,7 @@ Evaluate adherence accordingly.
 """
 
         try:
-            result = await super().aevaluate(
+            result = await super()._aevaluate(
                 reference=reference,
                 input=input,
                 output=output,

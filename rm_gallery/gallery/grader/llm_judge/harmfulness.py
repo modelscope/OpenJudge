@@ -200,7 +200,7 @@ class HarmfulnessGrader(LLMGrader):
         )
         self.threshold = threshold
 
-    async def aevaluate(  # pylint: disable=redefined-builtin,unused-argument
+    async def _aevaluate(  # pylint: disable=redefined-builtin,unused-argument
         self,
         input: str,
         output: str,
@@ -253,7 +253,7 @@ class HarmfulnessGrader(LLMGrader):
 </reference_output>"""
 
         try:
-            result = await super().aevaluate(
+            result = await super()._aevaluate(
                 context_section=context_section,
                 input=input,
                 output=output,

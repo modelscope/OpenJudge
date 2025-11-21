@@ -145,7 +145,7 @@ class ReflectionOutcomeMisinterpretationGrader(LLMGrader):
         >>>
         >>> api = OpenAIChatModel(
         ...     api_key="your-key",  # pragma: allowlist secret
-        ...     model_name="gpt-4o",
+        ...     model="gpt-4o",
         ...     generate_kwargs={"temperature": 0.1}
         ... )
         >>>
@@ -164,7 +164,9 @@ class ReflectionOutcomeMisinterpretationGrader(LLMGrader):
     def __init__(
         self,
         model: ChatModelBase | dict,
-        template: Optional[Template] = DEFAULT_REFLECTION_OUTCOME_MISINTERPRETATION_TEMPLATE,
+        template: Optional[
+            Template
+        ] = DEFAULT_REFLECTION_OUTCOME_MISINTERPRETATION_TEMPLATE,
         language: LanguageEnum = LanguageEnum.EN,
     ):
         super().__init__(
@@ -176,7 +178,9 @@ class ReflectionOutcomeMisinterpretationGrader(LLMGrader):
             language=language,
         )
         self.template = (
-            template if template is not None else DEFAULT_REFLECTION_OUTCOME_MISINTERPRETATION_TEMPLATE
+            template
+            if template is not None
+            else DEFAULT_REFLECTION_OUTCOME_MISINTERPRETATION_TEMPLATE
         )
 
     def _format_trajectory_steps(
@@ -186,17 +190,17 @@ class ReflectionOutcomeMisinterpretationGrader(LLMGrader):
         history_steps: Optional[list] = None,
     ) -> str:
         """Format trajectory steps for evaluation.
-        
+
         Args:
             observation: Agent's observation from the environment
             reflection: Agent's reflection on the situation
             history_steps: Optional list of previous step dictionaries
-        
+
         Returns:
             Formatted trajectory string
         """
         lines = []
-        
+
         # Add history steps if provided
         if history_steps:
             for i, hist_step in enumerate(history_steps):
@@ -205,16 +209,16 @@ class ReflectionOutcomeMisinterpretationGrader(LLMGrader):
                     if value:
                         lines.append(f"{key.capitalize()}: {value}")
                 lines.append("")
-        
+
         # Add current step
         step_number = len(history_steps) + 1 if history_steps else 1
         lines.append(f"Step {step_number}:")
         lines.append(f"Observation: {observation}")
         lines.append(f"Reflection: {reflection}")
-        
+
         return "\n".join(lines)
 
-    async def aevaluate(
+    async def _aevaluate(
         self,
         observation: str,
         reflection: str,
@@ -257,7 +261,7 @@ class ReflectionOutcomeMisinterpretationGrader(LLMGrader):
 </task_context>"""
 
         try:
-            result = await super().aevaluate(
+            result = await super()._aevaluate(
                 trajectory_steps=trajectory_steps,
                 context_section=context_section,
             )
@@ -291,4 +295,3 @@ __all__ = [
     "ReflectionOutcomeMisinterpretationGrader",
     "DEFAULT_REFLECTION_OUTCOME_MISINTERPRETATION_TEMPLATE",
 ]
-

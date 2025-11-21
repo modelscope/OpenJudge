@@ -24,7 +24,7 @@ class SyntaxCheckGrader(Grader):
             description="Check code syntax using Abstract Syntax Tree to validate Python code blocks.",
         )
 
-    async def aevaluate(self, answer: str) -> GraderScore:
+    async def _aevaluate(self, answer: str) -> GraderScore:
         """Check code syntax in the provided answer.
 
         Extracts Python code blocks from markdown-style code fences and validates
@@ -179,7 +179,7 @@ class CodeStyleGrader(Grader):
             f"Naming convention: {good_names}/{total_names} names follow snake_case",
         )
 
-    async def aevaluate(self, answer: str) -> GraderScore:
+    async def _aevaluate(self, answer: str) -> GraderScore:
         """Evaluate code style in the provided answer.
 
         Performs basic code style checking including indentation consistency and
@@ -270,7 +270,7 @@ class PatchSimilarityGrader(Grader):
             description="Calculate similarity between generated patch and oracle patch using difflib.SequenceMatcher",
         )
 
-    async def aevaluate(self, generated: str, reference: str) -> GraderScore:
+    async def _aevaluate(self, generated: str, reference: str) -> GraderScore:
         """Calculate similarity between generated and reference patches.
 
         Uses difflib.SequenceMatcher to calculate the similarity ratio between
@@ -382,7 +382,7 @@ class CodeExecutionGrader(Grader):
         # If no code block markers, assume the entire content is code
         return content
 
-    async def aevaluate(self, answer: str) -> GraderScore:
+    async def _aevaluate(self, answer: str) -> GraderScore:
         """Evaluate code by executing it against test cases.
 
         Tests the functional correctness of generated code by executing it

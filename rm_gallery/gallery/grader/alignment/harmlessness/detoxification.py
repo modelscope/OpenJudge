@@ -30,7 +30,7 @@ class DetoxifyGrader(Grader):
 
         self._model = Detoxify(detoxify_model_name)
 
-    async def aevaluate(
+    async def _aevaluate(
         self,
         answer: str,
         **kwargs: Any,

@@ -138,7 +138,7 @@ class BaseAlignmentGrader(LLMGrader):
             **kwargs,
         )
 
-    async def aevaluate(
+    async def _aevaluate(
         self,
         query: str,
         answer: str | List[str],
@@ -155,7 +155,7 @@ class BaseAlignmentGrader(LLMGrader):
             formatted_answers = "\n".join(
                 [f"Answer {i+1}: {ans}" for i, ans in enumerate(answer)],
             )
-            return await super().aevaluate(
+            return await super()._aevaluate(
                 query=query,
                 answer=formatted_answers,
                 **kwargs,
@@ -166,7 +166,7 @@ class BaseAlignmentGrader(LLMGrader):
                 raise ValueError(
                     "Single answer provided but grader is in listwise mode",
                 )
-            return await super().aevaluate(
+            return await super()._aevaluate(
                 query=query,
                 answer=answer,
                 **kwargs,

@@ -14,7 +14,7 @@ from rm_gallery.gallery.grader.agent import ReflectionProgressMisjudgeGrader
 
 def test_reflection_progress_misjudge_grader_creation():
     """Test creating a ReflectionProgressMisjudgeGrader instance"""
-    model = OpenAIChatModel(model_name="qwen-plus", stream=False)
+    model = OpenAIChatModel(model="qwen-plus", stream=False)
     grader = ReflectionProgressMisjudgeGrader(model=model)
 
     assert grader is not None
@@ -24,10 +24,10 @@ def test_reflection_progress_misjudge_grader_creation():
 
 def test_reflection_progress_misjudge_grader_chinese():
     """Test creating a Chinese grader instance"""
-    model = OpenAIChatModel(model_name="qwen-plus", stream=False)
+    model = OpenAIChatModel(model="qwen-plus", stream=False)
     grader = ReflectionProgressMisjudgeGrader(
         model=model,
-        language=LanguageEnum.ZH
+        language=LanguageEnum.ZH,
     )
 
     assert grader is not None
@@ -38,14 +38,14 @@ def test_reflection_progress_misjudge_grader_chinese():
 @pytest.mark.asyncio
 async def test_reflection_progress_overestimation():
     """Test detecting progress overestimation"""
-    model = OpenAIChatModel(model_name="qwen3-32b", stream=False)
+    model = OpenAIChatModel(model="qwen3-32b", stream=False)
     grader = ReflectionProgressMisjudgeGrader(model=model)
 
     # Test case with overestimated progress
     result = await grader.aevaluate(
         observation="Cabinet 1 is still empty. No items found.",
         reflection="Excellent progress! I'm making great headway toward finding the apples!",
-        task_context="Task: Find apples in cabinets"
+        task_context="Task: Find apples in cabinets",
     )
 
     assert result is not None
@@ -57,13 +57,13 @@ async def test_reflection_progress_overestimation():
 @pytest.mark.asyncio
 async def test_reflection_progress_correct():
     """Test with correct progress assessment"""
-    model = OpenAIChatModel(model_name="qwen3-32b", stream=False)
+    model = OpenAIChatModel(model="qwen3-32b", stream=False)
     grader = ReflectionProgressMisjudgeGrader(model=model)
 
     result = await grader.aevaluate(
         observation="Found 3 apples in cabinet 2.",
         reflection="Good progress! Found apples as required.",
-        task_context="Task: Find apples"
+        task_context="Task: Find apples",
     )
 
     assert result is not None
@@ -74,7 +74,7 @@ async def test_reflection_progress_correct():
 @pytest.mark.asyncio
 async def test_reflection_progress_with_history():
     """Test progress misjudge with history showing repeated failures"""
-    model = OpenAIChatModel(model_name="qwen3-32b", stream=False)
+    model = OpenAIChatModel(model="qwen3-32b", stream=False)
     grader = ReflectionProgressMisjudgeGrader(model=model)
 
     history = [
@@ -87,9 +87,8 @@ async def test_reflection_progress_with_history():
         observation="Cabinet 1 is empty.",
         reflection="Making excellent progress!",  # Overestimating
         history_steps=history,
-        task_context="Task: Find items"
+        task_context="Task: Find items",
     )
 
     assert result is not None
     assert result.score == 0.0
-

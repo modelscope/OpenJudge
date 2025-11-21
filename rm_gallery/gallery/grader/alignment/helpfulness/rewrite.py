@@ -143,7 +143,7 @@ class RewriteGrader(BaseHelpfulnessGrader):
             **kwargs,
         )
 
-    async def aevaluate(
+    async def _aevaluate(
         self,
         query: str,
         answer: str | List[str],
@@ -191,4 +191,4 @@ class RewriteGrader(BaseHelpfulnessGrader):
             >>> print(result.score, result.reason)
             1.0 The rewrite correctly fixes grammar and spelling errors while improving clarity.
         """
-        return await super().aevaluate(query=query, answer=answer, **kwargs)
+        return await super()._aevaluate(query=query, answer=answer, **kwargs)

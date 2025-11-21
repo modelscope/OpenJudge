@@ -247,7 +247,7 @@ class AutoRubrics(BaseRunner):
             f"aggregation_mode={self.config.aggregation_mode.value}",
         )
 
-    async def aevaluate_batch(self, eval_cases: List[EvalCase]) -> Dict[str, Any]:
+    async def run(self, eval_cases: List[EvalCase]) -> Dict[str, Any]:
         """
         Run AutoRubrics pipeline based on generation mode
 

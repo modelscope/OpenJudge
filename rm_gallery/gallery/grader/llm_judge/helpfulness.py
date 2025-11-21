@@ -199,7 +199,7 @@ class HelpfulnessGrader(LLMGrader):
         )
         self.threshold = threshold
 
-    async def aevaluate(  # pylint: disable=redefined-builtin,unused-argument
+    async def _aevaluate(  # pylint: disable=redefined-builtin,unused-argument
         self,
         input: str,
         output: str,
@@ -252,7 +252,7 @@ class HelpfulnessGrader(LLMGrader):
 </reference_output>"""
 
         try:
-            result = await self.aevaluate(
+            result = await self._aevaluate(
                 context_section=context_section,
                 input=input,
                 output=output,

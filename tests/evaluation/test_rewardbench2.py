@@ -56,7 +56,7 @@ async def test_rewardbench2_basic():
 
     # Execute evaluation
     print("\nRunning evaluation...")
-    report = await runner.aevaluate_batch(eval_cases)
+    report = await runner.run(eval_cases)
 
     # Print results
     print("\n" + "=" * 80)
@@ -125,7 +125,7 @@ async def test_rewardbench2_subset():
 
     # Execute evaluation on Ties subset only
     print("\nEvaluating Ties subset...")
-    report = await runner.aevaluate_batch(ties_cases)
+    report = await runner.run(ties_cases)
 
     # Print results
     print("\n" + "=" * 80)

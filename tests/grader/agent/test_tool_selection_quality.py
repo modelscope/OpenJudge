@@ -14,7 +14,7 @@ from rm_gallery.gallery.grader.agent import ToolSelectionQualityGrader
 
 def test_tool_selection_quality_grader_creation():
     """Test creating a ToolSelectionQualityGrader instance"""
-    model = OpenAIChatModel(model_name="qwen-plus", stream=False)
+    model = OpenAIChatModel(model="qwen-plus", stream=False)
     grader = ToolSelectionQualityGrader(model=model)
 
     assert grader is not None
@@ -25,11 +25,11 @@ def test_tool_selection_quality_grader_creation():
 
 def test_tool_selection_quality_grader_chinese():
     """Test creating a Chinese grader instance"""
-    model = OpenAIChatModel(model_name="qwen-plus", stream=False)
+    model = OpenAIChatModel(model="qwen-plus", stream=False)
     grader = ToolSelectionQualityGrader(
         model=model,
         threshold=0.8,
-        language=LanguageEnum.ZH
+        language=LanguageEnum.ZH,
     )
 
     assert grader is not None
@@ -41,7 +41,7 @@ def test_tool_selection_quality_grader_chinese():
 @pytest.mark.asyncio
 async def test_tool_selection_quality_good():
     """Test with good tool selection"""
-    model = OpenAIChatModel(model_name="qwen3-32b", stream=False)
+    model = OpenAIChatModel(model="qwen3-32b", stream=False)
     grader = ToolSelectionQualityGrader(model=model, threshold=0.7)
 
     # Example conversation
@@ -61,7 +61,10 @@ async def test_tool_selection_quality_good():
                 "type": "object",
                 "properties": {
                     "pattern": {"type": "string", "description": "File pattern"},
-                    "directory": {"type": "string", "description": "Directory to search"},
+                    "directory": {
+                        "type": "string",
+                        "description": "Directory to search",
+                    },
                 },
                 "required": ["pattern", "directory"],
             },
@@ -95,7 +98,10 @@ async def test_tool_selection_quality_good():
                 "type": "object",
                 "properties": {
                     "filepath": {"type": "string", "description": "File path"},
-                    "days": {"type": "integer", "description": "Number of days to look back"},
+                    "days": {
+                        "type": "integer",
+                        "description": "Number of days to look back",
+                    },
                 },
                 "required": ["filepath", "days"],
             },
@@ -142,7 +148,7 @@ async def test_tool_selection_quality_good():
 @pytest.mark.asyncio
 async def test_tool_selection_quality_poor():
     """Test with poor tool selection"""
-    model = OpenAIChatModel(model_name="qwen3-32b", stream=False)
+    model = OpenAIChatModel(model="qwen3-32b", stream=False)
     grader = ToolSelectionQualityGrader(model=model, threshold=0.7)
 
     # Example conversation
@@ -215,7 +221,7 @@ async def test_tool_selection_quality_poor():
 @pytest.mark.asyncio
 async def test_tool_selection_quality_with_history():
     """Test tool selection quality with conversation history"""
-    model = OpenAIChatModel(model_name="qwen3-32b", stream=False)
+    model = OpenAIChatModel(model="qwen3-32b", stream=False)
     grader = ToolSelectionQualityGrader(model=model)
 
     # Conversation with history
@@ -282,4 +288,3 @@ async def test_tool_selection_quality_with_history():
 
     assert result is not None
     assert result.score >= 0.7  # Good selection based on context
-

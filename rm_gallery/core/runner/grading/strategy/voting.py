@@ -2,8 +2,8 @@
 import asyncio
 from typing import Any, List
 
-from rm_gallery.core.grader.base import Grader, GraderScore
-from rm_gallery.core.runner.strategy.base import GraderStrategy
+from rm_gallery.core.grader.base import Grader, GraderScore, aevaluate_with_case
+from rm_gallery.core.runner.grading.strategy.base import GraderStrategy
 from rm_gallery.core.schema.data import EvalCase
 
 
@@ -45,7 +45,7 @@ class VotingStrategy(GraderStrategy):
         """
         # Collect all repeated execution tasks
         tasks = [
-            grader.aevaluate_case(eval_case, *args, **kwargs)
+            aevaluate_with_case(grader, eval_case, *args, **kwargs)
             for _ in range(self.num_repeats)
         ]
 

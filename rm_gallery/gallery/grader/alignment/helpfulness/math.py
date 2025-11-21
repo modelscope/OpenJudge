@@ -156,7 +156,7 @@ class MathGrader(BaseHelpfulnessGrader):
             **kwargs,
         )
 
-    async def aevaluate(
+    async def _aevaluate(
         self,
         query: str,
         answer: str | List[str],
@@ -204,4 +204,4 @@ class MathGrader(BaseHelpfulnessGrader):
             >>> print(result.score, result.reason)
             1.0 The solution correctly solves for x with clear step-by-step reasoning.
         """
-        return await super().aevaluate(query=query, answer=answer, **kwargs)
+        return await super()._aevaluate(query=query, answer=answer, **kwargs)

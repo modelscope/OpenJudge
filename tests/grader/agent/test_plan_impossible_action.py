@@ -14,7 +14,7 @@ from rm_gallery.gallery.grader.agent import PlanImpossibleActionGrader
 
 def test_plan_impossible_action_grader_creation():
     """Test creating a PlanImpossibleActionGrader instance"""
-    model = OpenAIChatModel(model_name="qwen-plus", stream=False)
+    model = OpenAIChatModel(model="qwen-plus", stream=False)
     grader = PlanImpossibleActionGrader(model=model)
 
     assert grader is not None
@@ -24,10 +24,10 @@ def test_plan_impossible_action_grader_creation():
 
 def test_plan_impossible_action_grader_chinese():
     """Test creating a Chinese grader instance"""
-    model = OpenAIChatModel(model_name="qwen-plus", stream=False)
+    model = OpenAIChatModel(model="qwen-plus", stream=False)
     grader = PlanImpossibleActionGrader(
         model=model,
-        language=LanguageEnum.ZH
+        language=LanguageEnum.ZH,
     )
 
     assert grader is not None
@@ -38,7 +38,7 @@ def test_plan_impossible_action_grader_chinese():
 @pytest.mark.asyncio
 async def test_plan_impossible_action_detection():
     """Test detecting impossible action in plan"""
-    model = OpenAIChatModel(model_name="qwen3-32b", stream=False)
+    model = OpenAIChatModel(model="qwen3-32b", stream=False)
     grader = PlanImpossibleActionGrader(model=model)
 
     # Test case with impossible action (using object before obtaining it)
@@ -46,7 +46,7 @@ async def test_plan_impossible_action_detection():
         plan="I will use the key to unlock the door.",
         observation="The drawer is closed. You don't have any items.",
         memory="The key is inside the drawer, but the drawer is not opened yet.",
-        task_context="Task: Unlock the door to exit"
+        task_context="Task: Unlock the door to exit",
     )
 
     assert result is not None
@@ -58,14 +58,14 @@ async def test_plan_impossible_action_detection():
 @pytest.mark.asyncio
 async def test_plan_possible_action():
     """Test with feasible plan"""
-    model = OpenAIChatModel(model_name="qwen3-32b", stream=False)
+    model = OpenAIChatModel(model="qwen3-32b", stream=False)
     grader = PlanImpossibleActionGrader(model=model)
 
     result = await grader.aevaluate(
         plan="I will first open the drawer to get the key, then unlock the door.",
         observation="Drawer is closed. Key is inside.",
         memory="Key is in drawer 1.",
-        task_context="Task: Unlock the door"
+        task_context="Task: Unlock the door",
     )
 
     assert result is not None
@@ -76,7 +76,7 @@ async def test_plan_possible_action():
 @pytest.mark.asyncio
 async def test_plan_impossible_action_with_history():
     """Test impossible action detection with history"""
-    model = OpenAIChatModel(model_name="qwen3-32b", stream=False)
+    model = OpenAIChatModel(model="qwen3-32b", stream=False)
     grader = PlanImpossibleActionGrader(model=model)
 
     history = [
@@ -88,9 +88,8 @@ async def test_plan_impossible_action_with_history():
         plan="I will close the door.",  # Door is already locked, can't close
         observation="Door is locked, cannot be closed further.",
         memory="Door is locked.",
-        history_steps=history
+        history_steps=history,
     )
 
     assert result is not None
     assert result.score == 0.0
-

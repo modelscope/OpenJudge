@@ -42,7 +42,7 @@ class ReasoningFormatGrader(Grader):
         self.think_token = think_token
         self.answer_token = answer_token
 
-    async def aevaluate(self, answer: str, *args: Any, **kwargs: Any) -> GraderScore:
+    async def _aevaluate(self, answer: str, *args: Any, **kwargs: Any) -> GraderScore:
         """
         Check format and calculate reward for reasoning tags.
 
@@ -132,7 +132,7 @@ class ReasoningToolCallFormatGrader(Grader):
             description="Check tool call format including think, answer and tool_call tags with JSON validation.",
         )
 
-    async def aevaluate(self, answer: str, **kwargs) -> GraderScore:
+    async def _aevaluate(self, answer: str, **kwargs) -> GraderScore:
         """
         Check tool call format and calculate reward score.
 
@@ -350,7 +350,7 @@ class LengthPenaltyGrader(Grader):
         self.max_length = max_length
         self.penalty_rate = penalty_rate
 
-    async def aevaluate(self, answer) -> GraderScore:
+    async def _aevaluate(self, answer) -> GraderScore:
         """
         Calculate length-based penalty for text content.
 
@@ -513,7 +513,7 @@ class NgramRepetitionPenaltyGrader(Grader):
                 return -(repetition_rate - self.penalty_threshold) * self.penalty_rate
             return 0.0
 
-    async def aevaluate(self, answer: str, **kwargs) -> GraderScore:
+    async def _aevaluate(self, answer: str, **kwargs) -> GraderScore:
         """
         Calculate N-gram repetition penalty for text content.
 
@@ -709,7 +709,7 @@ class PrivacyLeakageGrader(Grader):
 
         return leaks
 
-    async def aevaluate(self, answer: str) -> GraderScore:
+    async def _aevaluate(self, answer: str) -> GraderScore:
         """
         Detect privacy leaks in text content and calculate penalties.
 

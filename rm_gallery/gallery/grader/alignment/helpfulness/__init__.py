@@ -161,7 +161,7 @@ class BaseHelpfulnessGrader(BaseAlignmentGrader):
             **kwargs,
         )
 
-    async def aevaluate(
+    async def _aevaluate(
         self,
         query: str,
         answer: str | List[str],
@@ -210,4 +210,4 @@ class BaseHelpfulnessGrader(BaseAlignmentGrader):
             >>> print(result.score)
             0.9
         """
-        return await super().aevaluate(query=query, answer=answer, **kwargs)
+        return await super()._aevaluate(query=query, answer=answer, **kwargs)

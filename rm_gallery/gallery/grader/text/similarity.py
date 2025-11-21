@@ -155,7 +155,7 @@ class SimilarityGrader(Grader):
         self.case_sensitive = case_sensitive
         self.use_stemmer = use_stemmer
 
-    async def aevaluate(
+    async def _aevaluate(
         self,
         reference: str,
         candidate: str,

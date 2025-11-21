@@ -104,7 +104,7 @@ async def test_conflict_detector_custom_runner():
 
     # Run evaluation
     print("\nRunning custom evaluation...")
-    report = await runner.aevaluate_batch(eval_cases)
+    report = await runner.run(eval_cases)
 
     # Print results
     print("\n" + "=" * 80)

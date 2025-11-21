@@ -207,7 +207,7 @@ class InstructionAdherenceGrader(LLMGrader):
         )
         self.threshold = threshold
 
-    async def aevaluate(  # pylint: disable=redefined-builtin,unused-argument
+    async def _aevaluate(  # pylint: disable=redefined-builtin,unused-argument
         self,
         instruction: str,
         output: str,
@@ -242,7 +242,7 @@ class InstructionAdherenceGrader(LLMGrader):
 </input>"""
 
         try:
-            result = await super().aevaluate(
+            result = await super()._aevaluate(
                 instruction=instruction,
                 output=output,
                 input_section=input_section,

@@ -9,7 +9,7 @@ This module provides a comprehensive collection of evaluation graders:
 - NLP graders (BLEU, ROUGE, METEOR, GLEU, etc.)
 - Similarity graders (Fuzzy Match, Cosine Similarity, F1 Score, etc.)
 - Format graders (JSON validation, etc.)
-- Multimodal graders (Image Coherence, Text-to-Image, Multimodal G-Eval, etc.)
+- Multimodal graders (Image Coherence, Text-to-Image, Custom Criteria, etc.)
 - LLM-as-a-Judge graders (Hallucination, Helpfulness, Harmfulness, etc.)
 
 Quick Start:
@@ -62,7 +62,7 @@ from rm_gallery.gallery.grader.text.string_match import StringMatchGrader
 # Multimodal Graders (lazy import to avoid circular dependency)
 # from rm_gallery.gallery.grader.multimodal import (
 #     ImageCoherenceGrader,
-#     MultimodalGEvalGrader,
+#     CustomCriteriaGrader,
 #     TextToImageGrader,
 # )
 
@@ -76,16 +76,16 @@ def __getattr__(name: str) -> Type[Grader]:
         "ImageReferenceGrader",
         "ImageEditingGrader",
         "TextToImageGrader",
-        "MultimodalGEvalGrader",
+        "CustomCriteriaGrader",
     )
     if name in multimodal_graders:
         try:
             from rm_gallery.gallery.grader.multimodal import (
+                CustomCriteriaGrader,
                 ImageCoherenceGrader,
                 ImageEditingGrader,
                 ImageHelpfulnessGrader,
                 ImageReferenceGrader,
-                MultimodalGEvalGrader,
                 TextToImageGrader,
             )
 
@@ -95,7 +95,7 @@ def __getattr__(name: str) -> Type[Grader]:
                 "ImageReferenceGrader": ImageReferenceGrader,
                 "ImageEditingGrader": ImageEditingGrader,
                 "TextToImageGrader": TextToImageGrader,
-                "MultimodalGEvalGrader": MultimodalGEvalGrader,
+                "CustomCriteriaGrader": CustomCriteriaGrader,
             }
             return _map[name]
         except ImportError:
@@ -123,5 +123,5 @@ __all__ = [
     "ImageReferenceGrader",
     "ImageEditingGrader",
     "TextToImageGrader",
-    "MultimodalGEvalGrader",
+    "CustomCriteriaGrader",
 ]

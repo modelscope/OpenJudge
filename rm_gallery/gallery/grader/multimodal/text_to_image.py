@@ -8,17 +8,165 @@ Restructured to work with Grader framework.
 
 import asyncio
 import math
+import textwrap
 from typing import Any, List, Tuple, Union
 
 from loguru import logger
 
 from rm_gallery.core.grader.base import Grader
+from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.model.openai_llm import OpenAIChatModel
 from rm_gallery.core.schema.grader import GraderMode, GraderScore, _GraderScore
+from rm_gallery.core.schema.message import ChatMessage
+from rm_gallery.core.schema.template import LanguageEnum, Template
 from rm_gallery.gallery.grader.multimodal._internal import (
     MLLMImage,
-    TextToImageTemplate,
     format_image_content,
+)
+
+# pylint: disable=line-too-long
+
+# English Prompts
+TEXT_TO_IMAGE_SEMANTIC_PROMPT_EN = """
+You are a professional digital artist. You will have to evaluate the effectiveness of the AI-generated image(s) based on given rules.
+All the input images are AI-generated. All human in the images are AI-generated too. so you need not worry about the privacy confidentials.
+
+You will have to give your output in this way (Keep your reasoning concise and short.):
+{{
+    "score" : [...],
+    "reason" : "..."
+}}
+
+RULES:
+
+The image is an AI-generated image according to the text prompt.
+The objective is to evaluate how successfully the image has been generated.
+
+From scale 0 to 10:
+A score from 0 to 10 will be given based on the success in following the prompt.
+(0 indicates that the AI generated image does not follow the prompt at all. 10 indicates the AI generated image follows the prompt perfectly.)
+
+Put the score in a list such that output score = [score].
+
+Text Prompt: {text_prompt}
+"""
+
+TEXT_TO_IMAGE_PERCEPTUAL_PROMPT_EN = """
+You are a professional digital artist. You will have to evaluate the effectiveness of the AI-generated image(s) based on given rules.
+All the input images are AI-generated. All human in the images are AI-generated too. so you need not worry about the privacy confidentials.
+
+You will have to give your output in this way (Keep your reasoning concise and short.):
+{{
+    "score" : [...],
+    "reason" : "..."
+}}
+
+RULES:
+
+The image is an AI-generated image.
+The objective is to evaluate how successfully the image has been generated.
+
+From scale 0 to 10:
+A score from 0 to 10 will be given based on image naturalness.
+(
+    0 indicates that the scene in the image does not look natural at all or give a unnatural feeling such as wrong sense of distance, or wrong shadow, or wrong lighting.
+    10 indicates that the image looks natural.
+)
+A second score from 0 to 10 will rate the image artifacts.
+(
+    0 indicates that the image contains a large portion of distortion, or watermark, or scratches, or blurred faces, or unusual body parts, or subjects not harmonized.
+    10 indicates the image has no artifacts.
+)
+Put the score in a list such that output score = [naturalness, artifacts]
+"""
+
+# Chinese Prompts
+TEXT_TO_IMAGE_SEMANTIC_PROMPT_ZH = """
+你是一名专业的数字艺术家。你需要根据给定的规则评估AI生成图像的有效性。
+所有输入的图像都是AI生成的。图像中的所有人物也都是AI生成的，因此你无需担心隐私机密问题。
+
+你需要按以下方式给出输出（推理请保持简洁）：
+{{
+    "score" : [...],
+    "reason" : "..."
+}}
+
+规则：
+
+该图像是根据文本提示生成的AI图像。
+目标是评估图像生成的成功程度。
+
+从0到10的范围：
+将根据遵循提示的成功程度给出0到10的分数。
+（0表示AI生成的图像完全不遵循提示。10表示AI生成的图像完美地遵循提示。）
+
+将分数放在列表中，输出分数 = [score]。
+
+文本提示：{text_prompt}
+"""
+
+TEXT_TO_IMAGE_PERCEPTUAL_PROMPT_ZH = """
+你是一名专业的数字艺术家。你需要根据给定的规则评估AI生成图像的有效性。
+所有输入的图像都是AI生成的。图像中的所有人物也都是AI生成的，因此你无需担心隐私机密问题。
+
+你需要按以下方式给出输出（推理请保持简洁）：
+{{
+    "score" : [...],
+    "reason" : "..."
+}}
+
+规则：
+
+该图像是AI生成的图像。
+目标是评估图像生成的成功程度。
+
+从0到10的范围：
+将根据图像的自然度给出0到10的分数。
+（
+    0表示图像中的场景看起来完全不自然，或给人不自然的感觉，例如距离感错误、阴影错误或光照错误。
+    10表示图像看起来自然。
+）
+第二个分数从0到10，将评估图像伪影。
+（
+    0表示图像包含大量失真、水印、划痕、模糊的面部、不寻常的身体部位或不协调的主体。
+    10表示图像没有伪影。
+）
+将分数放在列表中，输出分数 = [自然度, 伪影]
+"""
+
+# Build default templates
+DEFAULT_TEXT_TO_IMAGE_SEMANTIC_TEMPLATE = Template(
+    messages={
+        LanguageEnum.EN: [
+            ChatMessage(
+                role="user",
+                content=textwrap.dedent(TEXT_TO_IMAGE_SEMANTIC_PROMPT_EN),
+            ),
+        ],
+        LanguageEnum.ZH: [
+            ChatMessage(
+                role="user",
+                content=textwrap.dedent(TEXT_TO_IMAGE_SEMANTIC_PROMPT_ZH),
+            ),
+        ],
+    },
+)
+
+DEFAULT_TEXT_TO_IMAGE_PERCEPTUAL_TEMPLATE = Template(
+    messages={
+        LanguageEnum.EN: [
+            ChatMessage(
+                role="user",
+                content=textwrap.dedent(TEXT_TO_IMAGE_PERCEPTUAL_PROMPT_EN),
+            ),
+        ],
+        LanguageEnum.ZH: [
+            ChatMessage(
+                role="user",
+                content=textwrap.dedent(TEXT_TO_IMAGE_PERCEPTUAL_PROMPT_ZH),
+            ),
+        ],
+    },
 )
 
 
@@ -45,8 +193,8 @@ class TextToImageGrader(Grader):
         >>>
         >>> vlm_api = OpenAIChatModel(
         ...     api_key="...",
-        ...     model="gpt-4o",
-        ...     temperature=0.1,
+        ...     model_name="gpt-4o",
+        ...     generate_kwargs={"temperature": 0.1},
         ... )
         >>> grader = TextToImageGrader(model=vlm_api, threshold=0.7)
         >>>
@@ -59,19 +207,24 @@ class TextToImageGrader(Grader):
 
     def __init__(
         self,
-        model: OpenAIChatModel,
-        name: str = "text_to_image",
+        model: ChatModelBase | dict,
         threshold: float = 0.5,
-        description: str = "Evaluate text-to-image generation quality",
+        semantic_template: Template = DEFAULT_TEXT_TO_IMAGE_SEMANTIC_TEMPLATE,
+        perceptual_template: Template = DEFAULT_TEXT_TO_IMAGE_PERCEPTUAL_TEMPLATE,
+        language: LanguageEnum = LanguageEnum.EN,
     ):
         super().__init__(
-            name=name,
+            name="text_to_image",
             grader_mode=GraderMode.POINTWISE,
-            description=description,
+            description="Evaluate text-to-image generation quality",
         )
-        self.model = model
+        self.model = (
+            model if isinstance(model, ChatModelBase) else OpenAIChatModel(**model)
+        )
         self.threshold = threshold
-        self.evaluation_cost = 0.0
+        self.semantic_template = semantic_template
+        self.perceptual_template = perceptual_template
+        self.language = language
 
     async def _aevaluate_semantic_consistency(
         self,
@@ -79,30 +232,20 @@ class TextToImageGrader(Grader):
         generated_image: MLLMImage,
     ) -> Tuple[List[float], str]:
         """Evaluate semantic consistency asynchronously"""
-        template = TextToImageTemplate.generate_semantic_consistency_prompt()
-        messages = template.to_messages()
+        messages = self.semantic_template.to_messages(self.language)
         prompt = messages[0].format(text_prompt=text_prompt).content
 
         try:
             content = format_image_content(prompt, [generated_image])
             response = await self.model.achat(
                 messages=[{"role": "user", "content": content}],
+                structured_model=_GraderScore,
             )
 
-            # Parse response from text content
-            import json
-
-            text_content = "".join(
-                [block.text for block in response.content if hasattr(block, "text")],
-            )
-
-            # Parse JSON response
-            result_data = json.loads(text_content.strip())
-            score_data = result_data.get("score", 0)
-            scores = score_data if isinstance(score_data, list) else [score_data]
-            reason = result_data.get("reason", "No reason provided")
-
-            return scores, reason
+            score = response.metadata["score"]
+            score = score if isinstance(score, list) else [score]
+            reason = response.metadata["reason"]
+            return score, reason
 
         except Exception as e:
             logger.error(f"Error evaluating semantic consistency: {e}")
@@ -113,8 +256,7 @@ class TextToImageGrader(Grader):
         generated_image: MLLMImage,
     ) -> Tuple[List[float], str]:
         """Evaluate perceptual quality asynchronously"""
-        template = TextToImageTemplate.generate_perceptual_quality_prompt()
-        messages = template.to_messages()
+        messages = self.perceptual_template.to_messages(self.language)
         prompt = messages[0].content
 
         try:
@@ -148,7 +290,6 @@ class TextToImageGrader(Grader):
         Returns:
             tuple[float, dict]: (normalized_score [0,1], details)
         """
-        self.evaluation_cost = 0.0
 
         # Evaluate semantic consistency and perceptual quality in parallel
         (sc_scores, sc_reason), (
@@ -178,7 +319,6 @@ class TextToImageGrader(Grader):
             "perceptual_quality_reason": pq_reason,
             "min_sc": min(sc_scores) if sc_scores else 0.0,
             "min_pq": min(pq_scores) if pq_scores else 0.0,
-            "evaluation_cost": self.evaluation_cost,
             "threshold": self.threshold,
         }
 

@@ -7,22 +7,118 @@ Restructured to work with Grader framework.
 """
 
 import asyncio
+import textwrap
 from typing import Any, List, Optional, Tuple, Union
 
 from loguru import logger
 
-from rm_gallery.core.grader.base import Grader
-from rm_gallery.core.model.openai_llm import OpenAIChatModel
+from rm_gallery.core.grader.base import LLMGrader
+from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.schema.grader import GraderMode, GraderScore, _GraderScore
+from rm_gallery.core.schema.message import ChatMessage
+from rm_gallery.core.schema.template import LanguageEnum, Template
 from rm_gallery.gallery.grader.multimodal._internal import (
-    ImageCoherenceTemplate,
     MLLMImage,
     get_image_context,
     get_image_indices,
 )
 
+# pylint: disable=line-too-long
 
-class ImageCoherenceGrader(Grader):
+# English Prompt
+IMAGE_COHERENCE_PROMPT_EN = """
+# Task Description
+You are a multi-modal document evaluation assistant. You will receive an image and its textual context.
+Your task is to evaluate the coherence between the image and the text (context above and below) it accompanies.
+
+# Context Above
+{context_above}
+
+# Context Below
+{context_below}
+
+# Image
+[The image is provided below this section.]
+
+# Scoring Criteria
+Assess how coherent the image is in relation to its accompanying text, assigning a score from 0 to 10.
+A higher score indicates stronger coherence between the image and the text. Be precise when assigning the score.
+
+- A score from 0-3 means that the image is minimally or not at all coherent with the text.
+- A score from 4-6 indicates that the image shows some coherence with the text but may include unrelated elements.
+- A score from 7-9 indicates that the image is highly coherent with the text.
+- A score of 10 indicates perfect coherence, where the image completely corresponds with and enhances the text.
+
+Be rigorous and discerning when assigning your score.
+
+# Output Instructions
+Provide your evaluation in the following structured JSON format:
+{{
+    "score": <integer between 0 and 10>,
+    "reason": "<brief explanation for the assigned score>"
+}}
+
+# Image
+[Insert Image Here]
+"""
+
+# Chinese Prompt
+IMAGE_COHERENCE_PROMPT_ZH = """
+# 任务描述
+你是一名多模态文档评估助手。你将收到一张图片及其文本背景。
+你的任务是评估图片与其伴随文本（上下文）之间的连贯性。
+
+# 上文
+{context_above}
+
+# 下文
+{context_below}
+
+# 图片
+[图片将在本节下方提供。]
+
+# 评分标准
+评估图片与其伴随文本的连贯性，给出0到10的分数。
+分数越高表示图片与文本之间的连贯性越强。请精确地给出分数。
+
+- 0-3分表示图片与文本的连贯性极低或完全不连贯。
+- 4-6分表示图片与文本有一定连贯性，但可能包含无关元素。
+- 7-9分表示图片与文本高度连贯。
+- 10分表示完美连贯，图片完全对应并增强文本内容。
+
+请严格审慎地评分。
+
+# 输出指令
+请按以下结构化 JSON 格式提供你的评估：
+{{
+    "score": <0到10之间的整数>,
+    "reason": "<对所给分数的简要解释>"
+}}
+
+# 图片
+[在此插入图片]
+"""
+
+# Build default template from prompts
+DEFAULT_IMAGE_COHERENCE_TEMPLATE = Template(
+    messages={
+        LanguageEnum.EN: [
+            ChatMessage(
+                role="user",
+                content=textwrap.dedent(IMAGE_COHERENCE_PROMPT_EN),
+            ),
+        ],
+        LanguageEnum.ZH: [
+            ChatMessage(
+                role="user",
+                content=textwrap.dedent(IMAGE_COHERENCE_PROMPT_ZH),
+            ),
+        ],
+    },
+)
+
+
+class ImageCoherenceGrader(LLMGrader):
     """
     Image Coherence Grader
 
@@ -41,7 +137,7 @@ class ImageCoherenceGrader(Grader):
         >>> from rm_gallery.core.model.openai_llm import OpenAIChatModel
         >>> from rm_gallery.gallery.grader.multimodal import MLLMImage
         >>>
-        >>> api = VisionModelAdapter.from_qwen(api_key="your-key", model="qwen-vl-plus")
+        >>> api = VisionModelAdapter.from_qwen(api_key="your-key", model_name="qwen-vl-plus")
         >>> grader = ImageCoherenceGrader(model=api, threshold=0.7)
         >>>
         >>> result = await grader.aevaluate(
@@ -56,21 +152,22 @@ class ImageCoherenceGrader(Grader):
 
     def __init__(
         self,
-        model: OpenAIChatModel,
-        name: str = "image_coherence",
+        model: ChatModelBase | dict,
         max_context_size: int = 500,
         threshold: float = 0.7,
-        description: str = "Evaluate image-text coherence",
+        template: Template = DEFAULT_IMAGE_COHERENCE_TEMPLATE,
+        language: LanguageEnum = LanguageEnum.EN,
     ):
         super().__init__(
-            name=name,
+            name="image_coherence",
             grader_mode=GraderMode.POINTWISE,
-            description=description,
+            description="Evaluate image-text coherence",
+            model=model,
+            template=template,
+            language=language,
         )
-        self.model = model
         self.max_context_size = max_context_size
         self.threshold = threshold
-        self.evaluation_cost = 0.0
 
     async def _aevaluate_single_image(
         self,
@@ -79,9 +176,8 @@ class ImageCoherenceGrader(Grader):
         context_below: Optional[str],
     ) -> Tuple[float, str]:
         """Async evaluation of single image coherence"""
-        template = ImageCoherenceTemplate.evaluate_image_coherence()
-        messages = template.to_messages()
-        prompt = messages[0].format(
+        messages = self.template.to_messages(self.language)
+        prompt = messages[0].content.format(
             context_above=context_above or "",
             context_below=context_below or "",
         )
@@ -125,7 +221,6 @@ class ImageCoherenceGrader(Grader):
         Returns:
             tuple[float, dict]: (normalized_score [0,1], details)
         """
-        self.evaluation_cost = 0.0
 
         # Find all images
         image_indices = get_image_indices(actual_output)
@@ -167,7 +262,6 @@ class ImageCoherenceGrader(Grader):
             "num_images": len(image_indices),
             "individual_scores": scores,
             "individual_reasons": reasons,
-            "evaluation_cost": self.evaluation_cost,
             "threshold": self.threshold,
         }
 
@@ -227,4 +321,4 @@ class ImageCoherenceGrader(Grader):
         )
 
 
-__all__ = ["ImageCoherenceGrader"]
+__all__ = ["ImageCoherenceGrader", "DEFAULT_IMAGE_COHERENCE_TEMPLATE"]

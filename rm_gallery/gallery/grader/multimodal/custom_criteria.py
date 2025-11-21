@@ -1,37 +1,94 @@
 # -*- coding: utf-8 -*-
 """
-Multimodal G-Eval Grader
+Custom Criteria Grader
 
-Based on the G-Eval framework for flexible evaluation with custom criteria.
-Restructured to work with Grader framework.
+Flexible evaluation with custom criteria for multimodal content.
+Supports automatic evaluation step generation and custom scoring rubrics.
 """
 
+import textwrap
 from typing import Any, List, Optional, Tuple
 
 from loguru import logger
 
 from rm_gallery.core.grader.base import Grader
+from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.model.openai_llm import OpenAIChatModel
 from rm_gallery.core.schema.grader import GraderMode, GraderScore
+from rm_gallery.core.schema.message import ChatMessage
+from rm_gallery.core.schema.template import LanguageEnum, Template
 from rm_gallery.gallery.grader.multimodal._internal import (
     EvaluationSteps,
     MLLMImage,
     MLLMTestCaseParams,
-    MultimodalGEvalTemplate,
     Rubric,
-    construct_g_eval_params_string,
+    construct_params_string,
     format_image_content,
     format_rubrics,
     validate_and_sort_rubrics,
     validate_criteria_and_evaluation_steps,
 )
 
+# pylint: disable=line-too-long
 
-class MultimodalGEvalGrader(Grader):
+# English Prompts
+CUSTOM_CRITERIA_GENERATE_STEPS_PROMPT_EN = """Given an evaluation criteria which outlines how you should judge the {parameters}, generate 3-4 concise evaluation steps based on the criteria below. You MUST make it clear how to evaluate {parameters} in relation to one another.
+
+Evaluation Criteria:
+{criteria}
+
+**
+IMPORTANT: Please make sure to only return in JSON format, with the "steps" key as a list of strings. No words or explanation is needed.
+Example JSON:
+{{
+    "steps": <list_of_strings>
+}}
+**
+
+JSON:
+"""
+
+# Chinese Prompts
+CUSTOM_CRITERIA_GENERATE_STEPS_PROMPT_ZH = """给定一个评估标准，概述你应该如何评估{parameters}，根据以下标准生成3-4个简明的评估步骤。你必须明确如何相互关联地评估{parameters}。
+
+评估标准：
+{criteria}
+
+**
+重要：请确保只返回JSON格式，使用"steps"键作为字符串列表。不需要其他文字或解释。
+示例JSON：
+{{
+    "steps": <字符串列表>
+}}
+**
+
+JSON:
+"""
+
+# Build default template for generating evaluation steps
+DEFAULT_CUSTOM_CRITERIA_GENERATE_STEPS_TEMPLATE = Template(
+    messages={
+        LanguageEnum.EN: [
+            ChatMessage(
+                role="user",
+                content=textwrap.dedent(CUSTOM_CRITERIA_GENERATE_STEPS_PROMPT_EN),
+            ),
+        ],
+        LanguageEnum.ZH: [
+            ChatMessage(
+                role="user",
+                content=textwrap.dedent(CUSTOM_CRITERIA_GENERATE_STEPS_PROMPT_ZH),
+            ),
+        ],
+    },
+)
+
+
+class CustomCriteriaGrader(Grader):
     """
-    Multimodal G-Eval Grader
+    Custom Criteria Grader
 
-    Flexible evaluation with custom criteria using the G-Eval framework.
+    Flexible evaluation with custom criteria for multimodal content.
     Supports:
     - Chain-of-Thought evaluation with step-by-step reasoning
     - Automatic evaluation step generation from criteria
@@ -52,8 +109,8 @@ class MultimodalGEvalGrader(Grader):
         >>> from rm_gallery.core.model.openai_llm import OpenAIChatModel
         >>> from rm_gallery.gallery.grader.multimodal import MLLMTestCaseParams, MLLMImage
         >>>
-        >>> vlm_api = VisionModelAdapter.from_qwen(model="qwen-vl-plus")
-        >>> grader = MultimodalGEvalGrader(
+        >>> vlm_api = VisionModelAdapter.from_qwen(model_name="qwen-vl-plus")
+        >>> grader = CustomCriteriaGrader(
         ...     model=vlm_api,
         ...     evaluation_name="Image Caption Quality",
         ...     evaluation_params=[
@@ -72,23 +129,25 @@ class MultimodalGEvalGrader(Grader):
 
     def __init__(
         self,
-        model: OpenAIChatModel,
+        model: ChatModelBase | dict,
         evaluation_name: str,
         evaluation_params: List[MLLMTestCaseParams],
-        name: str = "multimodal_geval",
         criteria: Optional[str] = None,
         evaluation_steps: Optional[List[str]] = None,
         rubric: Optional[List[Rubric]] = None,
         threshold: float = 0.7,
         score_range: Tuple[int, int] = (0, 10),
-        description: str = "Multimodal G-Eval flexible evaluation",
+        generate_steps_template: Template = DEFAULT_CUSTOM_CRITERIA_GENERATE_STEPS_TEMPLATE,
+        language: LanguageEnum = LanguageEnum.EN,
     ):
         super().__init__(
-            name=name,
+            name="custom_criteria",
             grader_mode=GraderMode.POINTWISE,
-            description=description,
+            description="Custom criteria flexible evaluation",
         )
-        self.model = model
+        self.model = (
+            model if isinstance(model, ChatModelBase) else OpenAIChatModel(**model)
+        )
         self.evaluation_name = evaluation_name
         self.evaluation_params = evaluation_params
         self.criteria = criteria
@@ -96,7 +155,8 @@ class MultimodalGEvalGrader(Grader):
         self.rubric = rubric
         self.threshold = threshold
         self.score_range = score_range
-        self.evaluation_cost = 0.0
+        self.generate_steps_template = generate_steps_template
+        self.language = language
         self._generated_steps: Optional[List[str]] = None
 
         # Validate criteria and evaluation steps
@@ -120,21 +180,13 @@ class MultimodalGEvalGrader(Grader):
             )
 
         # Build parameters string for context
-        params_str = construct_g_eval_params_string(self.evaluation_params)
+        params_str = construct_params_string(self.evaluation_params)
 
         # Generate steps using VLM
-        template = MultimodalGEvalTemplate.generate_evaluation_steps(
+        messages = self.generate_steps_template.get(self.language)
+        prompt = messages[0].content.format(
             parameters=params_str,
             criteria=self.criteria,
-        )
-        messages = template.to_messages()
-        prompt = (
-            messages[0]
-            .format(
-                parameters=params_str,
-                criteria=self.criteria,
-            )
-            .content
         )
 
         try:
@@ -169,11 +221,132 @@ class MultimodalGEvalGrader(Grader):
                 f"Analyze the {param.value}" for param in self.evaluation_params
             ] + ["Evaluate based on the given criteria"]
 
-    async def _aevaluate_with_geval(
+    def _generate_evaluation_prompt_parts(
+        self,
+        evaluation_steps: str,
+        test_case_list: List,
+        parameters: str,
+        rubric_str: Optional[str] = None,
+    ) -> List:
+        """Generate evaluation prompt parts with bilingual support"""
+        if self.language == LanguageEnum.ZH:
+            dependencies = "评估步骤和评分标准" if rubric_str else "评估步骤"
+            score_explanation = (
+                "基于提供的评分标准"
+                if rubric_str
+                else f"{self.score_range[1]}表示与评估步骤高度一致，{self.score_range[0]}表示不一致"
+            )
+            reasoning_expectation = "具体且基于评估步骤和评分标准。" if rubric_str else "具体且基于评估步骤。"
+            rubric_text = f"评分标准：\n{rubric_str}\n" if rubric_str else ""
+
+            prompt_start = textwrap.dedent(
+                f"""你是一名评估员。根据以下{dependencies}，评估下面的回答并返回一个包含两个字段的JSON对象：
+
+- `"score"`：一个介于{self.score_range[0]}和{self.score_range[1]}之间的整数，{score_explanation}。
+- `"reason"`：对给出分数的简要解释。必须提及具体的优点或缺点，引用输入中的相关细节。不要在解释中引用分数本身。
+
+你的解释应该：
+- {reasoning_expectation}
+- 提及测试用例参数中的关键细节。
+- 简洁、清晰、专注于评估逻辑。
+
+只返回有效的JSON。不要包含任何额外的评论或文本。
+
+---
+
+评估步骤：
+{evaluation_steps}
+
+{rubric_text}
+测试用例：
+************************
+""",
+            )
+
+            prompt_end = textwrap.dedent(
+                f"""
+************************
+
+
+参数：
+{parameters}
+
+---
+**示例JSON：**
+{{
+    "score": {self.score_range[0]},
+    "reason": "你的简洁且信息丰富的理由"
+}}
+
+JSON:
+""",
+            )
+        else:
+            dependencies = (
+                "evaluation steps and rubric" if rubric_str else "evaluation steps"
+            )
+            score_explanation = (
+                "based on the rubric provided"
+                if rubric_str
+                else f"with {self.score_range[1]} indicating strong alignment with the evaluation steps and {self.score_range[0]} indicating no alignment"
+            )
+            reasoning_expectation = (
+                "Be specific and grounded in the evaluation steps and rubric."
+                if rubric_str
+                else "Be specific and grounded in the evaluation steps."
+            )
+            rubric_text = f"Rubric:\n{rubric_str}\n" if rubric_str else ""
+
+            prompt_start = textwrap.dedent(
+                f"""You are an evaluator. Given the following {dependencies}, assess the response below and return a JSON object with two fields:
+
+- `"score"`: an integer between {self.score_range[0]} and {self.score_range[1]}, {score_explanation}.
+- `"reason"`: a brief explanation for why the score was given. This must mention specific strengths or shortcomings, referencing relevant details from the input. Do **not** quote the score itself in the explanation.
+
+Your explanation should:
+- {reasoning_expectation}
+- Mention key details from the test case parameters.
+- Be concise, clear, and focused on the evaluation logic.
+
+Only return valid JSON. Do **not** include any extra commentary or text.
+
+---
+
+Evaluation Steps:
+{evaluation_steps}
+
+{rubric_text}
+Test Case:
+************************
+""",
+            )
+
+            prompt_end = textwrap.dedent(
+                f"""
+************************
+
+
+Parameters:
+{parameters}
+
+---
+**Example JSON:**
+{{
+    "score": {self.score_range[0]},
+    "reason": "your concise and informative reason here"
+}}
+
+JSON:
+""",
+            )
+
+        return [prompt_start] + test_case_list + [prompt_end]
+
+    async def _aevaluate_with_criteria(
         self,
         params_dict: dict,
     ) -> Tuple[float, str]:
-        """Evaluate using G-Eval framework (asynchronous)"""
+        """Evaluate using custom criteria framework (asynchronous)"""
         # Get or generate evaluation steps
         steps = (
             self.evaluation_steps
@@ -187,7 +360,7 @@ class MultimodalGEvalGrader(Grader):
         )
 
         # Build parameters string
-        params_str = construct_g_eval_params_string(self.evaluation_params)
+        params_str = construct_params_string(self.evaluation_params)
 
         # Format rubric if provided
         rubric_str = format_rubrics(self.rubric) if self.rubric else None
@@ -201,13 +374,12 @@ class MultimodalGEvalGrader(Grader):
             else:
                 test_case_list.append(param_value)
 
-        # Generate evaluation prompt using template
-        prompt_parts = MultimodalGEvalTemplate.generate_evaluation_results(
+        # Generate evaluation prompt using helper method
+        prompt_parts = self._generate_evaluation_prompt_parts(
             evaluation_steps=steps_str,
             test_case_list=test_case_list,
             parameters=params_str,
-            rubric=rubric_str,
-            score_range=self.score_range,
+            rubric_str=rubric_str,
         )
 
         try:
@@ -247,7 +419,7 @@ class MultimodalGEvalGrader(Grader):
             return score, reason
 
         except Exception as e:
-            logger.error(f"Error in G-Eval evaluation: {e}")
+            logger.error(f"Error in custom criteria evaluation: {e}")
             return 0.0, f"Evaluation error: {str(e)}"
 
     async def _acompute(
@@ -255,7 +427,7 @@ class MultimodalGEvalGrader(Grader):
         **params_dict: Any,
     ) -> Tuple[float, dict]:
         """
-        Compute G-Eval score (asynchronous)
+        Compute custom criteria score (asynchronous)
 
         Args:
             **params_dict: Dictionary containing evaluation parameters
@@ -263,7 +435,6 @@ class MultimodalGEvalGrader(Grader):
         Returns:
             tuple[float, dict]: (normalized_score [0,1], details)
         """
-        self.evaluation_cost = 0.0
 
         # Validate required parameters
         for param in self.evaluation_params:
@@ -273,7 +444,7 @@ class MultimodalGEvalGrader(Grader):
                 }
 
         # Evaluate
-        raw_score, reason = await self._aevaluate_with_geval(params_dict)
+        raw_score, reason = await self._aevaluate_with_criteria(params_dict)
 
         # Normalize score to [0, 1]
         score_min, score_max = self.score_range
@@ -287,7 +458,6 @@ class MultimodalGEvalGrader(Grader):
             "evaluation_name": self.evaluation_name,
             "evaluation_params": [p.value for p in self.evaluation_params],
             "evaluation_steps": (self.evaluation_steps or self._generated_steps),
-            "evaluation_cost": self.evaluation_cost,
             "threshold": self.threshold,
         }
 
@@ -298,7 +468,7 @@ class MultimodalGEvalGrader(Grader):
         **params_dict: Any,
     ) -> GraderScore:
         """
-        Evaluate using Multimodal G-Eval framework
+        Evaluate using custom criteria framework
 
         Args:
             **params_dict: Dictionary containing evaluation parameters
@@ -346,4 +516,4 @@ Evaluation Steps:
         )
 
 
-__all__ = ["MultimodalGEvalGrader"]
+__all__ = ["CustomCriteriaGrader", "DEFAULT_CUSTOM_CRITERIA_GENERATE_STEPS_TEMPLATE"]

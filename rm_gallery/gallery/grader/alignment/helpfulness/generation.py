@@ -152,7 +152,7 @@ class GenerationGrader(BaseHelpfulnessGrader):
             **kwargs,
         )
 
-    async def aevaluate(
+    async def _aevaluate(
         self,
         query: str,
         answer: str | List[str],
@@ -200,4 +200,4 @@ class GenerationGrader(BaseHelpfulnessGrader):
             >>> print(result.score, result.reason)
             0.85 The story creatively addresses the prompt with good narrative structure.
         """
-        return await super().aevaluate(query=query, answer=answer, **kwargs)
+        return await super()._aevaluate(query=query, answer=answer, **kwargs)

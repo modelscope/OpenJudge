@@ -161,7 +161,7 @@ class PreciseIfGrader(BaseHelpfulnessGrader):
             **kwargs,
         )
 
-    async def aevaluate(
+    async def _aevaluate(
         self,
         query: str,
         answer: str | List[str],
@@ -211,4 +211,4 @@ class PreciseIfGrader(BaseHelpfulnessGrader):
             1.0 The response directly addresses the conditional query with specific, appropriate
                 suggestions.
         """
-        return await super().aevaluate(query=query, answer=answer, **kwargs)
+        return await super()._aevaluate(query=query, answer=answer, **kwargs)

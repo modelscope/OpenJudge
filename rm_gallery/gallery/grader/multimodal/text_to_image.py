@@ -193,7 +193,7 @@ class TextToImageGrader(Grader):
         >>>
         >>> vlm_api = OpenAIChatModel(
         ...     api_key="...",
-        ...     model_name="gpt-4o",
+        ...     model="gpt-4o",
         ...     generate_kwargs={"temperature": 0.1},
         ... )
         >>> grader = TextToImageGrader(model=vlm_api, threshold=0.7)
@@ -324,7 +324,7 @@ class TextToImageGrader(Grader):
 
         return final_score, details
 
-    async def aevaluate(
+    async def _aevaluate(
         self,
         text_prompt: str,
         generated_image: Union[MLLMImage, List[MLLMImage]],

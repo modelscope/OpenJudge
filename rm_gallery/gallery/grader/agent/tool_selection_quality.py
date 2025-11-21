@@ -173,7 +173,7 @@ class ToolSelectionQualityGrader(LLMGrader):
         >>>
         >>> api = OpenAIChatModel(
         ...     api_key="your-key",  # pragma: allowlist secret
-        ...     model_name="gpt-4o",
+        ...     model="gpt-4o",
         ...     generate_kwargs={"temperature": 0.1}
         ... )
         >>>
@@ -208,10 +208,12 @@ class ToolSelectionQualityGrader(LLMGrader):
         )
         self.threshold = threshold
         self.template = (
-            template if template is not None else DEFAULT_TOOL_SELECTION_QUALITY_TEMPLATE
+            template
+            if template is not None
+            else DEFAULT_TOOL_SELECTION_QUALITY_TEMPLATE
         )
 
-    async def aevaluate(
+    async def _aevaluate(
         self,
         query: Union[str, List[Dict[str, Any]]],
         tool_definitions: Union[Dict[str, Any], List[Dict[str, Any]]],
@@ -255,10 +257,12 @@ class ToolSelectionQualityGrader(LLMGrader):
 
         # Format query as string for the prompt
         if isinstance(query, list):
-            user_query = "\n".join([
-                f"{msg.get('role', 'user')}: {msg.get('content', '')}"
-                for msg in query
-            ])
+            user_query = "\n".join(
+                [
+                    f"{msg.get('role', 'user')}: {msg.get('content', '')}"
+                    for msg in query
+                ],
+            )
         else:
             user_query = str(query)
 
@@ -266,13 +270,16 @@ class ToolSelectionQualityGrader(LLMGrader):
         available_tools = json.dumps(tool_definitions, indent=2)
 
         # Format selected tools (extract tool names from tool_calls)
-        selected_tools = json.dumps([
-            {"name": tc.get("name"), "arguments": tc.get("arguments", {})}
-            for tc in tool_calls
-        ], indent=2)
+        selected_tools = json.dumps(
+            [
+                {"name": tc.get("name"), "arguments": tc.get("arguments", {})}
+                for tc in tool_calls
+            ],
+            indent=2,
+        )
 
         try:
-            result = await super().aevaluate(
+            result = await super()._aevaluate(
                 user_query=user_query,
                 available_tools=available_tools,
                 selected_tools=selected_tools,
@@ -308,4 +315,3 @@ __all__ = [
     "ToolSelectionQualityGrader",
     "DEFAULT_TOOL_SELECTION_QUALITY_TEMPLATE",
 ]
-

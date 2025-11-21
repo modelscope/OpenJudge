@@ -173,7 +173,7 @@ class ToolCallSuccessGrader(LLMGrader):
 
         return tool_calls
 
-    async def aevaluate(
+    async def _aevaluate(
         self,
         tool_definitions: Union[Dict[str, Any], List[Dict[str, Any]]],
         tool_calls: Union[Dict[str, Any], List[Dict[str, Any]]],
@@ -220,7 +220,7 @@ class ToolCallSuccessGrader(LLMGrader):
             tool_definitions = [tool_definitions] if tool_definitions else []
 
         # Call parent evaluate method with the structured data
-        result = await super().aevaluate(
+        result = await super()._aevaluate(
             tool_calls=json.dumps(tool_calls, indent=2),
             tool_definitions=json.dumps(tool_definitions, indent=2),
             **kwargs,

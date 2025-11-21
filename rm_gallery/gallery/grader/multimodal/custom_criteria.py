@@ -109,7 +109,7 @@ class CustomCriteriaGrader(Grader):
         >>> from rm_gallery.core.model.openai_llm import OpenAIChatModel
         >>> from rm_gallery.gallery.grader.multimodal import MLLMTestCaseParams, MLLMImage
         >>>
-        >>> vlm_api = VisionModelAdapter.from_qwen(model_name="qwen-vl-plus")
+        >>> vlm_api = VisionModelAdapter.from_qwen(model="qwen-vl-plus")
         >>> grader = CustomCriteriaGrader(
         ...     model=vlm_api,
         ...     evaluation_name="Image Caption Quality",
@@ -463,7 +463,7 @@ JSON:
 
         return normalized_score, details
 
-    async def aevaluate(
+    async def _aevaluate(
         self,
         **params_dict: Any,
     ) -> GraderScore:

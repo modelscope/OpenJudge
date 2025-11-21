@@ -21,7 +21,7 @@ from loguru import logger
 
 from rm_gallery.core.grader.auto.auto_grader import AutoGrader
 from rm_gallery.core.grader.auto.auto_rubrics import AutoRubricsConfig
-from rm_gallery.core.grader.base import GraderMode
+from rm_gallery.core.grader.base import GraderMode, aevaluate_with_cases
 from rm_gallery.core.model import OpenAIChatModel
 from rm_gallery.core.schema.data import EvalCase
 
@@ -264,12 +264,15 @@ class AutoGraderBatchTester:
 
         # Train the grader
         logger.info("Training grader...")
-        grader = await auto_grader.aevaluate_batch(train_samples)
+        grader = await auto_grader.run(train_samples)
         logger.info(f"Grader trained: {grader.name} ({grader.mode.value})")
 
         # Evaluate test samples
         logger.info("Evaluating test samples...")
-        results = await grader.aevaluate_batch(test_samples)
+        results = await aevaluate_with_cases(
+            grader,
+            test_samples,
+        )
 
         # Calculate accuracy
         accuracy_metrics = self.accuracy_calculator.calculate_accuracy(

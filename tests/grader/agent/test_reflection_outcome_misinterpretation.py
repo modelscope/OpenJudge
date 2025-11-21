@@ -14,7 +14,7 @@ from rm_gallery.gallery.grader.agent import ReflectionOutcomeMisinterpretationGr
 
 def test_reflection_outcome_misinterpretation_grader_creation():
     """Test creating a ReflectionOutcomeMisinterpretationGrader instance"""
-    model = OpenAIChatModel(model_name="qwen-plus", stream=False)
+    model = OpenAIChatModel(model="qwen-plus", stream=False)
     grader = ReflectionOutcomeMisinterpretationGrader(model=model)
 
     assert grader is not None
@@ -24,10 +24,10 @@ def test_reflection_outcome_misinterpretation_grader_creation():
 
 def test_reflection_outcome_misinterpretation_grader_chinese():
     """Test creating a Chinese grader instance"""
-    model = OpenAIChatModel(model_name="qwen-plus", stream=False)
+    model = OpenAIChatModel(model="qwen-plus", stream=False)
     grader = ReflectionOutcomeMisinterpretationGrader(
-        model=model, 
-        language=LanguageEnum.ZH
+        model=model,
+        language=LanguageEnum.ZH,
     )
 
     assert grader is not None
@@ -38,14 +38,14 @@ def test_reflection_outcome_misinterpretation_grader_chinese():
 @pytest.mark.asyncio
 async def test_reflection_outcome_misinterpretation_detection():
     """Test detecting reflection outcome misinterpretation"""
-    model = OpenAIChatModel(model_name="qwen3-32b", stream=False)
+    model = OpenAIChatModel(model="qwen3-32b", stream=False)
     grader = ReflectionOutcomeMisinterpretationGrader(model=model)
 
     # Test case with clear misinterpretation
     result = await grader.aevaluate(
         observation="The drawer is still closed. Action failed.",
         reflection="I successfully opened the drawer.",
-        task_context="Task: Open the drawer"
+        task_context="Task: Open the drawer",
     )
 
     assert result is not None
@@ -57,14 +57,14 @@ async def test_reflection_outcome_misinterpretation_detection():
 @pytest.mark.asyncio
 async def test_reflection_outcome_correct():
     """Test with correct reflection"""
-    model = OpenAIChatModel(model_name="qwen3-32b", stream=False)
+    model = OpenAIChatModel(model="qwen3-32b", stream=False)
     grader = ReflectionOutcomeMisinterpretationGrader(model=model)
 
     # Test case with correct reflection
     result = await grader.aevaluate(
         observation="The drawer is now open.",
         reflection="I successfully opened the drawer.",
-        task_context="Task: Open the drawer"
+        task_context="Task: Open the drawer",
     )
 
     assert result is not None
@@ -75,7 +75,7 @@ async def test_reflection_outcome_correct():
 @pytest.mark.asyncio
 async def test_reflection_outcome_with_history():
     """Test with history steps"""
-    model = OpenAIChatModel(model_name="qwen3-32b", stream=False)
+    model = OpenAIChatModel(model="qwen3-32b", stream=False)
     grader = ReflectionOutcomeMisinterpretationGrader(model=model)
 
     history = [
@@ -85,9 +85,8 @@ async def test_reflection_outcome_with_history():
     result = await grader.aevaluate(
         observation="Drawer is still locked.",
         reflection="The drawer is now open.",  # Wrong
-        history_steps=history
+        history_steps=history,
     )
 
     assert result is not None
     assert result.score == 0.0
-

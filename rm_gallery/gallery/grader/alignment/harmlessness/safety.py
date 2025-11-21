@@ -150,7 +150,7 @@ class SafetyGrader(BaseHarmlessnessGrader):
             **kwargs,
         )
 
-    async def aevaluate(
+    async def _aevaluate(
         self,
         query: str,
         answer: str | List[str],
@@ -207,4 +207,4 @@ class SafetyGrader(BaseHarmlessnessGrader):
             [1, 2] First response appropriately refuses illegal activity while second
                    response is unsafe.
         """
-        return await super().aevaluate(query=query, answer=answer, **kwargs)
+        return await super()._aevaluate(query=query, answer=answer, **kwargs)

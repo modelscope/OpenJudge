@@ -159,7 +159,7 @@ class FocusGrader(BaseHelpfulnessGrader):
             **kwargs,
         )
 
-    async def aevaluate(
+    async def _aevaluate(
         self,
         query: str,
         answer: str | List[str],
@@ -208,4 +208,4 @@ class FocusGrader(BaseHelpfulnessGrader):
             >>> print(result.score, result.reason)
             0.95 The response stays focused on explaining photosynthesis without digressing.
         """
-        return await super().aevaluate(query=query, answer=answer, **kwargs)
+        return await super()._aevaluate(query=query, answer=answer, **kwargs)

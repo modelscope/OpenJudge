@@ -12,6 +12,7 @@ import pytest
 
 from rm_gallery.core.grader.auto.auto_grader import AutoGrader
 from rm_gallery.core.grader.auto.auto_rubrics import AutoRubricsConfig
+from rm_gallery.core.grader.base import aevaluate_with_cases
 from rm_gallery.core.model import OpenAIChatModel
 from rm_gallery.core.schema.data import EvalCase
 
@@ -68,14 +69,11 @@ async def test_auto_grader_with_default_config() -> None:
     )
 
     # Train the grader
-    grader = await auto_grader.aevaluate_batch(training_data)
+    grader = await auto_grader.run(training_data)
     assert grader is not None, "Grader should be created successfully"
 
     # Evaluate test data
-    result = await grader.aevaluate_batch(
-        eval_cases=[test_data],
-        parser=None,
-    )
+    result = await aevaluate_with_cases(grader, eval_cases=test_data)
 
     assert result is not None, "Evaluation result should not be None"
     print(f"Default config result: {result}")
@@ -107,14 +105,11 @@ async def test_auto_grader_with_custom_config() -> None:
     )
 
     # Train the grader
-    grader = await auto_grader.aevaluate_batch(training_data)
+    grader = await auto_grader.run(training_data)
     assert grader is not None, "Grader should be created successfully"
 
     # Evaluate test data
-    result = await grader.aevaluate_batch(
-        eval_cases=[test_data],
-        parser=None,
-    )
+    result = await aevaluate_with_cases(grader, eval_cases=test_data)
 
     assert result is not None, "Evaluation result should not be None"
     print(f"Custom config result: {result}")
@@ -153,17 +148,18 @@ async def test_auto_grader_comparison() -> None:
     )
 
     # Train both graders
-    default_grader = await default_grader_factory.aevaluate_batch(pointwise_data)
-    custom_grader = await custom_grader_factory.aevaluate_batch(listwise_data)
+    default_grader = await default_grader_factory.run(pointwise_data)
+    custom_grader = await custom_grader_factory.run(listwise_data)
 
     # Evaluate with both graders
-    default_result = await default_grader.aevaluate_batch(
-        eval_cases=[test_data],
-        parser=None,
+    default_result = await aevaluate_with_cases(
+        default_grader,
+        eval_cases=test_data,
     )
-    custom_result = await custom_grader.aevaluate_batch(
-        eval_cases=[test_data],
-        parser=None,
+
+    custom_result = await aevaluate_with_cases(
+        custom_grader,
+        eval_cases=test_data,
     )
 
     # Assertions

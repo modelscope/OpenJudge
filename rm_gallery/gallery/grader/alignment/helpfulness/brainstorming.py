@@ -147,7 +147,7 @@ class BrainstormingGrader(BaseHelpfulnessGrader):
             **kwargs,
         )
 
-    async def aevaluate(
+    async def _aevaluate(
         self,
         query: str,
         answer: str | List[str],
@@ -183,4 +183,4 @@ class BrainstormingGrader(BaseHelpfulnessGrader):
             ...            " 3) Board game, 4) Book series"
             ... )
         """
-        return await super().aevaluate(query=query, answer=answer, **kwargs)
+        return await super()._aevaluate(query=query, answer=answer, **kwargs)

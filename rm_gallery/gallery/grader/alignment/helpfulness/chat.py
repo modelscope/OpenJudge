@@ -153,7 +153,7 @@ class ChatGrader(BaseHelpfulnessGrader):
             **kwargs,
         )
 
-    async def aevaluate(
+    async def _aevaluate(
         self,
         query: str,
         answer: str | List[str],
@@ -188,4 +188,4 @@ class ChatGrader(BaseHelpfulnessGrader):
             ...     answer="I'm doing well, thank you for asking! How can I assist you?"
             ... )
         """
-        return await super().aevaluate(query=query, answer=answer, **kwargs)
+        return await super()._aevaluate(query=query, answer=answer, **kwargs)

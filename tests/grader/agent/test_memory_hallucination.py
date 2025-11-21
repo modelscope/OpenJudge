@@ -14,7 +14,7 @@ from rm_gallery.gallery.grader.agent import MemoryHallucinationGrader
 
 def test_memory_hallucination_grader_creation():
     """Test creating a MemoryHallucinationGrader instance"""
-    model = OpenAIChatModel(model_name="qwen-plus", stream=False)
+    model = OpenAIChatModel(model="qwen-plus", stream=False)
     grader = MemoryHallucinationGrader(model=model)
 
     assert grader is not None
@@ -24,10 +24,10 @@ def test_memory_hallucination_grader_creation():
 
 def test_memory_hallucination_grader_chinese():
     """Test creating a Chinese grader instance"""
-    model = OpenAIChatModel(model_name="qwen-plus", stream=False)
+    model = OpenAIChatModel(model="qwen-plus", stream=False)
     grader = MemoryHallucinationGrader(
         model=model,
-        language=LanguageEnum.ZH
+        language=LanguageEnum.ZH,
     )
 
     assert grader is not None
@@ -38,14 +38,14 @@ def test_memory_hallucination_grader_chinese():
 @pytest.mark.asyncio
 async def test_memory_hallucination_detection():
     """Test detecting hallucinated information in memory"""
-    model = OpenAIChatModel(model_name="qwen3-32b", stream=False)
+    model = OpenAIChatModel(model="qwen3-32b", stream=False)
     grader = MemoryHallucinationGrader(model=model)
 
     # Test case with hallucinated memory
     result = await grader.aevaluate(
         observation="You see a closed cabinet.",
         memory="There is a red vase inside the cabinet with gold trim.",
-        task_context="Task: Inventory room objects"
+        task_context="Task: Inventory room objects",
     )
 
     assert result is not None
@@ -57,13 +57,13 @@ async def test_memory_hallucination_detection():
 @pytest.mark.asyncio
 async def test_memory_no_hallucination():
     """Test with correct memory without hallucination"""
-    model = OpenAIChatModel(model_name="qwen3-32b", stream=False)
+    model = OpenAIChatModel(model="qwen3-32b", stream=False)
     grader = MemoryHallucinationGrader(model=model)
 
     result = await grader.aevaluate(
         observation="Cabinet 1 contains 3 red apples.",
         memory="Cabinet 1 has 3 red apples.",
-        task_context="Task: Inventory items"
+        task_context="Task: Inventory items",
     )
 
     assert result is not None
@@ -74,7 +74,7 @@ async def test_memory_no_hallucination():
 @pytest.mark.asyncio
 async def test_memory_hallucination_with_history():
     """Test memory hallucination with history"""
-    model = OpenAIChatModel(model_name="qwen3-32b", stream=False)
+    model = OpenAIChatModel(model="qwen3-32b", stream=False)
     grader = MemoryHallucinationGrader(model=model)
 
     history = [
@@ -84,9 +84,8 @@ async def test_memory_hallucination_with_history():
     result = await grader.aevaluate(
         observation="Cabinet is still locked. Cannot see inside.",
         memory="Cabinet contains 5 golden coins.",  # Cannot know this
-        history_steps=history
+        history_steps=history,
     )
 
     assert result is not None
     assert result.score == 0.0
-

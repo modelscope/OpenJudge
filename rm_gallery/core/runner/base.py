@@ -11,7 +11,7 @@ class BaseRunner(ABC):
     """
 
     @abstractmethod
-    async def aevaluate_batch(
+    async def run(
         self,
         eval_cases: List[EvalCase],
         *args: Any,

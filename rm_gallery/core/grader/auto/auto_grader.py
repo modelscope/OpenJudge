@@ -84,7 +84,7 @@ class AutoGrader(BaseRunner):
                 f"Unsupported method: {self.config.method}. Supported methods: 'auto_rubrics'.",
             )
 
-    async def aevaluate_batch(
+    async def run(
         self,
         eval_cases: List[EvalCase],
         *args: Any,
@@ -99,7 +99,7 @@ class AutoGrader(BaseRunner):
             LLMGrader instance with generated rubrics
         """
         # Generate rubrics using the selected method
-        rubrics_result = await self.rubric_generator.aevaluate_batch(eval_cases)
+        rubrics_result = await self.rubric_generator.run(eval_cases)
 
         # Extract the final rubrics from the result
         if isinstance(rubrics_result, dict) and "final_rubrics" in rubrics_result:

@@ -203,7 +203,7 @@ class HallucinationGrader(LLMGrader):
             template if template is not None else DEFAULT_HALLUCINATION_TEMPLATE
         )
 
-    async def aevaluate(  # pylint: disable=redefined-builtin,unused-argument
+    async def _aevaluate(  # pylint: disable=redefined-builtin,unused-argument
         self,
         context: str,
         input: str,
@@ -249,7 +249,7 @@ class HallucinationGrader(LLMGrader):
 </reference_output>"""
 
         try:
-            result = await super().aevaluate(
+            result = await super()._aevaluate(
                 context=context,
                 input=input,
                 output=output,

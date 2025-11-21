@@ -150,7 +150,7 @@ class SummarizationGrader(BaseHelpfulnessGrader):
             **kwargs,
         )
 
-    async def aevaluate(
+    async def _aevaluate(
         self,
         query: str,
         answer: str | List[str],
@@ -206,4 +206,4 @@ class SummarizationGrader(BaseHelpfulnessGrader):
             >>> print(result.score, result.reason)
             0.85 The summary captures the key points but could include more specific impacts.
         """
-        return await super().aevaluate(query=query, answer=answer, **kwargs)
+        return await super()._aevaluate(query=query, answer=answer, **kwargs)

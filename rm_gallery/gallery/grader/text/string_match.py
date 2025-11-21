@@ -128,7 +128,7 @@ class StringMatchGrader(Grader):
         self.case_sensitive = case_sensitive
         self.ignore_whitespace = ignore_whitespace
 
-    async def aevaluate(
+    async def _aevaluate(
         self,
         reference: str = "",
         candidate: str = "",

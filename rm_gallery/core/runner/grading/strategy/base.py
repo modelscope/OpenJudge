@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import asyncio
 from abc import ABC, abstractmethod
 from typing import Any, List
 
@@ -34,25 +33,25 @@ class GraderStrategy(ABC):
         """
         ...
 
-    async def aevaluate_batch(
-        self,
-        grader: Grader,
-        eval_cases: List[EvalCase],
-        *args,
-        **kwargs: Any,
-    ) -> List[List[GraderScore]]:
-        """Evaluate a batch of eval cases using the optimized grader function.
+    # async def aevaluate_batch(
+    #     self,
+    #     grader: Grader,
+    #     eval_cases: List[EvalCase],
+    #     *args,
+    #     **kwargs: Any,
+    # ) -> List[List[GraderScore]]:
+    #     """Evaluate a batch of eval cases using the optimized grader function.
 
-        Args:
-            grader: Grader instance
-            eval_cases: List of EvalCase instances
-            *args: Additional positional arguments
-            **kwargs: Additional keyword arguments
-        Returns:
-            List of lists of optimized grader results
-        """
-        coroutines = [
-            self.aevaluate(grader, eval_case, *args, **kwargs)
-            for eval_case in eval_cases
-        ]
-        return await asyncio.gather(*coroutines)
+    #     Args:
+    #         grader: Grader instance
+    #         eval_cases: List of EvalCase instances
+    #         *args: Additional positional arguments
+    #         **kwargs: Additional keyword arguments
+    #     Returns:
+    #         List of lists of optimized grader results
+    #     """
+    #     coroutines = [
+    #         self.aevaluate(grader, eval_case, *args, **kwargs)
+    #         for eval_case in eval_cases
+    #     ]
+    #     return await asyncio.gather(*coroutines)

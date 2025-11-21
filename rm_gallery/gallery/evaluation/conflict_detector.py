@@ -233,6 +233,6 @@ async def evaluate_async(
     runner = PairwiseComparisonRunner(model=model, metrics=metric_objects)
 
     # Run evaluation
-    report = await runner.aevaluate_batch(eval_cases)
+    report = await runner.run(eval_cases)
 
     return report.model_dump()

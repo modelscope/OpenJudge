@@ -164,7 +164,7 @@ class OpenQAGrader(BaseHelpfulnessGrader):
             **kwargs,
         )
 
-    async def aevaluate(
+    async def _aevaluate(
         self,
         query: str,
         answer: str | List[str],
@@ -213,4 +213,4 @@ class OpenQAGrader(BaseHelpfulnessGrader):
             0.9 The response comprehensively addresses multiple aspects of climate change
                 mpacts on agriculture.
         """
-        return await super().aevaluate(query=query, answer=answer, **kwargs)
+        return await super()._aevaluate(query=query, answer=answer, **kwargs)

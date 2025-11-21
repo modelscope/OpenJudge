@@ -152,7 +152,7 @@ class CodeGrader(BaseHelpfulnessGrader):
             **kwargs,
         )
 
-    async def aevaluate(
+    async def _aevaluate(
         self,
         query: str,
         answer: str | List[str],
@@ -201,4 +201,4 @@ class CodeGrader(BaseHelpfulnessGrader):
             >>> print(result.score, result.reason)
             0.9 The code correctly implements factorial calculation using recursion.
         """
-        return await super().aevaluate(query=query, answer=answer, **kwargs)
+        return await super()._aevaluate(query=query, answer=answer, **kwargs)

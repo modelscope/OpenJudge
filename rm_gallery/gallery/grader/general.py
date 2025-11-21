@@ -50,7 +50,7 @@ class AccuracyGrader(Grader):
             description="Calculate accuracy between generated content and reference answer",
         )
 
-    async def aevaluate(self, generated: str, reference: str) -> GraderScore:
+    async def _aevaluate(self, generated: str, reference: str) -> GraderScore:
         """
         Calculate accuracy between generated content and reference answer.
 
@@ -139,7 +139,7 @@ class F1ScoreGrader(Grader):
             chinese_only=chinese_only,
         )
 
-    async def aevaluate(self, generated: str, reference: str) -> GraderScore:
+    async def _aevaluate(self, generated: str, reference: str) -> GraderScore:
         """
         Calculate F1 score between generated content and reference answer at word level.
 
@@ -252,7 +252,7 @@ class RougeLGrader(Grader):
             description="Calculate ROUGE-L score between generated content and reference answer",
         )
 
-    async def aevaluate(self, generated: str, reference: str) -> GraderScore:
+    async def _aevaluate(self, generated: str, reference: str) -> GraderScore:
         """
         Calculate ROUGE-L score between generated content and reference answer.
 
@@ -391,7 +391,7 @@ class NumberAccuracyGrader(Grader):
         numbers = re.findall(number_pattern, text)
         return [float(n) for n in numbers if n]
 
-    async def aevaluate(self, generated: str, reference: str) -> GraderScore:
+    async def _aevaluate(self, generated: str, reference: str) -> GraderScore:
         """
         Calculate number accuracy by comparing extracted numbers from both texts.
 

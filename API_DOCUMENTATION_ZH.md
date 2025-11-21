@@ -692,7 +692,7 @@ auto_grader = AutoGrader(
 )
 
 # 自动生成评估器
-generated_grader = await auto_grader.aevaluate_batch(eval_cases)
+generated_grader = await auto_grader.run(eval_cases)
 
 # 使用自动生成的评估器进行评估
 evaluation_results = await generated_grader.evaluate_eval_case(eval_case=test_eval_case)  # 测试数据
@@ -744,7 +744,7 @@ async def main():
 
     # 2. 使用AutoGrader生成完整评估器
     auto_grader = AutoGrader(model=model)
-    auto_generated_grader = await auto_grader.aevaluate_batch(train_data)
+    auto_generated_grader = await auto_grader.run(train_data)
 
     # 3. 使用自动生成的评估器评估测试数据
     results = await auto_generated_grader.evaluate_eval_case(eval_case=test_data)

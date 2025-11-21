@@ -149,7 +149,7 @@ class ReasoningGrader(BaseHelpfulnessGrader):
             **kwargs,
         )
 
-    async def aevaluate(
+    async def _aevaluate(
         self,
         query: str,
         answer: str | List[str],
@@ -200,4 +200,4 @@ class ReasoningGrader(BaseHelpfulnessGrader):
             0.9 The response demonstrates logical reasoning by correctly identifying the
                 undetermined nature of the statement.
         """
-        return await super().aevaluate(query=query, answer=answer, **kwargs)
+        return await super()._aevaluate(query=query, answer=answer, **kwargs)

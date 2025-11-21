@@ -160,7 +160,7 @@ class RolePlayingGrader(BaseHelpfulnessGrader):
             **kwargs,
         )
 
-    async def aevaluate(
+    async def _aevaluate(
         self,
         query: str,
         answer: str | List[str],
@@ -211,4 +211,4 @@ class RolePlayingGrader(BaseHelpfulnessGrader):
             0.9 The response maintains character consistency and appropriately engages with the
                 scenario.
         """
-        return await super().aevaluate(query=query, answer=answer, **kwargs)
+        return await super()._aevaluate(query=query, answer=answer, **kwargs)

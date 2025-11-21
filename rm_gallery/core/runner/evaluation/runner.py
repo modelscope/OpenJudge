@@ -102,7 +102,7 @@ class EvaluationRunner(BaseRunner):
         self.metrics.append(metric)
         return self
 
-    async def aevaluate_batch(
+    async def run(
         self,
         eval_cases: List[EvalCase],
         *args: Any,

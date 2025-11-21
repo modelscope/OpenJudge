@@ -34,7 +34,7 @@ class MathVerifyGrader(Grader):
         )
         self.timeout_score = timeout_score
 
-    async def aevaluate(self, generated: str, reference: str) -> GraderScore:
+    async def _aevaluate(self, generated: str, reference: str) -> GraderScore:
         """
         Verify mathematical expressions for accuracy by parsing and comparing the generated answer
         against a reference answer using the math_verify library.

@@ -129,7 +129,7 @@ class Cramo(LLMGrader):
             model=model,
         )
 
-    async def aevaluate(
+    async def _aevaluate(
         self,
         instruction: str,
         completion: str,
@@ -171,7 +171,7 @@ class Cramo(LLMGrader):
         ).metadata.get("rubrics", [])
 
         # Evaluate the completion using the generated rubrics
-        result = await super().aevaluate(
+        result = await super()._aevaluate(
             instruction=instruction,
             completion=completion,
             rubrics="\n".join(rubrics),

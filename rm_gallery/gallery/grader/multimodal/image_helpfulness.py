@@ -144,7 +144,7 @@ class ImageHelpfulnessGrader(LLMGrader):
         >>>
         >>> api = OpenAIChatModel(
         ...     api_key="your-key",  # pragma: allowlist secret
-        ...     model_name="gpt-4o",
+        ...     model="gpt-4o",
         ...     generate_kwargs={"temperature": 0.1},
         ... )
         >>> grader = ImageHelpfulnessGrader(model=api, threshold=0.7)
@@ -260,7 +260,7 @@ class ImageHelpfulnessGrader(LLMGrader):
 
         return final_score, details
 
-    async def aevaluate(
+    async def _aevaluate(
         self,
         actual_output: List[Union[str, MLLMImage]],
         **kwargs: Any,

@@ -7,7 +7,7 @@ from typing import Any, Callable, Dict, List, Tuple, TypedDict
 
 from loguru import logger
 
-from rm_gallery.core.grader.base import Grader
+from rm_gallery.core.grader.base import Grader, aevaluate_with_case
 from rm_gallery.core.runner.base import BaseRunner
 from rm_gallery.core.runner.grading.strategy.base import GraderStrategy
 from rm_gallery.core.schema.data import EvalCase, EvalCaseParser
@@ -34,11 +34,7 @@ class GradingResult(TypedDict):
 
 def parse_grading_config(
     config: GradingConfig,
-) -> Tuple[
-    Grader | Callable | None,
-    EvalCaseParser | Callable | None,
-    GraderStrategy | None,
-]:
+) -> Tuple[Grader, EvalCaseParser | Callable | None, GraderStrategy | None]:
     """Parse config into grader and parser."""
     grader_config = config.get("grader")  # type: ignore
     grader = None
@@ -72,7 +68,7 @@ class GradingRunner(BaseRunner):
         concurrency_manager = ConcurrencyManager()
         concurrency_manager.set_max_concurrent(max_concurrent)
 
-    async def aevaluate(self, eval_case: EvalCase) -> GradingResult:
+    async def _run(self, eval_case: EvalCase) -> GradingResult:
         """Run experiment for a single sample.
 
         Args:
@@ -89,12 +85,14 @@ class GradingRunner(BaseRunner):
             grader, parser, strategy = parse_grading_config(config)
             if grader is not None:
                 if strategy is not None:
-                    coroutine = strategy.aevaluate_batch(grader, [eval_case])
+                    coroutine = strategy.aevaluate(grader, eval_case, parser=parser)
                 else:
-                    coroutine = grader.aevaluate_batch(
+                    coroutine = aevaluate_with_case(
+                        grader,
+                        eval_case,
                         parser=parser,
-                        eval_cases=[eval_case],
                     )
+
                 coroutines.append(coroutine)
                 keys.append(key)
 
@@ -102,14 +100,14 @@ class GradingRunner(BaseRunner):
 
         total_score = 0.0
         for key, score in zip(keys, scores):
-            results[key] = score[0]
+            results[key] = score
             config = self.grading_configs[key]
             weight = config.get("weight", 1.0) if "weight" in config else 1.0
             total_score += score.score * weight
 
         return {"total_score": total_score, "dimensions": results}
 
-    async def aevaluate_batch(
+    async def run(
         self,
         eval_cases: List[EvalCase],
         *args: Any,
@@ -128,7 +126,7 @@ class GradingRunner(BaseRunner):
 
         # Create async tasks for each eval case
         for eval_case in eval_cases:
-            coroutines.append(self.aevaluate(eval_case))
+            coroutines.append(self._run(eval_case))
 
         # Execute all tasks in parallel
         results = await asyncio.gather(*coroutines)

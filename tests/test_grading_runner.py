@@ -117,5 +117,5 @@ async def test_grading_runner_execution():
         },
     )
     # Run using async method
-    result = await runner.aevaluate_batch(eval_cases=eval_cases)
+    result = await runner.run(eval_cases=eval_cases)
     assert result is not None

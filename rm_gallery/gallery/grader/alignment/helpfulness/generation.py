@@ -1,10 +1,18 @@
 # -*- coding: utf-8 -*-
+"""GenerationGrader
+
+Creates high-quality, instruction-following content across diverse formats and topics.
+"""
 from typing import Any, List
 
 from rm_gallery.core.grader.base import GraderMode, GraderRank, GraderScore
 from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import Template
+from rm_gallery.gallery.grader.alignment.base import (
+    ALIGNMENT_LISTWISE_SYSTEM_PROMPT,
+    ALIGNMENT_POINTWISE_SYSTEM_PROMPT,
+)
 from rm_gallery.gallery.grader.alignment.helpfulness import BaseHelpfulnessGrader
 
 RUBRICS = (
@@ -23,7 +31,7 @@ RUBRICS = (
 )
 
 # Generation Score System Prompt
-GENERATION_POINTWISE_SYSTEM_PROMPT = "You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words."
+GENERATION_POINTWISE_SYSTEM_PROMPT = ALIGNMENT_POINTWISE_SYSTEM_PROMPT
 
 # Generation Score User Prompt
 GENERATION_POINTWISE_USER_PROMPT = """# Task Description
@@ -50,7 +58,7 @@ Be as objective as possible.
 """
 
 # Generation Rank System Prompt
-GENERATION_LISTWISE_SYSTEM_PROMPT = "You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words."
+GENERATION_LISTWISE_SYSTEM_PROMPT = ALIGNMENT_LISTWISE_SYSTEM_PROMPT
 
 # Generation Rank User Prompt
 GENERATION_LISTWISE_USER_PROMPT = """# Task Description
@@ -105,7 +113,10 @@ GENERATION_LISTWISE_TEMPLATE = Template(
 
 
 class GenerationGrader(BaseHelpfulnessGrader):
-    """Generation: Creates high-quality, instruction-following content across diverse formats and topics."""
+    """GenerationGrader
+
+    Creates high-quality, instruction-following content across diverse formats and topics.
+    """
 
     _point_template = GENERATION_POINTWISE_TEMPLATE
     _list_template = GENERATION_LISTWISE_TEMPLATE
@@ -136,7 +147,8 @@ class GenerationGrader(BaseHelpfulnessGrader):
             model=model,
             template=template,
             rubrics=rubrics,
-            description="Creates high-quality, instruction-following content across diverse formats and topics.",
+            description="Creates high-quality, instruction-following content across diverse "
+            "formats and topics.",
             **kwargs,
         )
 
@@ -179,7 +191,7 @@ class GenerationGrader(BaseHelpfulnessGrader):
             >>> import asyncio
             >>> from rm_gallery.core.model.openai_llm import OpenAIChatModel
             >>> from rm_gallery.core.grader.base import GraderMode
-            >>> model = OpenAIChatModel(model_name="gpt-3.5-turbo")
+            >>> model = OpenAIChatModel(model="gpt-3.5-turbo")
             >>> grader = GenerationGrader(mode=GraderMode.POINTWISE, model=model)
             >>> result = asyncio.run(grader.aevaluate(
             ...     query="Write a short story about a robot learning to paint",

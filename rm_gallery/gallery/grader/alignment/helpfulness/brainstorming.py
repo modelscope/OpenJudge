@@ -1,10 +1,15 @@
 # -*- coding: utf-8 -*-
+"""Brainstorming: Generates creative ideas and suggestions to address user challenges."""
 from typing import Any, List
 
 from rm_gallery.core.grader.base import GraderMode, GraderRank, GraderScore
 from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import Template
+from rm_gallery.gallery.grader.alignment.base import (
+    ALIGNMENT_LISTWISE_SYSTEM_PROMPT,
+    ALIGNMENT_POINTWISE_SYSTEM_PROMPT,
+)
 from rm_gallery.gallery.grader.alignment.helpfulness import BaseHelpfulnessGrader
 
 RUBRICS = (
@@ -24,7 +29,7 @@ RUBRICS = (
 
 
 # Brainstorming Score System Prompt
-BRAINSTORMING_POINTWISE_SYSTEM_PROMPT = "You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words."
+BRAINSTORMING_POINTWISE_SYSTEM_PROMPT = ALIGNMENT_POINTWISE_SYSTEM_PROMPT
 
 # Brainstorming Score User Prompt
 BRAINSTORMING_POINTWISE_USER_PROMPT = """# Task Description
@@ -53,7 +58,7 @@ Be as objective as possible.
 """
 
 # Brainstorming Rank System Prompt
-BRAINSTORMING_LISTWISE_SYSTEM_PROMPT = "You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words."
+BRAINSTORMING_LISTWISE_SYSTEM_PROMPT = ALIGNMENT_LISTWISE_SYSTEM_PROMPT
 
 # Brainstorming Rank User Prompt
 BRAINSTORMING_LISTWISE_USER_PROMPT = """# Task Description
@@ -174,7 +179,8 @@ class BrainstormingGrader(BaseHelpfulnessGrader):
             >>> grader = BrainstormingGrader()
             >>> result = await grader.aevaluate(
             ...     query="Give me ideas for a birthday gift for my 10-year-old",
-            ...     answer="Here are some ideas: 1) Art supplies kit, 2) Science experiment set, 3) Board game, 4) Book series"
+            ...     answer="Here are some ideas: 1) Art supplies kit, 2) Science experiment set,"
+            ...            " 3) Board game, 4) Book series"
             ... )
         """
         return await super().aevaluate(query=query, answer=answer, **kwargs)

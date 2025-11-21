@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """The chat model base class."""
-
 from abc import ABC, abstractmethod
 from typing import Any, AsyncGenerator
 
@@ -12,7 +11,7 @@ TOOL_CHOICE_MODES = ["auto", "none", "any", "required"]
 class ChatModelBase(ABC):
     """Base class for chat models."""
 
-    model_name: str
+    model: str
     """The model name"""
 
     stream: bool
@@ -20,18 +19,18 @@ class ChatModelBase(ABC):
 
     def __init__(
         self,
-        model_name: str,
+        model: str,
         stream: bool,
     ) -> None:
         """Initialize the chat model base class.
 
         Args:
-            model_name (`str`):
+            model (`str`):
                 The name of the model
             stream (`bool`):
                 Whether the model output is streaming or not
         """
-        self.model_name = model_name
+        self.model = model
         self.stream = stream
 
     @abstractmethod
@@ -40,7 +39,7 @@ class ChatModelBase(ABC):
         *args: Any,
         **kwargs: Any,
     ) -> ChatResponse | AsyncGenerator[ChatResponse, None]:
-        ...
+        """call achat."""
 
     def _validate_tool_choice(
         self,

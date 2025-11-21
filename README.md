@@ -205,7 +205,7 @@ chat_template = Chat(
         )
     ],
     model={
-        "model_name": "gpt-3.5-turbo",
+        "model": "gpt-3.5-turbo",
         "api_key": "your-api-key"
     }
 )

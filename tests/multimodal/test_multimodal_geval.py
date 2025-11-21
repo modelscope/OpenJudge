@@ -37,10 +37,10 @@ async def test_geval_basic():
 
     # Create model
     model = OpenAIChatModel(
-        model_name="qwen-vl-max",
+        model="qwen-vl-max",
         api_key=api_key,
         base_url=base_url,
-        generate_kwargs={"temperature": 0.1},
+        temperature=0.1,
     )
 
     # Create grader with auto-generated steps
@@ -89,10 +89,10 @@ async def test_geval_with_explicit_steps():
     base_url = os.getenv("OPENAI_BASE_URL")
 
     model = OpenAIChatModel(
-        model_name="qwen-vl-max",
+        model="qwen-vl-max",
         api_key=api_key,
         base_url=base_url,
-        generate_kwargs={"temperature": 0.1},
+        temperature=0.1,
     )
 
     # Create grader with explicit steps
@@ -153,10 +153,10 @@ async def test_geval_with_rubric():
     base_url = os.getenv("OPENAI_BASE_URL")
 
     model = OpenAIChatModel(
-        model_name="qwen-vl-max",
+        model="qwen-vl-max",
         api_key=api_key,
         base_url=base_url,
-        generate_kwargs={"temperature": 0.1},
+        temperature=0.1,
     )
 
     # Create grader with rubric
@@ -222,7 +222,7 @@ async def test_geval_with_local_image():
     base_url = os.getenv("OPENAI_BASE_URL")
 
     model = OpenAIChatModel(
-        model_name="qwen-vl-max",
+        model="qwen-vl-max",
         api_key=api_key,
         base_url=base_url,
     )
@@ -282,7 +282,7 @@ async def test_geval_multiple_images():
     base_url = os.getenv("OPENAI_BASE_URL")
 
     model = OpenAIChatModel(
-        model_name="qwen-vl-max",
+        model="qwen-vl-max",
         api_key=api_key,
         base_url=base_url,
     )
@@ -339,7 +339,7 @@ async def test_geval_error_handling():
     base_url = os.getenv("OPENAI_BASE_URL")
 
     model = OpenAIChatModel(
-        model_name="qwen-vl-max",
+        model="qwen-vl-max",
         api_key=api_key,
         base_url=base_url,
     )

@@ -32,9 +32,12 @@ Quick Start:
     >>> # Use a multimodal grader
     >>> from rm_gallery.gallery.grader.multimodal import ImageCoherenceGrader
     >>> from rm_gallery.core.model.openai_llm import OpenAIChatModel
-    >>> api = OpenAIChatModel(api_key="...", model_name="gpt-4o", generate_kwargs={"temperature": 0.1})
+    >>> api = OpenAIChatModel(api_key="...", model="gpt-4o", temperature=0.1)
     >>> grader = ImageCoherenceGrader(model=api)
 """
+from typing import Type
+
+from rm_gallery.core.grader.base import Grader
 
 # Format Graders
 from rm_gallery.gallery.grader.format.json_match import (
@@ -65,7 +68,7 @@ from rm_gallery.gallery.grader.text.string_match import StringMatchGrader
 
 
 # Expose multimodal graders for convenience
-def __getattr__(name):
+def __getattr__(name: str) -> Type[Grader]:
     """Lazy loading for multimodal grader classes"""
     multimodal_graders = (
         "ImageCoherenceGrader",
@@ -102,6 +105,7 @@ def __getattr__(name):
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
+# pylint: disable=undefined-all-variable
 __all__ = [
     # Text Graders
     "StringMatchGrader",

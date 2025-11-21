@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
+"""util functions."""
 import json
 from typing import Any, Dict, Type
 
 from json_repair import repair_json
+from loguru import logger
 from pydantic import BaseModel
 
 
@@ -111,3 +113,50 @@ def _create_tool_from_base_model(
         },
     }
     return tool_definition
+
+
+def trim_and_load_json(response: str, metric: Any = None) -> Dict[str, Any]:
+    """
+    Extract and parse JSON from LLM response
+
+    Handles common cases where LLM wraps JSON in markdown code blocks or text.
+
+    Args:
+        response: LLM response string
+        metric: Optional metric instance for error logging
+
+    Returns:
+        Parsed JSON dictionary
+
+    Raises:
+        ValueError: If JSON cannot be parsed
+
+    Example:
+        >>> response = '''```json
+        ... {"score": 8, "reasoning": "Good"}
+        ... ```'''
+        >>> data = trim_and_load_json(response)
+        >>> data["score"]  # 8
+    """
+    # Remove markdown code blocks
+    response = response.strip()
+    if response.startswith("```json"):
+        response = response[7:]
+    elif response.startswith("```"):
+        response = response[3:]
+
+    if response.endswith("```"):
+        response = response[:-3]
+
+    response = response.strip()
+
+    # Try to parse JSON
+    try:
+        return json.loads(response)
+    except json.JSONDecodeError as e:
+        error_msg = (
+            f"Failed to parse JSON from response: {e}\nResponse: {response[:200]}"
+        )
+        if metric:
+            logger.error(f"{metric.name}: {error_msg}")
+        raise ValueError(error_msg) from e

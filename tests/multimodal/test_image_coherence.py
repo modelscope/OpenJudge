@@ -18,10 +18,10 @@ async def test_with_base64_image():
 
     # Initialize model
     model = OpenAIChatModel(
-        model_name="qwen-vl-max",
+        model="qwen-vl-max",
         api_key=os.getenv("OPENAI_API_KEY"),
         base_url=os.getenv("OPENAI_BASE_URL"),
-        generate_kwargs={"temperature": 0.1},
+        temperature=0.1,
     )
 
     # Create grader
@@ -61,7 +61,7 @@ async def test_with_public_image():
     """Test with a stable public image URL"""
 
     model = OpenAIChatModel(
-        model_name="qwen-vl-max",
+        model="qwen-vl-max",
         api_key=os.getenv("OPENAI_API_KEY"),
         base_url=os.getenv("OPENAI_BASE_URL"),
     )

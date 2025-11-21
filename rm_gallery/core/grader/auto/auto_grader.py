@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+"""AutoGrader with flexible rubric generation methods and prompt templates."""
+
 from typing import Any, Callable, List, Optional
 
 from loguru import logger
@@ -69,7 +71,7 @@ class AutoGrader(BaseRunner):
             f"grader_mode={self.config.method_config.grader_mode.value}",
         )
 
-    def _create_rubric_generator(self):
+    def _create_rubric_generator(self) -> AutoRubrics:
         """Create rubric generator based on method configuration."""
         if self.config.method == "auto_rubrics":
             return AutoRubrics(
@@ -97,7 +99,7 @@ class AutoGrader(BaseRunner):
             LLMGrader instance with generated rubrics
         """
         # Generate rubrics using the selected method
-        rubrics_result = await self.rubric_generator(eval_cases)
+        rubrics_result = await self.rubric_generator.aevaluate_batch(eval_cases)
 
         # Extract the final rubrics from the result
         if isinstance(rubrics_result, dict) and "final_rubrics" in rubrics_result:
@@ -164,7 +166,7 @@ class AutoGrader(BaseRunner):
 
     @classmethod
     def create(
-        cls,
+        cls: type["AutoGrader"],
         model: OpenAIChatModel,
         parser: EvalCaseParser | Callable | None = None,
         # Method configuration
@@ -175,7 +177,7 @@ class AutoGrader(BaseRunner):
         # Custom prompts (optional)
         custom_evaluation_prompt: Optional[str] = None,
         # Method-specific parameters (when method_config is None)
-        **method_kwargs,
+        **method_kwargs: Any,
     ) -> "AutoGrader":
         """Create AutoGrader instance with flexible configuration.
 
@@ -185,7 +187,8 @@ class AutoGrader(BaseRunner):
             method: Method to generate rubrics ('auto_rubrics' or 'checklist')
             method_config: Configuration object for the selected method
             grader_name: Name for the generated grader
-            custom_evaluation_prompt: Custom evaluation prompt (overrides template selection for evaluation)
+            custom_evaluation_prompt: Custom evaluation prompt (overrides template selection
+                for evaluation)
             **method_kwargs: Additional parameters for the method (when method_config is None)
 
         Returns:

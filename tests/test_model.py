@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
+"""test."""
 import asyncio
 
 from rm_gallery.core.model.openai_llm import OpenAIChatModel
 
 if __name__ == "__main__":
     model = OpenAIChatModel(
-        model_name="qwen-plus",
+        model="qwen-plus",
         stream=False,
     )
 

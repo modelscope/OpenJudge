@@ -1,10 +1,15 @@
 # -*- coding: utf-8 -*-
+"""ReasoningGrader."""
 from typing import Any, List
 
 from rm_gallery.core.grader.base import GraderMode, GraderRank, GraderScore
 from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import Template
+from rm_gallery.gallery.grader.alignment.base import (
+    ALIGNMENT_LISTWISE_SYSTEM_PROMPT,
+    ALIGNMENT_POINTWISE_SYSTEM_PROMPT,
+)
 from rm_gallery.gallery.grader.alignment.helpfulness import BaseHelpfulnessGrader
 
 RUBRICS = (
@@ -24,7 +29,7 @@ RUBRICS = (
 
 
 # Reasoning Score System Prompt
-REASONING_POINTWISE_SYSTEM_PROMPT = "You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words."
+REASONING_POINTWISE_SYSTEM_PROMPT = ALIGNMENT_POINTWISE_SYSTEM_PROMPT
 
 # Reasoning Score User Prompt
 REASONING_POINTWISE_USER_PROMPT = """# Task Description
@@ -51,7 +56,7 @@ Be as objective as possible.
 """
 
 # Reasoning Rank System Prompt
-REASONING_LISTWISE_SYSTEM_PROMPT = "You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words."
+REASONING_LISTWISE_SYSTEM_PROMPT = ALIGNMENT_LISTWISE_SYSTEM_PROMPT
 
 # Reasoning Rank User Prompt
 REASONING_LISTWISE_USER_PROMPT = """# Task Description
@@ -105,7 +110,10 @@ REASONING_LISTWISE_TEMPLATE = Template(
 
 
 class ReasoningGrader(BaseHelpfulnessGrader):
-    """Reasoning: Applies logical thinking and systematic approaches to solve problems and answer questions."""
+    """ReasoningGrader
+
+    Applies logical thinking and systematic approaches to solve problems and answer questions.
+    """
 
     _point_template = REASONING_POINTWISE_TEMPLATE
     _list_template = REASONING_LISTWISE_TEMPLATE
@@ -136,7 +144,8 @@ class ReasoningGrader(BaseHelpfulnessGrader):
             model=model,
             template=template,
             rubrics=rubrics,
-            description="Applies logical thinking and systematic approaches to solve problems and answer questions.",
+            description="Applies logical thinking and systematic approaches to solve problems "
+            "and answer questions.",
             **kwargs,
         )
 
@@ -180,13 +189,15 @@ class ReasoningGrader(BaseHelpfulnessGrader):
             >>> import asyncio
             >>> from rm_gallery.core.model.openai_llm import OpenAIChatModel
             >>> from rm_gallery.core.grader.base import GraderMode
-            >>> model = OpenAIChatModel(model_name="gpt-3.5-turbo")
+            >>> model = OpenAIChatModel(model="gpt-3.5-turbo")
             >>> grader = ReasoningGrader(mode=GraderMode.POINTWISE, model=model)
             >>> result = asyncio.run(grader.aevaluate(
-            ...     query="If all roses are flowers and some flowers are red, is it true that some roses are red?",
+            ...     query="If all roses are flowers and some flowers are red, is it true that "
+            ...           "some roses are red?",
             ...     answer="This is undetermined because we don't know which flowers are red."
             ... ))
             >>> print(result.score, result.reason)
-            0.9 The response demonstrates logical reasoning by correctly identifying the undetermined nature of the statement.
+            0.9 The response demonstrates logical reasoning by correctly identifying the
+                undetermined nature of the statement.
         """
         return await super().aevaluate(query=query, answer=answer, **kwargs)

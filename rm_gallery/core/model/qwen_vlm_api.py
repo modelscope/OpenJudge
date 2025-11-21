@@ -24,7 +24,7 @@ class QwenVLMConfig(BaseModel):
 
     Attributes:
         api_key: DashScope API key
-        model_name: Model name (qwen-vl-plus, qwen-vl-max, etc.)
+        model: Model name (qwen-vl-plus, qwen-vl-max, etc.)
         temperature: Sampling temperature
         top_p: Nucleus sampling parameter
         max_tokens: Maximum tokens to generate
@@ -33,7 +33,7 @@ class QwenVLMConfig(BaseModel):
     """
 
     api_key: str = Field(..., description="DashScope API key")
-    model_name: str = Field(
+    model: str = Field(
         default="qwen-vl-plus",
         description="Qwen VL model name",
     )
@@ -75,7 +75,7 @@ class QwenVLAPI(ChatModelBase):
         >>> # Initialize
         >>> api = QwenVLAPI(
         ...     api_key=os.getenv("DASHSCOPE_API_KEY"),
-        ...     model_name="qwen-vl-plus"
+        ...     model="qwen-vl-plus"
         ... )
         >>>
         >>> # Generate response
@@ -88,7 +88,7 @@ class QwenVLAPI(ChatModelBase):
     def __init__(
         self,
         api_key: Optional[str] = None,
-        model_name: str = "qwen-vl-plus",
+        model: str = "qwen-vl-plus",
         temperature: float = 0.1,
         top_p: float = 0.9,
         max_tokens: int = 2000,
@@ -100,14 +100,14 @@ class QwenVLAPI(ChatModelBase):
 
         Args:
             api_key: DashScope API key (defaults to DASHSCOPE_API_KEY env var)
-            model_name: Model name
+            model: Model name
             temperature: Sampling temperature
             top_p: Nucleus sampling
             max_tokens: Maximum tokens to generate
             enable_cache: Enable response caching
             cache_ttl: Cache TTL in seconds
         """
-        super().__init__(model_name=model_name, stream=False)
+        super().__init__(model=model, stream=False)
 
         # Get API key from parameter or environment
         self.api_key = api_key or os.getenv("DASHSCOPE_API_KEY")
@@ -131,7 +131,7 @@ class QwenVLAPI(ChatModelBase):
 
     def get_model_name(self) -> str:
         """Get the model name"""
-        return self.model_name
+        return self.model
 
     def _format_messages(
         self,
@@ -212,7 +212,7 @@ class QwenVLAPI(ChatModelBase):
         try:
             response = MultiModalConversation.call(
                 api_key=self.api_key,
-                model=self.model_name,
+                model=self.model,
                 messages=messages,
                 temperature=self.temperature,
                 top_p=self.top_p,
@@ -237,7 +237,7 @@ class QwenVLAPI(ChatModelBase):
             # Parse structured output if schema or response_format provided
             output_schema = response_format or schema
             if output_schema:
-                from rm_gallery.core.metrics.multimodal.utils import trim_and_load_json
+                from rm_gallery.core.model.utils import trim_and_load_json
 
                 data = trim_and_load_json(response_text)
                 try:
@@ -281,7 +281,7 @@ class QwenVLAPI(ChatModelBase):
         # Run in executor to avoid blocking
         loop = asyncio.get_event_loop()
 
-        def _sync_call():
+        def _sync_call() -> Union[str, BaseModel, Dict[str, Any]]:
             return self.generate(
                 text,
                 images,
@@ -312,7 +312,7 @@ class QwenVLAPI(ChatModelBase):
         # Return ChatResponse
         return ChatResponse(
             content=response_text,
-            model_name=self.model_name,
+            model=self.model,
         )
 
     def _estimate_cost(self, response: Any) -> float:
@@ -328,8 +328,8 @@ class QwenVLAPI(ChatModelBase):
         # Rough estimates for Qwen VL models (as of 2024)
         # qwen-vl-plus: ~$0.001 per request
         # qwen-vl-max: ~$0.002 per request
-
-        if "max" in self.model_name.lower():
+        del response
+        if "max" in self.model.lower():
             return 0.002
         else:
             return 0.001
@@ -427,5 +427,5 @@ class QwenVLAPI(ChatModelBase):
                 if self._total_requests > 0
                 else 0.0
             ),
-            "model": self.model_name,
+            "model": self.model,
         }

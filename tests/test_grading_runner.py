@@ -5,8 +5,6 @@ Test Grading Runner
 Tests for the GradingRunner class functionality.
 """
 
-import asyncio
-
 import pytest
 
 from rm_gallery.core.model.openai_llm import OpenAIChatModel
@@ -53,7 +51,7 @@ def test_grading_runner_example():
         },
     ]
     eval_cases = validate_eval_cases(eval_cases, eval_case_schema)
-    model = OpenAIChatModel(model_name="qwen-plus")
+    model = OpenAIChatModel(model="qwen-plus")
 
     runner = GradingRunner(
         grading_configs={
@@ -108,7 +106,7 @@ async def test_grading_runner_execution():
         },
     ]
     eval_cases = validate_eval_cases(eval_cases, eval_case_schema)
-    model = OpenAIChatModel(model_name="qwen-plus")
+    model = OpenAIChatModel(model="qwen-plus")
 
     runner = GradingRunner(
         grading_configs={

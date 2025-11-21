@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # https://arxiv.org/pdf/2410.21545
-
+"""Cramo grader for evaluation of AI assistant responses."""
 
 from typing import Any
 
@@ -151,7 +151,7 @@ class Cramo(LLMGrader):
 
         Example:
             >>> from rm_gallery.core.model.dashscope_llm import DashScopeLLM
-            >>> model_config = {"model_name": "qwen-plus"}
+            >>> model_config = {"model": "qwen-plus"}
             >>> grader = Cramo(name="cramo_eval", model=model_config)
             >>> result = await grader.aevaluate(
             ...     instruction="Explain the process of photosynthesis",

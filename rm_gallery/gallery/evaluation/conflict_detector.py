@@ -57,7 +57,7 @@ Which is better? Reply with [[BEST: A]], [[BEST: B]], or [[TIE]].
 """
 
             response = await self.model.achat(
-                messages=[{"role": "user", "content": prompt}]
+                messages=[{"role": "user", "content": prompt}],
             )
 
             # Extract text from ChatResponse
@@ -165,7 +165,7 @@ Which is better? Reply with [[BEST: A]], [[BEST: B]], or [[TIE]].
         results = await asyncio.gather(*tasks)
 
         return {
-            "model": self.model.model_name,
+            "model": self.model.model,
             "total_samples": len(eval_cases),
             "results": [r.model_dump() for r in results],
         }
@@ -233,6 +233,6 @@ async def evaluate_async(
     runner = PairwiseComparisonRunner(model=model, metrics=metric_objects)
 
     # Run evaluation
-    report = await runner(eval_cases)
+    report = await runner.aevaluate_batch(eval_cases)
 
     return report.model_dump()

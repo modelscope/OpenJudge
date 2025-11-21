@@ -34,7 +34,7 @@ if TYPE_CHECKING:
 else:
     GenerationResponse = "dashscope.api_entities.dashscope_response.GenerationResponse"
     MultiModalConversationResponse = (
-        "dashscope.api_entities.dashscope_response." "MultiModalConversationResponse"
+        "dashscope.api_entities.dashscope_response.MultiModalConversationResponse"
     )
 
 
@@ -44,17 +44,17 @@ class DashScopeChatModel(ChatModelBase):
 
     def __init__(
         self,
-        model_name: str,
+        model: str,
         api_key: str,
         stream: bool = True,
         enable_thinking: bool | None = None,
-        generate_kwargs: dict | None = None,
-        base_http_api_url: str | None = None,
+        base_url: str | None = None,
+        **kwargs: Any,
     ) -> None:
         """Initialize the DashScope chat model.
 
         Args:
-            model_name (`str`):
+            model (`str`):
                 The model names.
             api_key (`str`):
                 The dashscope API key.
@@ -65,11 +65,10 @@ class DashScopeChatModel(ChatModelBase):
                 Refer to `DashScope documentation
                 <https://help.aliyun.com/zh/model-studio/deep-thinking>`_
                 for more details.
-            generate_kwargs (`dict | None`, \
-            optional):
+            kwargs (optional):
                The extra keyword arguments used in DashScope API generation,
                e.g. `temperature`, `seed`.
-            base_http_api_url (`str | None`, optional):
+            base_url (`str | None`, optional):
                 The base URL for DashScope API requests. If not provided,
                 the default base URL from the DashScope SDK will be used.
         """
@@ -80,16 +79,16 @@ class DashScopeChatModel(ChatModelBase):
             )
             stream = True
 
-        super().__init__(model_name, stream)
+        super().__init__(model, stream)
 
         self.api_key = api_key
         self.enable_thinking = enable_thinking
-        self.generate_kwargs = generate_kwargs or {}
+        self.kwargs = kwargs or {}
 
-        if base_http_api_url is not None:
+        if base_url is not None:
             import dashscope
 
-            dashscope.base_http_api_url = base_http_api_url
+            dashscope.base_url = base_url
 
     async def achat(
         self,
@@ -148,7 +147,7 @@ class DashScopeChatModel(ChatModelBase):
 
         # For qvq and qwen-vl models, the content field cannot be `None` or
         # `[{"text": None}]`, so we need to convert it to an empty list.
-        if self.model_name.startswith("qvq") or "-vl" in self.model_name:
+        if self.model.startswith("qvq") or "-vl" in self.model:
             for msg in messages:
                 if msg["content"] is None or msg["content"] == [
                     {"text": None},
@@ -157,9 +156,9 @@ class DashScopeChatModel(ChatModelBase):
 
         kwargs = {
             "messages": messages,
-            "model": self.model_name,
+            "model": self.model,
             "stream": self.stream,
-            **self.generate_kwargs,
+            **self.kwargs,
             **kwargs,
             "result_format": "message",
             # In agentscope, the `incremental_output` must be `True` when
@@ -194,7 +193,7 @@ class DashScopeChatModel(ChatModelBase):
             )
 
         start_datetime = datetime.now()
-        if self.model_name.startswith("qvq") or "-vl" in self.model_name:
+        if self.model.startswith("qvq") or "-vl" in self.model:
             response = dashscope.MultiModalConversation.call(
                 api_key=self.api_key,
                 **kwargs,

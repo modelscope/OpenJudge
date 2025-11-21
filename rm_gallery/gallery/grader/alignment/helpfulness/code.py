@@ -1,10 +1,15 @@
 # -*- coding: utf-8 -*-
+"""Code: Generates correct, efficient, and readable code solutions to programming problems."""
 from typing import Any, List
 
 from rm_gallery.core.grader.base import GraderMode, GraderRank, GraderScore
 from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import Template
+from rm_gallery.gallery.grader.alignment.base import (
+    ALIGNMENT_LISTWISE_SYSTEM_PROMPT,
+    ALIGNMENT_POINTWISE_SYSTEM_PROMPT,
+)
 from rm_gallery.gallery.grader.alignment.helpfulness import BaseHelpfulnessGrader
 
 RUBRICS = (
@@ -29,7 +34,7 @@ RUBRICS = (
 
 
 # Code Score System Prompt
-CODE_POINTWISE_SYSTEM_PROMPT = "You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words."
+CODE_POINTWISE_SYSTEM_PROMPT = ALIGNMENT_POINTWISE_SYSTEM_PROMPT
 
 # Code Score User Prompt
 CODE_POINTWISE_USER_PROMPT = """# Task Description
@@ -56,7 +61,7 @@ Be as objective as possible.
 """
 
 # Code Rank System Prompt
-CODE_LISTWISE_SYSTEM_PROMPT = "You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words."
+CODE_LISTWISE_SYSTEM_PROMPT = ALIGNMENT_LISTWISE_SYSTEM_PROMPT
 
 # Code Rank User Prompt
 CODE_LISTWISE_USER_PROMPT = """# Task Description
@@ -142,7 +147,8 @@ class CodeGrader(BaseHelpfulnessGrader):
             model=model,
             template=template,
             rubrics=rubrics,
-            description="Generates correct, efficient, and readable code solutions to programming problems.",
+            description="Generates correct, efficient, and readable code solutions to "
+            "programming problems.",
             **kwargs,
         )
 
@@ -185,11 +191,12 @@ class CodeGrader(BaseHelpfulnessGrader):
             >>> import asyncio
             >>> from rm_gallery.core.model.openai_llm import OpenAIChatModel
             >>> from rm_gallery.core.grader.base import GraderMode
-            >>> model = OpenAIChatModel(model_name="gpt-3.5-turbo")
+            >>> model = OpenAIChatModel(model="gpt-3.5-turbo")
             >>> grader = CodeGrader(mode=GraderMode.POINTWISE, model=model)
             >>> result = asyncio.run(grader.aevaluate(
             ...     query="Write a function to calculate the factorial of a number",
-            ...     answer="def factorial(n):\\n    if n <= 1:\\n        return 1\\n    return n * factorial(n-1)"
+            ...     answer="def factorial(n):\\n    if n <= 1:\\n        return 1\\n    "
+            ...            "return n * factorial(n-1)"
             ... ))
             >>> print(result.score, result.reason)
             0.9 The code correctly implements factorial calculation using recursion.

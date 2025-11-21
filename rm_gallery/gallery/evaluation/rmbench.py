@@ -19,7 +19,6 @@ from rm_gallery.core.runner.evaluation import (
     MetricResult,
 )
 from rm_gallery.core.schema.data import EvalCase
-from rm_gallery.gallery.evaluation.conflict_detector import load_eval_cases
 
 
 class RMBenchRunner(EvaluationRunner):
@@ -77,7 +76,7 @@ Please provide your analysis and then output your verdict in the format: \
 
         # Get LLM judgment
         response = await self.model.achat(
-            messages=[{"role": "user", "content": prompt}]
+            messages=[{"role": "user", "content": prompt}],
         )
 
         # Extract text from ChatResponse
@@ -222,7 +221,7 @@ Please provide your analysis and then output your verdict in the format: \
         results = await asyncio.gather(*all_tasks)
 
         return {
-            "model": self.model.model_name,
+            "model": self.model.model,
             "total_samples": len(eval_cases),
             "results": [r.model_dump() for r in results],
         }

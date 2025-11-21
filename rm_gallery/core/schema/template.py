@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 """template."""
-from __future__ import annotations
-
 import json
 from abc import ABC
 from enum import Enum
@@ -274,7 +272,7 @@ class Chat(ABC):
 
         Examples:
             >>> template = Template(messages=[ChatMessage(role="user", content="Hello {name}")])
-            >>> chat = Chat(template=template, model={"model_name": "qwen-plus"})
+            >>> chat = Chat(template=template, model={"model": "qwen-plus"})
             >>> chat.format(name="World")
             [{'role': 'user', 'content': 'Hello World'}]
         """
@@ -311,7 +309,7 @@ class Chat(ABC):
 
         Examples:
             >>> template = Template(messages=[ChatMessage(role="user", content="Say hello")])
-            >>> chat = Chat(template=template, model={"model_name": "qwen-plus"})
+            >>> chat = Chat(template=template, model={"model": "qwen-plus"})
             >>> response = asyncio.run(chat())
             >>> isinstance(response, ChatResponse)
             True
@@ -359,7 +357,7 @@ class Chat(ABC):
         return response
 
     @classmethod
-    def load(cls, path: str) -> Chat:
+    def load(cls, path: str) -> "Chat":
         """Load a Chat instance from a JSON or YAML file.
 
         This method loads a Chat configuration from a file and creates a Chat

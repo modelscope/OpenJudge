@@ -93,7 +93,7 @@ class MetricResult(BaseModel):
 class EvaluationReport(BaseModel):
     """Complete evaluation report including results and metrics."""
 
-    model_name: str = Field(default="", description="Name of the evaluated model")
+    model: str = Field(default="", description="Name of the evaluated model")
     total_samples: int = Field(description="Total number of samples")
     valid_samples: int = Field(description="Number of valid samples")
     results: List[EvaluationResult] = Field(
@@ -152,7 +152,7 @@ class EvaluationReport(BaseModel):
             Dictionary with key statistics
         """
         return {
-            "model_name": self.model_name,
+            "model": self.model,
             "total_samples": self.total_samples,
             "valid_samples": self.valid_samples,
             "error_rate": self.error_rate,

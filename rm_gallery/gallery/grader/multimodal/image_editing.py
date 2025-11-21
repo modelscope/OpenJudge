@@ -48,7 +48,7 @@ class ImageEditingGrader(Grader):
         >>> from rm_gallery.core.model.openai_llm import OpenAIChatModel
         >>> from rm_gallery.gallery.grader.multimodal import MLLMImage
         >>>
-        >>> vlm_api = VisionModelAdapter.from_qwen(api_key="...", model_name="qwen-vl-plus")
+        >>> vlm_api = VisionModelAdapter.from_qwen(api_key="...", model="qwen-vl-plus")
         >>> grader = ImageEditingGrader(model=vlm_api, threshold=0.7)
         >>>
         >>> result = await grader.aevaluate(

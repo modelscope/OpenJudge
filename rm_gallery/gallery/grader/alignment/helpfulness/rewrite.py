@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
+"""RewriteGrader."""
 from typing import Any, List
 
 from rm_gallery.core.grader.base import GraderMode, GraderRank, GraderScore
 from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import Template
+from rm_gallery.gallery.grader.alignment.base import ALIGNMENT_POINTWISE_SYSTEM_PROMPT
 from rm_gallery.gallery.grader.alignment.helpfulness import BaseHelpfulnessGrader
 
 RUBRICS = (
@@ -28,14 +30,15 @@ REWRITE_POINTWISE_TEMPLATE = Template(
     messages=[
         ChatMessage(
             role="system",
-            content="You are a helpful assistant skilled in evaluating rewritten text quality. Please make reward judgments based on the given prompt words.",
+            content=ALIGNMENT_POINTWISE_SYSTEM_PROMPT,
         ),
         ChatMessage(
             role="user",
             content="""# Task Description
 Please act as an impartial judge and evaluate the quality of a rewritten text.
 You should critically and accurately assess the rewritten text based on the provided rubrics.
-Focus on how well the rewriting improves clarity, style, or format while preserving the original meaning.
+Focus on how well the rewriting improves clarity, style, or format while preserving the original
+meaning.
 
 # Rubrics
 {rubrics}
@@ -62,13 +65,18 @@ REWRITE_LISTWISE_TEMPLATE = Template(
     messages=[
         ChatMessage(
             role="system",
-            content="You are a helpful assistant skilled in evaluating rewritten text quality. Please make reward judgments based on the given prompt words.",
+            content=ALIGNMENT_POINTWISE_SYSTEM_PROMPT,
         ),
         ChatMessage(
             role="user",
             content="""# Task Description
-Your role is that of a professional evaluation expert. I will provide you with an original text and several rewritten versions. Your task is to select the single best rewritten version from the candidates.
-I will also provide you with a set of rubrics, listed under the heading #Rubrics. These rubrics are ordered from highest to lowest importance. You must check each rewritten version in turn to see if it violates any rubric, and provide reasons for any violations you find. These reasons should be used as references for ranking the rewritten versions.
+Your role is that of a professional evaluation expert. I will provide you with an original text \
+and several rewritten versions. Your task is to select the single best rewritten version from the \
+candidates.
+I will also provide you with a set of rubrics, listed under the heading #Rubrics. These rubrics \
+are ordered from highest to lowest importance. You must check each rewritten version in turn to \
+see if it violates any rubric, and provide reasons for any violations you find. These reasons \
+should be used as references for ranking the rewritten versions.
 You may organize your reasoning as you see fit, but keep your thought process as concise as possible.
 
 # Rubrics
@@ -94,7 +102,11 @@ You may organize your reasoning as you see fit, but keep your thought process as
 
 
 class RewriteGrader(BaseHelpfulnessGrader):
-    """Rewrite: Improves text quality by correcting errors and enhancing clarity, fluency, and style."""
+    """Rewrite
+
+    Improves text quality by correcting errors and enhancing clarity,
+    fluency, and style.
+    """
 
     _point_template = REWRITE_POINTWISE_TEMPLATE
     _list_template = REWRITE_LISTWISE_TEMPLATE
@@ -114,7 +126,8 @@ class RewriteGrader(BaseHelpfulnessGrader):
             model: The language model used for evaluation. Can be either a ChatModelBase
                    instance or a dictionary configuration. If a dict is provided, it will
                    be used to initialize an OpenAIChatModel.
-            template: The template for generating prompts. If None, a default template will be used.
+            template: The template for generating prompts. If None, a default template
+                      will be used.
             mode: The grader mode. Defaults to LISTWISE.
             rubrics: Custom rubrics for evaluation. If None, default rubrics will be used.
             **kwargs: Additional keyword arguments.
@@ -125,7 +138,8 @@ class RewriteGrader(BaseHelpfulnessGrader):
             model=model,
             template=template,
             rubrics=rubrics,
-            description="Improves text quality by correcting errors and enhancing clarity, fluency, and style.",
+            description="Improves text quality by correcting errors and enhancing clarity, "
+            "fluency, and style.",
             **kwargs,
         )
 
@@ -168,7 +182,7 @@ class RewriteGrader(BaseHelpfulnessGrader):
             >>> import asyncio
             >>> from rm_gallery.core.model.openai_llm import OpenAIChatModel
             >>> from rm_gallery.core.grader.base import GraderMode
-            >>> model = OpenAIChatModel(model_name="gpt-3.5-turbo")
+            >>> model = OpenAIChatModel(model="gpt-3.5-turbo")
             >>> grader = RewriteGrader(mode=GraderMode.POINTWISE, model=model)
             >>> result = asyncio.run(grader.aevaluate(
             ...     query="This is a bad writen sentance with alot of erors.",

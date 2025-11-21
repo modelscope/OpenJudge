@@ -18,12 +18,13 @@ from typing import List
 
 from loguru import logger
 
-from rm_gallery.core.grader.auto_rubrics import AutoRubrics
+from rm_gallery.core.grader.auto.auto_rubrics import AutoRubrics
 from rm_gallery.core.grader.base import GraderMode
 from rm_gallery.core.model.openai_llm import OpenAIChatModel
 from rm_gallery.core.schema.data import EvalCase
 
 
+# pylint: disable=line-too-long
 def create_test_samples() -> List[EvalCase]:
     """
     Create 3 test samples for three evaluation modes
@@ -121,7 +122,7 @@ async def test_single_data(mode: GraderMode, samples: List[EvalCase]):
     )
 
     model = OpenAIChatModel(
-        model_name="qwen3-32b",
+        model="qwen3-32b",
         stream=False,
     )
 
@@ -139,7 +140,7 @@ async def test_single_data(mode: GraderMode, samples: List[EvalCase]):
         max_score=1,
     )
 
-    results = await auto_rubrics(samples)
+    results = await auto_rubrics.aevaluate_batch(samples)
 
     for i, sample_result in enumerate(results["sample_results"]):
         valid = sample_result.get("rubric_valid", "False")
@@ -159,6 +160,7 @@ async def test_single_data(mode: GraderMode, samples: List[EvalCase]):
 
 
 async def main():
+    """Main function to run tests."""
     # Create test data - 3 samples for 3 modes
     samples = create_test_samples()
     # Pointwise: use sample 0

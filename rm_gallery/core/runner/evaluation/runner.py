@@ -36,7 +36,7 @@ class EvaluationRunner(BaseRunner):
                     result = await self._evaluate_single_sample(sample)
                     results.append(result)
                 return {
-                    "model": self.model.model_name,
+                    "model": self.model.model,
                     "total_samples": len(eval_cases),
                     "results": [r.model_dump() for r in results],
                 }
@@ -167,10 +167,10 @@ class EvaluationRunner(BaseRunner):
 
         # Step 4: Build report
         valid_results = [r for r in results if r.is_valid]
-        model_name = runner_output.get("model", "unknown")
+        model = runner_output.get("model", "unknown")
 
         report = EvaluationReport(
-            model_name=model_name,
+            model=model,
             total_samples=len(results),
             valid_samples=len(valid_results),
             results=results,
@@ -261,7 +261,7 @@ class EvaluationRunner(BaseRunner):
             EvaluationReport with error information
         """
         return EvaluationReport(
-            model_name="unknown",
+            model="unknown",
             total_samples=len(eval_cases),
             valid_samples=0,
             results=[],

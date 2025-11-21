@@ -5,8 +5,6 @@ Test Template Module
 Tests for the Template and Chat classes functionality.
 """
 
-import asyncio
-
 import pytest
 
 from rm_gallery.core.model.openai_llm import OpenAIChatModel
@@ -23,7 +21,7 @@ def test_template_main_example():
             ],
         },
     )
-    model = OpenAIChatModel(model_name="qwen-plus", stream=False)
+    model = OpenAIChatModel(model="qwen-plus", stream=False)
     chat = Chat(template=template, model=model)
     messages = chat.format(
         language="en",
@@ -47,7 +45,7 @@ async def test_chat_execution():
             ],
         },
     )
-    model = OpenAIChatModel(model_name="qwen-plus", stream=False)
+    model = OpenAIChatModel(model="qwen-plus", stream=False)
     chat = Chat(template=template, model=model)
     messages = chat.format(
         language="en",

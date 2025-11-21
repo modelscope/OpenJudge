@@ -1,10 +1,18 @@
 # -*- coding: utf-8 -*-
+"""Precise-IF
+
+Provides concise, targeted responses that directly address conditional queries.
+"""
 from typing import Any, List
 
 from rm_gallery.core.grader.base import GraderMode, GraderRank, GraderScore
 from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import Template
+from rm_gallery.gallery.grader.alignment.base import (
+    ALIGNMENT_LISTWISE_SYSTEM_PROMPT,
+    ALIGNMENT_POINTWISE_SYSTEM_PROMPT,
+)
 from rm_gallery.gallery.grader.alignment.helpfulness import BaseHelpfulnessGrader
 
 RUBRICS = (
@@ -27,7 +35,7 @@ RUBRICS = (
 
 
 # Precise If Score System Prompt
-PRECISE_IF_POINTWISE_SYSTEM_PROMPT = "You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words."
+PRECISE_IF_POINTWISE_SYSTEM_PROMPT = ALIGNMENT_POINTWISE_SYSTEM_PROMPT
 
 # Precise If Score User Prompt
 PRECISE_IF_POINTWISE_USER_PROMPT = """# Task Description
@@ -54,7 +62,7 @@ Be as objective as possible.
 """
 
 # Precise If Rank System Prompt
-PRECISE_IF_LISTWISE_SYSTEM_PROMPT = "You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words."
+PRECISE_IF_LISTWISE_SYSTEM_PROMPT = ALIGNMENT_LISTWISE_SYSTEM_PROMPT
 
 # Precise If Rank User Prompt
 PRECISE_IF_LISTWISE_USER_PROMPT = """# Task Description
@@ -114,7 +122,10 @@ PRECISE_IF_LISTWISE_TEMPLATE = Template(
 
 
 class PreciseIfGrader(BaseHelpfulnessGrader):
-    """Precise-IF: Provides concise, targeted responses that directly address conditional queries."""
+    """Precise-IF
+
+    Provides concise, targeted responses that directly address conditional queries.
+    """
 
     _point_template = PRECISE_IF_POINTWISE_TEMPLATE
     _list_template = PRECISE_IF_LISTWISE_TEMPLATE
@@ -145,7 +156,8 @@ class PreciseIfGrader(BaseHelpfulnessGrader):
             model=model,
             template=template,
             rubrics=rubrics,
-            description="Provides concise, targeted responses that directly address conditional queries.",
+            description="Provides concise, targeted responses that directly address "
+            "conditional queries.",
             **kwargs,
         )
 
@@ -188,13 +200,15 @@ class PreciseIfGrader(BaseHelpfulnessGrader):
             >>> import asyncio
             >>> from rm_gallery.core.model.openai_llm import OpenAIChatModel
             >>> from rm_gallery.core.grader.base import GraderMode
-            >>> model = OpenAIChatModel(model_name="gpt-3.5-turbo")
+            >>> model = OpenAIChatModel(model="gpt-3.5-turbo")
             >>> grader = PreciseIfGrader(mode=GraderMode.POINTWISE, model=model)
             >>> result = asyncio.run(grader.aevaluate(
             ...     query="If the temperature is above 30°C, what should I wear?",
-            ...     answer="If the temperature is above 30°C, wear light, breathable clothing such as shorts and a t-shirt."
+            ...     answer="If the temperature is above 30°C, wear light, breathable clothing "
+            ...            "such as shorts and a t-shirt."
             ... ))
             >>> print(result.score, result.reason)
-            1.0 The response directly addresses the conditional query with specific, appropriate suggestions.
+            1.0 The response directly addresses the conditional query with specific, appropriate
+                suggestions.
         """
         return await super().aevaluate(query=query, answer=answer, **kwargs)

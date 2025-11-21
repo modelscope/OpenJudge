@@ -10,8 +10,8 @@ import asyncio
 
 import pytest
 
-from rm_gallery.core.grader.auto_grader import AutoGrader
-from rm_gallery.core.grader.auto_rubrics import AutoRubricsConfig
+from rm_gallery.core.grader.auto.auto_grader import AutoGrader
+from rm_gallery.core.grader.auto.auto_rubrics import AutoRubricsConfig
 from rm_gallery.core.model import OpenAIChatModel
 from rm_gallery.core.schema.data import EvalCase
 
@@ -49,7 +49,7 @@ def get_unlabeled_sample() -> EvalCase:
 
 def get_test_model() -> OpenAIChatModel:
     """Get test model instance."""
-    return OpenAIChatModel(model_name="qwen3-32b", stream=False)
+    return OpenAIChatModel(model="qwen3-32b", stream=False)
 
 
 @pytest.mark.asyncio
@@ -57,7 +57,7 @@ async def test_auto_grader_with_default_config() -> None:
     """Test AutoGrader with default configuration."""
     model = get_test_model()
     training_data = [get_pointwise_sample()]
-    test_data = get_unlabeled_sample()
+    test_data = [get_unlabeled_sample()]
 
     # Create grader with default config
     auto_grader = AutoGrader.create(
@@ -86,7 +86,7 @@ async def test_auto_grader_with_custom_config() -> None:
     """Test AutoGrader with custom configuration."""
     model = get_test_model()
     training_data = [get_listwise_sample()]
-    test_data = get_unlabeled_sample()
+    test_data = [get_unlabeled_sample()]
 
     # Create grader with custom config
     custom_config = AutoRubricsConfig(
@@ -126,7 +126,7 @@ async def test_auto_grader_comparison() -> None:
     model = get_test_model()
     pointwise_data = [get_pointwise_sample()]
     listwise_data = [get_listwise_sample()]
-    test_data = get_unlabeled_sample()
+    test_data = [get_unlabeled_sample()]
 
     # Default grader
     default_grader_factory = AutoGrader.create(
@@ -153,8 +153,8 @@ async def test_auto_grader_comparison() -> None:
     )
 
     # Train both graders
-    default_grader = await default_grader_factory(pointwise_data)
-    custom_grader = await custom_grader_factory(listwise_data)
+    default_grader = await default_grader_factory.aevaluate_batch(pointwise_data)
+    custom_grader = await custom_grader_factory.aevaluate_batch(listwise_data)
 
     # Evaluate with both graders
     default_result = await default_grader.aevaluate_batch(

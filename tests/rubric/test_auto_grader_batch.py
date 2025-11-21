@@ -19,8 +19,8 @@ from typing import Any, Dict, List, Optional
 import pytest
 from loguru import logger
 
-from rm_gallery.core.grader.auto_grader import AutoGrader
-from rm_gallery.core.grader.auto_rubrics import AutoRubricsConfig
+from rm_gallery.core.grader.auto.auto_grader import AutoGrader
+from rm_gallery.core.grader.auto.auto_rubrics import AutoRubricsConfig
 from rm_gallery.core.grader.base import GraderMode
 from rm_gallery.core.model import OpenAIChatModel
 from rm_gallery.core.schema.data import EvalCase
@@ -221,6 +221,7 @@ class AutoGraderBatchTester:
         self.accuracy_calculator = AccuracyCalculator()
         self.data_loader = DataLoader()
 
+    @pytest.mark.asyncio
     async def run_batch_test(
         self,
         eval_cases: List[EvalCase],
@@ -332,7 +333,7 @@ class AutoGraderBatchTester:
 @pytest.fixture
 def test_model() -> OpenAIChatModel:
     """Fixture for test model."""
-    return OpenAIChatModel(model_name="qwen3-32b", stream=False)
+    return OpenAIChatModel(model="qwen3-32b", stream=False)
 
 
 @pytest.fixture
@@ -494,7 +495,7 @@ async def main() -> None:
         return
 
     # Initialize components
-    model = OpenAIChatModel(model_name="qwen3-32b", stream=False)
+    model = OpenAIChatModel(model="qwen3-32b", stream=False)
     batch_tester = AutoGraderBatchTester(model)
 
     try:

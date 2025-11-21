@@ -1,10 +1,15 @@
 # -*- coding: utf-8 -*-
+"""Chat: Maintains natural, engaging conversations while providing accurate information."""
 from typing import Any, List
 
 from rm_gallery.core.grader.base import GraderMode, GraderRank, GraderScore
 from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import Template
+from rm_gallery.gallery.grader.alignment.base import (
+    ALIGNMENT_LISTWISE_SYSTEM_PROMPT,
+    ALIGNMENT_POINTWISE_SYSTEM_PROMPT,
+)
 from rm_gallery.gallery.grader.alignment.helpfulness import BaseHelpfulnessGrader
 
 RUBRICS = (
@@ -23,7 +28,7 @@ RUBRICS = (
 )
 
 # Chat Score System Prompt
-CHAT_POINTWISE_SYSTEM_PROMPT = "You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words."
+CHAT_POINTWISE_SYSTEM_PROMPT = ALIGNMENT_POINTWISE_SYSTEM_PROMPT
 
 # Chat Score User Prompt
 CHAT_POINTWISE_USER_PROMPT = """# Task Description
@@ -52,7 +57,7 @@ Be as objective as possible.
 """
 
 # Chat Rank System Prompt
-CHAT_LISTWISE_SYSTEM_PROMPT = "You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words."
+CHAT_LISTWISE_SYSTEM_PROMPT = ALIGNMENT_LISTWISE_SYSTEM_PROMPT
 
 # Chat Rank User Prompt
 CHAT_LISTWISE_USER_PROMPT = """# Task Description
@@ -143,7 +148,8 @@ class ChatGrader(BaseHelpfulnessGrader):
             model=model,
             template=template,
             rubrics=rubrics,
-            description="Maintains natural, engaging conversations while providing accurate information.",
+            description="Maintains natural, engaging conversations while providing accurate "
+            "information.",
             **kwargs,
         )
 

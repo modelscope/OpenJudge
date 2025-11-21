@@ -40,8 +40,8 @@ async def test_rewardbench2_basic():
     # Initialize model
     print("Initializing model...")
     model = OpenAIChatModel(
-        model_name="gpt-4o-mini",
-        generate_kwargs={"temperature": 0.1},
+        model="gpt-4o-mini",
+        temperature=0.1,
     )
 
     # Create runner with metrics
@@ -56,13 +56,13 @@ async def test_rewardbench2_basic():
 
     # Execute evaluation
     print("\nRunning evaluation...")
-    report = await runner(eval_cases)
+    report = await runner.aevaluate_batch(eval_cases)
 
     # Print results
     print("\n" + "=" * 80)
     print("REWARDBENCH2 EVALUATION RESULTS")
     print("=" * 80)
-    print(f"\nModel: {report.model_name}")
+    print(f"\nModel: {report.model}")
     print(f"Total samples: {report.total_samples}")
     print(f"Valid samples: {report.valid_samples}")
 
@@ -112,8 +112,8 @@ async def test_rewardbench2_subset():
 
     # Initialize model
     model = OpenAIChatModel(
-        model_name="gpt-4o-mini",
-        generate_kwargs={"temperature": 0.1},
+        model="gpt-4o-mini",
+        temperature=0.1,
     )
 
     # Create runner with Ties-specific metric
@@ -125,13 +125,13 @@ async def test_rewardbench2_subset():
 
     # Execute evaluation on Ties subset only
     print("\nEvaluating Ties subset...")
-    report = await runner(ties_cases)
+    report = await runner.aevaluate_batch(ties_cases)
 
     # Print results
     print("\n" + "=" * 80)
     print("TIES SUBSET EVALUATION RESULTS")
     print("=" * 80)
-    print(f"\nModel: {report.model_name}")
+    print(f"\nModel: {report.model}")
     print(f"Total samples: {report.total_samples}")
     print(f"Valid samples: {report.valid_samples}")
 
@@ -163,4 +163,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

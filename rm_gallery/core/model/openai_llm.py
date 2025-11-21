@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+"""OpenAI Client."""
 import os
 from datetime import datetime
 from typing import Any, AsyncGenerator, Dict, List, Literal, OrderedDict, Type
@@ -52,19 +53,19 @@ class OpenAIChatModel(ChatModelBase):
 
     def __init__(
         self,
-        model_name: str,
+        model: str,
         api_key: str | None = None,
         base_url: str | None = None,
         stream: bool = False,
         reasoning_effort: Literal["low", "medium", "high"] | None = None,
         organization: str | None = None,
         client_args: Dict[str, Any] | None = None,
-        generate_kwargs: Dict[str, Any] | None = None,
+        **kwargs: Any,
     ) -> None:
         """Initialize the openai client.
 
         Args:
-            model_name: The name of the model to use in OpenAI API.
+            model: The name of the model to use in OpenAI API.
             api_key: The API key for OpenAI API. If not specified, it will
                 be read from the environment variable `OPENAI_API_KEY`.
             base_url: The base URL for OpenAI API. If not specified, it will
@@ -74,13 +75,13 @@ class OpenAIChatModel(ChatModelBase):
             organization: The organization ID for OpenAI API. If not specified, it will
                 be read from the environment variable `OPENAI_ORGANIZATION`.
             client_args: The extra keyword arguments to initialize the OpenAI client.
-            generate_kwargs: The extra keyword arguments used in OpenAI API generation,
+            kwargs: The extra keyword arguments used in OpenAI API generation,
                 e.g. `temperature`, `seed`.
         """
-        self.model_name = model_name
+        self.model = model
         self.stream = stream
         self.reasoning_effort = reasoning_effort
-        self.generate_kwargs = generate_kwargs or {}
+        self.kwargs = kwargs or {}
 
         # Initialize client
         client_args = client_args or {}
@@ -164,14 +165,14 @@ class OpenAIChatModel(ChatModelBase):
             )
 
         # Qwen-omni requires different base64 audio format from openai
-        if "omni" in self.model_name.lower():
+        if "omni" in self.model.lower():
             _format_audio_data_for_qwen_omni(messages)
 
         kwargs = {
-            "model": self.model_name,
+            "model": self.model,
             "messages": messages,
             "stream": self.stream,
-            **self.generate_kwargs,
+            **self.kwargs,
             **kwargs,
         }
         if self.reasoning_effort and "reasoning_effort" not in kwargs:
@@ -201,7 +202,7 @@ class OpenAIChatModel(ChatModelBase):
             kwargs.pop("tools", None)
             kwargs.pop("tool_choice", None)
 
-            if "qwen" in self.model_name:
+            if "qwen" in self.model:
                 structured_model = {"type": "json_object"}
 
             kwargs["response_format"] = structured_model
@@ -334,7 +335,7 @@ class OpenAIChatModel(ChatModelBase):
                     )
 
                 if audio:
-                    media_type = self.generate_kwargs.get("audio", {}).get(
+                    media_type = self.kwargs.get("audio", {}).get(
                         "format",
                         "wav",
                     )
@@ -432,7 +433,7 @@ class OpenAIChatModel(ChatModelBase):
                     ),
                 )
             if choice.message.audio:
-                media_type = self.generate_kwargs.get("audio", {}).get(
+                media_type = self.kwargs.get("audio", {}).get(
                     "format",
                     "mp3",
                 )

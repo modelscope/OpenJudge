@@ -167,7 +167,7 @@ class Grader(ABC):
             ...             "content": "Question: {query}\\nAnswer: {answer}\\nRate accuracy (0-1):"
             ...         }
             ...     ],
-            ...     model={"model_name": "qwen-plus"}
+            ...     model={"model": "qwen-plus"}
             ... )
             >>>
             >>> # Evaluate
@@ -452,7 +452,7 @@ llm_grader = LLMGrader(
             "content": "问题: {query}\n答案: {answer}\n综合评价 (0-1):"
         }
     ],
-    model=ChatModelBase(model_name="qwen-plus"),
+    model=ChatModelBase(model="qwen-plus"),
     description="综合评估答案的质量和准确性"
 )
 
@@ -621,7 +621,7 @@ eval_cases = [
 ]
 
 # 创建语言模型
-model = OpenAIChatModel(model_name="gpt-4")
+model = OpenAIChatModel(model="gpt-4")
 
 # 创建AutoRubrics实例
 auto_rubrics = AutoRubrics(
@@ -733,7 +733,7 @@ async def main():
     ]
 
     # 创建模型
-    model = OpenAIChatModel(model_name="gpt-4")
+    model = OpenAIChatModel(model="gpt-4")
 
     # 1. 使用AutoRubrics生成评分细则
     auto_rubrics = AutoRubrics(model=model)

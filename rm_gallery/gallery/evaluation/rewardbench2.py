@@ -12,7 +12,6 @@ from loguru import logger
 
 from rm_gallery.core.model.openai_llm import OpenAIChatModel
 from rm_gallery.core.runner.evaluation import (
-    AccuracyMetric,
     BaseMetric,
     EvaluationResult,
     EvaluationRunner,
@@ -125,7 +124,7 @@ class RewardBench2Runner(EvaluationRunner):
         # Get LLM judgment
         full_prompt = f"{REWARDBENCH2_SYSTEM_PROMPT}\n\n{prompt}"
         response = await self.model.achat(
-            messages=[{"role": "user", "content": full_prompt}]
+            messages=[{"role": "user", "content": full_prompt}],
         )
 
         # Extract text from ChatResponse
@@ -180,7 +179,7 @@ class RewardBench2Runner(EvaluationRunner):
 
             # Get LLM rating
             response = await self.model.achat(
-                messages=[{"role": "user", "content": prompt}]
+                messages=[{"role": "user", "content": prompt}],
             )
 
             # Extract text from ChatResponse
@@ -310,7 +309,7 @@ class RewardBench2Runner(EvaluationRunner):
         results = await asyncio.gather(*all_tasks)
 
         return {
-            "model": self.model.model_name,
+            "model": self.model.model,
             "total_samples": len(eval_cases),
             "results": [r.model_dump() for r in results],
         }

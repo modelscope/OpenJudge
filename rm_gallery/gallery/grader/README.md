@@ -300,11 +300,11 @@ models = [
     "honesty_listwise_reward"
 ]
 
-for model_name in models:
-    rm = RewardRegistry.get(model_name)
+for model in models:
+    rm = RewardRegistry.get(model)
     results = rm.evaluate_batch(dataset.datasamples[:100])
     # Calculate metrics...
-    print(f"{model_name}: accuracy = {accuracy:.2%}")
+    print(f"{model}: accuracy = {accuracy:.2%}")
 ```
 
 ## 🤝 Contributing New Models

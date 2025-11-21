@@ -1,10 +1,18 @@
 # -*- coding: utf-8 -*-
+"""Translation: Accurately converts text between languages while preserving meaning,
+tone, and cultural context.
+"""
+
 from typing import Any, List
 
 from rm_gallery.core.grader.base import GraderMode, GraderRank, GraderScore
 from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import Template
+from rm_gallery.gallery.grader.alignment.base import (
+    ALIGNMENT_LISTWISE_SYSTEM_PROMPT,
+    ALIGNMENT_POINTWISE_SYSTEM_PROMPT,
+)
 from rm_gallery.gallery.grader.alignment.helpfulness import BaseHelpfulnessGrader
 
 RUBRICS = (
@@ -23,7 +31,7 @@ RUBRICS = (
 )
 
 # Translation Score System Prompt
-TRANSLATION_POINTWISE_SYSTEM_PROMPT = "You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words."
+TRANSLATION_POINTWISE_SYSTEM_PROMPT = ALIGNMENT_POINTWISE_SYSTEM_PROMPT
 
 # Translation Score User Prompt
 TRANSLATION_POINTWISE_USER_PROMPT = """# Task Description
@@ -50,14 +58,17 @@ Be as objective as possible.
 """
 
 # Translation Rank System Prompt
-TRANSLATION_LISTWISE_SYSTEM_PROMPT = "You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words."
+TRANSLATION_LISTWISE_SYSTEM_PROMPT = ALIGNMENT_LISTWISE_SYSTEM_PROMPT
 
 # Translation Rank User Prompt
 TRANSLATION_LISTWISE_USER_PROMPT = """# Task Description
 Your role is that of a professional evaluation expert. I will provide you with a \
 question and several candidate answers. Your task is to select the single best answer \
 from the candidates.
-I will also provide you with a set of rubrics, listed under the heading #Rubrics. These rubrics are ordered from highest to lowest importance.These rubrics can serve as supplementary knowledge for your judgment. If you find any of the rubrics helpful for the current problem, feel free to use them as supplements.If all answers meet all rubrics, you can judge and choose one answer by yourself.
+I will also provide you with a set of rubrics, listed under the heading #Rubrics. These rubrics are
+ordered from highest to lowest importance.These rubrics can serve as supplementary knowledge for
+your judgment. If you find any of the rubrics helpful for the current problem, feel free to use them
+ as supplements.If all answers meet all rubrics, you can judge and choose one answer by yourself.
 
 # Rubrics
 {rubrics}
@@ -105,7 +116,11 @@ TRANSLATION_LISTWISE_TEMPLATE = Template(
 
 
 class TranslationGrader(BaseHelpfulnessGrader):
-    """Translation: Accurately converts text between languages while preserving meaning, tone, and cultural context."""
+    """TranslationGrader
+
+    Accurately converts text between languages while preserving meaning, tone,
+    and cultural context.
+    """
 
     _point_template = TRANSLATION_POINTWISE_TEMPLATE
     _list_template = TRANSLATION_LISTWISE_TEMPLATE
@@ -136,7 +151,8 @@ class TranslationGrader(BaseHelpfulnessGrader):
             model=model,
             template=template,
             rubrics=rubrics,
-            description="Accurately converts text between languages while preserving meaning, tone, and cultural context.",
+            description="Accurately converts text between languages while preserving meaning, "
+            "tone, and cultural context.",
             **kwargs,
         )
 
@@ -179,7 +195,7 @@ class TranslationGrader(BaseHelpfulnessGrader):
             >>> import asyncio
             >>> from rm_gallery.core.model.openai_llm import OpenAIChatModel
             >>> from rm_gallery.core.grader.base import GraderMode
-            >>> model = OpenAIChatModel(model_name="gpt-3.5-turbo")
+            >>> model = OpenAIChatModel(model="gpt-3.5-turbo")
             >>> grader = TranslationGrader(mode=GraderMode.POINTWISE, model=model)
             >>> result = asyncio.run(grader.aevaluate(
             ...     query="Hello, how are you today?",

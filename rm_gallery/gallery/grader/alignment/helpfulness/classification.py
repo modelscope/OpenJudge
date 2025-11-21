@@ -1,10 +1,15 @@
 # -*- coding: utf-8 -*-
+"""Classification: Accurately categorizes input content into predefined classes or labels."""
 from typing import Any, List
 
 from rm_gallery.core.grader.base import GraderMode, GraderRank, GraderScore
 from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import Template
+from rm_gallery.gallery.grader.alignment.base import (
+    ALIGNMENT_LISTWISE_SYSTEM_PROMPT,
+    ALIGNMENT_POINTWISE_SYSTEM_PROMPT,
+)
 from rm_gallery.gallery.grader.alignment.helpfulness import BaseHelpfulnessGrader
 
 RUBRICS = (
@@ -26,7 +31,7 @@ RUBRICS = (
 
 
 # Classification Score System Prompt
-CLASSIFICATION_POINTWISE_SYSTEM_PROMPT = "You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words."
+CLASSIFICATION_POINTWISE_SYSTEM_PROMPT = ALIGNMENT_POINTWISE_SYSTEM_PROMPT
 
 # Classification Score User Prompt
 CLASSIFICATION_POINTWISE_USER_PROMPT = """# Task Description
@@ -53,7 +58,7 @@ Be as objective as possible.
 """
 
 # Classification Rank System Prompt
-CLASSIFICATION_LISTWISE_SYSTEM_PROMPT = "You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words."
+CLASSIFICATION_LISTWISE_SYSTEM_PROMPT = ALIGNMENT_LISTWISE_SYSTEM_PROMPT
 
 # Classification Rank User Prompt
 CLASSIFICATION_LISTWISE_USER_PROMPT = """# Task Description

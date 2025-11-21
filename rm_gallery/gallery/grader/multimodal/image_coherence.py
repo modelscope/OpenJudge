@@ -41,7 +41,7 @@ class ImageCoherenceGrader(Grader):
         >>> from rm_gallery.core.model.openai_llm import OpenAIChatModel
         >>> from rm_gallery.gallery.grader.multimodal import MLLMImage
         >>>
-        >>> api = VisionModelAdapter.from_qwen(api_key="your-key", model_name="qwen-vl-plus")
+        >>> api = VisionModelAdapter.from_qwen(api_key="your-key", model="qwen-vl-plus")
         >>> grader = ImageCoherenceGrader(model=api, threshold=0.7)
         >>>
         >>> result = await grader.aevaluate(

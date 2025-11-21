@@ -1,10 +1,15 @@
 # -*- coding: utf-8 -*-
+"""Math: Solves mathematical problems with accuracy, logical coherence, and proper notation."""
 from typing import Any, List
 
 from rm_gallery.core.grader.base import GraderMode, GraderRank, GraderScore
 from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import Template
+from rm_gallery.gallery.grader.alignment.base import (
+    ALIGNMENT_LISTWISE_SYSTEM_PROMPT,
+    ALIGNMENT_POINTWISE_SYSTEM_PROMPT,
+)
 from rm_gallery.gallery.grader.alignment.helpfulness import BaseHelpfulnessGrader
 
 RUBRICS = (
@@ -28,7 +33,7 @@ RUBRICS = (
 
 
 # Math Score System Prompt
-MATH_POINTWISE_SYSTEM_PROMPT = "You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words."
+MATH_POINTWISE_SYSTEM_PROMPT = ALIGNMENT_POINTWISE_SYSTEM_PROMPT
 
 # Math Score User Prompt
 MATH_POINTWISE_USER_PROMPT = """# Task Description
@@ -55,7 +60,7 @@ Be as objective as possible.
 """
 
 # Math Rank System Prompt
-MATH_LISTWISE_SYSTEM_PROMPT = "You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words."
+MATH_LISTWISE_SYSTEM_PROMPT = ALIGNMENT_LISTWISE_SYSTEM_PROMPT
 
 # Math Rank User Prompt
 MATH_LISTWISE_USER_PROMPT = """# Task Description
@@ -146,7 +151,8 @@ class MathGrader(BaseHelpfulnessGrader):
             model=model,
             template=template,
             rubrics=rubrics,
-            description="Solves mathematical problems with accuracy, logical coherence, and proper notation.",
+            description="Solves mathematical problems with accuracy, "
+            "logical coherence, and proper notation.",
             **kwargs,
         )
 
@@ -189,7 +195,7 @@ class MathGrader(BaseHelpfulnessGrader):
             >>> import asyncio
             >>> from rm_gallery.core.model.openai_llm import OpenAIChatModel
             >>> from rm_gallery.core.grader.base import GraderMode
-            >>> model = OpenAIChatModel(model_name="gpt-3.5-turbo")
+            >>> model = OpenAIChatModel(model="gpt-3.5-turbo")
             >>> grader = MathGrader(mode=GraderMode.POINTWISE, model=model)
             >>> result = asyncio.run(grader.aevaluate(
             ...     query="Solve for x: 2x + 5 = 15",

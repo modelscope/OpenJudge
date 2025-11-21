@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+"""Base class for graders."""
 import asyncio
 import os
 
@@ -79,7 +80,7 @@ class Grader(ABC):
         )
 
     @abstractmethod
-    async def aevaluate(self, **kwargs) -> GraderScore | GraderRank:
+    async def aevaluate(self, **kwargs: Any) -> GraderScore | GraderRank:
         """Evaluate method to be implemented by subclasses.
 
         This abstract method must be implemented by all Grader subclasses. It performs
@@ -139,14 +140,17 @@ class Grader(ABC):
             ...             description="Ranks answers by relevance"
             ...         )
             ...
-            ...     async def aevaluate(self, query: str, answer_1: str, answer_2: str, **kwargs) -> GraderRank:
+            ...     async def aevaluate(self,
+            ...                         query: str,
+            ...                         answer_1: str,
+            ...                         answer_2: str,
+            ...                        **kwargs) -> GraderRank:
             ...         # Implementation would rank answers by relevance
             ...         return GraderRank(
             ...             rank=[1, 2],
             ...             reason="First answer is more relevant to the query than the second"
             ...         )
         """
-        ...
 
     async def _a_safe_evaluate(
         self,
@@ -162,7 +166,7 @@ class Grader(ABC):
         """
         concurrency_manager = ConcurrencyManager()
 
-        async def _evaluate_task():
+        async def _evaluate_task() -> GraderScore | GraderRank:
             try:
                 # Check if self.evaluate is a coroutine function
                 if asyncio.iscoroutinefunction(self.aevaluate):
@@ -172,7 +176,9 @@ class Grader(ABC):
                     loop = asyncio.get_event_loop()
                     result = await loop.run_in_executor(
                         None,
-                        lambda: self.aevaluate(**kwargs),
+                        lambda: self.aevaluate(  # pylint: disable=unnecessary-lambda
+                            **kwargs,
+                        ),
                     )
                 return result
             except Exception as e:
@@ -189,7 +195,7 @@ class Grader(ABC):
         self,
         eval_case: EvalCase,
         parser: EvalCaseParser | None = None,
-        *args,
+        *args: Any,
         **kwargs: Any,
     ) -> List[GraderScore]:
         """Evaluate an eval case using this grader.
@@ -211,6 +217,7 @@ class Grader(ABC):
         Raises:
             ValueError: If the grader mode is invalid.
         """
+        del args
         if parser is not None:
             eval_case = parse_eval_case(eval_case, parser)
 
@@ -239,7 +246,7 @@ class Grader(ABC):
 
         elif self.mode == GraderMode.LISTWISE:
             # Listwise: Evaluate all samples together in one call
-            params = {key: value for key, value in kwargs.items()}
+            params = kwargs
             params.update(eval_case.input)
             if len(eval_case.outputs) > 1:
                 if eval_case.outputs:
@@ -276,7 +283,7 @@ class Grader(ABC):
         self,
         eval_cases: List[EvalCase],
         parser: EvalCaseParser | Callable | None = None,
-        *args,
+        *args: Any,
         **kwargs: Any,
     ) -> List[List[GraderScore]]:
         """Main entry point to evaluate eval case.
@@ -347,18 +354,18 @@ class Grader(ABC):
             ...             "content": "Question: {query}\\nAnswer: {answer}\\nRate accuracy (0-1):"
             ...         }
             ...     ],
-            ...     model={"model_name": "qwen-plus"}
+            ...     model={"model": "qwen-plus"}
             ... )
             >>>
             >>> # Evaluate
             >>> results = await grader.aevaluate_batch(eval_cases=[eval_case])
             >>> print(results)
         """
+        del args
         coroutines: List = [
             self.aevaluate_case(
                 eval_case=_eval_case,
                 parser=parser,
-                *args,
                 **kwargs,
             )
             for _eval_case in eval_cases
@@ -370,7 +377,7 @@ class Grader(ABC):
         self,
         eval_cases: List[EvalCase],
         parser: EvalCaseParser | Callable | None = None,
-        *args,
+        *args: Any,
         **kwargs: Any,
     ) -> List[List[GraderScore]]:
         """Main entry point to evaluate eval case.
@@ -441,7 +448,7 @@ class Grader(ABC):
             ...             "content": "Question: {query}\\nAnswer: {answer}\\nRate accuracy (0-1):"
             ...         }
             ...     ],
-            ...     model={"model_name": "qwen-plus"}
+            ...     model={"model": "qwen-plus"}
             ... )
             >>>
             >>> # Evaluate
@@ -521,7 +528,7 @@ class LLMGrader(Grader):
         mode: GraderMode = GraderMode.POINTWISE,
         language: LanguageEnum | str | None = None,
         description: str = "",
-        template: dict | Template = {},
+        template: dict | Template | None = None,
         callback: Callable | None = None,
         rubrics: str = "",
         **kwargs: Any,
@@ -538,7 +545,8 @@ class LLMGrader(Grader):
                      If None, defaults to environment variable LANGUAGE or "en".
             description: The description of the grader.
             template: The template for generating prompts.
-            callback: The callback function for processing model response to GraderScore or GraderRank.
+            callback: The callback function for processing model response to GraderScore
+                      or GraderRank.
             rubrics: The rubrics used for evaluation.
             **kwargs: Additional keyword arguments (e.g., min_score, max_score, num_responses).
         """
@@ -563,6 +571,7 @@ class LLMGrader(Grader):
         else:
             self.language = language
 
+        template = template or {}
         self.template = (
             template if isinstance(template, Template) else Template(**template)
         )
@@ -659,7 +668,7 @@ class LLMGrader(Grader):
             **config,
         )
 
-    async def aevaluate(self, **kwargs) -> GraderScore | GraderRank:
+    async def aevaluate(self, **kwargs: Any) -> GraderScore | GraderRank:
         """Evaluate using LLM.
 
         Performs evaluation using a large language model according to the configured
@@ -701,7 +710,7 @@ class LLMGrader(Grader):
             ...         {"role": "system", "content": "You are a helpful assistant."},
             ...         {"role": "user", "content": "{query}\\n{answer}\\n\\nRate helpfulness:"}
             ...     ],
-            ...     model=DashScopeLLM(model_name="qwen-plus"),
+            ...     model=DashScopeLLM(model="qwen-plus"),
             ...     rubrics="Rate the helpfulness of the answer (0.0-1.0)"
             ... )
             >>> result = await grader.aevaluate(
@@ -717,9 +726,10 @@ class LLMGrader(Grader):
             ...     mode=GraderMode.LISTWISE,
             ...     template=[
             ...         {"role": "system", "content": "Rank the following answers by relevance."},
-            ...         {"role": "user", "content": "Query: {query}\\nAnswers:\\n1. {answer_1}\\n2. {answer_2}"}
+            ...         {"role": "user",
+            ...          "content": "Query: {query}\\nAnswers:\\n1. {answer_1}\\n2. {answer_2}"}
             ...     ],
-            ...     model=DashScopeLLM(model_name="qwen-plus"),
+            ...     model=DashScopeLLM(model="qwen-plus"),
             ...     rubrics="Rank answers by relevance (1 is most relevant)"
             ... )
             >>> result = await ranking_grader.aevaluate(
@@ -800,7 +810,7 @@ class FunctionGrader(Grader):
         )
         self.func = func
 
-    async def aevaluate(self, **kwargs) -> GraderScore | GraderRank:
+    async def aevaluate(self, **kwargs: Any) -> GraderScore | GraderRank:
         """Evaluate using a function.
 
         Performs evaluation by calling the wrapped function with the provided arguments.
@@ -837,9 +847,13 @@ class FunctionGrader(Grader):
             >>> def accuracy_function(query: str, answer: str) -> GraderScore:
             ...     # Simple accuracy function - checks if answer contains key facts
             ...     if "Paris" in answer and "capital" in answer.lower():
-            ...         return GraderScore(name=self.name, score=1.0, reason="Correctly identifies Paris as capital")
+            ...         return GraderScore(name=self.name,
+            ...                            score=1.0,
+            ...                            reason="Correctly identifies Paris as capital")
             ...     else:
-            ...         return GraderScore(name=self.name, score=0.0, reason="Missing key information")
+            ...         return GraderScore(name=self.name,
+            ...                            score=0.0,
+            ...                            reason="Missing key information")
             ...
             >>> grader = FunctionGrader(
             ...     func=accuracy_function,
@@ -869,7 +883,8 @@ class FunctionGrader(Grader):
             >>> result = await ranking_grader.aevaluate(
             ...     query="Explain photosynthesis",
             ...     answer_1="Photosynthesis converts light to energy.",
-            ...     answer_2="Photosynthesis is the process by which plants convert light energy into chemical energy."
+            ...     answer_2="Photosynthesis is the process by which plants convert light "
+                             "energy into chemical energy."
             ... )
             >>> print(result.rank, result.reason)
             [2, 1] Second answer is more detailed

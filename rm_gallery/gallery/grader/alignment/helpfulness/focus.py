@@ -1,10 +1,18 @@
 # -*- coding: utf-8 -*-
+"""FocusGrader
+
+Maintains strict adherence to the main topic while filtering out irrelevant information.
+"""
 from typing import Any, List
 
 from rm_gallery.core.grader.base import GraderMode, GraderRank, GraderScore
 from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import Template
+from rm_gallery.gallery.grader.alignment.base import (
+    ALIGNMENT_LISTWISE_SYSTEM_PROMPT,
+    ALIGNMENT_POINTWISE_SYSTEM_PROMPT,
+)
 from rm_gallery.gallery.grader.alignment.helpfulness import BaseHelpfulnessGrader
 
 RUBRICS = (
@@ -25,7 +33,7 @@ RUBRICS = (
 
 
 # Focus Score System Prompt
-FOCUS_POINTWISE_SYSTEM_PROMPT = "You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words."
+FOCUS_POINTWISE_SYSTEM_PROMPT = ALIGNMENT_POINTWISE_SYSTEM_PROMPT
 
 # Focus Score User Prompt
 FOCUS_POINTWISE_USER_PROMPT = """# Task Description
@@ -52,7 +60,7 @@ Be as objective as possible.
 """
 
 # Focus Rank System Prompt
-FOCUS_LISTWISE_SYSTEM_PROMPT = "You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words."
+FOCUS_LISTWISE_SYSTEM_PROMPT = ALIGNMENT_LISTWISE_SYSTEM_PROMPT
 
 # Focus Rank User Prompt
 FOCUS_LISTWISE_USER_PROMPT = """# Task Description
@@ -112,7 +120,10 @@ FOCUS_LISTWISE_TEMPLATE = Template(
 
 
 class FocusGrader(BaseHelpfulnessGrader):
-    """Focus: Maintains strict adherence to the main topic while filtering out irrelevant information."""
+    """FocusGrader
+
+    Maintains strict adherence to the main topic while filtering out irrelevant information.
+    """
 
     _point_template = FOCUS_POINTWISE_TEMPLATE
     _list_template = FOCUS_LISTWISE_TEMPLATE
@@ -143,7 +154,8 @@ class FocusGrader(BaseHelpfulnessGrader):
             model=model,
             template=template,
             rubrics=rubrics,
-            description="Maintains strict adherence to the main topic while filtering out irrelevant information.",
+            description="Maintains strict adherence to the main topic while filtering out "
+            "irrelevant information.",
             **kwargs,
         )
 
@@ -186,11 +198,12 @@ class FocusGrader(BaseHelpfulnessGrader):
             >>> import asyncio
             >>> from rm_gallery.core.model.openai_llm import OpenAIChatModel
             >>> from rm_gallery.core.grader.base import GraderMode
-            >>> model = OpenAIChatModel(model_name="gpt-3.5-turbo")
+            >>> model = OpenAIChatModel(model="gpt-3.5-turbo")
             >>> grader = FocusGrader(mode=GraderMode.POINTWISE, model=model)
             >>> result = asyncio.run(grader.aevaluate(
             ...     query="Explain the process of photosynthesis",
-            ...     answer="Photosynthesis is the process by which plants convert light energy into chemical energy..."
+            ...     answer="Photosynthesis is the process by which plants convert light "
+            ...            "energy into chemical energy..."
             ... ))
             >>> print(result.score, result.reason)
             0.95 The response stays focused on explaining photosynthesis without digressing.

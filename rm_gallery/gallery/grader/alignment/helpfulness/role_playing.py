@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+"""Role Playing: Engages in immersive roleplay scenarios with consistent
+character portrayal and contextual awareness.
+"""
 from typing import Any, List
 
 from rm_gallery.core.grader.base import GraderRank, GraderScore
@@ -6,6 +9,10 @@ from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.schema.grader import GraderMode
 from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import Template
+from rm_gallery.gallery.grader.alignment.base import (
+    ALIGNMENT_LISTWISE_SYSTEM_PROMPT,
+    ALIGNMENT_POINTWISE_SYSTEM_PROMPT,
+)
 from rm_gallery.gallery.grader.alignment.helpfulness import BaseHelpfulnessGrader
 
 RUBRICS = (
@@ -30,7 +37,7 @@ RUBRICS = (
 
 
 # Role Playing Score System Prompt
-ROLE_PLAYING_POINTWISE_SYSTEM_PROMPT = "You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words."
+ROLE_PLAYING_POINTWISE_SYSTEM_PROMPT = ALIGNMENT_POINTWISE_SYSTEM_PROMPT
 
 # Role Playing Score User Prompt
 ROLE_PLAYING_POINTWISE_USER_PROMPT = """# Task Description
@@ -69,13 +76,16 @@ ROLE_PLAYING_POINTWISE_TEMPLATE = Template(
     ],
 )
 
-ROLE_PLAYING_LISTWISE_SYSTEM_PROMPT = """You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words."""
+ROLE_PLAYING_LISTWISE_SYSTEM_PROMPT = ALIGNMENT_LISTWISE_SYSTEM_PROMPT
 
 ROLE_PLAYING_LISTWISE_USER_PROMPT = """# Task Description
 Your role is that of a professional evaluation expert. I will provide you with a \
 question and several candidate answers. Your task is to select the single best answer \
 from the candidates.
-I will also provide you with a set of rubrics, listed under the heading #Rubrics. These rubrics are ordered from highest to lowest importance.These rubrics can serve as supplementary knowledge for your judgment, though not necessarily required. First, think independently. Use these rubrics only when unsure about certain answers, selecting specific ones based on the questions and answers.
+I will also provide you with a set of rubrics, listed under the heading #Rubrics. These rubrics \
+are ordered from highest to lowest importance.These rubrics can serve as supplementary knowledge \
+for your judgment, though not necessarily required. First, think independently. Use these rubrics \
+only when unsure about certain answers, selecting specific ones based on the questions and answers.
 
 # Rubrics
 {rubrics}
@@ -110,7 +120,11 @@ ROLE_PLAYING_LISTWISE_TEMPLATE = Template(
 
 
 class RolePlayingGrader(BaseHelpfulnessGrader):
-    """Role Playing: Engages in immersive roleplay scenarios with consistent character portrayal and contextual awareness."""
+    """Role Playing
+
+    Engages in immersive roleplay scenarios with consistent character
+    portrayal and contextual awareness.
+    """
 
     _point_template = ROLE_PLAYING_POINTWISE_TEMPLATE
     _list_template = ROLE_PLAYING_LISTWISE_TEMPLATE
@@ -141,7 +155,8 @@ class RolePlayingGrader(BaseHelpfulnessGrader):
             model=model,
             template=template,
             rubrics=rubrics,
-            description="Engages in immersive roleplay scenarios with consistent character portrayal and contextual awareness.",
+            description="Engages in immersive roleplay scenarios with consistent character "
+            "portrayal and contextual awareness.",
             **kwargs,
         )
 
@@ -185,13 +200,15 @@ class RolePlayingGrader(BaseHelpfulnessGrader):
             >>> import asyncio
             >>> from rm_gallery.core.model.openai_llm import OpenAIChatModel
             >>> from rm_gallery.core.grader.base import GraderMode
-            >>> model = OpenAIChatModel(model_name="gpt-3.5-turbo")
+            >>> model = OpenAIChatModel(model="gpt-3.5-turbo")
             >>> grader = RolePlayingGrader(mode=GraderMode.POINTWISE, model=model)
             >>> result = asyncio.run(grader.aevaluate(
             ...     query="You are a medieval blacksmith. A knight approaches requesting a sword.",
-            ...     answer="Ah, good sir knight! I shall forge you a blade worthy of your noble quest. What specifications would you desire in your weapon?"
+            ...     answer="Ah, good sir knight! I shall forge you a blade worthy of your noble "
+            ...            "quest. What specifications would you desire in your weapon?"
             ... ))
             >>> print(result.score, result.reason)
-            0.9 The response maintains character consistency and appropriately engages with the scenario.
+            0.9 The response maintains character consistency and appropriately engages with the
+                scenario.
         """
         return await super().aevaluate(query=query, answer=answer, **kwargs)

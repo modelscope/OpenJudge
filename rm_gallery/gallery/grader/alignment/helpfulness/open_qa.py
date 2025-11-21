@@ -1,10 +1,19 @@
 # -*- coding: utf-8 -*-
+"""Open QA Grader
+
+Provides comprehensive, nuanced answers to open-ended questions without definitive correct
+responses.
+"""
 from typing import Any, List
 
 from rm_gallery.core.grader.base import GraderMode, GraderRank, GraderScore
 from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import Template
+from rm_gallery.gallery.grader.alignment.base import (
+    ALIGNMENT_LISTWISE_SYSTEM_PROMPT,
+    ALIGNMENT_POINTWISE_SYSTEM_PROMPT,
+)
 from rm_gallery.gallery.grader.alignment.helpfulness import BaseHelpfulnessGrader
 
 RUBRICS = (
@@ -28,7 +37,7 @@ RUBRICS = (
 
 
 # Open QA Score System Prompt
-OPEN_QA_POINTWISE_SYSTEM_PROMPT = "You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words."
+OPEN_QA_POINTWISE_SYSTEM_PROMPT = ALIGNMENT_POINTWISE_SYSTEM_PROMPT
 
 # Open QA Score User Prompt
 OPEN_QA_POINTWISE_USER_PROMPT = """# Task Description
@@ -55,7 +64,7 @@ Be as objective as possible.
 """
 
 # Open QA Rank System Prompt
-OPEN_QA_LISTWISE_SYSTEM_PROMPT = "You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words."
+OPEN_QA_LISTWISE_SYSTEM_PROMPT = ALIGNMENT_LISTWISE_SYSTEM_PROMPT
 
 # Open QA Rank User Prompt
 OPEN_QA_LISTWISE_USER_PROMPT = """# Task Description
@@ -115,7 +124,11 @@ OPEN_QA_LISTWISE_TEMPLATE = Template(
 
 
 class OpenQAGrader(BaseHelpfulnessGrader):
-    """Open QA: Provides comprehensive, nuanced answers to open-ended questions without definitive correct responses."""
+    """OpenQAGrader
+
+    Provides comprehensive, nuanced answers to open-ended questions without definitive correct
+    responses.
+    """
 
     _point_template = OPEN_QA_POINTWISE_TEMPLATE
     _list_template = OPEN_QA_LISTWISE_TEMPLATE
@@ -146,7 +159,8 @@ class OpenQAGrader(BaseHelpfulnessGrader):
             model=model,
             template=template,
             rubrics=rubrics,
-            description="Provides comprehensive, nuanced answers to open-ended questions without definitive correct responses.",
+            description="Provides comprehensive, nuanced answers to open-ended questions without "
+            "definitive correct responses.",
             **kwargs,
         )
 
@@ -189,13 +203,14 @@ class OpenQAGrader(BaseHelpfulnessGrader):
             >>> import asyncio
             >>> from rm_gallery.core.model.openai_llm import OpenAIChatModel
             >>> from rm_gallery.core.grader.base import GraderMode
-            >>> model = OpenAIChatModel(model_name="gpt-3.5-turbo")
+            >>> model = OpenAIChatModel(model="gpt-3.5-turbo")
             >>> grader = OpenQAGrader(mode=GraderMode.POINTWISE, model=model)
             >>> result = asyncio.run(grader.aevaluate(
             ...     query="What are the potential impacts of climate change on global agriculture?",
             ...     answer="Climate change can impact global agriculture in several ways..."
             ... ))
             >>> print(result.score, result.reason)
-            0.9 The response comprehensively addresses multiple aspects of climate change impacts on agriculture.
+            0.9 The response comprehensively addresses multiple aspects of climate change
+                mpacts on agriculture.
         """
         return await super().aevaluate(query=query, answer=answer, **kwargs)

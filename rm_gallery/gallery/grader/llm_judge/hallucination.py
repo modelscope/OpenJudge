@@ -164,8 +164,8 @@ class HallucinationGrader(LLMGrader):
         >>>
         >>> api = OpenAIChatModel(
         ...     api_key="your-key",  # pragma: allowlist secret
-        ...     model_name="gpt-4o",
-        ...     generate_kwargs={"temperature": 0.1}
+        ...     model="gpt-4o",
+        ...     temperature=0.1
         ... )
         >>>
         >>> # English grader

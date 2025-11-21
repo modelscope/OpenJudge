@@ -79,11 +79,11 @@ def _get_size_of_image_url(url: str) -> tuple[int, int]:
     return width, height
 
 
-def _get_base_and_tile_tokens(model_name: str) -> tuple[int, int]:
+def _get_base_and_tile_tokens(model: str) -> tuple[int, int]:
     """Get the base and tile tokens for the given OpenAI model.
 
     Args:
-        model_name (`str`):
+        model (`str`):
             The name of the model.
 
     Returns:
@@ -91,7 +91,7 @@ def _get_base_and_tile_tokens(model_name: str) -> tuple[int, int]:
             A tuple containing the base tokens and tile tokens.
     """
     if any(
-        model_name.startswith(_)
+        model.startswith(_)
         for _ in [
             "gpt-4o",
             "gpt-4.1",
@@ -101,7 +101,7 @@ def _get_base_and_tile_tokens(model_name: str) -> tuple[int, int]:
         return 85, 170
 
     if any(
-        model_name.startswith(_)
+        model.startswith(_)
         for _ in [
             "o1",
             "o1-pro",
@@ -110,16 +110,16 @@ def _get_base_and_tile_tokens(model_name: str) -> tuple[int, int]:
     ):
         return 75, 150
 
-    if model_name.startswith("4o-mini"):
+    if model.startswith("4o-mini"):
         return 2833, 5667
 
     raise ValueError(
-        f"Unsupported OpenAI model {model_name} for token counting. ",
+        f"Unsupported OpenAI model {model} for token counting. ",
     )
 
 
 def _calculate_tokens_for_tools(
-    model_name: str,
+    model: str,
     tools: list[dict],
     encoding: Any,
 ) -> int:
@@ -137,7 +137,7 @@ def _calculate_tokens_for_tools(
     enum_item = 3
     func_end = 12
 
-    if model_name.startswith("gpt-4o"):
+    if model.startswith("gpt-4o"):
         func_init = 7
 
     func_token_count = 0
@@ -173,7 +173,7 @@ def _calculate_tokens_for_tools(
 
 
 def _count_content_tokens_for_openai_vision_model(
-    model_name: str,
+    model: str,
     content: list[dict],
     encoding: Any,
 ) -> int:
@@ -181,7 +181,7 @@ def _count_content_tokens_for_openai_vision_model(
     Implemented according to https://platform.openai.com/docs/guides/vision.
 
     Args:
-        model_name (`str`):
+        model (`str`):
             The name of the model.
         content (`list[dict]`):
             A list of dictionaries.
@@ -231,7 +231,7 @@ def _count_content_tokens_for_openai_vision_model(
 
             # Different counting logic for different models
             if any(
-                model_name.startswith(_)
+                model.startswith(_)
                 for _ in [
                     "gpt-4.1-mini",
                     "gpt-4.1-nano",
@@ -242,17 +242,17 @@ def _count_content_tokens_for_openai_vision_model(
                     math.ceil(width / 32) * math.ceil(height / 32),
                     1536,
                 )
-                if model_name.startswith("gpt-4.1-mini"):
+                if model.startswith("gpt-4.1-mini"):
                     num_tokens += math.ceil(patches * 1.62)
 
-                elif model_name.startswith("gpt-4.1-nano"):
+                elif model.startswith("gpt-4.1-nano"):
                     num_tokens += math.ceil(patches * 2.46)
 
                 else:
                     num_tokens += math.ceil(patches * 1.72)
 
             elif any(
-                model_name.startswith(_)
+                model.startswith(_)
                 for _ in [
                     "gpt-4o",
                     "gpt-4.1",
@@ -261,7 +261,7 @@ def _count_content_tokens_for_openai_vision_model(
                 ]
             ):
                 base_tokens, tile_tokens = _get_base_and_tile_tokens(
-                    model_name,
+                    model,
                 )
 
                 # By default, we use high here to avoid undercounting tokens
@@ -295,14 +295,14 @@ def _count_content_tokens_for_openai_vision_model(
 class OpenAITokenCounter(TokenCounterBase):
     """The OpenAI token counting class."""
 
-    def __init__(self, model_name: str) -> None:
+    def __init__(self, model: str) -> None:
         """Initialize the OpenAI token counter.
 
         Args:
-            model_name (`str`):
+            model (`str`):
                 The name of the OpenAI model to use for token counting.
         """
-        self.model_name = model_name
+        self.model = model
 
     async def count(
         self,
@@ -325,7 +325,7 @@ class OpenAITokenCounter(TokenCounterBase):
         import tiktoken
 
         try:
-            encoding = tiktoken.encoding_for_model(self.model_name)
+            encoding = tiktoken.encoding_for_model(self.model)
         except KeyError:
             encoding = tiktoken.get_encoding("o200k_base")
 
@@ -340,7 +340,7 @@ class OpenAITokenCounter(TokenCounterBase):
                 # Considering vision models
                 if key == "content" and isinstance(value, list):
                     num_tokens += _count_content_tokens_for_openai_vision_model(
-                        self.model_name,
+                        self.model,
                         value,
                         encoding,
                     )
@@ -371,7 +371,7 @@ class OpenAITokenCounter(TokenCounterBase):
 
         if tools:
             num_tokens += _calculate_tokens_for_tools(
-                self.model_name,
+                self.model,
                 tools,
                 encoding,
             )

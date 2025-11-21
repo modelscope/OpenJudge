@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+"""SummarizationGrader."""
 from typing import Any, List
 
 from rm_gallery.core.grader.base import GraderRank, GraderScore
@@ -6,6 +7,10 @@ from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.schema.grader import GraderMode
 from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import Template
+from rm_gallery.gallery.grader.alignment.base import (
+    ALIGNMENT_LISTWISE_SYSTEM_PROMPT,
+    ALIGNMENT_POINTWISE_SYSTEM_PROMPT,
+)
 from rm_gallery.gallery.grader.alignment.helpfulness import BaseHelpfulnessGrader
 
 RUBRICS = (
@@ -21,12 +26,13 @@ RUBRICS = (
 )
 
 # Summarization Score System Prompt
-SUMMARIZATION_POINTWISE_SYSTEM_PROMPT = "You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words."
+SUMMARIZATION_POINTWISE_SYSTEM_PROMPT = ALIGNMENT_POINTWISE_SYSTEM_PROMPT
 
 # Summarization Score User Prompt
 SUMMARIZATION_POINTWISE_USER_PROMPT = """# Task Description
 Please act as an impartial judge and evaluate the quality of a summary.
-You should assess the summary based on comprehensive coverage, avoidance of irrelevant information, logical structure, and factual accuracy.
+You should assess the summary based on comprehensive coverage, avoidance of irrelevant \
+information, logical structure, and factual accuracy.
 Be as objective as possible.
 
 # Rubrics
@@ -48,7 +54,7 @@ Be as objective as possible.
 """
 
 # Summarization Rank System Prompt
-SUMMARIZATION_LISTWISE_SYSTEM_PROMPT = "You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words."
+SUMMARIZATION_LISTWISE_SYSTEM_PROMPT = ALIGNMENT_LISTWISE_SYSTEM_PROMPT
 
 # Summarization Rank User Prompt
 SUMMARIZATION_LISTWISE_USER_PROMPT = """# Task Description
@@ -183,11 +189,19 @@ class SummarizationGrader(BaseHelpfulnessGrader):
             >>> import asyncio
             >>> from rm_gallery.core.model.openai_llm import OpenAIChatModel
             >>> from rm_gallery.core.grader.base import GraderMode
-            >>> model = OpenAIChatModel(model_name="gpt-3.5-turbo")
+            >>> model = OpenAIChatModel(model="gpt-3.5-turbo")
             >>> grader = SummarizationGrader(mode=GraderMode.POINTWISE, model=model)
             >>> result = asyncio.run(grader.aevaluate(
-            ...     query="Climate change is a significant global challenge that affects ecosystems, economies, and societies worldwide. It is caused primarily by human activities such as burning fossil fuels, deforestation, and industrial processes. The impacts include rising sea levels, extreme weather events, biodiversity loss, and food security issues. Addressing climate change requires international cooperation, policy changes, and technological innovations.",
-            ...     answer="Climate change, caused by human activities, has global impacts on ecosystems and societies. It requires international cooperation and technological solutions."
+            ...     query="Climate change is a significant global challenge that affects "
+                          "ecosystems, economies, and societies worldwide. It is caused primarily "
+                          "by human activities such as burning fossil fuels, deforestation, and "
+                          "industrial processes. The impacts include rising sea levels, extreme "
+                          "weather events, biodiversity loss, and food security issues. Addressing "
+                          " climate change requires international cooperation, policy changes, and "
+                          " technological innovations.",
+            ...     answer="Climate change, caused by human activities, has global impacts on "
+                           "ecosystems and societies. It requires international cooperation and "
+                           "technological solutions."
             ... ))
             >>> print(result.score, result.reason)
             0.85 The summary captures the key points but could include more specific impacts.

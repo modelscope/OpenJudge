@@ -721,7 +721,7 @@ class AutoRubrics(BaseRunner):
             "sampling_mode": sampling_mode,
             "grader_mode": self.config.grader_mode.value,
             "aggregation_mode": self.config.aggregation_mode.value,
-            "config": self.config.dict(),
+            "config": self.config.model_dump(),
             "total_samples": total_eval_cases,
             "final_rubrics": final_rubrics,
             "final_rubric_count": len(final_rubrics),

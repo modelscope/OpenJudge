@@ -39,8 +39,8 @@ async def test_rmbench_basic():
     # Initialize model
     print("Initializing model...")
     model = OpenAIChatModel(
-        model_name="gpt-4o-mini",
-        generate_kwargs={"temperature": 0.1},
+        model="gpt-4o-mini",
+        temperature=0.1,
     )
 
     # Create runner with RM-Bench specific metric
@@ -52,13 +52,13 @@ async def test_rmbench_basic():
 
     # Execute evaluation
     print("\nRunning evaluation...")
-    report = await runner(eval_cases)
+    report = await runner.aevaluate_batch(eval_cases)
 
     # Print results
     print("\n" + "=" * 80)
     print("RM-BENCH EVALUATION RESULTS")
     print("=" * 80)
-    print(f"\nModel: {report.model_name}")
+    print(f"\nModel: {report.model}")
     print(f"Total samples: {report.total_samples}")
     print(f"Valid samples: {report.valid_samples}")
 
@@ -80,7 +80,7 @@ async def test_rmbench_basic():
             for i, row_label in enumerate(["Simple", "Medium", "Complex"]):
                 print(
                     f"Chosen {row_label:7s} {acc_matrix[i][0]:.3f}   "
-                    f"{acc_matrix[i][1]:.3f}   {acc_matrix[i][2]:.3f}"
+                    f"{acc_matrix[i][1]:.3f}   {acc_matrix[i][2]:.3f}",
                 )
 
     # Save results
@@ -122,8 +122,8 @@ async def test_rmbench_domain_analysis():
 
     # Initialize model
     model = OpenAIChatModel(
-        model_name="gpt-4o-mini",
-        generate_kwargs={"temperature": 0.1},
+        model="gpt-4o-mini",
+        temperature=0.1,
     )
 
     # Evaluate first domain only for demo
@@ -136,13 +136,13 @@ async def test_rmbench_domain_analysis():
         metrics=[RMBenchAccuracyMetric()],
     )
 
-    report = await runner(domain_cases[first_domain])
+    report = await runner.aevaluate_batch(domain_cases[first_domain])
 
     # Print results
     print("\n" + "=" * 80)
     print(f"DOMAIN: {first_domain}")
     print("=" * 80)
-    print(f"Model: {report.model_name}")
+    print(f"Model: {report.model}")
     print(f"Total samples: {report.total_samples}")
     print(f"Valid samples: {report.valid_samples}")
 
@@ -167,8 +167,8 @@ async def test_rmbench_parallel_vs_serial():
         return
 
     model = OpenAIChatModel(
-        model_name="gpt-4o-mini",
-        generate_kwargs={"temperature": 0.1},
+        model="gpt-4o-mini",
+        temperature=0.1,
     )
 
     # Test with different worker counts
@@ -186,7 +186,7 @@ async def test_rmbench_parallel_vs_serial():
         )
 
         start_time = time.time()
-        report = await runner(eval_cases)
+        report = await runner.aevaluate_batch(eval_cases)
         elapsed_time = time.time() - start_time
 
         print(f"Elapsed time: {elapsed_time:.2f}s")
@@ -217,4 +217,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

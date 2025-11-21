@@ -20,7 +20,7 @@ Example:
 
     # Run evaluation
     report = await runner(eval_cases)
-    print(report.model_name, report.metrics)
+    print(report.model, report.metrics)
     ```
 """
 

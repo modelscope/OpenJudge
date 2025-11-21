@@ -1,10 +1,18 @@
 # -*- coding: utf-8 -*-
+"""Closed QA Grader
+
+Provides precise, fact-based answers to questions with definitive correct responses.
+"""
 from typing import Any, List
 
 from rm_gallery.core.grader.base import GraderMode, GraderRank, GraderScore
 from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import Template
+from rm_gallery.gallery.grader.alignment.base import (
+    ALIGNMENT_LISTWISE_SYSTEM_PROMPT,
+    ALIGNMENT_POINTWISE_SYSTEM_PROMPT,
+)
 from rm_gallery.gallery.grader.alignment.helpfulness import BaseHelpfulnessGrader
 
 RUBRICS = (
@@ -25,7 +33,7 @@ RUBRICS = (
 
 
 # Closed QA Score System Prompt
-CLOSED_QA_POINTWISE_SYSTEM_PROMPT = "You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words."
+CLOSED_QA_POINTWISE_SYSTEM_PROMPT = ALIGNMENT_POINTWISE_SYSTEM_PROMPT
 
 # Closed QA Score User Prompt
 CLOSED_QA_POINTWISE_USER_PROMPT = """# Task Description
@@ -52,7 +60,7 @@ Be as objective as possible.
 """
 
 # Closed QA Rank System Prompt
-CLOSED_QA_LISTWISE_SYSTEM_PROMPT = "You are a helpful assistant skilled in reward evaluation. Please make reward judgments based on the given prompt words."
+CLOSED_QA_LISTWISE_SYSTEM_PROMPT = ALIGNMENT_LISTWISE_SYSTEM_PROMPT
 
 # Closed QA Rank User Prompt
 CLOSED_QA_LISTWISE_USER_PROMPT = """# Task Description
@@ -106,7 +114,10 @@ CLOSED_QA_LISTWISE_TEMPLATE = Template(
 
 
 class ClosedQAGrader(BaseHelpfulnessGrader):
-    """Closed QA: Provides precise, fact-based answers to questions with definitive correct responses."""
+    """Closed QA
+
+    Provides precise, fact-based answers to questions with definitive correct responses.
+    """
 
     _point_template = CLOSED_QA_POINTWISE_TEMPLATE
     _list_template = CLOSED_QA_LISTWISE_TEMPLATE
@@ -137,7 +148,8 @@ class ClosedQAGrader(BaseHelpfulnessGrader):
             model=model,
             template=template,
             rubrics=rubrics,
-            description="Provides precise, fact-based answers to questions with definitive correct responses.",
+            description="Provides precise, fact-based answers to questions with definitive "
+            "correct responses.",
             **kwargs,
         )
 
@@ -181,7 +193,7 @@ class ClosedQAGrader(BaseHelpfulnessGrader):
             >>> import asyncio
             >>> from rm_gallery.core.model.openai_llm import OpenAIChatModel
             >>> from rm_gallery.core.grader.base import GraderMode
-            >>> model = OpenAIChatModel(model_name="gpt-3.5-turbo")
+            >>> model = OpenAIChatModel(model="gpt-3.5-turbo")
             >>> grader = ClosedQAGrader(mode=GraderMode.POINTWISE, model=model)
             >>> result = asyncio.run(grader.aevaluate(
             ...     query="What is the capital of France?",

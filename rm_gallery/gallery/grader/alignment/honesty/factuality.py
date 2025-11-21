@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
+"""Factuality: Detects hallucinations and other basic errors in completions."""
 from typing import Any, List
 
 from rm_gallery.core.grader.base import GraderMode, GraderRank, GraderScore
 from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import Template
+from rm_gallery.gallery.grader.alignment.base import ALIGNMENT_POINTWISE_SYSTEM_PROMPT
 from rm_gallery.gallery.grader.alignment.helpfulness import BaseHelpfulnessGrader
 
 RUBRICS = (
@@ -17,8 +19,7 @@ FACTUALITY_POINTWISE_TEMPLATE = Template(
     messages=[
         ChatMessage(
             role="system",
-            content="You are a helpful assistant skilled in reward evaluation. "
-            "Please make reward judgments based on the given prompt words.",
+            content=ALIGNMENT_POINTWISE_SYSTEM_PROMPT,
         ),
         ChatMessage(
             role="user",
@@ -53,8 +54,7 @@ FACTUALITY_LISTWISE_TEMPLATE = Template(
     messages=[
         ChatMessage(
             role="system",
-            content="You are a helpful assistant skilled in reward evaluation. "
-            "Please make reward judgments based on the given prompt words.",
+            content=ALIGNMENT_POINTWISE_SYSTEM_PROMPT,
         ),
         ChatMessage(
             role="user",
@@ -166,13 +166,13 @@ class FactualityGrader(BaseHelpfulnessGrader):
             >>> import asyncio
             >>> from rm_gallery.core.model.openai_llm import OpenAIChatModel
             >>> from rm_gallery.core.grader.base import GraderMode
-            >>> model = OpenAIChatModel(model_name="gpt-3.5-turbo")
+            >>> model = OpenAIChatModel(model="gpt-3.5-turbo")
             >>> grader = FactualityGrader(mode=GraderMode.POINTWISE, model=model)
             >>> result = asyncio.run(grader.aevaluate(
             ...     query="Who was the first person to walk on the moon?",
             ...     answer="Neil Armstrong was the first person to walk on the moon."
             ... ))
-            >>> print(result.score, result.reason)
-            1.0 The response correctly identifies Neil Armstrong as the first person to walk on the moon.
+            >>> print(result.score)
+            1.0
         """
         return await super().aevaluate(query=query, answer=answer, **kwargs)

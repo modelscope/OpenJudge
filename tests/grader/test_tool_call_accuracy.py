@@ -13,7 +13,7 @@ from rm_gallery.gallery.grader.agent.tool_call_accuracy import ToolCallAccuracyG
 
 def test_tool_call_accuracy_grader_creation():
     """Test creating a ToolCallAccuracyGrader instance"""
-    model = OpenAIChatModel(model_name="qwen-plus", stream=False)
+    model = OpenAIChatModel(model="qwen-plus", stream=False)
     grader = ToolCallAccuracyGrader(model=model)
 
     assert grader is not None
@@ -26,7 +26,7 @@ def test_tool_call_accuracy_grader_creation():
 async def test_tool_call_accuracy_grader_execution():
     """Test executing the tool call accuracy grader with actual model call"""
     # Initialize the grader
-    model = OpenAIChatModel(model_name="qwen3-32b", stream=False)
+    model = OpenAIChatModel(model="qwen3-32b", stream=False)
     grader = ToolCallAccuracyGrader(model=model)
 
     # Example conversation

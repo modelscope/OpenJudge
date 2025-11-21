@@ -38,8 +38,8 @@ async def test_conflict_detector_basic():
 
     # Initialize model
     model = OpenAIChatModel(
-        model_name="gpt-4o-mini",
-        generate_kwargs={"temperature": 0.1},
+        model="gpt-4o-mini",
+        temperature=0.1,
     )
 
     # Run evaluation using evaluate_async helper
@@ -54,7 +54,7 @@ async def test_conflict_detector_basic():
     print("\n" + "=" * 80)
     print("CONFLICT DETECTOR EVALUATION RESULTS")
     print("=" * 80)
-    print(f"\nModel: {report.get('model_name', 'Unknown')}")
+    print(f"\nModel: {report.get('model', 'Unknown')}")
     print(f"Total samples: {report.get('total_samples', 0)}")
     print(f"Valid samples: {report.get('valid_samples', 0)}")
 
@@ -88,8 +88,8 @@ async def test_conflict_detector_custom_runner():
 
     # Initialize model
     model = OpenAIChatModel(
-        model_name="gpt-4o-mini",
-        generate_kwargs={"temperature": 0.1},
+        model="gpt-4o-mini",
+        temperature=0.1,
     )
 
     # Create runner with custom metrics
@@ -104,13 +104,13 @@ async def test_conflict_detector_custom_runner():
 
     # Run evaluation
     print("\nRunning custom evaluation...")
-    report = await runner(eval_cases)
+    report = await runner.aevaluate_batch(eval_cases)
 
     # Print results
     print("\n" + "=" * 80)
     print("CUSTOM RUNNER RESULTS")
     print("=" * 80)
-    print(f"Model: {report.model_name}")
+    print(f"Model: {report.model}")
     print(f"Total samples: {report.total_samples}")
     print(f"Valid samples: {report.valid_samples}")
 
@@ -136,4 +136,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

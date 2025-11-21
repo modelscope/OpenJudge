@@ -93,9 +93,11 @@ class ToolCallAccuracyGrader(LLMGrader):
 
     The evaluator uses a scoring rubric of 1 to 5:
     - Score 1: The tool calls are irrelevant
-    - Score 2: The tool calls are partially relevant, but not enough tools were called or the parameters were not correctly passed
+    - Score 2: The tool calls are partially relevant, but not enough tools were called or the
+               parameters were not correctly passed
     - Score 3: The tool calls are relevant, but there were unnecessary, excessive tool calls made
-    - Score 4: The tool calls are relevant, but some tools returned errors and agent retried calling them again and succeeded
+    - Score 4: The tool calls are relevant, but some tools returned errors and agent retried calling
+               them again and succeeded
     - Score 5: The tool calls are relevant, and all parameters were correctly passed
 
     This evaluation focuses on measuring whether tool calls meaningfully contribute to addressing
@@ -204,21 +206,24 @@ class ToolCallAccuracyGrader(LLMGrader):
         response: Union[str, List[Dict[str, Any]]] = None,
         **kwargs: Any,
     ) -> GraderScore:
-        """Evaluate tool call accuracy. Accepts a query, tool definitions, and tool calls for evaluation.
+        """
+        Evaluate tool call accuracy. Accepts a query, tool definitions, and tool calls.
 
-        This method evaluates the accuracy of tool calls based on multiple criteria including relevance,
-        parameter correctness, completeness, efficiency, and execution success. It assigns a score from
-        1 to 5 based on how well the tool calls address the user's query.
+        This method evaluates the accuracy of tool calls based on multiple criteria including
+        relevance, parameter correctness, completeness, efficiency, and execution success.
+        It assigns a score from 1 to 5 based on how well the tool calls address the user's query.
 
         Args:
             query: Query or Chat history up to the message that has the tool call being evaluated.
-                  Can be a string for simple queries or a list of message dictionaries for conversation history.
+                  Can be a string for simple queries or a list of message dictionaries for
+                  conversation history.
             tool_definitions: List of tool definitions whose calls are being evaluated.
                              Each definition includes name, description, and parameters information.
             tool_calls: Optional List of tool calls to evaluate. If not provided, response should be
                        provided and should contain tool call(s).
             response: Optional response to be evaluated alongside the tool calls.
-                     If provided and tool_calls parameter is not provided, all tool calls in response will be evaluated.
+                     If provided and tool_calls parameter is not provided, all tool calls in
+                     response will be evaluated.
                      If both response and tool_calls parameters are provided, only the tool calls in
                      tool_calls parameter will be evaluated.
             **kwargs: Additional keyword arguments passed to the underlying evaluation model.
@@ -232,7 +237,7 @@ class ToolCallAccuracyGrader(LLMGrader):
         Example:
             >>> import asyncio
             >>> from rm_gallery.core.model.openai_llm import OpenAIChatModel
-            >>> model = OpenAIChatModel(model_name="gpt-3.5-turbo")
+            >>> model = OpenAIChatModel(model="gpt-3.5-turbo")
             >>> grader = ToolCallAccuracyGrader(model=model)
             >>> conversation = [
             ...     {"role": "user", "content": "What's the weather like in New York?"}

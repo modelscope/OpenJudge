@@ -15,7 +15,7 @@ from rm_gallery.gallery.grader.agent.tool_call_success import ToolCallSuccessGra
 
 def test_tool_call_success_grader_creation():
     """Test creating a ToolCallSuccessGrader instance"""
-    model = OpenAIChatModel(model_name="qwen-plus", stream=False)
+    model = OpenAIChatModel(model="qwen-plus", stream=False)
     grader = ToolCallSuccessGrader(model=model)
 
     assert grader is not None
@@ -23,12 +23,12 @@ def test_tool_call_success_grader_creation():
     assert grader.name == "tool_call_success"
 
 
-# @pytest.mark.skip(reason="Requires API key and network access")
+@pytest.mark.skip(reason="Requires API key and network access")
 @pytest.mark.asyncio
 async def test_tool_call_success_grader_execution():
     """Test executing the tool call success grader with actual model call"""
     # Initialize the grader
-    model = OpenAIChatModel(model_name="qwen-plus", stream=False)
+    model = OpenAIChatModel(model="qwen-plus", stream=False)
     grader = ToolCallSuccessGrader(model=model)
 
     # Define tool definitions

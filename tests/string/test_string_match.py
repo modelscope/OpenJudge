@@ -225,12 +225,12 @@ class TestStringMatchGrader:
 
     async def test_invalid_algorithm(self, grader):
         """Test invalid algorithm"""
-        with pytest.raises(ValueError, match="Unknown algorithm"):
-            await grader.aevaluate(
-                reference="test",
-                candidate="test",
-                algorithm="invalid_algorithm",
-            )
+        grader_error = await grader.aevaluate(
+            reference="test",
+            candidate="test",
+            algorithm="invalid_algorithm",
+        )
+        assert "Unknown algorithm" in grader_error.reason
 
     async def test_algorithm_metadata(self, grader):
         """Test that algorithm is included in metadata"""

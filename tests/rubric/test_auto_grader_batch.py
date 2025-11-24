@@ -182,7 +182,7 @@ class DataLoader:
         return eval_cases
 
 
-class TestConfig:
+class GraderTestConfig:
     """Configuration for batch tests."""
 
     def __init__(
@@ -225,7 +225,7 @@ class AutoGraderBatchTester:
     async def run_batch_test(
         self,
         eval_cases: List[EvalCase],
-        config: TestConfig,
+        config: GraderTestConfig,
         grader_name: str = "AutoGrader_Batch_Test",
     ) -> Dict[str, Any]:
         """Run a complete batch test with the given configuration."""
@@ -368,7 +368,7 @@ async def test_listwise_batch_evaluation(
     )
 
     # Configure test
-    config = TestConfig(
+    config = GraderTestConfig(
         grader_mode="listwise",
         aggregation_mode="merge_similar",
         sampling_mode="all_samples",
@@ -414,7 +414,7 @@ async def test_pointwise_batch_evaluation(
     )
 
     # Configure test
-    config = TestConfig(
+    config = GraderTestConfig(
         grader_mode="pointwise",
         aggregation_mode="keep_all",
         sampling_mode="all_samples",
@@ -458,7 +458,7 @@ async def test_batch_with_results_saving(
     )
 
     # Configure test
-    config = TestConfig(
+    config = GraderTestConfig(
         grader_mode="listwise",
         max_train_samples=20,
         max_test_samples=5,
@@ -514,7 +514,7 @@ async def main() -> None:
             return
 
         # Test configuration
-        config = TestConfig(
+        config = GraderTestConfig(
             grader_mode="listwise",
             aggregation_mode="merge_similar",
             sampling_mode="all_samples",

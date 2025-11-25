@@ -2,18 +2,23 @@
 """
 Instruction Adherence Grader
 
-Evaluates whether model outputs correctly follow the given instructions, including
+Evaluates whether model response correctly follow the given instructions, including
 content requirements, format constraints, style guidelines, and other specified criteria.
 """
 
 import textwrap
-from typing import Any, Optional
+from typing import Optional
 
 from loguru import logger
 
 from rm_gallery.core.grader.base import LLMGrader
 from rm_gallery.core.model.base import ChatModelBase
-from rm_gallery.core.schema.grader import GraderMode, GraderScore
+from rm_gallery.core.schema.grader import (
+    GraderError,
+    GraderMode,
+    GraderRank,
+    GraderScore,
+)
 from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import LanguageEnum, Template
 
@@ -21,7 +26,7 @@ from rm_gallery.core.schema.template import LanguageEnum, Template
 
 # English Prompt
 INSTRUCTION_ADHERENCE_PROMPT_EN = """
-You are a professional data annotator responsible for evaluating whether the model output follows the given instructions. Your task is to score according to the following criteria:
+You are a professional data annotator responsible for evaluating whether the model response follows the given instructions. Your task is to score according to the following criteria:
 
 <Scoring Criteria>
 A response that perfectly follows instructions should:
@@ -44,7 +49,7 @@ Points should be deducted for:
 <Guidance>
 - Carefully parse the instruction to identify ALL requirements and constraints.
 - Break down complex instructions into individual requirements.
-- Check each requirement systematically against the output.
+- Check each requirement systematically against the response.
 - Consider both explicit requirements (stated clearly) and implicit requirements (strongly implied).
 - Evaluate format, structure, and style requirements separately from content requirements.
 - Be strict: partial fulfillment should result in lower scores.
@@ -62,9 +67,9 @@ Evaluate the following:
 
 {input_section}
 
-<output>
-{output}
-</output>
+<response>
+{response}
+</response>
 
 # Output Instructions
 Provide your evaluation in the following structured JSON format:
@@ -119,9 +124,9 @@ INSTRUCTION_ADHERENCE_PROMPT_ZH = """
 
 {input_section}
 
-<output>
-{output}
-</output>
+<response>
+{response}
+</response>
 
 # 输出指令
 请按以下结构化 JSON 格式提供你的评估：
@@ -157,15 +162,15 @@ class InstructionAdherenceGrader(LLMGrader):
     """
     Instruction Adherence Grader
 
-    Evaluates how well model outputs follow the given instructions across multiple dimensions
+    Evaluates how well model response follow the given instructions across multiple dimensions
     including content, format, style, constraints, and completeness.
 
     Key evaluation dimensions:
-    - Content Relevance: Does output address all required topics/questions?
-    - Format Compliance: Does output follow specified format (e.g., JSON, bullet points, essay)?
+    - Content Relevance: Does response address all required topics/questions?
+    - Format Compliance: Does response follow specified format (e.g., JSON, bullet points, essay)?
     - Constraint Adherence: Are all constraints satisfied (e.g., length, tone, style)?
     - Completeness: Are all instruction requirements fulfilled?
-    - Precision: Does output avoid adding unrequested information?
+    - Precision: Does response avoid adding unrequested information?
 
     Attributes:
         name: Grader name
@@ -184,8 +189,8 @@ class InstructionAdherenceGrader(LLMGrader):
         >>>
         >>> result = await grader.aevaluate(
         ...     instruction="Write a 3-sentence summary in formal tone about climate change.",
-        ...     output="Climate change is a big problem. It's getting hotter. We need to act now!",
-        ...     input="Summarize the climate situation."
+        ...     response="Climate change is a big problem. It's getting hotter. We need to act now!",
+        ...     query="Summarize the climate situation."
         ... )
         >>> print(f"Instruction adherence score: {result.score:.2f}")
     """
@@ -200,28 +205,26 @@ class InstructionAdherenceGrader(LLMGrader):
         super().__init__(
             name="instruction_adherence",
             mode=GraderMode.POINTWISE,
-            description="Evaluate whether output follows the given instructions",
+            description="Evaluate whether response follows the given instructions",
             model=model,
             template=template,
             language=language,
         )
         self.threshold = threshold
 
-    async def _aevaluate(  # pylint: disable=redefined-builtin,unused-argument
+    async def aevaluate(
         self,
         instruction: str,
-        output: str,
-        input: Optional[str] = None,
-        **kwargs: Any,
-    ) -> GraderScore:
+        response: str,
+        query: Optional[str] = None,
+    ) -> GraderScore | GraderRank | GraderError:
         """
-        Evaluate instruction adherence in output
+        Evaluate instruction adherence in response
 
         Args:
             instruction: The instruction or prompt given to the model
-            output: Model output to evaluate
-            input: Optional original user input or question
-            **kwargs: Additional arguments (ignored)
+            response: Model response to evaluate
+            query: Optional original user query or question
 
         Returns:
             GraderScore: Score with normalized instruction adherence value [0, 1]
@@ -230,21 +233,32 @@ class InstructionAdherenceGrader(LLMGrader):
         Example:
             >>> result = await grader.aevaluate(
             ...     instruction="Write exactly 3 bullet points about AI safety.",
-            ...     output="• AI safety is important\\n• We need alignment research\\n• Testing is crucial",
+            ...     response="• AI safety is important\\n• We need alignment research\\n• Testing is crucial",
             ... )
         """
+        return await super().aevaluate(
+            instruction=instruction,
+            response=response,
+            query=query,
+        )
 
+    async def _aevaluate(
+        self,
+        instruction: str,
+        response: str,
+        query: Optional[str] = None,
+    ) -> GraderScore:
         # Prepare input section
         input_section = ""
-        if input:
-            input_section = f"""<input>
-{input}
-</input>"""
+        if query:
+            input_section = f"""<query>
+{query}
+</query>"""
 
         try:
             result = await super()._aevaluate(
                 instruction=instruction,
-                output=output,
+                response=response,
                 input_section=input_section,
             )
             score = result.score

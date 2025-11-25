@@ -7,7 +7,7 @@ Supports automatic evaluation step generation and custom scoring rubrics.
 """
 
 import textwrap
-from typing import Any, List, Optional, Tuple
+from typing import Any, List, Optional, Tuple, Union
 
 from loguru import logger
 
@@ -20,7 +20,6 @@ from rm_gallery.core.schema.template import LanguageEnum, Template
 from rm_gallery.gallery.grader.multimodal._internal import (
     EvaluationSteps,
     MLLMImage,
-    MLLMTestCaseParams,
     Rubric,
     construct_params_string,
     format_image_content,
@@ -87,51 +86,81 @@ DEFAULT_CUSTOM_CRITERIA_GENERATE_STEPS_TEMPLATE = Template(
 class CustomCriteriaGrader(Grader):
     """
     Custom Criteria Grader
-
-    Flexible evaluation with custom criteria for multimodal content.
-    Supports:
-    - Chain-of-Thought evaluation with step-by-step reasoning
-    - Automatic evaluation step generation from criteria
-    - Custom rubrics for detailed scoring standards
-    - Flexible scoring (0-10 scale, normalized to 0-1)
-
-    Attributes:
-        name: Grader name
-        model: OpenAIChatModel instance for evaluation
-        evaluation_name: Name for this evaluation
-        evaluation_params: List of parameters to evaluate (e.g., input, actual_output)
-        criteria: Evaluation criteria description
+    
+    Purpose:
+        Flexible evaluation framework for multimodal content using custom criteria.
+        Enables defining your own evaluation standards with automatic step generation
+        and optional scoring rubrics. Ideal for domain-specific or task-specific evaluation.
+    
+    What it evaluates:
+        - Any combination of multimodal inputs (images, text, context, tools)
+        - Custom criteria defined by you (quality, accuracy, creativity, etc.)
+        - Chain-of-Thought evaluation with step-by-step reasoning
+        - Automatic evaluation step generation from criteria description
+        - Custom rubrics for fine-grained scoring standards
+    
+    When to use:
+        - Domain-specific evaluation not covered by standard graders
+        - Custom quality metrics for your specific use case
+        - Multimodal tasks requiring specialized assessment
+        - Research experiments with novel evaluation criteria
+        - Business-specific quality standards
+    
+    Scoring:
+        - Configurable score range (default: 0-10, normalized to 0-1)
+        - Optional rubrics define expected outcomes for score ranges
+        - Can auto-generate evaluation steps from criteria description
+        - Chain-of-Thought reasoning for explainability
+    
+    Args:
+        model: ChatModelBase instance or dict config for vision-language model
+        evaluation_name: Name for this evaluation (e.g., "Image Caption Quality")
+        evaluation_params: List of parameter strings to evaluate, e.g., ["input", "actual_output"]
+                          Valid values: "input", "actual_output", "expected_output", "context",
+                          "retrieval_context", "tools", "expected_tools"
+        criteria: Evaluation criteria description (required if evaluation_steps not provided)
         evaluation_steps: Explicit evaluation steps (optional, auto-generated if not provided)
-        rubric: Detailed scoring rubric (optional)
-        threshold: Success threshold [0, 1] (default: 0.7)
-
+        rubric: Optional list of Rubric objects defining score ranges
+        threshold: Minimum score [0, 1] to pass (default: 0.7)
+        score_range: Score range tuple (default: (0, 10))
+        generate_steps_template: Template for generating steps (default: DEFAULT_CUSTOM_CRITERIA_GENERATE_STEPS_TEMPLATE)
+        language: Prompt language - EN or ZH (default: LanguageEnum.EN)
+    
+    Returns:
+        GraderScore object with:
+            - score: Normalized score [0, 1]
+            - reason: Detailed reasoning including evaluation steps
+            - metadata: Raw score, score range, evaluation steps, etc.
+    
     Example:
         >>> from rm_gallery.core.model.openai_llm import OpenAIChatModel
-        >>> from rm_gallery.gallery.grader.multimodal import MLLMTestCaseParams, MLLMImage
+        >>> from rm_gallery.gallery.grader.multimodal import CustomCriteriaGrader, MLLMImage
         >>>
-        >>> vlm_api = VisionModelAdapter.from_qwen(model="qwen-vl-plus")
+        >>> # Initialize vision-language model
+        >>> vlm = OpenAIChatModel(api_key="sk-...", model="gpt-4o")
+        >>>
+        >>> # Create custom grader
         >>> grader = CustomCriteriaGrader(
-        ...     model=vlm_api,
+        ...     model=vlm,
         ...     evaluation_name="Image Caption Quality",
-        ...     evaluation_params=[
-        ...         MLLMTestCaseParams.INPUT,
-        ...         MLLMTestCaseParams.ACTUAL_OUTPUT
-        ...     ],
-        ...     criteria="Evaluate the quality of image captions based on accuracy and detail",
-        ...     threshold=0.7
+        ...     evaluation_params=["input", "actual_output"],
+        ...     criteria="Evaluate caption accuracy, detail level, and relevance to image"
         ... )
         >>>
+        >>> # Evaluate
         >>> result = await grader.aevaluate(
-        ...     input=[MLLMImage(url="..."), "Describe this image"],
-        ...     actual_output=["A cat sitting on a mat"]
+        ...     input=[MLLMImage(url="https://example.com/cat.jpg"), "Describe this image"],
+        ...     actual_output=["A fluffy orange cat sitting on a blue mat"]
         ... )
+        >>> print(result.score)  # 0.9
+        >>> print(result.reason)  # "Caption is accurate and detailed..."
     """
 
     def __init__(
         self,
         model: ChatModelBase | dict,
         evaluation_name: str,
-        evaluation_params: List[MLLMTestCaseParams],
+        evaluation_params: List[str],
         criteria: Optional[str] = None,
         evaluation_steps: Optional[List[str]] = None,
         rubric: Optional[List[Rubric]] = None,
@@ -140,6 +169,21 @@ class CustomCriteriaGrader(Grader):
         generate_steps_template: Template = DEFAULT_CUSTOM_CRITERIA_GENERATE_STEPS_TEMPLATE,
         language: LanguageEnum = LanguageEnum.EN,
     ):
+        """
+        Initialize CustomCriteriaGrader
+
+        Args:
+            model: ChatModelBase instance or dict config for OpenAIChatModel
+            evaluation_name: Name for this evaluation (e.g., "Image Caption Quality")
+            evaluation_params: List of parameter strings to evaluate (e.g., ["input", "actual_output"])
+            criteria: Evaluation criteria description (required if evaluation_steps not provided)
+            evaluation_steps: Explicit evaluation steps (optional, auto-generated from criteria if not provided)
+            rubric: Optional list of Rubric objects defining score ranges and expected outcomes
+            threshold: Success threshold [0, 1] (default: 0.7)
+            score_range: Score range as (min, max) tuple (default: (0, 10))
+            generate_steps_template: Template for generating evaluation steps (default: DEFAULT_CUSTOM_CRITERIA_GENERATE_STEPS_TEMPLATE)
+            language: Language for prompts (default: LanguageEnum.EN)
+        """
         super().__init__(
             name="custom_criteria",
             grader_mode=GraderMode.POINTWISE,
@@ -218,7 +262,7 @@ class CustomCriteriaGrader(Grader):
             logger.error(f"Error generating evaluation steps: {e}")
             # Fallback to default steps
             return [
-                f"Analyze the {param.value}" for param in self.evaluation_params
+                f"Analyze the {param}" for param in self.evaluation_params
             ] + ["Evaluate based on the given criteria"]
 
     def _generate_evaluation_prompt_parts(
@@ -368,7 +412,7 @@ JSON:
         # Build test case list (text and images)
         test_case_list = []
         for param in self.evaluation_params:
-            param_value = params_dict.get(param.value, [])
+            param_value = params_dict.get(param, [])
             if isinstance(param_value, list):
                 test_case_list.extend(param_value)
             else:
@@ -424,13 +468,13 @@ JSON:
 
     async def _acompute(
         self,
-        **params_dict: Any,
+        params_dict: dict,
     ) -> Tuple[float, dict]:
         """
         Compute custom criteria score (asynchronous)
 
         Args:
-            **params_dict: Dictionary containing evaluation parameters
+            params_dict: Dictionary containing evaluation parameters
 
         Returns:
             tuple[float, dict]: (normalized_score [0,1], details)
@@ -438,9 +482,9 @@ JSON:
 
         # Validate required parameters
         for param in self.evaluation_params:
-            if param.value not in params_dict:
+            if param not in params_dict:
                 return 0.0, {
-                    "error": f"Missing required parameter: {param.value}",
+                    "error": f"Missing required parameter: {param}",
                 }
 
         # Evaluate
@@ -456,7 +500,7 @@ JSON:
             "score_range": self.score_range,
             "reason": reason,
             "evaluation_name": self.evaluation_name,
-            "evaluation_params": [p.value for p in self.evaluation_params],
+            "evaluation_params": self.evaluation_params,
             "evaluation_steps": (self.evaluation_steps or self._generated_steps),
             "threshold": self.threshold,
         }
@@ -465,19 +509,26 @@ JSON:
 
     async def _aevaluate(
         self,
-        **params_dict: Any,
+        *,
+        input: Optional[List[Union[str, MLLMImage]]] = None,
+        actual_output: Optional[List[Union[str, MLLMImage]]] = None,
+        expected_output: Optional[List[Union[str, MLLMImage]]] = None,
+        context: Optional[List[Union[str, MLLMImage]]] = None,
+        retrieval_context: Optional[List[Union[str, MLLMImage]]] = None,
+        tools: Optional[List[Union[str, MLLMImage]]] = None,
+        expected_tools: Optional[List[Union[str, MLLMImage]]] = None,
     ) -> GraderScore:
         """
         Evaluate using custom criteria framework
 
         Args:
-            **params_dict: Dictionary containing evaluation parameters
-                Expected keys depend on evaluation_params, e.g.:
-                - input: List[Union[str, MLLMImage]]
-                - actual_output: List[Union[str, MLLMImage]]
-                - expected_output: List[Union[str, MLLMImage]]
-                - context: List[Union[str, MLLMImage]]
-                etc.
+            input: Input to the system (prompt, question, images, etc.)
+            actual_output: Actual output from the system
+            expected_output: Expected/reference output
+            context: General context information
+            retrieval_context: Context retrieved from a knowledge base
+            tools: Tools used by the system
+            expected_tools: Expected/reference tools that should be used
 
         Returns:
             GraderScore: Score with normalized evaluation value [0, 1]
@@ -488,7 +539,21 @@ JSON:
             ...     actual_output=["A cat sitting"]
             ... )
         """
-        score, details = await self._acompute(**params_dict)
+        # Build params_dict from provided arguments
+        params_dict = {
+            "input": input,
+            "actual_output": actual_output,
+            "expected_output": expected_output,
+            "context": context,
+            "retrieval_context": retrieval_context,
+            "tools": tools,
+            "expected_tools": expected_tools,
+        }
+        
+        # Remove None values
+        params_dict = {k: v for k, v in params_dict.items() if v is not None}
+        
+        score, details = await self._acompute(params_dict)
 
         if "error" in details:
             return GraderScore(

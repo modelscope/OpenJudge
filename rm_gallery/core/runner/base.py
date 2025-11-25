@@ -11,7 +11,7 @@ class BaseRunner(ABC):
     """
 
     @abstractmethod
-    async def run(
+    async def arun(
         self,
         eval_cases: List[EvalCase],
         *args: Any,

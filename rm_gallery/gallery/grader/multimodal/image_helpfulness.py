@@ -14,7 +14,7 @@ from loguru import logger
 
 from rm_gallery.core.grader.base import LLMGrader
 from rm_gallery.core.model.base import ChatModelBase
-from rm_gallery.core.schema.grader import GraderMode, GraderScore, _GraderScore
+from rm_gallery.core.schema.grader import GraderMode, GraderScore, GraderScoreCallback
 from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import LanguageEnum, Template
 from rm_gallery.gallery.grader.multimodal._internal import (
@@ -122,41 +122,58 @@ DEFAULT_IMAGE_HELPFULNESS_TEMPLATE = Template(
 class ImageHelpfulnessGrader(LLMGrader):
     """
     Image Helpfulness Grader
-
-    Evaluates how helpful images are in enabling readers to understand the
-    surrounding text. Unlike coherence (which measures matching), helpfulness
-    measures whether the image provides additional value for comprehension.
-
-    Key evaluation dimensions:
-    - Information enhancement: Does the image provide new information?
-    - Understanding assistance: Does it make concepts clearer?
-    - Practical value: Is it genuinely useful for the reader?
-
-    Attributes:
-        name: Grader name
-        model: OpenAIChatModel instance for evaluation
-        max_context_size: Maximum characters to extract from context (default: 500)
-        threshold: Success threshold [0, 1] (default: 0.7)
-
+    
+    Purpose:
+        Evaluates how helpful images are in aiding readers' understanding of text.
+        Goes beyond simple coherence to assess whether images provide genuine value,
+        clarify concepts, and enhance comprehension.
+    
+    What it evaluates:
+        - Information Enhancement: Does image add new understanding beyond text?
+        - Concept Clarification: Does it make complex ideas easier to grasp?
+        - Practical Utility: Is it genuinely useful vs. merely decorative?
+        - Educational Value: Does it aid learning or task completion?
+        - Comprehension Support: Does it help readers grasp the content faster?
+    
+    When to use:
+        - Educational content evaluation
+        - Technical documentation quality assurance
+        - Tutorial and how-to guide assessment
+        - Instructional design evaluation
+        - User manual and help documentation review
+    
+    Scoring:
+        - 10: Extremely helpful, significantly enhances understanding
+        - 7-9: Very helpful, provides clear value
+        - 4-6: Somewhat helpful but limited value
+        - 0-3: Not helpful or redundant with text
+        Note: For multiple images, returns average score
+    
+    Args:
+        model: Vision-language model instance or dict config
+        max_context_size: Max characters from text context (default: 500)
+        threshold: Minimum score [0, 1] to pass (default: 0.7)
+        template: Custom template (default: DEFAULT_IMAGE_HELPFULNESS_TEMPLATE)
+        language: Prompt language - EN or ZH (default: LanguageEnum.EN)
+    
+    Returns:
+        GraderScore with normalized helpfulness score [0, 1]
+    
     Example:
         >>> from rm_gallery.core.model.openai_llm import OpenAIChatModel
-        >>> from rm_gallery.gallery.grader.multimodal import MLLMImage
+        >>> from rm_gallery.gallery.grader.multimodal import ImageHelpfulnessGrader, MLLMImage
         >>>
-        >>> api = OpenAIChatModel(
-        ...     api_key="your-key",  # pragma: allowlist secret
-        ...     model="gpt-4o",
-        ...     generate_kwargs={"temperature": 0.1},
-        ... )
-        >>> grader = ImageHelpfulnessGrader(model=api, threshold=0.7)
+        >>> model = OpenAIChatModel(api_key="sk-...", model="gpt-4o")
+        >>> grader = ImageHelpfulnessGrader(model=model)
         >>>
         >>> result = await grader.aevaluate(
         ...     actual_output=[
-        ...         "The architecture consists of multiple layers.",
-        ...         MLLMImage(url="https://example.com/architecture_diagram.jpg"),
-        ...         "Each layer serves a specific purpose."
+        ...         "The system architecture has three layers.",
+        ...         MLLMImage(url="https://example.com/arch_diagram.jpg"),
+        ...         "Each layer handles specific functions."
         ...     ]
         ... )
-        >>> print(f"Helpfulness score: {result.score:.2f}")
+        >>> print(result.score)  # 0.9 - diagram very helpful for understanding
     """
 
     def __init__(
@@ -167,6 +184,16 @@ class ImageHelpfulnessGrader(LLMGrader):
         template: Template = DEFAULT_IMAGE_HELPFULNESS_TEMPLATE,
         language: LanguageEnum = LanguageEnum.EN,
     ):
+        """
+        Initialize ImageHelpfulnessGrader
+
+        Args:
+            model: ChatModelBase instance or dict config for OpenAIChatModel
+            max_context_size: Maximum characters to extract from context (default: 500)
+            threshold: Success threshold [0, 1] (default: 0.7)
+            template: Template for evaluation prompts (default: DEFAULT_IMAGE_HELPFULNESS_TEMPLATE)
+            language: Language for prompts (default: LanguageEnum.EN)
+        """
         super().__init__(
             name="image_helpfulness",
             grader_mode=GraderMode.POINTWISE,
@@ -199,7 +226,7 @@ class ImageHelpfulnessGrader(LLMGrader):
             content = format_image_content(prompt, [image])
             response = await self.model.achat(
                 messages=[{"role": "user", "content": content}],
-                structured_model=_GraderScore,
+                structured_model=GraderScoreCallback,
             )
             score = response.metadata["score"]
             reason = response.metadata["reason"]

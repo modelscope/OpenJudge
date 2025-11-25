@@ -237,7 +237,7 @@ class QwenVLAPI(ChatModelBase):
             # Parse structured output if schema or response_format provided
             output_schema = response_format or schema
             if output_schema:
-                from rm_gallery.core.model.utils import trim_and_load_json
+                from rm_gallery.core.utils.utils import trim_and_load_json
 
                 data = trim_and_load_json(response_text)
                 try:

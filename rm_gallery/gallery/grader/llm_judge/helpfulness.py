@@ -150,41 +150,67 @@ DEFAULT_HELPFULNESS_TEMPLATE = Template(
 class HelpfulnessGrader(LLMGrader):
     """
     Helpfulness Grader
-
-    Evaluates the helpfulness, depth, and appropriateness of model response.
-    Measures whether responses provide useful, relevant, and well-organized
-    information that directly addresses the user's needs.
-
-    Key evaluation dimensions:
-    - Usefulness: Does it provide relevant information?
-    - Depth: Does it offer insightful analysis and unique perspectives?
-    - Clarity: Is it well-organized and easy to understand?
-    - Appropriateness: Does it adhere to ethical standards and context?
-    - Relevance: Does it stay on-topic without irrelevant content?
-
-    Attributes:
-        name: Grader name
-        model: OpenAIChatModel instance for evaluation
-        threshold: Success threshold [0, 1] (default: 0.7)
-        template: Evaluation template (default: DEFAULT_HELPFULNESS_TEMPLATE)
-
+    
+    Purpose:
+        Evaluates how helpful, useful, and well-structured model outputs are in addressing
+        user needs. Goes beyond correctness to assess practical value and user satisfaction.
+    
+    What it evaluates:
+        - Usefulness: Provides relevant, actionable information
+        - Depth: Offers insightful analysis beyond surface-level answers
+        - Clarity: Well-organized, easy to understand structure
+        - Completeness: Addresses all aspects of the query
+        - Appropriateness: Matches context and user expertise level
+        - Relevance: Stays on-topic without unnecessary tangents
+    
+    When to use:
+        - Evaluating chatbot and assistant responses for user satisfaction
+        - Ranking multiple candidate responses by utility
+        - Training reward models for RLHF (Reinforcement Learning from Human Feedback)
+        - Quality assurance for customer-facing AI systems
+        - A/B testing different response generation strategies
+    
+    Scoring:
+        - 10: Exceptionally helpful, comprehensive, and well-organized
+        - 7-9: Helpful and relevant with good depth
+        - 4-6: Provides some useful information but lacks depth or clarity
+        - 0-3: Unhelpful, irrelevant, or confusing
+    
+    Args:
+        model: ChatModelBase instance or dict config for OpenAIChatModel
+        threshold: Minimum score [0, 1] to pass (default: 0.7)
+        template: Custom evaluation template (default: DEFAULT_HELPFULNESS_TEMPLATE)
+        language: Prompt language - EN or ZH (default: LanguageEnum.EN)
+    
+    Returns:
+        GraderScore object with:
+            - score: Normalized score [0, 1] where 1.0 = maximally helpful
+            - reason: Explanation of strengths and weaknesses
+            - metadata: Raw score, threshold, and evaluation details
+    
     Example:
         >>> from rm_gallery.core.model.openai_llm import OpenAIChatModel
+        >>> from rm_gallery.gallery.grader.llm_judge import HelpfulnessGrader
         >>>
-        >>> api = OpenAIChatModel(
-        ...     api_key="your-key",  # pragma: allowlist secret
-        ...     model="gpt-4o",
-        ...     temperature=0.1
+        >>> # Initialize grader
+        >>> model = OpenAIChatModel(api_key="sk-...", model="gpt-4o")
+        >>> grader = HelpfulnessGrader(model=model, threshold=0.7)
+        >>>
+        >>> # Helpful output
+        >>> result = await grader.aevaluate(
+        ...     input="What are Python decorators?",
+        ...     output="Decorators are functions that modify other functions. They use @syntax..."
         ... )
-        >>> grader = HelpfulnessGrader(model=api, threshold=0.7)
+        >>> print(result.score)  # 0.9 - very helpful with good explanation
         >>>
+        >>> # Unhelpful output
         >>> result = await grader.aevaluate(
         ...     query="What are decorators in Python?",
         ...     response="Decorators are functions that modify other functions...",
         ...     context="User needs help understanding Python decorators.",
         ...     reference_response="Decorators are a Python feature for wrapping functions."
         ... )
-        >>> print(f"Helpfulness score: {result.score:.2f}")
+        >>> print(result.score)  # 0.2 - too vague and lacks depth
     """
 
     def __init__(
@@ -194,6 +220,15 @@ class HelpfulnessGrader(LLMGrader):
         template: Optional[Template] = DEFAULT_HELPFULNESS_TEMPLATE,
         language: LanguageEnum = LanguageEnum.EN,
     ):
+        """
+        Initialize HelpfulnessGrader
+
+        Args:
+            model: ChatModelBase instance or dict config for OpenAIChatModel
+            threshold: Success threshold [0, 1] (default: 0.7)
+            template: Template for evaluation prompts (default: DEFAULT_HELPFULNESS_TEMPLATE)
+            language: Language for prompts (default: LanguageEnum.EN)
+        """
         super().__init__(
             name="helpfulness",
             mode=GraderMode.POINTWISE,

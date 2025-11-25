@@ -264,7 +264,7 @@ class AutoGraderBatchTester:
 
         # Train the grader
         logger.info("Training grader...")
-        grader = await auto_grader.run(train_samples)
+        grader = await auto_grader.arun(train_samples)
         logger.info(f"Grader trained: {grader.name} ({grader.mode.value})")
 
         # Evaluate test samples

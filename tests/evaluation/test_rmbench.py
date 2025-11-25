@@ -52,7 +52,7 @@ async def test_rmbench_basic():
 
     # Execute evaluation
     print("\nRunning evaluation...")
-    report = await runner.run(eval_cases)
+    report = await runner.arun(eval_cases)
 
     # Print results
     print("\n" + "=" * 80)
@@ -136,7 +136,7 @@ async def test_rmbench_domain_analysis():
         metrics=[RMBenchAccuracyMetric()],
     )
 
-    report = await runner.run(domain_cases[first_domain])
+    report = await runner.arun(domain_cases[first_domain])
 
     # Print results
     print("\n" + "=" * 80)
@@ -186,7 +186,7 @@ async def test_rmbench_parallel_vs_serial():
         )
 
         start_time = time.time()
-        report = await runner.run(eval_cases)
+        report = await runner.arun(eval_cases)
         elapsed_time = time.time() - start_time
 
         print(f"Elapsed time: {elapsed_time:.2f}s")

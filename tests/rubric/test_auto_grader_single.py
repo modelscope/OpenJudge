@@ -69,7 +69,7 @@ async def test_auto_grader_with_default_config() -> None:
     )
 
     # Train the grader
-    grader = await auto_grader.run(training_data)
+    grader = await auto_grader.arun(training_data)
     assert grader is not None, "Grader should be created successfully"
 
     # Evaluate test data
@@ -105,7 +105,7 @@ async def test_auto_grader_with_custom_config() -> None:
     )
 
     # Train the grader
-    grader = await auto_grader.run(training_data)
+    grader = await auto_grader.arun(training_data)
     assert grader is not None, "Grader should be created successfully"
 
     # Evaluate test data
@@ -148,8 +148,8 @@ async def test_auto_grader_comparison() -> None:
     )
 
     # Train both graders
-    default_grader = await default_grader_factory.run(pointwise_data)
-    custom_grader = await custom_grader_factory.run(listwise_data)
+    default_grader = await default_grader_factory.arun(pointwise_data)
+    custom_grader = await custom_grader_factory.arun(listwise_data)
 
     # Evaluate with both graders
     default_result = await aevaluate_with_cases(

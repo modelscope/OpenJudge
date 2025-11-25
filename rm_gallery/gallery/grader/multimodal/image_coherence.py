@@ -14,7 +14,7 @@ from loguru import logger
 
 from rm_gallery.core.grader.base import LLMGrader
 from rm_gallery.core.model.base import ChatModelBase
-from rm_gallery.core.schema.grader import GraderMode, GraderScore, _GraderScore
+from rm_gallery.core.schema.grader import GraderMode, GraderScore, GraderScoreCallback
 from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import LanguageEnum, Template
 from rm_gallery.gallery.grader.multimodal._internal import (
@@ -121,33 +121,57 @@ DEFAULT_IMAGE_COHERENCE_TEMPLATE = Template(
 class ImageCoherenceGrader(LLMGrader):
     """
     Image Coherence Grader
-
-    Evaluates how well images cohere with their surrounding textual context.
-    Considers both the text appearing above and below each image.
-
-    For multiple images, computes the average coherence score.
-
-    Attributes:
-        name: Grader name
-        model: OpenAIChatModel instance for evaluation
-        max_context_size: Maximum characters to extract from context (default: 500)
-        threshold: Success threshold [0, 1] (default: 0.7)
-
+    
+    Purpose:
+        Evaluates how well images match and relate to their surrounding text context.
+        Assesses whether images are appropriately placed and meaningfully connected
+        to the text above and below them.
+    
+    What it evaluates:
+        - Semantic Alignment: Image content matches surrounding text topic
+        - Contextual Relevance: Image relates to both preceding and following text
+        - Visual-Text Consistency: Image illustrates concepts mentioned in text
+        - Placement Appropriateness: Image positioned at logical point in content
+    
+    When to use:
+        - Document generation with embedded images
+        - Multimodal content quality assurance
+        - Educational material evaluation
+        - Technical documentation review
+        - Marketing content assessment
+    
+    Scoring:
+        - 10: Perfect coherence, image perfectly illustrates text
+        - 7-9: Strong coherence with clear relationship
+        - 4-6: Some coherence but connection could be clearer
+        - 0-3: Weak or no coherence, image seems misplaced
+        Note: For multiple images, returns average score
+    
+    Args:
+        model: Vision-language model instance or dict config
+        max_context_size: Max characters from text context (default: 500)
+        threshold: Minimum score [0, 1] to pass (default: 0.7)
+        template: Custom evaluation template (default: DEFAULT_IMAGE_COHERENCE_TEMPLATE)
+        language: Prompt language - EN or ZH (default: LanguageEnum.EN)
+    
+    Returns:
+        GraderScore with normalized coherence score [0, 1]
+    
     Example:
         >>> from rm_gallery.core.model.openai_llm import OpenAIChatModel
-        >>> from rm_gallery.gallery.grader.multimodal import MLLMImage
+        >>> from rm_gallery.gallery.grader.multimodal import ImageCoherenceGrader, MLLMImage
         >>>
-        >>> api = VisionModelAdapter.from_qwen(api_key="your-key", model="qwen-vl-plus")
-        >>> grader = ImageCoherenceGrader(model=api, threshold=0.7)
+        >>> model = OpenAIChatModel(api_key="sk-...", model="gpt-4o")
+        >>> grader = ImageCoherenceGrader(model=model)
         >>>
         >>> result = await grader.aevaluate(
         ...     actual_output=[
-        ...         "Our sales grew significantly in Q3.",
+        ...         "Q3 sales increased 25%.",
         ...         MLLMImage(url="https://example.com/sales_chart.jpg"),
-        ...         "This was driven by new product launches."
+        ...         "Growth driven by new products."
         ...     ]
         ... )
-        >>> print(f"Coherence score: {result.score:.2f}")
+        >>> print(result.score)  # 0.95 - image coherent with sales context
     """
 
     def __init__(
@@ -158,6 +182,16 @@ class ImageCoherenceGrader(LLMGrader):
         template: Template = DEFAULT_IMAGE_COHERENCE_TEMPLATE,
         language: LanguageEnum = LanguageEnum.EN,
     ):
+        """
+        Initialize ImageCoherenceGrader
+
+        Args:
+            model: ChatModelBase instance or dict config for OpenAIChatModel
+            max_context_size: Maximum characters to extract from context (default: 500)
+            threshold: Success threshold [0, 1] (default: 0.7)
+            template: Template for evaluation prompts (default: DEFAULT_IMAGE_COHERENCE_TEMPLATE)
+            language: Language for prompts (default: LanguageEnum.EN)
+        """
         super().__init__(
             name="image_coherence",
             grader_mode=GraderMode.POINTWISE,
@@ -197,7 +231,7 @@ class ImageCoherenceGrader(LLMGrader):
             # Call model without structured output
             response = await self.model.achat(
                 messages=[{"role": "user", "content": content}],
-                structured_model=_GraderScore,
+                structured_model=GraderScoreCallback,
             )
             score = response.metadata["score"]
             reason = response.metadata["reason"]

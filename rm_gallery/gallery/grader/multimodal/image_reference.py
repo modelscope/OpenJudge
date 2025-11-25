@@ -14,7 +14,7 @@ from loguru import logger
 
 from rm_gallery.core.grader.base import LLMGrader
 from rm_gallery.core.model.base import ChatModelBase
-from rm_gallery.core.schema.grader import GraderMode, GraderScore, _GraderScore
+from rm_gallery.core.schema.grader import GraderMode, GraderScore, GraderScoreCallback
 from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import LanguageEnum, Template
 from rm_gallery.gallery.grader.multimodal._internal import (
@@ -120,41 +120,58 @@ DEFAULT_IMAGE_REFERENCE_TEMPLATE = Template(
 class ImageReferenceGrader(LLMGrader):
     """
     Image Reference Grader
-
-    Evaluates whether images are properly referenced in the surrounding text.
-    Assesses the clarity, accuracy, and appropriateness of image references.
-
-    Key evaluation aspects:
-    - Reference clarity: Is the reference explicit and clear?
-    - Reference accuracy: Does the reference description match the image?
-    - Reference necessity: Is the reference at an appropriate location?
-
-    Common reference types:
-    - Explicit: "As shown in Figure 1...", "The diagram above..."
-    - Implicit: "This shows...", "We can see..."
-    - None: No reference to the image
-
-    Attributes:
-        name: Grader name
-        model: OpenAIChatModel instance for evaluation
-        max_context_size: Maximum characters to extract from context (default: 500)
-        threshold: Success threshold [0, 1] (default: 0.7)
-
+    
+    Purpose:
+        Evaluates how well images are referenced in surrounding text. Assesses whether
+        text properly introduces, cites, and discusses images, ensuring readers know
+        what to look at and why.
+    
+    What it evaluates:
+        - Reference Clarity: Explicit and clear image references in text
+        - Reference Accuracy: Description matches actual image content
+        - Reference Placement: References at appropriate text locations
+        - Reference Types: Explicit ("Figure 1") vs. Implicit ("shown here")
+        - Contextual Integration: Image well-integrated into narrative flow
+    
+    When to use:
+        - Academic and research paper evaluation
+        - Technical documentation quality check
+        - Report and presentation assessment
+        - Editorial content review
+        - Style guide compliance verification
+    
+    Scoring:
+        - 10: Perfect explicit references with clear descriptions
+        - 7-9: Good explicit or appropriate implicit references
+        - 4-6: Some references but unclear or improper
+        - 0-3: No references or completely inappropriate
+        Note: For multiple images, returns average score
+    
+    Args:
+        model: Vision-language model instance or dict config
+        max_context_size: Max characters from text context (default: 500)
+        threshold: Minimum score [0, 1] to pass (default: 0.7)
+        template: Custom template (default: DEFAULT_IMAGE_REFERENCE_TEMPLATE)
+        language: Prompt language - EN or ZH (default: LanguageEnum.EN)
+    
+    Returns:
+        GraderScore with normalized reference quality score [0, 1]
+    
     Example:
         >>> from rm_gallery.core.model.openai_llm import OpenAIChatModel
-        >>> from rm_gallery.gallery.grader.multimodal import MLLMImage
+        >>> from rm_gallery.gallery.grader.multimodal import ImageReferenceGrader, MLLMImage
         >>>
-        >>> api = VisionModelAdapter.from_qwen(api_key="your-key", model="qwen-vl-plus")
-        >>> grader = ImageReferenceGrader(model=api, threshold=0.7)
+        >>> model = OpenAIChatModel(api_key="sk-...", model="gpt-4o")
+        >>> grader = ImageReferenceGrader(model=model)
         >>>
         >>> result = await grader.aevaluate(
         ...     actual_output=[
-        ...         "The sales data is presented below.",
-        ...         MLLMImage(url="https://example.com/sales_chart.jpg"),
-        ...         "As shown in the chart above, Q3 had the highest sales."
+        ...         "Figure 1 shows the sales trend.",
+        ...         MLLMImage(url="https://example.com/chart.jpg"),
+        ...         "As seen in Figure 1, Q3 peaked."
         ...     ]
         ... )
-        >>> print(f"Reference quality score: {result.score:.2f}")
+        >>> print(result.score)  # 1.0 - explicit references before and after
     """
 
     def __init__(
@@ -165,6 +182,16 @@ class ImageReferenceGrader(LLMGrader):
         template: Template = DEFAULT_IMAGE_REFERENCE_TEMPLATE,
         language: LanguageEnum = LanguageEnum.EN,
     ):
+        """
+        Initialize ImageReferenceGrader
+
+        Args:
+            model: ChatModelBase instance or dict config for OpenAIChatModel
+            max_context_size: Maximum characters to extract from context (default: 500)
+            threshold: Success threshold [0, 1] (default: 0.7)
+            template: Template for evaluation prompts (default: DEFAULT_IMAGE_REFERENCE_TEMPLATE)
+            language: Language for prompts (default: LanguageEnum.EN)
+        """
         super().__init__(
             name="image_reference",
             grader_mode=GraderMode.POINTWISE,
@@ -197,7 +224,7 @@ class ImageReferenceGrader(LLMGrader):
             content = format_image_content(prompt, [image])
             response = await self.model.achat(
                 messages=[{"role": "user", "content": content}],
-                structured_model=_GraderScore,
+                structured_model=GraderScoreCallback,
             )
             score = response.metadata["score"]
             reason = response.metadata["reason"]

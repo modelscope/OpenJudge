@@ -51,8 +51,8 @@ class GraderScore(GraderResult):
     score: float = Field(default=..., description="score")
 
 
-class _GraderScore(BaseModel):
-    """Grader score result.
+class GraderScoreCallback(BaseModel):
+    """Callback for grader score result.
 
     Represents a numerical score assigned by a grader along with a reason.
 
@@ -84,8 +84,8 @@ class GraderRank(GraderResult):
     rank: List[int] = Field(default=..., description="rank")
 
 
-class _GraderRank(BaseModel):
-    """Grader rank result.
+class GraderRankCallback(BaseModel):
+    """Callback for grader rank result, used for .
 
     Represents a ranking of items assigned by a grader along with a reason.
 
@@ -109,25 +109,8 @@ class GraderError(GraderResult):
     Represents an error encountered during evaluation.
 
     Attributes:
+        error (str): The error message.
         reason (str): Description of the error encountered during evaluation.
         metadata (Dict[str, Any]): Optional additional error information.
     """
-
-
-class GraderInfo(BaseModel):
-    """Grader info.
-
-    Represents meta information about a grader.
-
-    Attributes:
-        name (str): The name of the grader.
-        mode (GraderMode): The grader mode (pointwise or listwise).
-        description (str): The description of the grader.
-    """
-
-    name: str = Field(default=..., description="The name of the grader")
-    mode: GraderMode = Field(default=..., description="The grader mode")
-    description: str = Field(
-        default=...,
-        description="The description of the grader",
-    )
+    error: str = Field(default=..., description="error")

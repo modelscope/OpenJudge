@@ -102,7 +102,7 @@ class EvaluationRunner(BaseRunner):
         self.metrics.append(metric)
         return self
 
-    async def run(
+    async def arun(
         self,
         eval_cases: List[EvalCase],
         *args: Any,

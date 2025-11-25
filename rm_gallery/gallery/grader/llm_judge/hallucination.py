@@ -2,18 +2,23 @@
 """
 Hallucination Grader
 
-Evaluates whether model outputs contain hallucinations (fabricated information not
-supported by the input context).
+Evaluates whether model response contain hallucinations (fabricated information not
+supported by the context).
 """
 
 import textwrap
-from typing import Any, Optional
+from typing import Optional
 
 from loguru import logger
 
 from rm_gallery.core.grader.base import LLMGrader
 from rm_gallery.core.model.base import ChatModelBase
-from rm_gallery.core.schema.grader import GraderMode, GraderScore
+from rm_gallery.core.schema.grader import (
+    GraderError,
+    GraderMode,
+    GraderRank,
+    GraderScore,
+)
 from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import LanguageEnum, Template
 
@@ -21,11 +26,11 @@ from rm_gallery.core.schema.template import LanguageEnum, Template
 
 # English Prompt
 HALLUCINATION_PROMPT_EN = """
-You are a professional data annotator responsible for evaluating whether the model output contains hallucinations. Your task is to score according to the following criteria:
+You are a professional data annotator responsible for evaluating whether the model response contains hallucinations. Your task is to score according to the following criteria:
 
 <Scoring Criteria>
-A hallucination-free answer should:
-- Contain only verifiable facts directly supported by the input context.
+A hallucination-free response should:
+- Contain only verifiable facts directly supported by the context.
 - Not make unsupported claims or assumptions.
 - Not add speculative or imagined details.
 - Be completely accurate regarding dates, numbers, and specific details.
@@ -33,29 +38,29 @@ A hallucination-free answer should:
 </Scoring Criteria>
 
 <Guidance>
-- Thoroughly read the input context.
-- Identify all claims made in the output.
-- Cross-check each claim with the input context.
+- Thoroughly read the query.
+- Identify all claims made in the response.
+- Cross-check each claim with the context.
 - Note any unsupported or contradictory information.
 - Consider the severity and number of hallucinations.
 </Guidance>
 
 <Reminder>
-Focus only on factual accuracy and support from the input context. Do not consider style, grammar, or presentation when scoring. A short but factual response should score higher than a longer response containing unsupported claims.
+Focus only on factual accuracy and support from the context. Do not consider style, grammar, or presentation when scoring. A short but factual response should score higher than a longer response containing unsupported claims.
 </Reminder>
 
-Use the following context to help you evaluate whether there are hallucinations in the output:
+Use the following context to help you evaluate whether there are hallucinations in the response:
 <context>
 {context}
 </context>
 
-<input>
-{input}
-</input>
+<query>
+{query}
+</query>
 
-<output>
-{output}
-</output>
+<response>
+{response}
+</response>
 
 {reference_section}
 
@@ -99,13 +104,13 @@ HALLUCINATION_PROMPT_ZH = """
 {context}
 </context>
 
-<input>
-{input}
-</input>
+<query>
+{query}
+</query>
 
-<output>
-{output}
-</output>
+<response>
+{response}
+</response>
 
 {reference_section}
 
@@ -142,13 +147,13 @@ class HallucinationGrader(LLMGrader):
     """
     Hallucination Grader
 
-    Evaluates whether model outputs contain hallucinations - information that is not
+    Evaluates whether model response contain hallucinations - information that is not
     supported by the provided context or makes unsupported claims.
 
     Key evaluation dimensions:
-    - Factual grounding: Is information supported by input context?
+    - Factual grounding: Is information supported by context?
     - Claim verification: Are all claims backed by provided evidence?
-    - Speculation detection: Does output avoid adding imagined details?
+    - Speculation detection: Does response avoid adding imagined details?
     - Accuracy: Are dates, numbers, and specific details correct?
 
     Attributes:
@@ -175,10 +180,10 @@ class HallucinationGrader(LLMGrader):
         >>> grader_zh = HallucinationGrader(model=api, threshold=0.7, language=LanguageEnum.ZH)
         >>>
         >>> result = await grader_en.aevaluate(
+        ...     query="When was the company founded?",
+        ...     response="The company was founded in 2020 in San Francisco with 100 employees.",
         ...     context="The company was founded in 2020 in San Francisco.",
-        ...     input="When was the company founded?",
-        ...     output="The company was founded in 2020 in San Francisco with 100 employees.",
-        ...     reference_output="The company was founded in 2020."
+        ...     reference_response="The company was founded in 2020."
         ... )
         >>> print(f"Hallucination score: {result.score:.2f}")
     """
@@ -193,7 +198,7 @@ class HallucinationGrader(LLMGrader):
         super().__init__(
             name="hallucination",
             mode=GraderMode.POINTWISE,
-            description="Evaluate whether output contains hallucinations",
+            description="Evaluate whether response contains hallucinations",
             model=model,
             template=template,
             language=language,
@@ -203,23 +208,21 @@ class HallucinationGrader(LLMGrader):
             template if template is not None else DEFAULT_HALLUCINATION_TEMPLATE
         )
 
-    async def _aevaluate(  # pylint: disable=redefined-builtin,unused-argument
+    async def aevaluate(
         self,
+        query: str,
+        response: str,
         context: str,
-        input: str,
-        output: str,
-        reference_output: Optional[str] = None,
-        **kwargs: Any,
-    ) -> GraderScore:
+        reference_response: Optional[str] = None,
+    ) -> GraderScore | GraderRank | GraderError:
         """
-        Evaluate hallucination in output
+        Evaluate hallucination in response
 
         Args:
+            query: Input question or prompt
+            response: Model response to evaluate
             context: Context information to verify against
-            input: Input question or prompt
-            output: Model output to evaluate
-            reference_output: Optional reference output for comparison
-            **kwargs: Additional arguments (ignored)
+            reference_response: Optional reference response for comparison
 
         Returns:
             GraderScore: Score with normalized hallucination value [0, 1]
@@ -227,32 +230,45 @@ class HallucinationGrader(LLMGrader):
 
         Example:
             >>> result = await grader.aevaluate(
+            ...     query="When did the product launch?",
+            ...     response="The product launched in 2023 with great success.",
             ...     context="The product launched in 2023.",
-            ...     input="When did the product launch?",
-            ...     output="The product launched in 2023 with great success.",
-            ...     reference_output="The product launched in 2023."
+            ...     reference_response="The product launched in 2023."
             ... )
         """
+        return await super().aevaluate(
+            query=query,
+            response=response,
+            context=context,
+            reference_response=reference_response,
+        )
 
+    async def _aevaluate(
+        self,
+        query: str,
+        response: str,
+        context: str,
+        reference_response: Optional[str] = None,
+    ) -> GraderScore:
         # Prepare reference section based on language
         reference_section = ""
-        if reference_output:
+        if reference_response:
             if self.language == LanguageEnum.ZH:
                 reference_section = f"""如有需要，你也可以使用以下参考输出来帮助识别回答中的幻觉：
-<reference_output>
-{reference_output}
-</reference_output>"""
+<reference_response>
+{reference_response}
+</reference_response>"""
             else:
-                reference_section = f"""If available, you may also use the following reference outputs to help you identify hallucinations in the response:
-<reference_output>
-{reference_output}
-</reference_output>"""
+                reference_section = f"""If available, you may also use the following reference response to help you identify hallucinations in the response:
+<reference_response>
+{reference_response}
+</reference_response>"""
 
         try:
             result = await super()._aevaluate(
+                query=query,
+                response=response,
                 context=context,
-                input=input,
-                output=output,
                 reference_section=reference_section,
             )
             score = result.score

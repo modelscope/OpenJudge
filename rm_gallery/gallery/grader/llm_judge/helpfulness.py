@@ -2,17 +2,22 @@
 """
 Helpfulness Grader
 
-Evaluates the helpfulness, depth, and appropriateness of model outputs.
+Evaluates the helpfulness, depth, and appropriateness of model response.
 """
 
 import textwrap
-from typing import Any, Optional
+from typing import Optional
 
 from loguru import logger
 
 from rm_gallery.core.grader.base import LLMGrader
 from rm_gallery.core.model.base import ChatModelBase
-from rm_gallery.core.schema.grader import GraderMode, GraderScore
+from rm_gallery.core.schema.grader import (
+    GraderError,
+    GraderMode,
+    GraderRank,
+    GraderScore,
+)
 from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import LanguageEnum, Template
 
@@ -20,10 +25,10 @@ from rm_gallery.core.schema.template import LanguageEnum, Template
 
 # English Prompt
 HELPFULNESS_PROMPT_EN = """
-You are a professional data annotator responsible for evaluating the helpfulness, depth, and appropriateness of the model output. Your task is to score according to the following criteria:
+You are a professional data annotator responsible for evaluating the helpfulness, depth, and appropriateness of the model response. Your task is to score according to the following criteria:
 
 <Scoring Criteria>
-A helpful, in-depth, and appropriate answer should:
+A helpful, in-depth, and appropriate response should:
 - Provide useful and relevant information directly addressing the question.
 - Offer in-depth analysis, unique perspectives, or new knowledge to enhance understanding.
 - Be presented in a clear, organized, and easy-to-understand manner.
@@ -39,9 +44,9 @@ Points should be deducted in the following cases:
 </Scoring Criteria>
 
 <Guidance>
-- Carefully read the input question and model output.
-- Evaluate the output according to the <Scoring Criteria>.
-- The score should reflect how well the output meets the standards of helpfulness, depth, and appropriateness.
+- Carefully read the query and model response.
+- Evaluate the response according to the <Scoring Criteria>.
+- The score should reflect how well the response meets the standards of helpfulness, depth, and appropriateness.
 </Guidance>
 
 <Reminder>
@@ -50,13 +55,13 @@ The goal is to evaluate the helpfulness, depth, and appropriateness of the respo
 
 {context_section}
 
-<input>
-{input}
-</input>
+<query>
+{query}
+</query>
 
-<output>
-{output}
-</output>
+<response>
+{response}
+</response>
 
 {reference_section}
 
@@ -102,13 +107,13 @@ HELPFULNESS_PROMPT_ZH = """
 
 {context_section}
 
-<input>
-{input}
-</input>
+<query>
+{query}
+</query>
 
-<output>
-{output}
-</output>
+<response>
+{response}
+</response>
 
 {reference_section}
 
@@ -146,7 +151,7 @@ class HelpfulnessGrader(LLMGrader):
     """
     Helpfulness Grader
 
-    Evaluates the helpfulness, depth, and appropriateness of model outputs.
+    Evaluates the helpfulness, depth, and appropriateness of model response.
     Measures whether responses provide useful, relevant, and well-organized
     information that directly addresses the user's needs.
 
@@ -174,10 +179,10 @@ class HelpfulnessGrader(LLMGrader):
         >>> grader = HelpfulnessGrader(model=api, threshold=0.7)
         >>>
         >>> result = await grader.aevaluate(
+        ...     query="What are decorators in Python?",
+        ...     response="Decorators are functions that modify other functions...",
         ...     context="User needs help understanding Python decorators.",
-        ...     input="What are decorators in Python?",
-        ...     output="Decorators are functions that modify other functions...",
-        ...     reference_output="Decorators are a Python feature for wrapping functions."
+        ...     reference_response="Decorators are a Python feature for wrapping functions."
         ... )
         >>> print(f"Helpfulness score: {result.score:.2f}")
     """
@@ -192,30 +197,28 @@ class HelpfulnessGrader(LLMGrader):
         super().__init__(
             name="helpfulness",
             mode=GraderMode.POINTWISE,
-            descriptio="Evaluate helpfulness, depth, and appropriateness of output",
+            description="Evaluate helpfulness, depth, and appropriateness of response",
             model=model,
             template=template,
             language=language,
         )
         self.threshold = threshold
 
-    async def _aevaluate(  # pylint: disable=redefined-builtin,unused-argument
+    async def aevaluate(
         self,
-        input: str,
-        output: str,
+        query: str,
+        response: str,
         context: Optional[str] = None,
-        reference_output: Optional[str] = None,
-        **kwargs: Any,
-    ) -> GraderScore:
+        reference_response: Optional[str] = None,
+    ) -> GraderScore | GraderRank | GraderError:
         """
-        Evaluate helpfulness of output
+        Evaluate helpfulness of response
 
         Args:
-            input: Input question or prompt
-            output: Model output to evaluate
+            query: Input query or prompt
+            response: Model response to evaluate
             context: Optional context or background information
-            reference_output: Optional reference output for comparison
-            **kwargs: Additional arguments (ignored)
+            reference_response: Optional reference response for comparison
 
         Returns:
             GraderScore: Score with normalized helpfulness value [0, 1]
@@ -223,13 +226,26 @@ class HelpfulnessGrader(LLMGrader):
 
         Example:
             >>> result = await grader.aevaluate(
-            ...     input="Explain machine learning",
-            ...     output="Machine learning is a subset of AI that enables systems to learn from data...",
+            ...     query="Explain machine learning",
+            ...     answer="Machine learning is a subset of AI that enables systems to learn from data...",
             ...     context="Audience: beginners",
-            ...     reference_output="ML is a field of AI focused on learning from data."
+            ...     reference_response="ML is a field of AI focused on learning from data."
             ... )
         """
+        return await super().aevaluate(
+            query=query,
+            response=response,
+            context=context,
+            reference_response=reference_response,
+        )
 
+    async def _aevaluate(
+        self,
+        query: str,
+        response: str,
+        context: Optional[str] = None,
+        reference_response: Optional[str] = None,
+    ) -> GraderScore:
         # Prepare context section
         context_section = ""
         if context:
@@ -239,23 +255,23 @@ class HelpfulnessGrader(LLMGrader):
 
         # Prepare reference section based on language
         reference_section = ""
-        if reference_output:
+        if reference_response:
             if self.language == LanguageEnum.ZH:
                 reference_section = f"""如有需要，你也可以使用以下参考输出进行比较：
-<reference_output>
-{reference_output}
-</reference_output>"""
+<reference_response>
+{reference_response}
+</reference_response>"""
             else:
-                reference_section = f"""If available, you may also use the following reference output for comparison:
-<reference_output>
-{reference_output}
-</reference_output>"""
+                reference_section = f"""If available, you may also use the following reference response for comparison:
+<reference_response>
+{reference_response}
+</reference_response>"""
 
         try:
-            result = await self._aevaluate(
+            result = await super()._aevaluate(
+                query=query,
+                response=response,
                 context_section=context_section,
-                input=input,
-                output=output,
                 reference_section=reference_section,
             )
             score = result.score

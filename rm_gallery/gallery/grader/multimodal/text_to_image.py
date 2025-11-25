@@ -16,7 +16,7 @@ from loguru import logger
 from rm_gallery.core.grader.base import Grader
 from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.model.openai_llm import OpenAIChatModel
-from rm_gallery.core.schema.grader import GraderMode, GraderScore, _GraderScore
+from rm_gallery.core.schema.grader import GraderMode, GraderScore, GraderScoreCallback
 from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import LanguageEnum, Template
 from rm_gallery.gallery.grader.multimodal._internal import (
@@ -173,36 +173,55 @@ DEFAULT_TEXT_TO_IMAGE_PERCEPTUAL_TEMPLATE = Template(
 class TextToImageGrader(Grader):
     """
     Text-to-Image Quality Grader
-
-    Evaluates AI-generated images based on:
-    1. Semantic Consistency (SC): How well the image matches the text prompt (0-10)
-    2. Perceptual Quality (PQ): Visual quality of the image
-       - Naturalness (0-10)
-       - Artifacts (0-10)
-
-    Final score = sqrt(semantic_consistency * min(perceptual_quality)) / 10
-
-    Attributes:
-        name: Grader name
-        model: OpenAIChatModel instance for evaluation
-        threshold: Success threshold [0, 1] (default: 0.5)
-
+    
+    Purpose:
+        Evaluates AI-generated images from text prompts by measuring semantic
+        consistency (prompt following) and perceptual quality (visual realism).
+        Essential for text-to-image model evaluation and benchmarking.
+    
+    What it evaluates:
+        - Semantic Consistency: Image accurately reflects prompt description
+        - Element Presence: All requested elements are included
+        - Visual Quality: Image looks natural and realistic
+        - Artifact Detection: No distortions, blur, or unnatural features
+        - Composition: Proper spatial arrangement and aesthetics
+        - Detail Fidelity: Specific details match prompt requirements
+    
+    When to use:
+        - Text-to-image model benchmarking (DALL-E, Stable Diffusion, etc.)
+        - Prompt engineering effectiveness evaluation
+        - Generative model quality control
+        - A/B testing different generation parameters
+        - Research on text-to-image alignment
+    
+    Scoring:
+        Formula: sqrt(semantic_consistency * min(perceptual_quality)) / 10
+        - Semantic: 0-10 for prompt alignment
+        - Perceptual: 0-10 for naturalness + 0-10 for artifact absence
+        - Final: [0, 1] normalized score
+    
+    Args:
+        model: Vision-language model instance or dict config
+        threshold: Minimum score [0, 1] to pass (default: 0.5)
+        semantic_template: Template for semantic evaluation
+        perceptual_template: Template for perceptual evaluation
+        language: Prompt language - EN or ZH (default: LanguageEnum.EN)
+    
+    Returns:
+        GraderScore with combined quality score [0, 1]
+    
     Example:
         >>> from rm_gallery.core.model.openai_llm import OpenAIChatModel
-        >>> from rm_gallery.gallery.grader.multimodal import MLLMImage
+        >>> from rm_gallery.gallery.grader.multimodal import TextToImageGrader, MLLMImage
         >>>
-        >>> vlm_api = OpenAIChatModel(
-        ...     api_key="...",
-        ...     model="gpt-4o",
-        ...     generate_kwargs={"temperature": 0.1},
-        ... )
-        >>> grader = TextToImageGrader(model=vlm_api, threshold=0.7)
+        >>> model = OpenAIChatModel(api_key="sk-...", model="gpt-4o")
+        >>> grader = TextToImageGrader(model=model)
         >>>
         >>> result = await grader.aevaluate(
-        ...     text_prompt="A cat sitting on a blue sofa",
-        ...     generated_image=MLLMImage(url="https://example.com/cat.jpg")
+        ...     text_prompt="A fluffy orange cat sitting on a blue sofa",
+        ...     generated_image=MLLMImage(url="https://example.com/generated.jpg")
         ... )
-        >>> print(f"Score: {result.score:.4f}")
+        >>> print(result.score)  # 0.92 - excellent prompt following and quality
     """
 
     def __init__(
@@ -213,6 +232,16 @@ class TextToImageGrader(Grader):
         perceptual_template: Template = DEFAULT_TEXT_TO_IMAGE_PERCEPTUAL_TEMPLATE,
         language: LanguageEnum = LanguageEnum.EN,
     ):
+        """
+        Initialize TextToImageGrader
+
+        Args:
+            model: ChatModelBase instance or dict config for OpenAIChatModel
+            threshold: Success threshold [0, 1] (default: 0.5)
+            semantic_template: Template for semantic consistency evaluation (default: DEFAULT_TEXT_TO_IMAGE_SEMANTIC_TEMPLATE)
+            perceptual_template: Template for perceptual quality evaluation (default: DEFAULT_TEXT_TO_IMAGE_PERCEPTUAL_TEMPLATE)
+            language: Language for prompts (default: LanguageEnum.EN)
+        """
         super().__init__(
             name="text_to_image",
             grader_mode=GraderMode.POINTWISE,
@@ -239,7 +268,7 @@ class TextToImageGrader(Grader):
             content = format_image_content(prompt, [generated_image])
             response = await self.model.achat(
                 messages=[{"role": "user", "content": content}],
-                structured_model=_GraderScore,
+                structured_model=GraderScoreCallback,
             )
 
             score = response.metadata["score"]
@@ -263,7 +292,7 @@ class TextToImageGrader(Grader):
             content = format_image_content(prompt, [generated_image])
             response = await self.model.achat(
                 messages=[{"role": "user", "content": content}],
-                structured_model=_GraderScore,
+                structured_model=GraderScoreCallback,
             )
             score = response.metadata["score"]
             score = score[:2] if isinstance(score, list) else [score, score]

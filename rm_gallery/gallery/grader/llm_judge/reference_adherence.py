@@ -172,39 +172,69 @@ DEFAULT_REFERENCE_ADHERENCE_TEMPLATE = Template(
 class ReferenceAdherenceGrader(LLMGrader):
     """
     Reference Adherence Grader
-
-    Evaluates how well model response adhere to provided reference materials, including
-    factual alignment, style consistency, proper grounding, and appropriate use of
-    reference information.
-
-    Key evaluation dimensions:
-    - Factual Consistency: Does response align with facts in reference?
-    - Information Coverage: Are key points from reference appropriately included?
-    - Style/Format Matching: Does response match reference style when required?
-    - Proper Attribution: Are references used appropriately without misrepresentation?
-    - Grounding Quality: Is response properly grounded in reference material?
-
-    Attributes:
-        name: Grader name
-        model: OpenAIChatModel instance for evaluation
-        threshold: Success threshold [0, 1] (default: 0.7)
-
+    
+    Purpose:
+        Evaluates how well model outputs adhere to provided reference materials, ensuring
+        factual accuracy, proper information coverage, and appropriate use of reference
+        content without misrepresentation.
+    
+    What it evaluates:
+        - Factual Consistency: Output aligns with facts in reference
+        - Information Coverage: Key points from reference are appropriately included
+        - Style/Format Matching: Output matches reference style when required
+        - Proper Attribution: References used without misrepresentation
+        - Grounding Quality: Output properly grounded in reference material
+        - Omission Detection: Identifies when critical information is missing
+    
+    When to use:
+        - Content generation based on reference documents
+        - Rewriting or paraphrasing with fidelity requirements
+        - Technical documentation where accuracy is critical
+        - Academic or research content generation
+        - Legal or compliance-sensitive text generation
+        - Brand voice consistency checks
+    
+    Scoring:
+        - 10: Perfect adherence to reference in all aspects
+        - 7-9: Strong adherence with minor stylistic differences
+        - 4-6: Partially follows reference but with notable deviations
+        - 0-3: Significant departures or misrepresentation of reference
+    
+    Args:
+        model: ChatModelBase instance or dict config for OpenAIChatModel
+        threshold: Minimum score [0, 1] to pass (default: 0.7)
+        template: Custom evaluation template (default: DEFAULT_REFERENCE_ADHERENCE_TEMPLATE)
+        language: Prompt language - EN or ZH (default: LanguageEnum.EN)
+    
+    Returns:
+        GraderScore object with:
+            - score: Normalized score [0, 1] where 1.0 = perfect adherence
+            - reason: Explanation of how well output follows reference
+            - metadata: Raw score, threshold, and evaluation details
+    
     Example:
         >>> from rm_gallery.core.model.openai_llm import OpenAIChatModel
+        >>> from rm_gallery.gallery.grader.llm_judge import ReferenceAdherenceGrader
         >>>
-        >>> api = OpenAIChatModel(
-        ...     api_key="your-key",  # pragma: allowlist secret
-        ...     model="gpt-4o",
-        ...     temperature=0.1
+        >>> # Initialize grader
+        >>> model = OpenAIChatModel(api_key="sk-...", model="gpt-4o")
+        >>> grader = ReferenceAdherenceGrader(model=model, threshold=0.7)
+        >>>
+        >>> # Good adherence
+        >>> result = await grader.aevaluate(
+        ...     reference="Product launched Q1 2023 in Europe with 50% market share.",
+        ...     input="When was the product launched?",
+        ...     output="The product launched in Q1 2023 in Europe, capturing 50% market share."
         ... )
-        >>> grader = ReferenceAdherenceGrader(model=api, threshold=0.7)
+        >>> print(result.score)  # 1.0 - accurate to reference
         >>>
+        >>> # Poor adherence
         >>> result = await grader.aevaluate(
         ...     query="When and where was the product launched?",
         ...     response="The product was launched in early 2023 in European markets."
         ...     reference="The product was launched in Q1 2023 in Europe.",
         ... )
-        >>> print(f"Reference adherence score: {result.score:.2f}")
+        >>> print(result.score)  # 0.1 - contradicts reference
     """
 
     def __init__(
@@ -214,6 +244,15 @@ class ReferenceAdherenceGrader(LLMGrader):
         template: Optional[Template] = DEFAULT_REFERENCE_ADHERENCE_TEMPLATE,
         language: LanguageEnum = LanguageEnum.EN,
     ):
+        """
+        Initialize ReferenceAdherenceGrader
+
+        Args:
+            model: ChatModelBase instance or dict config for OpenAIChatModel
+            threshold: Success threshold [0, 1] (default: 0.7)
+            template: Template for evaluation prompts (default: DEFAULT_REFERENCE_ADHERENCE_TEMPLATE)
+            language: Language for prompts (default: LanguageEnum.EN)
+        """
         super().__init__(
             name="reference_adherence",
             mode=GraderMode.POINTWISE,

@@ -6,9 +6,10 @@ import os
 # import inspect
 from abc import ABC, abstractmethod
 from functools import partial
-from typing import Any, Callable, List
+from typing import Any, Callable, List, Type
 
 from loguru import logger
+from pydantic import BaseModel
 
 from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.model.openai_llm import OpenAIChatModel
@@ -19,8 +20,8 @@ from rm_gallery.core.schema.grader import (
     GraderMode,
     GraderRank,
     GraderScore,
-    _GraderRank,
-    _GraderScore,
+    GraderRankCallback,
+    GraderScoreCallback,
 )
 from rm_gallery.core.schema.template import Chat, LanguageEnum, Template
 from rm_gallery.core.utils.concurrency import ConcurrencyManager
@@ -30,12 +31,12 @@ class Grader(ABC):
     """Base class for graders.
 
     This abstract base class defines the interface for all graders.
-    Subclasses must implement the evaluate method.
+    Subclasses must implement the _aevaluate method.
 
     Attributes:
         name (str): The name of the grader.
         mode (GraderMode): The grader mode (pointwise or listwise).
-        description: The description of the grader.
+        description (str): Description of what this grader evaluates.
     """
 
     def __init__(
@@ -48,9 +49,13 @@ class Grader(ABC):
         """Initialize a Grader.
 
         Args:
-            name: The name of the grader.
-            mode: The grader mode. Defaults to POINTWISE.
-            description: The description of the grader.
+            name: The name of the grader. Used for identification and logging.
+            mode: The grader mode. Either POINTWISE (individual sample evaluation) 
+                  or LISTWISE (joint evaluation of multiple samples). 
+                  Defaults to POINTWISE.
+            description: Human-readable description of what this grader evaluates.
+            **kwargs: Additional keyword arguments that will be stored and 
+                     accessible to subclasses.
         """
         self._name = name
         self.mode = mode
@@ -66,24 +71,11 @@ class Grader(ABC):
         """
         return self._name
 
-    @property
-    def meta(self) -> GraderInfo:
-        """Get the metadata of the grader.
-
-        Returns:
-            GraderInfo: The metadata of the grader.
-        """
-        return GraderInfo(
-            name=self.name,
-            mode=self.mode,
-            description=self.description,
-        )
-
     @abstractmethod
     async def _aevaluate(self, **kwargs: Any) -> GraderScore | GraderRank:
-        """Evaluate method to be implemented by subclasses.
+        """Abstract method for performing the actual evaluation logic.
 
-        This abstract method must be implemented by all Grader subclasses. It performs
+        This method must be implemented by all Grader subclasses. It performs
         the actual evaluation logic and returns either a score or a ranking based on
         the grader's mode (pointwise or listwise).
 
@@ -102,12 +94,14 @@ class Grader(ABC):
 
             In pointwise mode:
                 GraderScore: Contains a numerical score and explanation.
+                    - name (str): Name of the grader
                     - score (float): Numerical score (typically 0.0-1.0 or 1-5 scale)
                     - reason (str): Explanation of how the score was determined
                     - metadata (Dict[str, Any]): Additional evaluation information
 
             In listwise mode:
                 GraderRank: Contains a ranked list and explanation.
+                    - name (str): Name of the grader
                     - rank (List[int]): Ranking of items (e.g., [1, 3, 2] means first
                       item is best, third item is second best, second item is worst)
                     - reason (str): Explanation of how the ranking was determined
@@ -123,7 +117,7 @@ class Grader(ABC):
             ...             description="Evaluates factual accuracy of answers"
             ...         )
             ...
-            ...     async def aevaluate(self, query: str, answer: str, **kwargs) -> GraderScore:
+            ...     async def _aevaluate(self, query: str, answer: str, **kwargs) -> GraderScore:
             ...         # Implementation would evaluate accuracy
             ...         return GraderScore(
             ...             name=self.name,
@@ -140,13 +134,14 @@ class Grader(ABC):
             ...             description="Ranks answers by relevance"
             ...         )
             ...
-            ...     async def aevaluate(self,
+            ...     async def _aevaluate(self,
             ...                         query: str,
             ...                         answer_1: str,
             ...                         answer_2: str,
             ...                        **kwargs) -> GraderRank:
             ...         # Implementation would rank answers by relevance
             ...         return GraderRank(
+            ...             name=self.name,
             ...             rank=[1, 2],
             ...             reason="First answer is more relevant to the query than the second"
             ...         )
@@ -156,35 +151,34 @@ class Grader(ABC):
         self,
         **kwargs: Any,
     ) -> GraderScore | GraderRank | GraderError:
-        """Safely evaluate, handling exceptions gracefully and control concurrency.
+        """Public method to safely evaluate with exception handling and concurrency control.
+
+        This method serves as a wrapper around _aevaluate that adds error handling and concurrency control.
+        It catches any exceptions that occur during evaluation and wraps them in a 
+        GraderError object. It also controls concurrency using the ConcurrencyManager.
 
         Args:
-            **kwargs: Arguments for the evaluation.
+            **kwargs: Arguments for the evaluation, passed directly to _aevaluate.
 
         Returns:
-            GraderScore | GraderRank: The grader result or error result.
+            GraderScore | GraderRank | GraderError: The grader result or error result.
+            
+            On successful evaluation:
+                - GraderScore in POINTWISE mode
+                - GraderRank in LISTWISE mode
+                
+            On failure:
+                - GraderError containing the error information
         """
         concurrency_manager = ConcurrencyManager()
 
         async def _evaluate_task() -> GraderScore | GraderRank | GraderError:
             try:
-                # Check if self.evaluate is a coroutine function
-                if asyncio.iscoroutinefunction(self._aevaluate):
-                    result = await self._aevaluate(**kwargs)
-                else:
-                    # If it's a synchronous function, run it in a thread pool
-                    loop = asyncio.get_event_loop()
-                    result = await loop.run_in_executor(
-                        None,
-                        lambda: self._aevaluate(  # pylint: disable=unnecessary-lambda
-                            **kwargs,
-                        ),
-                    )
-                return result
+                return await self._aevaluate(**kwargs)
             except Exception as e:
                 error_msg = f"Error in {self.name} during evaluation: {str(e)}"
                 logger.error(error_msg)
-                return GraderError(name=self.name, reason=error_msg)
+                return GraderError(name=self.name, error=error_msg)
 
         # Use the concurrency manager to control execution
         return await concurrency_manager.run_with_concurrency_control(
@@ -242,15 +236,21 @@ class Grader(ABC):
 
 
 class LLMGrader(Grader):
-    """LLM-based grader.
+    """LLM-based grader that uses large language models for evaluation.
 
     This class extends the base Grader class to provide LLM-based evaluation capabilities.
-    It uses a language model to perform evaluations according to specified rubrics.
+    It uses a language model to perform evaluations according to specified rubrics and templates.
+
+    The LLMGrader constructs prompts using a template, sends them to an LLM, and parses
+    the structured response into either a GraderScore or GraderRank depending on the mode.
 
     Attributes:
-        template: The template for generating prompts.
-        model: The language model used for evaluation.
-        rubrics: The rubrics used for evaluation.
+        template (Template): The template for generating prompts.
+        model (ChatModelBase): The language model used for evaluation.
+        rubrics (str): The rubrics used for evaluation.
+        language (LanguageEnum): The language for the evaluation.
+        callback (Callable | Type[BaseModel]): Function or Pydantic model to process model response 
+                                             into GraderScore or GraderRank.
     """
 
     def __init__(
@@ -261,7 +261,7 @@ class LLMGrader(Grader):
         language: LanguageEnum | str | None = None,
         description: str = "",
         template: dict | Template | None = None,
-        callback: Callable | None = None,
+        callback: Callable | Type[BaseModel] | None = None,
         rubrics: str = "",
         **kwargs: Any,
     ):
@@ -271,16 +271,27 @@ class LLMGrader(Grader):
             model: The language model used for evaluation. Can be either a ChatModelBase
                    instance or a dictionary configuration. If a dict is provided, it will
                    be used to initialize an OpenAIChatModel.
-            name: The name of the grader.
-            mode: The grader mode. Defaults to POINTWISE.
+            name: The name of the grader. Used for identification and logging.
+            mode: The grader mode. Either POINTWISE (individual sample evaluation) 
+                  or LISTWISE (joint evaluation of multiple samples). 
+                  Defaults to POINTWISE.
             language: The language of the grader. Can be LanguageEnum, string, or None.
                      If None, defaults to environment variable LANGUAGE or "en".
-            description: The description of the grader.
-            template: The template for generating prompts.
-            callback: The callback function for processing model response to GraderScore
-                      or GraderRank.
-            rubrics: The rubrics used for evaluation.
-            **kwargs: Additional keyword arguments (e.g., min_score, max_score, num_responses).
+            description: Human-readable description of what this grader evaluates.
+            template: The template for generating prompts. Defines how inputs are formatted
+                     for the LLM. Can be a dict or Template object.
+            callback: The callback function or Pydantic model for processing model response 
+                      to GraderScore or GraderRank.
+                      
+                      Can be one of the following:
+                      1. A Callable that processes the response and populates metadata
+                      2. A Pydantic BaseModel subclass for structured output parsing
+                      3. None, in which case uses GraderScoreCallback for POINTWISE mode
+                         or GraderRankCallback for LISTWISE mode
+            rubrics: The rubrics used for evaluation. These guide the LLM on how to perform
+                    the evaluation.
+            **kwargs: Additional keyword arguments passed to the parent Grader class and
+                     used in the template rendering.
         """
         super().__init__(
             name=name,
@@ -312,7 +323,7 @@ class LLMGrader(Grader):
             self.callback = callback
         else:
             self.callback = (
-                _GraderScore if self.mode == GraderMode.POINTWISE else _GraderRank
+                GraderScoreCallback if self.mode == GraderMode.POINTWISE else GraderRankCallback
             )
 
         if isinstance(model, dict):
@@ -408,6 +419,10 @@ class LLMGrader(Grader):
         template, sends the request to the LLM, and parses the structured response into
         either a GraderScore or GraderRank depending on the grader mode.
 
+        The callback mechanism supports two modes:
+        1. Callable functions that process the response and populate metadata
+        2. Pydantic BaseModel subclasses for structured output parsing
+
         Args:
             **kwargs: Arbitrary keyword arguments containing the data to be evaluated.
                      These are passed to the LLM template and typically include fields
@@ -419,12 +434,14 @@ class LLMGrader(Grader):
 
             In pointwise mode:
                 GraderScore: Contains a numerical score and explanation.
+                    - name (str): Name of the grader
                     - score (float): Numerical score assigned by the LLM
                     - reason (str): LLM's explanation of how the score was determined
                     - metadata (Dict[str, Any]): Additional information from the LLM
 
             In listwise mode:
                 GraderRank: Contains a ranked list and explanation.
+                    - name (str): Name of the grader
                     - rank (List[int]): Ranking of items as determined by the LLM
                     - reason (str): LLM's explanation of how the ranking was determined
                     - metadata (Dict[str, Any]): Additional information from the LLM
@@ -529,10 +546,21 @@ class FunctionGrader(Grader):
         """Initialize a FunctionGrader.
 
         Args:
-            func: The function to use for evaluation.
-            name: The name of the grader.
-            mode: The grader mode.
-            description: The description of the grader.
+            func: The function to use for evaluation. This function will be called
+                  with the evaluation data and must return either a GraderScore (for
+                  pointwise mode) or a GraderRank (for listwise mode).
+                  
+                  For pointwise mode, typical signature:
+                  ```async def my_func(query: str, answer: str, **kwargs) -> GraderScore:```
+                  
+                  For listwise mode, typical signature:
+                  ```async def my_func(query: str, answer_1: str, answer_2: str, **kwargs) -> GraderRank:```
+            name: The name of the grader. Used for identification and logging.
+            mode: The grader mode. Either POINTWISE (individual sample evaluation) 
+                  or LISTWISE (joint evaluation of multiple samples). 
+                  Defaults to POINTWISE.
+            description: Human-readable description of what this grader evaluates.
+            **kwargs: Additional keyword arguments passed to the parent Grader class.
         """
         super().__init__(
             name,
@@ -645,10 +673,30 @@ class FunctionGrader(Grader):
 
     @classmethod
     def wrap(cls, func: Callable) -> Callable:
-        """Wrap a function as a grader.
+        """Decorator to wrap a function as a FunctionGrader.
+
+        This class method allows you to easily convert a regular Python function
+        into a FunctionGrader instance. The wrapped function must follow the
+        FunctionGrader requirements and return either a GraderScore or GraderRank.
+
+        Args:
+            func: The function to wrap as a grader. Must return GraderScore or GraderRank.
 
         Returns:
-            The Callable grader.
+            A partially applied FunctionGrader constructor that can be instantiated
+            with additional parameters like mode, name, and description.
+
+        Example:
+            >>> @FunctionGrader.wrap
+            >>> def my_accuracy_function(query: str, answer: str) -> GraderScore:
+            >>>     # Custom accuracy evaluation logic
+            >>>     score = calculate_accuracy(query, answer)
+            >>>     return GraderScore(name="accuracy", score=score, reason="Custom calculation")
+            >>>
+            >>> # Create the grader instance
+            >>> accuracy_grader = my_accuracy_function(mode=GraderMode.POINTWISE, 
+            ...                                       name="my_accuracy",
+            ...                                       description="My custom accuracy evaluator")
         """
 
         return partial(FunctionGrader, func=func)
@@ -661,18 +709,22 @@ async def aevaluate_with_case(
     *args: Any,
     **kwargs: Any,
 ) -> List[GraderScore]:
-    """Evaluate a single eval case using the specified grader.
+    """Evaluate a single evaluation case using the specified grader.
 
-    This method evaluates an eval case based on the grader's mode (pointwise or listwise).
+    This function evaluates an EvalCase based on the grader's mode (pointwise or listwise).
     In pointwise mode, each sample is evaluated individually. In listwise mode, all samples
-    are evaluated together in one call. The method handles both GraderScore and GraderError
+    are evaluated together in one call. The function handles both GraderScore and GraderError
     results, converting errors to zero-score GraderScore instances.
 
     Args:
         grader: The grader instance to use for evaluation.
         eval_case: The evaluation case to evaluate, containing input data and output samples.
+                  An EvalCase consists of:
+                  - input: A dictionary containing shared data for all samples
+                  - outputs: A list of dictionaries, each representing an individual sample to evaluate
         parser: Optional parser to transform the eval case before evaluation. Defaults to None.
-        *args: Additional positional arguments passed to the grader.
+               Allows for mapping field names between the data structure and what the grader expects.
+        *args: Additional positional arguments passed to the grader (currently unused).
         **kwargs: Additional keyword arguments passed to the grader.
 
     Returns:
@@ -736,7 +788,7 @@ async def aevaluate_with_case(
                     GraderScore(
                         name=result.name,
                         score=0.0,
-                        reason=result.reason,
+                        reason=result.error,
                     ),
                 )
             else:
@@ -768,7 +820,7 @@ async def aevaluate_with_case(
                 GraderScore(
                     name=result.name,
                     score=0.0,
-                    reason=result.reason,
+                    reason=result.error,
                 ),
             ]
         else:
@@ -785,7 +837,7 @@ async def aevaluate_with_cases(
     parser: EvalCaseParser | Callable | None = None,
     **kwargs: Any,
 ) -> List[List[GraderScore]]:
-    """Evaluate multiple eval cases using the specified grader concurrently.
+    """Evaluate multiple evaluation cases using the specified grader concurrently.
 
     This is the main entry point to evaluate multiple eval cases using a grader. It
     processes all eval cases concurrently using asyncio.gather for improved performance.
@@ -795,18 +847,15 @@ async def aevaluate_with_cases(
     Args:
         grader: The grader instance to use for evaluation.
         eval_cases: A list of evaluation cases to evaluate. Each EvalCase consists of:
-
-            * input: A dictionary containing shared data for all samples
-            * outputs: A list of dictionaries, each representing an individual sample to evaluate
+                   - input: A dictionary containing shared data for all samples
+                   - outputs: A list of dictionaries, each representing an individual sample to evaluate
         parser: Optional parser to transform eval cases before evaluation. This allows for
-            mapping field names between the data structure and what the grader expects.
-            Can be:
-
-                1. An EvalCaseParser instance with field mappings
-                2. A callable function that takes an EvalCase and returns a transformed EvalCase
-                3. None, in which case the eval cases are used as-is
-
-            Defaults to None.
+                mapping field names between the data structure and what the grader expects.
+                Can be:
+                   1. An EvalCaseParser instance with field mappings
+                   2. A callable function that takes an EvalCase and returns a transformed EvalCase
+                   3. None, in which case the eval cases are used as-is
+                Defaults to None.
         **kwargs: Additional keyword arguments passed to each grader evaluation.
 
     Returns:

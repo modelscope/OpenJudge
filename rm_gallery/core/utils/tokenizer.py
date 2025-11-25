@@ -1,9 +1,21 @@
 # -*- coding: utf-8 -*-
+from enum import Enum
 import re
 from abc import ABC, abstractmethod
 from typing import Any, List
 
 from pydantic import BaseModel, Field
+
+
+class TokenizerEnum(str, Enum):
+    """
+    Enum for tokenizer types.
+
+    Supported tokenizer types: tiktoken, jieba, simple.
+    """
+    tiktoken = "tiktoken"
+    jieba = "jieba"
+    simple = "simple"
 
 
 class BaseTokenizer(BaseModel, ABC):
@@ -159,7 +171,7 @@ class SimpleTokenizer(BaseTokenizer):
 
 
 def get_tokenizer(
-    tokenizer_type: str = "tiktoken",
+    tokenizer_type: TokenizerEnum = TokenizerEnum.tiktoken,
     encoding_name: str = "cl100k_base",
     chinese_only: bool = False,
     **kwargs: Any,
@@ -179,11 +191,12 @@ def get_tokenizer(
     Raises:
         ValueError: If tokenizer_type is not supported
     """
-    if tokenizer_type == "tiktoken":
+    tokenizer_type = TokenizerEnum(tokenizer_type)
+    if tokenizer_type is TokenizerEnum.tiktoken:
         return TiktokenTokenizer(encoding_name=encoding_name, **kwargs)
-    elif tokenizer_type == "jieba":
+    elif tokenizer_type is TokenizerEnum.jieba:
         return JiebaTokenizer(chinese_only=chinese_only, **kwargs)
-    elif tokenizer_type == "simple":
+    elif tokenizer_type is TokenizerEnum.simple:
         return SimpleTokenizer(**kwargs)
     else:
         raise ValueError(

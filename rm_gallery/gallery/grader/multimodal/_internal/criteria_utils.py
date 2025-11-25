@@ -7,18 +7,17 @@ Helper functions for multimodal custom criteria evaluation.
 
 from typing import List, Optional, Tuple
 
-from rm_gallery.gallery.grader.multimodal._internal.helpers import MLLMTestCaseParams
 from rm_gallery.gallery.grader.multimodal._internal.schema import Rubric
 
-# Mapping for multimodal test case parameters
-MULTIMODAL_CRITERIA_PARAMS = {
-    MLLMTestCaseParams.INPUT: "Input",
-    MLLMTestCaseParams.ACTUAL_OUTPUT: "Actual Output",
-    MLLMTestCaseParams.EXPECTED_OUTPUT: "Expected Output",
-    MLLMTestCaseParams.CONTEXT: "Context",
-    MLLMTestCaseParams.RETRIEVAL_CONTEXT: "Retrieval Context",
-    MLLMTestCaseParams.TOOLS: "Tools",
-    MLLMTestCaseParams.EXPECTED_TOOLS: "Expected Tools",
+# Mapping for parameter display names (used in prompt generation)
+PARAM_DISPLAY_NAMES = {
+    "input": "Input",
+    "actual_output": "Actual Output",
+    "expected_output": "Expected Output",
+    "context": "Context",
+    "retrieval_context": "Retrieval Context",
+    "tools": "Tools",
+    "expected_tools": "Expected Tools",
 }
 
 
@@ -135,7 +134,7 @@ def format_rubrics(rubrics: Optional[List[Rubric]]) -> Optional[str]:
 
 
 def construct_params_string(
-    evaluation_params: List[MLLMTestCaseParams],
+    evaluation_params: List[str],
 ) -> str:
     """
     Construct a readable string from evaluation parameters
@@ -147,14 +146,11 @@ def construct_params_string(
         Formatted parameter string
 
     Example:
-        >>> params = [
-        ...     MLLMTestCaseParams.INPUT,
-        ...     MLLMTestCaseParams.ACTUAL_OUTPUT
-        ... ]
+        >>> params = ["input", "actual_output"]
         >>> construct_params_string(params)
         'Input and Actual Output'
     """
-    params = [MULTIMODAL_CRITERIA_PARAMS[param] for param in evaluation_params]
+    params = [PARAM_DISPLAY_NAMES[param] for param in evaluation_params]
 
     if len(params) == 1:
         params_str = params[0]
@@ -191,7 +187,6 @@ def get_score_range(rubric: Optional[List[Rubric]]) -> Tuple[int, int]:
 
 
 __all__ = [
-    "MULTIMODAL_CRITERIA_PARAMS",
     "validate_criteria_and_evaluation_steps",
     "validate_and_sort_rubrics",
     "format_rubrics",

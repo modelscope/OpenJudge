@@ -5,7 +5,6 @@ Utility Functions for Multimodal Graders
 This module contains core data structures for multimodal graders.
 """
 
-from enum import Enum
 from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
@@ -41,22 +40,6 @@ class MLLMImage(BaseModel):
         """Validate that at least one of url or base64 is provided"""
         if not self.url and not self.base64:
             raise ValueError("Either 'url' or 'base64' must be provided")
-
-
-class MLLMTestCaseParams(str, Enum):
-    """
-    Test case parameters for multimodal evaluation
-
-    Defines which fields are required for different types of graders.
-    """
-
-    INPUT = "input"
-    ACTUAL_OUTPUT = "actual_output"
-    EXPECTED_OUTPUT = "expected_output"
-    RETRIEVAL_CONTEXT = "retrieval_context"
-    CONTEXT = "context"
-    TOOLS = "tools"
-    EXPECTED_TOOLS = "expected_tools"
 
 
 def format_image_content(

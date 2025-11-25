@@ -24,7 +24,7 @@ that are presented from most important to least important.
 Avoid any position biases and ensure that the order in which the responses were \
 presented does not influence your decision.
 Do not allow the length of the responses to influence your evaluation.
-Be as goal as possible.
+Be as goal-oriented as possible.
 
 # Rubrics
 {rubrics}
@@ -56,7 +56,7 @@ that are presented from most important to least important.
 Avoid any position biases and ensure that the order in which the responses were \
 presented does not influence your decision.
 Do not allow the length of the responses to influence your evaluation.
-Be as goal as possible.
+Be as goal-oriented as possible.
 
 # Rubrics
 {rubrics}

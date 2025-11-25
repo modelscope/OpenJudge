@@ -161,38 +161,67 @@ DEFAULT_INSTRUCTION_ADHERENCE_TEMPLATE = Template(
 class InstructionAdherenceGrader(LLMGrader):
     """
     Instruction Adherence Grader
-
-    Evaluates how well model response follow the given instructions across multiple dimensions
-    including content, format, style, constraints, and completeness.
-
-    Key evaluation dimensions:
-    - Content Relevance: Does response address all required topics/questions?
-    - Format Compliance: Does response follow specified format (e.g., JSON, bullet points, essay)?
-    - Constraint Adherence: Are all constraints satisfied (e.g., length, tone, style)?
-    - Completeness: Are all instruction requirements fulfilled?
-    - Precision: Does response avoid adding unrequested information?
-
-    Attributes:
-        name: Grader name
-        model: OpenAIChatModel instance for evaluation
-        threshold: Success threshold [0, 1] (default: 0.7)
-
+    
+    Purpose:
+        Evaluates how precisely model outputs follow given instructions across content,
+        format, style, and constraints. Essential for ensuring AI systems execute tasks
+        as specified without deviation.
+    
+    What it evaluates:
+        - Content Relevance: Addresses all required topics and questions
+        - Format Compliance: Follows specified format (JSON, bullet points, essay, etc.)
+        - Constraint Adherence: Satisfies length, tone, style requirements
+        - Completeness: Fulfills all instruction requirements
+        - Precision: Avoids adding unrequested information
+        - Structural Accuracy: Maintains requested organization
+    
+    When to use:
+        - Structured output generation (JSON, XML, specific formats)
+        - Task completion verification in agent systems
+        - Evaluating instruction-tuned models
+        - Quality control for templated content generation
+        - Testing AI assistants' ability to follow complex instructions
+    
+    Scoring:
+        - 10: Perfect adherence to all instruction aspects
+        - 7-9: Follows most instructions with minor deviations
+        - 4-6: Partial adherence, misses some requirements
+        - 0-3: Significant instruction violations or misunderstanding
+    
+    Args:
+        model: ChatModelBase instance or dict config for OpenAIChatModel
+        threshold: Minimum score [0, 1] to pass (default: 0.7)
+        template: Custom evaluation template (default: DEFAULT_INSTRUCTION_ADHERENCE_TEMPLATE)
+        language: Prompt language - EN or ZH (default: LanguageEnum.EN)
+    
+    Returns:
+        GraderScore object with:
+            - score: Normalized score [0, 1] where 1.0 = perfect adherence
+            - reason: Detailed analysis of adherence and violations
+            - metadata: Raw score, threshold, and evaluation details
+    
     Example:
         >>> from rm_gallery.core.model.openai_llm import OpenAIChatModel
+        >>> from rm_gallery.gallery.grader.llm_judge import InstructionAdherenceGrader
         >>>
-        >>> api = OpenAIChatModel(
-        ...     api_key="your-key",  # pragma: allowlist secret
-        ...     model="gpt-4o",
-        ...     temperature=0.1
+        >>> # Initialize grader
+        >>> model = OpenAIChatModel(api_key="sk-...", model="gpt-4o")
+        >>> grader = InstructionAdherenceGrader(model=model, threshold=0.7)
+        >>>
+        >>> # Good adherence
+        >>> result = await grader.aevaluate(
+        ...     instruction="Write exactly 3 sentences in formal academic tone.",
+        ...     output="Climate change poses serious risks. Research shows rising temperatures. Action is urgently needed."
         ... )
-        >>> grader = InstructionAdherenceGrader(model=api, threshold=0.7)
+        >>> print(result.score)  # 1.0 - follows all requirements
         >>>
+        >>> # Poor adherence
         >>> result = await grader.aevaluate(
         ...     instruction="Write a 3-sentence summary in formal tone about climate change.",
         ...     response="Climate change is a big problem. It's getting hotter. We need to act now!",
         ...     query="Summarize the climate situation."
         ... )
-        >>> print(f"Instruction adherence score: {result.score:.2f}")
+        >>> print(result.score)  # 0.3 - informal tone, poor structure
     """
 
     def __init__(
@@ -202,6 +231,15 @@ class InstructionAdherenceGrader(LLMGrader):
         template: Optional[Template] = DEFAULT_INSTRUCTION_ADHERENCE_TEMPLATE,
         language: LanguageEnum = LanguageEnum.EN,
     ):
+        """
+        Initialize InstructionAdherenceGrader
+
+        Args:
+            model: ChatModelBase instance or dict config for OpenAIChatModel
+            threshold: Success threshold [0, 1] (default: 0.7)
+            template: Template for evaluation prompts (default: DEFAULT_INSTRUCTION_ADHERENCE_TEMPLATE)
+            language: Language for prompts (default: LanguageEnum.EN)
+        """
         super().__init__(
             name="instruction_adherence",
             mode=GraderMode.POINTWISE,

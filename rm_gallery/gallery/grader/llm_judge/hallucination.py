@@ -146,46 +146,74 @@ DEFAULT_HALLUCINATION_TEMPLATE = Template(
 class HallucinationGrader(LLMGrader):
     """
     Hallucination Grader
-
-    Evaluates whether model response contain hallucinations - information that is not
-    supported by the provided context or makes unsupported claims.
-
-    Key evaluation dimensions:
-    - Factual grounding: Is information supported by context?
-    - Claim verification: Are all claims backed by provided evidence?
-    - Speculation detection: Does response avoid adding imagined details?
-    - Accuracy: Are dates, numbers, and specific details correct?
-
-    Attributes:
-        name: Grader name
-        model: OpenAIChatModel instance for evaluation
-        threshold: Success threshold [0, 1] (default: 0.7)
-        template: Evaluation template (default: DEFAULT_HALLUCINATION_TEMPLATE)
-        language: Language for evaluation prompts (default: LanguageEnum.EN)
-
+    
+    Purpose:
+        Detects hallucinations in model outputs by verifying that all claims are properly 
+        grounded in the provided context. A hallucination occurs when the model generates 
+        information that is not supported by, or contradicts, the given context.
+    
+    What it evaluates:
+        - Factual Grounding: Every claim must be supported by the input context
+        - Claim Verification: All statements must have evidence in provided materials
+        - Speculation Detection: Model should not add imagined or assumed details
+        - Numerical Accuracy: Dates, numbers, and statistics must be exact
+        - Contradiction Avoidance: Output must not contradict the context
+    
+    When to use:
+        - RAG (Retrieval-Augmented Generation) systems where context is provided
+        - Question-answering systems that must stay grounded in given documents
+        - Summarization tasks where fidelity to source is critical
+        - Fact-checking generated content against reference materials
+    
+    Scoring:
+        - 10: Perfect grounding, no unsupported claims
+        - 7-9: Mostly accurate with minor unsupported details
+        - 4-6: Contains some hallucinations but core facts are correct
+        - 0-3: Significant hallucinations or fabricated information
+    
+    Args:
+        model: ChatModelBase instance or dict config for OpenAIChatModel
+        threshold: Minimum score [0, 1] to pass (default: 0.7)
+        template: Custom evaluation template (default: DEFAULT_HALLUCINATION_TEMPLATE)
+        language: Prompt language - EN or ZH (default: LanguageEnum.EN)
+    
+    Returns:
+        GraderScore object with:
+            - score: Normalized score [0, 1] where 1.0 = no hallucinations
+            - reason: Detailed explanation of any hallucinations found
+            - metadata: Raw score, threshold, and evaluation details
+    
     Example:
         >>> from rm_gallery.core.model.openai_llm import OpenAIChatModel
-        >>> from rm_gallery.core.schema.template import LanguageEnum
+        >>> from rm_gallery.gallery.grader.llm_judge import HallucinationGrader
         >>>
-        >>> api = OpenAIChatModel(
-        ...     api_key="your-key",  # pragma: allowlist secret
+        >>> # Initialize model
+        >>> model = OpenAIChatModel(
+        ...     api_key="sk-...",
         ...     model="gpt-4o",
         ...     temperature=0.1
         ... )
         >>>
-        >>> # English grader
-        >>> grader_en = HallucinationGrader(model=api, threshold=0.7, language=LanguageEnum.EN)
+        >>> # Create grader
+        >>> grader = HallucinationGrader(model=model, threshold=0.7)
         >>>
-        >>> # Chinese grader
-        >>> grader_zh = HallucinationGrader(model=api, threshold=0.7, language=LanguageEnum.ZH)
-        >>>
-        >>> result = await grader_en.aevaluate(
-        ...     query="When was the company founded?",
-        ...     response="The company was founded in 2020 in San Francisco with 100 employees.",
+        >>> # Good output (grounded in context)
+        >>> result = await grader.aevaluate(
         ...     context="The company was founded in 2020 in San Francisco.",
-        ...     reference_response="The company was founded in 2020."
+        ...     query="When was the company founded?",
+        ...     response="The company was founded in 2020 in San Francisco."
         ... )
-        >>> print(f"Hallucination score: {result.score:.2f}")
+        >>> print(result.score)  # 1.0 - no hallucinations
+        >>> print(result.reason)  # "Output is fully supported by context"
+        >>>
+        >>> # Bad output (contains hallucination)
+        >>> result = await grader.aevaluate(
+        ...     context="The company was founded in 2020 in San Francisco.",
+        ...     query="When was the company founded?",
+        ...     response="The company was founded in 2020 with 100 employees."
+        ... )
+        >>> print(result.score)  # 0.5 - contains unsupported claim about employees
+        >>> print(result.reason)  # "Output contains hallucination: '100 employees' not mentioned"
     """
 
     def __init__(
@@ -195,6 +223,15 @@ class HallucinationGrader(LLMGrader):
         template: Optional[Template] = DEFAULT_HALLUCINATION_TEMPLATE,
         language: LanguageEnum = LanguageEnum.EN,
     ):
+        """
+        Initialize HallucinationGrader
+
+        Args:
+            model: ChatModelBase instance or dict config for OpenAIChatModel
+            threshold: Success threshold [0, 1] (default: 0.7)
+            template: Template for evaluation prompts (default: DEFAULT_HALLUCINATION_TEMPLATE)
+            language: Language for prompts (default: LanguageEnum.EN)
+        """
         super().__init__(
             name="hallucination",
             mode=GraderMode.POINTWISE,

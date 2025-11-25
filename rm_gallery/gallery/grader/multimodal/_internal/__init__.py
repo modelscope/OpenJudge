@@ -28,7 +28,6 @@ from rm_gallery.gallery.grader.multimodal._internal.criteria_utils import (
 # Helper functions and data types
 from rm_gallery.gallery.grader.multimodal._internal.helpers import (
     MLLMImage,
-    MLLMTestCaseParams,
     format_image_content,
 )
 
@@ -44,14 +43,12 @@ __all__ = [
     "Rubric",
     # Data types
     "MLLMImage",
-    "MLLMTestCaseParams",
     # Helper functions
     "format_image_content",
     # Context functions
     "get_image_indices",
     "get_image_context",
     # Custom Criteria utilities
-    "MULTIMODAL_CRITERIA_PARAMS",
     "validate_criteria_and_evaluation_steps",
     "validate_and_sort_rubrics",
     "format_rubrics",

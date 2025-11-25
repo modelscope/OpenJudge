@@ -16,7 +16,7 @@ from loguru import logger
 from rm_gallery.core.grader.base import Grader
 from rm_gallery.core.model.base import ChatModelBase
 from rm_gallery.core.model.openai_llm import OpenAIChatModel
-from rm_gallery.core.schema.grader import GraderMode, GraderScore, _GraderScore
+from rm_gallery.core.schema.grader import GraderMode, GraderScore, GraderScoreCallback
 from rm_gallery.core.schema.message import ChatMessage
 from rm_gallery.core.schema.template import LanguageEnum, Template
 from rm_gallery.gallery.grader.multimodal._internal import (
@@ -171,38 +171,56 @@ DEFAULT_IMAGE_EDITING_PERCEPTUAL_TEMPLATE = Template(
 class ImageEditingGrader(Grader):
     """
     Image Editing Quality Grader
-
-    Evaluates AI-edited images based on:
-    1. Semantic Consistency (SC): How well the edits follow the instruction (0-10)
-    2. Perceptual Quality (PQ): Visual quality of the edited image
-       - Naturalness (0-10): How natural the edited areas look
-       - Artifacts (0-10): Whether there are editing artifacts
-
-    Final score = sqrt(semantic_consistency * min(perceptual_quality)) / 10
-
-    This metric checks:
-    - Whether the specified edits were correctly applied
-    - Whether unmentioned areas remained unchanged
-    - Whether edits blend naturally with the original image
-
-    Attributes:
-        name: Grader name
-        model: OpenAIChatModel instance for evaluation
-        threshold: Success threshold [0, 1] (default: 0.5)
-
+    
+    Purpose:
+        Evaluates AI-generated image edits by measuring both semantic consistency
+        (does edit follow instruction?) and perceptual quality (does edit look natural?).
+        Uses geometric mean to ensure both dimensions meet quality standards.
+    
+    What it evaluates:
+        - Semantic Consistency: Edits correctly follow the instruction
+        - Edit Precision: Only specified areas are modified
+        - Naturalness: Edited areas look realistic and natural
+        - Artifact-Free: No distortions, blurriness, or unnatural elements
+        - Conservation: Un-instructed areas remain unchanged
+        - Integration: Edits blend seamlessly with original
+    
+    When to use:
+        - AI image editing model evaluation
+        - Inpainting and outpainting quality assessment
+        - Photo editing tool benchmarking
+        - Image manipulation detection research
+        - Generative model quality control
+    
+    Scoring:
+        Formula: sqrt(min(semantic_scores) * min(perceptual_scores)) / 10
+        - Semantic: 0-10 for instruction following + minimal over-editing
+        - Perceptual: 0-10 for naturalness + 0-10 for artifact absence
+        - Final: [0, 1] normalized score
+    
+    Args:
+        model: Vision-language model instance or dict config
+        threshold: Minimum score [0, 1] to pass (default: 0.5)
+        semantic_template: Template for semantic evaluation
+        perceptual_template: Template for perceptual evaluation
+        language: Prompt language - EN or ZH (default: LanguageEnum.EN)
+    
+    Returns:
+        GraderScore with combined quality score [0, 1]
+    
     Example:
         >>> from rm_gallery.core.model.openai_llm import OpenAIChatModel
-        >>> from rm_gallery.gallery.grader.multimodal import MLLMImage
+        >>> from rm_gallery.gallery.grader.multimodal import ImageEditingGrader, MLLMImage
         >>>
-        >>> vlm_api = VisionModelAdapter.from_qwen(api_key="...", model="qwen-vl-plus")
-        >>> grader = ImageEditingGrader(model=vlm_api, threshold=0.7)
+        >>> model = OpenAIChatModel(api_key="sk-...", model="gpt-4o")
+        >>> grader = ImageEditingGrader(model=model)
         >>>
         >>> result = await grader.aevaluate(
-        ...     original_image=MLLMImage(url="https://example.com/original.jpg"),
-        ...     edit_instruction="Change the sofa color to blue",
-        ...     edited_image=MLLMImage(url="https://example.com/edited.jpg")
+        ...     original_image=MLLMImage(url="https://example.com/room.jpg"),
+        ...     edit_instruction="Change sofa color to blue",
+        ...     edited_image=MLLMImage(url="https://example.com/room_edited.jpg")
         ... )
-        >>> print(f"Score: {result.score:.4f}")
+        >>> print(result.score)  # 0.85 - good edit quality
     """
 
     def __init__(
@@ -213,6 +231,16 @@ class ImageEditingGrader(Grader):
         perceptual_template: Template = DEFAULT_IMAGE_EDITING_PERCEPTUAL_TEMPLATE,
         language: LanguageEnum = LanguageEnum.EN,
     ):
+        """
+        Initialize ImageEditingGrader
+
+        Args:
+            model: ChatModelBase instance or dict config for OpenAIChatModel
+            threshold: Success threshold [0, 1] (default: 0.5)
+            semantic_template: Template for semantic consistency evaluation (default: DEFAULT_IMAGE_EDITING_SEMANTIC_TEMPLATE)
+            perceptual_template: Template for perceptual quality evaluation (default: DEFAULT_IMAGE_EDITING_PERCEPTUAL_TEMPLATE)
+            language: Language for prompts (default: LanguageEnum.EN)
+        """
         super().__init__(
             name="image_editing",
             grader_mode=GraderMode.POINTWISE,
@@ -240,7 +268,7 @@ class ImageEditingGrader(Grader):
             content = format_image_content(prompt, [original_image, edited_image])
             response = await self.model.achat(
                 messages=[{"role": "user", "content": content}],
-                structured_model=_GraderScore,
+                structured_model=GraderScoreCallback,
             )
             score = response.metadata["score"]
             score = score if isinstance(score, list) else [score]
@@ -263,7 +291,7 @@ class ImageEditingGrader(Grader):
             content = format_image_content(prompt, [edited_image])
             response = await self.model.achat(
                 messages=[{"role": "user", "content": content}],
-                structured_model=_GraderScore,
+                structured_model=GraderScoreCallback,
             )
             score = response.metadata["score"]
             score = score[:2] if isinstance(score, list) else [score, score]

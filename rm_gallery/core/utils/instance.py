@@ -4,8 +4,8 @@ import importlib
 from typing import Any, Type, TypedDict
 
 
-class InstDict(TypedDict, total=False):
-    """instance param."""
+class InstanceConfig(TypedDict, total=False):
+    """instance config."""
 
     class_name: str
     """Name of the class to instantiate."""
@@ -15,11 +15,8 @@ class InstDict(TypedDict, total=False):
     """Keyword arguments to pass to the class constructor."""
 
 
-Inst = InstDict | object
-
-
 def init_instance_by_config(
-    config: Inst,
+    config: InstanceConfig | object,
     accept_type: Type | None = None,
 ) -> Any:
     """Initialize an instance from configuration dictionary or check existing instance.
@@ -29,7 +26,7 @@ def init_instance_by_config(
     - An existing object instance that needs type checking
 
     Args:
-        config (Inst): Configuration dictionary with class, module and kwargs,
+        config (InstanceConfig | object): Configuration dictionary with class, module and kwargs,
                                            or an existing object instance
         accept_type (Type, optional): Expected type or base class that the instantiated
                                     class should be subclass of. If provided, will check

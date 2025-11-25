@@ -11,7 +11,7 @@ This module contains graders for multimodal evaluation tasks including:
 - Flexible custom criteria framework for multimodal evaluation
 """
 
-from rm_gallery.gallery.grader.multimodal._internal import MLLMImage, MLLMTestCaseParams
+from rm_gallery.gallery.grader.multimodal._internal import MLLMImage
 from rm_gallery.gallery.grader.multimodal.custom_criteria import CustomCriteriaGrader
 from rm_gallery.gallery.grader.multimodal.image_coherence import ImageCoherenceGrader
 from rm_gallery.gallery.grader.multimodal.image_editing import ImageEditingGrader
@@ -31,5 +31,4 @@ __all__ = [
     "CustomCriteriaGrader",
     # Multimodal data types
     "MLLMImage",
-    "MLLMTestCaseParams",
 ]

@@ -1,8 +1,15 @@
 # -*- coding: utf-8 -*-
+"""General utility functions.
+
+This module provides various utility functions for common tasks such as
+JSON processing, schema manipulation, and data extraction from LLM responses.
+"""
+
 import json
 from typing import Any, Dict, Type
 
 from json_repair import repair_json
+from loguru import logger
 from pydantic import BaseModel
 
 
@@ -11,6 +18,24 @@ def _json_loads_with_repair(
 ) -> dict | list | str | float | int | bool | None:
     """The given json_str maybe incomplete, e.g. '{"key', so we need to
     repair and load it into a Python object.
+
+    Args:
+        json_str: A potentially incomplete JSON string that needs repair.
+
+    Returns:
+        The parsed Python object from the repaired JSON string.
+        
+    Raises:
+        ValueError: If the JSON string cannot be parsed even after repair.
+        
+    Example:
+        >>> result = _json_loads_with_repair('{"key": "value"}')
+        >>> print(result)
+        {'key': 'value'}
+        >>>
+        >>> result = _json_loads_with_repair('{"key"')  # Incomplete JSON
+        >>> print(result)  # Repaired and parsed
+        {'key': None}
     """
     repaired = json_str
     try:
@@ -29,7 +54,22 @@ def _json_loads_with_repair(
 
 def _remove_title_field(schema: dict) -> None:
     """Remove the title field from the JSON schema to avoid
-    misleading the LLM."""
+    misleading the LLM.
+
+    This function recursively removes 'title' fields from a JSON schema dictionary,
+    which helps prevent LLM confusion when using the schema as a tool definition.
+
+    Args:
+        schema: The JSON schema dictionary to modify in-place.
+        
+    Example:
+        >>> schema = {"title": "Test", "properties": {"name": {"title": "Name", "type": "string"}}}
+        >>> _remove_title_field(schema)
+        >>> print("title" in schema)
+        False
+        >>> print("title" in schema["properties"]["name"])
+        False
+    """
     # The top level title field
     if "title" in schema:
         schema.pop("title")
@@ -59,6 +99,7 @@ def _create_tool_from_base_model(
     tool_name: str = "generate_structured_output",
 ) -> Dict[str, Any]:
     """Create a function tool definition from a Pydantic BaseModel.
+
     This function converts a Pydantic BaseModel class into a tool definition
     that can be used with function calling API. The resulting tool
     definition includes the model's JSON schema as parameters, enabling
@@ -66,37 +107,37 @@ def _create_tool_from_base_model(
     with properly formatted data.
 
     Args:
-        structured_model (`Type[BaseModel]`):
-            A Pydantic BaseModel class that defines the expected structure
+        structured_model: A Pydantic BaseModel class that defines the expected structure
             for the tool's output.
-        tool_name (`str`, default `"generate_structured_output"`):
-            The tool name that used to force the LLM to generate structured
-            output by calling this function.
+        tool_name: The tool name that used to force the LLM to generate structured
+            output by calling this function. Defaults to "generate_structured_output".
 
     Returns:
-        `Dict[str, Any]`: A tool definition dictionary compatible with
+        Dict[str, Any]: A tool definition dictionary compatible with
             function calling API, containing type ("function") and
             function dictionary with name, description, and parameters
             (JSON schema).
 
-    .. code-block:: python
-        :caption: Example usage
+    Example:
+        >>> from pydantic import BaseModel
+        >>> 
+        >>> class PersonInfo(BaseModel):
+        ...     name: str
+        ...     age: int
+        ...     email: str
+        ...
+        >>> tool = _create_tool_from_base_model(PersonInfo, "extract_person")
+        >>> print(tool["function"]["name"])
+        extract_person
+        >>> print(tool["type"])
+        function
+        >>> print("parameters" in tool["function"])
+        True
 
-        from pydantic import BaseModel
-
-        class PersonInfo(BaseModel):
-            name: str
-            age: int
-            email: str
-
-        tool = _create_tool_from_base_model(PersonInfo, "extract_person")
-        print(tool["function"]["name"])  # extract_person
-        print(tool["type"])              # function
-
-    .. note:: The function automatically removes the 'title' field from
+    Note:
+        The function automatically removes the 'title' field from
         the JSON schema to ensure compatibility with function calling
-        format. This is handled by the internal ``_remove_title_field()``
-        function.
+        format. This is handled by the internal [_remove_title_field](file:///mnt3/huangsen.huang/codes/RM-Gallery/rm_gallery/core/utils/utils.py#L33-L55) function.
     """
     schema = structured_model.model_json_schema()
 
@@ -115,26 +156,32 @@ def _create_tool_from_base_model(
 
 def trim_and_load_json(response: str, metric: Any = None) -> Dict[str, Any]:
     """
-    Extract and parse JSON from LLM response
+    Extract and parse JSON from LLM response.
 
     Handles common cases where LLM wraps JSON in markdown code blocks or text.
 
     Args:
-        response: LLM response string
-        metric: Optional metric instance for error logging
+        response: LLM response string.
+        metric: Optional metric instance for error logging.
 
     Returns:
-        Parsed JSON dictionary
-
+        Dict[str, Any]: Parsed JSON dictionary.
+        
     Raises:
-        ValueError: If JSON cannot be parsed
+        ValueError: If JSON cannot be parsed.
 
     Example:
         >>> response = '''```json
         ... {"score": 8, "reasoning": "Good"}
         ... ```'''
         >>> data = trim_and_load_json(response)
-        >>> data["score"]  # 8
+        >>> print(data["score"])
+        8
+        >>>
+        >>> response = '{"name": "Alice", "age": 30}'
+        >>> data = trim_and_load_json(response)
+        >>> print(data["name"])
+        Alice
     """
     # Remove markdown code blocks
     response = response.strip()

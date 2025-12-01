@@ -125,10 +125,10 @@ AgentScope 目前内置支持以下 API 提供商：**OpenAI**、**DashScope**�
 
 1. **ChatModel**（位于 `agentscope.model` 下）：
    ```python
-   from agentscope.model import ChatModelBase
+   from agentscope.model import BaseChatModel
 
 
-   class YourChatModel(ChatModelBase):
+   class YourChatModel(BaseChatModel):
        """
        需要考虑的功能包括：
        - 集成 tools API

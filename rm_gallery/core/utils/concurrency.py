@@ -17,33 +17,33 @@ class ConcurrencyManager:
             cls._instance = super(ConcurrencyManager, cls).__new__(cls)
         return cls._instance
 
-    def __init__(self, max_concurrent: int = 32):
+    def __init__(self, max_concurrency: int = 32):
         """Initialize the GraderConcurrencyManager as a singleton."""
-        self.set_max_concurrent(max_concurrent)
+        self.set_max_concurrency(max_concurrency)
 
-    def set_max_concurrent(self, max_concurrent: int = 32):
+    def set_max_concurrency(self, max_concurrency: int = 32):
         """
         Set the maximum number of concurrent grader evaluations.
 
         Args:
-            max_concurrent: Maximum number of concurrent evaluations allowed
+            max_concurrency: Maximum number of concurrent evaluations allowed
         """
-        if max_concurrent <= 0:
-            raise ValueError("max_concurrent must be greater than 0")
+        if max_concurrency <= 0:
+            raise ValueError("max_concurrency must be greater than 0")
 
-        self._max_concurrent = max_concurrent
+        self._max_concurrency = max_concurrency
         # Note: We cannot directly change the semaphore's capacity,
         # so we create a new one
-        self._semaphore = asyncio.Semaphore(max_concurrent)
+        self._semaphore = asyncio.Semaphore(max_concurrency)
 
-    def get_max_concurrent(self) -> int:
+    def get_max_concurrency(self) -> int:
         """
         Get the current maximum concurrent limit.
 
         Returns:
             The maximum number of concurrent evaluations allowed
         """
-        return self._max_concurrent
+        return self._max_concurrency
 
     async def run_with_concurrency_control(self, coro):
         """

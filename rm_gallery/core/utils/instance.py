@@ -1,11 +1,32 @@
 # -*- coding: utf-8 -*-
-"""instance."""
+"""Instance utility functions.
+
+This module provides utilities for dynamically instantiating classes from
+configuration dictionaries or validating existing instances.
+"""
+
 import importlib
 from typing import Any, Type, TypedDict
 
 
 class InstanceConfig(TypedDict, total=False):
-    """instance config."""
+    """Configuration for dynamic instance creation.
+
+    A typed dictionary that defines the structure for instance configuration,
+    used when dynamically creating class instances from configuration data.
+
+    Attributes:
+        class_name (str): Name of the class to instantiate.
+        module_path (str): Module path where the class is defined.
+        kwargs (dict): Keyword arguments to pass to the class constructor.
+
+    Example:
+        >>> config: InstanceConfig = {
+        ...     "class_name": "MyClass",
+        ...     "module_path": "my_module",
+        ...     "kwargs": {"param1": "value1"}
+        ... }
+    """
 
     class_name: str
     """Name of the class to instantiate."""
@@ -26,35 +47,35 @@ def init_instance_by_config(
     - An existing object instance that needs type checking
 
     Args:
-        config (InstanceConfig | object): Configuration dictionary with class, module and kwargs,
-                                           or an existing object instance
-        accept_type (Type, optional): Expected type or base class that the instantiated
-                                    class should be subclass of. If provided, will check
-                                    if the instantiated class is a subclass of accept_type.
+        config: Configuration dictionary with class, module and kwargs,
+                or an existing object instance.
+        accept_type: Expected type or base class that the instantiated
+                     class should be subclass of. If provided, will check
+                     if the instantiated class is a subclass of accept_type.
 
     Returns:
-        Any: Initialized instance of the specified class or the existing instance
+        Any: Initialized instance of the specified class or the existing instance.
 
     Raises:
         TypeError: If accept_type is provided and the instantiated class is not
-                  a subclass of accept_type, or if config is neither a dict nor valid instance
+                  a subclass of accept_type, or if config is neither a dict nor valid instance.
 
     Example:
         >>> # From config dict
         >>> config = {
-        ...     'class': 'StringMatchGrader',
-        ...     'module': 'rm_gallery.gallery.grader.text.string_match',
+        ...     'class_name': 'StringMatchGrader',
+        ...     'module_path': 'rm_gallery.core.graders.gallery.text.string_match',
         ...     'kwargs': {'ignore_case': True}
         ... }
-        >>> instance = init_instance_by_config(config)
+        >>> # instance = init_instance_by_config(config)
         >>>
         >>> # With existing instance
-        >>> existing_instance = StringMatchGrader(ignore_case=True)
-        >>> instance = init_instance_by_config(existing_instance)
+        >>> # existing_instance = StringMatchGrader(ignore_case=True)
+        >>> # instance = init_instance_by_config(existing_instance)
         >>>
         >>> # With type checking
-        >>> from rm_gallery.core.grader.base import Grader
-        >>> instance = init_instance_by_config(config, accept_type=Grader)
+        >>> # from rm_gallery.core.grader.base import Grader
+        >>> # instance = init_instance_by_config(config, accept_type=Grader)
     """
     # If config is already an instance, just check its type
     if not isinstance(config, dict):
@@ -80,7 +101,7 @@ def init_instance_by_config(
     # Check type if accept_type is provided
     if accept_type is not None and not issubclass(cls, accept_type):
         raise TypeError(
-            f"Instantiated class {cls.__name__} is not a of {accept_type.__name__}",
+            f"Instantiated class {cls.__name__} is not a subclass of {accept_type.__name__}",
         )
 
     # Instantiate the class with kwargs

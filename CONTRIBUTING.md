@@ -129,10 +129,10 @@ existing `ReActAgent` in the repository:
 
 1. **Chat Model Class** (under `agentscope.model`):
    ```python
-   from agentscope.model import ChatModelBase
+   from agentscope.model import BaseChatModel
 
 
-   class YourChatModel(ChatModelBase):
+   class YourChatModel(BaseChatModel):
        """
        The functionalities that you need to consider include:
        - Tools API integration

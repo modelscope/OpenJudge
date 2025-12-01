@@ -255,12 +255,12 @@ exact_match_grader = FunctionGrader(
 
 创建LLM评估器需要提供Template和模型配置
 
-##### Template 类
+##### PromptTemplate 类
 
-Template类是LLM Template系统的核心，用于定义对话模板和必需字段。
+Template类是LLM PromptTemplate系统的核心，用于定义对话模板和必需字段。
 
 ```python
-class Template(BaseModel):
+class PromptTemplate(BaseModel):
     """Template for generating chat messages.
 
     Attributes:
@@ -280,11 +280,11 @@ class Template(BaseModel):
 ##### 使用示例
 
 ```python
-from rm_gallery.core.schema.template import Template
+from rm_gallery.core.schema.template import PromptTemplate
 from rm_gallery.core.schema.message import ChatMessage
 
 # 单语言模板
-template = Template(
+template = PromptTemplate(
     messages=[
         ChatMessage(
             role="system",
@@ -298,7 +298,7 @@ template = Template(
 )
 
 # 多语言模板
-multilingual_template = Template(
+multilingual_template = PromptTemplate(
     messages={
         LanguageEnum.EN: [
             ChatMessage(
@@ -405,7 +405,7 @@ def custom_parser(eval_case: EvalCase) -> EvalCase:
 import asyncio
 from rm_gallery.core.schema.data import EvalCase, EvalCaseParser
 from rm_gallery.core.grader.base import LLMGrader, FunctionGrader, GraderScore
-from rm_gallery.core.model.base import ChatModelBase
+from rm_gallery.core.model.base import BaseChatModel
 
 # 创建数据样本
 eval_cases = [
@@ -452,7 +452,7 @@ llm_grader = LLMGrader(
             "content": "问题: {query}\n答案: {answer}\n综合评价 (0-1):"
         }
     ],
-    model=ChatModelBase(model="qwen-plus"),
+    model=BaseChatModel(model="qwen-plus"),
     description="综合评估答案的质量和准确性"
 )
 
@@ -480,13 +480,13 @@ class GradingRunner(BaseRunner):
 
     def __init__(
         self,
-        grading_configs: Dict[str, GradingConfig],
+        grader_configs: Dict[str, GraderConfig],
         max_concurrent: int = 32,
     ):
         """Initialize the EvaluationRunner.
 
         Args:
-            grading_configs: Dictionary of grading configurations where keys are dimension names
+            grader_configs: Dictionary of grading configurations where keys are dimension names
                            and values are grading configurations
             max_concurrent: Maximum number of concurrent evaluations (default: 32)
         """
@@ -535,7 +535,7 @@ eval_cases = [
 ]
 
 # 定义评估配置
-grading_configs = {
+grader_configs = {
     "helpfulness": {
         "grader": helpfulness_grader,  # 已定义的帮助性评估器
         "weight": 1.0
@@ -552,7 +552,7 @@ grading_configs = {
 
 # 创建GradingRunner
 runner = GradingRunner(
-    grading_configs=grading_configs,
+    grader_configs=grader_configs,
     max_concurrent=10  # 最大并发数
 )
 
@@ -621,7 +621,7 @@ eval_cases = [
 ]
 
 # 创建语言模型
-model = OpenAIChatModel(model="gpt-4")
+model = OpenAIChatModel(model="qwen3-max")
 
 # 创建AutoRubrics实例
 auto_rubrics = AutoRubrics(
@@ -733,7 +733,7 @@ async def main():
     ]
 
     # 创建模型
-    model = OpenAIChatModel(model="gpt-4")
+    model = OpenAIChatModel(model="qwen3-max")
 
     # 1. 使用AutoRubrics生成评分细则
     auto_rubrics = AutoRubrics(model=model)

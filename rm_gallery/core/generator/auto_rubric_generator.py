@@ -40,7 +40,6 @@ from rm_gallery.core.graders.schema import GraderMode
 from rm_gallery.core.models.schema.prompt_template import LanguageEnum
 from rm_gallery.core.models.openai_chat_model import OpenAIChatModel
 
-# pylint: disable=line-too-long
 
 @dataclass
 class BaseRubricsGeneratorConfig(LLMGraderGeneratorConfig):
@@ -120,38 +119,39 @@ class BaseRubricsGeneratorConfig(LLMGraderGeneratorConfig):
 @dataclass
 class PointwiseRubricsGeneratorConfig(BaseRubricsGeneratorConfig):
     """Configuration parameters for Pointwise rubrics generator.
-    
+
     This configuration class is for pointwise (scoring) rubric generation.
     It automatically sets grader_mode to POINTWISE. All other parameters
     are inherited from BaseRubricsGeneratorConfig.
-    
+
     Attributes:
         min_score: Minimum score value for pointwise mode. Defaults to 0.
         max_score: Maximum score value for pointwise mode. Defaults to 1.
     """
-    
+
     # Pointwise-specific parameters
     min_score: int = 0
     max_score: int = 1
-    
+
     def __post_init__(self):
         """Automatically set grader_mode to POINTWISE."""
         # Set grader_mode automatically
-        object.__setattr__(self, 'grader_mode', GraderMode.POINTWISE)
+        object.__setattr__(self, "grader_mode", GraderMode.POINTWISE)
+
 
 @dataclass
 class ListwiseRubricsGeneratorConfig(BaseRubricsGeneratorConfig):
     """Configuration parameters for Listwise rubrics generator.
-    
+
     This configuration class is for listwise (ranking) rubric generation.
     It automatically sets grader_mode to LISTWISE. All other parameters
     are inherited from BaseRubricsGeneratorConfig.
     """
-    
+
     def __post_init__(self):
         """Automatically set grader_mode to LISTWISE."""
         # Set grader_mode automatically
-        object.__setattr__(self, 'grader_mode', GraderMode.LISTWISE)
+        object.__setattr__(self, "grader_mode", GraderMode.LISTWISE)
 
 
 class RubricsGenerator(LLMGraderGenerator):
@@ -159,11 +159,11 @@ class RubricsGenerator(LLMGraderGenerator):
 
     This generator implements a training-free framework that extracts evaluation
     rubrics from preference data. It uses a two-stage approach:
-    
+
     1. Query-specific generation: For each training example, generates tailored
        rubrics using an iterative Propose-Evaluate-Revise loop that ensures
        rubric quality through validation.
-    
+
     2. Aggregation and categorization: Consolidates query-specific rubrics into
        a unified, non-redundant set using information-theoretic selection
        (MCR²) and optional semantic categorization.
@@ -175,6 +175,7 @@ class RubricsGenerator(LLMGraderGenerator):
 
     Supports both pointwise (scoring) and listwise (ranking) evaluation modes.
     """
+
     def __init__(
         self,
         config: Union[PointwiseRubricsGeneratorConfig, ListwiseRubricsGeneratorConfig],
@@ -182,22 +183,22 @@ class RubricsGenerator(LLMGraderGenerator):
         """Initialize the rubrics generator with the provided configuration.
 
         Args:
-            config (Union[PointwiseRubricsGeneratorConfig, ListwiseRubricsGeneratorConfig]): 
+            config (Union[PointwiseRubricsGeneratorConfig, ListwiseRubricsGeneratorConfig]):
                 Configuration for rubric generation. Can be:
                 - PointwiseRubricsGeneratorConfig for pointwise evaluation
                 - ListwiseRubricsGeneratorConfig for listwise evaluation
                 - RubricsGeneratorConfig for backward compatibility
                 The grader_mode is automatically set based on the config type.
-                
+
                 The configuration includes parameters from the inheritance hierarchy:
                 From GraderGeneratorConfig:
                 - grader_name (str): Human-readable name for the generated grader.
-                
+
                 From LLMGraderGeneratorConfig:
                 - model (BaseChatModel | None): Language model to use for generation.
                 - grader_mode (GraderMode): Mode for the generated grader (POINTWISE or LISTWISE).
                 - custom_evaluation_prompt (PromptTemplate | None): Custom template for evaluation.
-                
+
                 From BaseRubricsGeneratorConfig:
                 - language (LanguageEnum): Language for prompts (ZH or EN). Defaults to EN.
                 - enable_categorization (bool): Whether to enable LLM-based categorization. Defaults to False.
@@ -211,7 +212,7 @@ class RubricsGenerator(LLMGraderGenerator):
                 - patience (int): Consecutive low-increment iterations before early stopping. Defaults to 2.
                 - max_iterations (int): Maximum batch iterations allowed. Defaults to 50.
                 - max_total_rubrics (int): Maximum total rubrics to maintain in pool. Defaults to 200.
-                
+
                 From PointwiseRubricsGeneratorConfig (only for pointwise evaluation):
                 - min_score (int): Minimum score value for pointwise mode. Defaults to 0.
                 - max_score (int): Maximum score value for pointwise mode. Defaults to 1.
@@ -224,11 +225,11 @@ class RubricsGenerator(LLMGraderGenerator):
         **kwargs,
     ) -> LLMGrader:
         """Generate an LLMGrader with auto-generated rubrics from training data.
-        
+
         This method generates evaluation rubrics from the provided training data
         and creates an LLMGrader instance configured with these rubrics. The training
         data is used only for rubric generation, not for evaluation.
-        
+
         Args:
             dataset: List of training data dictionaries to generate rubrics from.
                  For pointwise mode, each dict should contain:
@@ -240,7 +241,7 @@ class RubricsGenerator(LLMGraderGenerator):
                  - "responses": List[str], multiple responses to rank
                  - "rank": List[int] (optional), expected ranking for validation
             **kwargs: Additional arguments passed to sub-methods.
-            
+
         Returns:
             LLMGrader: Configured grader instance with generated rubrics.
                      Can be used to evaluate new data via aevaluate() method.
@@ -248,7 +249,7 @@ class RubricsGenerator(LLMGraderGenerator):
 
         # Generate rubrics
         rubrics = await self._generate_rubrics(dataset, **kwargs)
-        
+
         # Prepare grader kwargs
         grader_kwargs = {
             "model": self.config.model,
@@ -262,11 +263,10 @@ class RubricsGenerator(LLMGraderGenerator):
             grader_kwargs["min_score"] = self.config.min_score
             grader_kwargs["max_score"] = self.config.max_score
 
-        
         # Add custom template if provided
-        if hasattr(self.config, 'custom_evaluation_prompt') and self.config.custom_evaluation_prompt is not None:
+        if hasattr(self.config, "custom_evaluation_prompt") and self.config.custom_evaluation_prompt is not None:
             grader_kwargs["template"] = self.config.custom_evaluation_prompt
-        
+
         return LLMGrader(**grader_kwargs)
 
     async def _generate_rubrics(
@@ -297,7 +297,7 @@ class RubricsGenerator(LLMGraderGenerator):
         Returns:
             str: Formatted string containing consolidated evaluation rubrics.
                 Ready to be used as rubrics parameter in LLMGrader.
-                
+
         Example:
             >>> dataset = [
             ...     {"query": "Explain photosynthesis", "response": "Photosynthesis is...", "label_score": 1},
@@ -317,6 +317,7 @@ class RubricsGenerator(LLMGraderGenerator):
 
         return categorized_rubrics
 
+    # pylint: disable=unused-argument, too-many-statements
     async def _generate_query_rubrics(
         self,
         dataset: List[dict],
@@ -354,12 +355,12 @@ class RubricsGenerator(LLMGraderGenerator):
             "max_epochs": self.config.max_epochs,
             "language": self.config.language,
         }
-        
+
         # Add min_score and max_score only for pointwise mode
         if self.config.grader_mode == GraderMode.POINTWISE:
             generator_kwargs["min_score"] = self.config.min_score
             generator_kwargs["max_score"] = self.config.max_score
-        
+
         query_generator = QuerySpecificRubricGenerator(**generator_kwargs)
 
         # Automatically select sampling mode based on data size
@@ -370,17 +371,17 @@ class RubricsGenerator(LLMGraderGenerator):
         # ALL_SAMPLES mode: Process all samples concurrently, generating rubrics independently
         if sampling_mode == "all_samples":
             logger.info(f"Using ALL_SAMPLES mode: processing all {len(dataset)} samples concurrently")
-            
+
             # Create coroutines for all samples
             all_coroutines = []
             for data_item in dataset:
                 all_coroutines.append(
-                    query_generator.generate_iterative(data_item)
+                    query_generator.generate_iterative(data_item),
                 )
-            
+
             # Execute all coroutines concurrently
             all_results = await asyncio.gather(*all_coroutines)
-            
+
             # Extract rubrics from results
             all_rubrics = []
             successful_count = 0
@@ -389,18 +390,18 @@ class RubricsGenerator(LLMGraderGenerator):
             for idx, result in enumerate(all_results):
                 rubric_valid = result.get("rubric_valid", False)
                 rubrics = result.get("rubrics", [])
-                
+
                 if rubrics and rubric_valid:
                     all_rubrics.extend(rubrics)
                     successful_count += 1
                     logger.debug(
                         f"Data item {idx + 1}: {len(rubrics)} rubrics, "
-                        f"valid={rubric_valid}, epoch={result.get('rubric_epoch', 'N/A')}"
+                        f"valid={rubric_valid}, epoch={result.get('rubric_epoch', 'N/A')}",
                     )
                 elif rubrics and not rubric_valid:
                     logger.warning(
                         f"Data item {idx + 1}: {len(rubrics)} rubrics generated but "
-                        f"failed validation (valid={rubric_valid}), skipping"
+                        f"failed validation (valid={rubric_valid}), skipping",
                     )
                     failed_count += 1
                 else:
@@ -409,26 +410,26 @@ class RubricsGenerator(LLMGraderGenerator):
 
             logger.info(
                 f"ALL_SAMPLES completed: {len(all_rubrics)} total rubrics from "
-                f"{successful_count} successful samples ({failed_count} failed)"
+                f"{successful_count} successful samples ({failed_count} failed)",
             )
             return all_rubrics
 
         # SMART_SAMPLING mode: Iteratively build optimal rubric subset using MCR² selection
         else:
-            logger.info(f"Using SMART_SAMPLING mode with MCR² selection")
-            
+            logger.info("Using SMART_SAMPLING mode with MCR² selection")
+
             # Initialize MCR² selector
             mcr_selector = SuperFastAdaptiveMCR2(batch_size=self.config.mcr_batch_size)
-            
+
             selected_rubrics = []
             coding_rates = [0.0]
             low_increment_count = 0
             current_index = 0
             iteration = 0
-            
+
             while iteration < self.config.max_iterations:
                 iteration += 1
-                
+
                 # Get next batch
                 start_idx = current_index
                 end_idx = min(start_idx + self.config.batch_size, len(dataset))
@@ -437,22 +438,18 @@ class RubricsGenerator(LLMGraderGenerator):
                     current_index = 0
                     start_idx = 0
                     end_idx = min(self.config.batch_size, len(dataset))
-                
+
                 batch_data = dataset[start_idx:end_idx]
                 current_index = end_idx
-                
+
                 logger.info(
-                    f"Iteration {iteration}: Processing batch {start_idx}-{end_idx-1} "
-                    f"({len(batch_data)} samples)"
+                    f"Iteration {iteration}: Processing batch {start_idx}-{end_idx-1} " f"({len(batch_data)} samples)",
                 )
-                
+
                 # Generate rubrics for batch concurrently
-                batch_coroutines = [
-                    query_generator.generate_iterative(data_item)
-                    for data_item in batch_data
-                ]
+                batch_coroutines = [query_generator.generate_iterative(data_item) for data_item in batch_data]
                 batch_results = await asyncio.gather(*batch_coroutines)
-                
+
                 batch_rubrics = []
                 for result in batch_results:
                     rubric_valid = result.get("rubric_valid", False)
@@ -463,20 +460,20 @@ class RubricsGenerator(LLMGraderGenerator):
                     elif rubrics and not rubric_valid:
                         logger.debug(
                             f"Skipping invalid rubrics: {len(rubrics)} rubrics "
-                            f"failed validation (valid={rubric_valid})"
+                            f"failed validation (valid={rubric_valid})",
                         )
-                
+
                 if not batch_rubrics:
                     logger.warning(f"No rubrics generated in iteration {iteration}")
                     continue
-                
+
                 # Combine existing and new rubrics, then apply MCR² information-theoretic selection
                 combined_rubrics = selected_rubrics + batch_rubrics
                 logger.info(
                     f"MCR² evaluation: {len(selected_rubrics)} existing + "
-                    f"{len(batch_rubrics)} new = {len(combined_rubrics)} total"
+                    f"{len(batch_rubrics)} new = {len(combined_rubrics)} total",
                 )
-                
+
                 mcr_results = mcr_selector.ultra_fast_adaptive_selection(
                     combined_rubrics,
                     batch_size=self.config.mcr_batch_size,
@@ -484,46 +481,46 @@ class RubricsGenerator(LLMGraderGenerator):
                     patience=self.config.patience,
                     max_samples=min(self.config.max_total_rubrics, len(combined_rubrics)),
                 )
-                
+
                 # Update selected rubrics
                 selected_rubrics = mcr_results["selected_texts"]
                 current_rate = mcr_results["final_coding_rate"]
                 previous_rate = coding_rates[-1]
                 increment = current_rate - previous_rate
                 coding_rates.append(current_rate)
-                
+
                 logger.info(
                     f"MCR² results: {len(selected_rubrics)} selected, "
-                    f"rate={current_rate:.6f}, increment={increment:.6f}"
+                    f"rate={current_rate:.6f}, increment={increment:.6f}",
                 )
-                
+
                 # Check convergence
                 if increment < self.config.min_increment_threshold:
                     low_increment_count += 1
                     logger.info(
                         f"Low increment: {increment:.6f} < {self.config.min_increment_threshold:.6f} "
-                        f"(count: {low_increment_count}/{self.config.patience})"
+                        f"(count: {low_increment_count}/{self.config.patience})",
                     )
                     if low_increment_count >= self.config.patience:
                         logger.info(
                             f"Converged after {iteration} iterations "
-                            f"({self.config.patience} consecutive low increments)"
+                            f"({self.config.patience} consecutive low increments)",
                         )
                         break
                 else:
                     low_increment_count = 0
-                
+
                 # Check max rubrics limit
                 if len(selected_rubrics) >= self.config.max_total_rubrics:
                     logger.info(f"Reached max rubrics limit: {self.config.max_total_rubrics}")
                     break
-            
+
             logger.info(
-                f"SMART_SAMPLING completed: {len(selected_rubrics)} rubrics selected "
-                f"after {iteration} iterations"
+                f"SMART_SAMPLING completed: {len(selected_rubrics)} rubrics selected " f"after {iteration} iterations",
             )
             return selected_rubrics
 
+    # pylint: disable=unused-argument
     async def _categorize_query_rubrics(
         self,
         query_rubrics: List[str],
@@ -561,13 +558,13 @@ class RubricsGenerator(LLMGraderGenerator):
         if not self.config.enable_categorization:
             logger.info(f"Categorization disabled: keeping all {len(query_rubrics)} rubrics")
             formatted_rubrics = "\n\n".join(
-                [f"{i+1}. {rubric}" for i, rubric in enumerate(query_rubrics)]
+                [f"{i+1}. {rubric}" for i, rubric in enumerate(query_rubrics)],
             )
             return formatted_rubrics
-        
+
         # If categorization is enabled: use LLM-based categorization
         logger.info(f"Categorization enabled: categorizing {len(query_rubrics)} rubrics...")
-        
+
         # Initialize rubric categorizer
         categorizer = LLMRubricCategorizer(
             num_categories=self.config.categories_number,
@@ -578,29 +575,29 @@ class RubricsGenerator(LLMGraderGenerator):
         # Categorize rubrics
         try:
             categorized_rubrics, categorization_info = await categorizer.categorize_rubrics(
-                query_rubrics
+                query_rubrics,
             )
 
             if not categorized_rubrics:
                 logger.error("Rubric categorization failed, falling back to numbered list format")
                 # Fallback: return original rubrics as formatted string
                 return "\n\n".join(
-                    [f"{i+1}. {rubric}" for i, rubric in enumerate(query_rubrics)]
+                    [f"{i+1}. {rubric}" for i, rubric in enumerate(query_rubrics)],
                 )
 
             logger.info(
-                f"Successfully categorized into {categorization_info.get('num_categories', 0)} categories"
+                f"Successfully categorized into {categorization_info.get('num_categories', 0)} categories",
             )
 
             # Format categorized rubrics into a single string
             formatted_rubrics = "\n\n".join(
-                [f"Rubric {i+1}:\n{rubric}" for i, rubric in enumerate(categorized_rubrics)]
+                [f"Rubric {i+1}:\n{rubric}" for i, rubric in enumerate(categorized_rubrics)],
             )
 
             return formatted_rubrics
-            
+
         except Exception as e:
             logger.error(f"Categorization error: {e}, falling back to numbered list format")
             return "\n\n".join(
-                [f"{i+1}. {rubric}" for i, rubric in enumerate(query_rubrics)]
+                [f"{i+1}. {rubric}" for i, rubric in enumerate(query_rubrics)],
             )

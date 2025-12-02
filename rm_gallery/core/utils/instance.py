@@ -82,8 +82,7 @@ def init_instance_by_config(
         instance = config
         if accept_type is not None and not isinstance(instance, accept_type):
             raise TypeError(
-                f"Provided instance {instance.__class__.__name__} "
-                f"is not an instance of {accept_type.__name__}",
+                f"Provided instance {instance.__class__.__name__} " f"is not an instance of {accept_type.__name__}",
             )
         return instance
 

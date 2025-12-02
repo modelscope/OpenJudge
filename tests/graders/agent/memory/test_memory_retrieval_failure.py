@@ -7,14 +7,14 @@ Tests for the MemoryRetrievalFailureGrader class functionality.
 
 import pytest
 
-from rm_gallery.core.graders.gallery.agent import MemoryRetrievalFailureGrader
+from rm_gallery.core.graders.predefined.agent import MemoryRetrievalFailureGrader
 from rm_gallery.core.models.openai_chat_model import OpenAIChatModel
 from rm_gallery.core.models.schema.prompt_template import LanguageEnum
 
 
 def test_memory_retrieval_failure_grader_creation():
     """Test creating a MemoryRetrievalFailureGrader instance"""
-    model = OpenAIChatModel(model="qwen-plus", stream=False)
+    model = OpenAIChatModel(model="qwen-plus", api_key="your-key", stream=False)
     grader = MemoryRetrievalFailureGrader(model=model)
 
     assert grader is not None
@@ -24,7 +24,7 @@ def test_memory_retrieval_failure_grader_creation():
 
 def test_memory_retrieval_failure_grader_chinese():
     """Test creating a Chinese grader instance"""
-    model = OpenAIChatModel(model="qwen-plus", stream=False)
+    model = OpenAIChatModel(model="qwen-plus", api_key="your-key", stream=False)
     grader = MemoryRetrievalFailureGrader(
         model=model,
         language=LanguageEnum.ZH,
@@ -38,7 +38,7 @@ def test_memory_retrieval_failure_grader_chinese():
 @pytest.mark.asyncio
 async def test_memory_retrieval_failure_detection():
     """Test detecting memory retrieval failure"""
-    model = OpenAIChatModel(model="qwen3-32b", stream=False)
+    model = OpenAIChatModel(model="qwen-plus", api_key="your-key", stream=False)
     grader = MemoryRetrievalFailureGrader(model=model)
 
     # Test case where plan ignores known information from memory
@@ -58,7 +58,7 @@ async def test_memory_retrieval_failure_detection():
 @pytest.mark.asyncio
 async def test_memory_retrieval_success():
     """Test with successful memory retrieval"""
-    model = OpenAIChatModel(model="qwen3-32b", stream=False)
+    model = OpenAIChatModel(model="qwen-plus", api_key="your-key", stream=False)
     grader = MemoryRetrievalFailureGrader(model=model)
 
     result = await grader.aevaluate(
@@ -76,7 +76,7 @@ async def test_memory_retrieval_success():
 @pytest.mark.asyncio
 async def test_memory_retrieval_failure_with_history():
     """Test memory retrieval failure with history"""
-    model = OpenAIChatModel(model="qwen3-32b", stream=False)
+    model = OpenAIChatModel(model="qwen-plus", api_key="your-key", stream=False)
     grader = MemoryRetrievalFailureGrader(model=model)
 
     history = [

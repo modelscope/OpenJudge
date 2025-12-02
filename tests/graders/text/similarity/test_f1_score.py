@@ -7,7 +7,7 @@ Test token-based F1 score calculation following OpenAI Evals implementation.
 
 import pytest
 
-from rm_gallery.core.graders.gallery.text.similarity.similarity import SimilarityGrader
+from rm_gallery.core.graders.predefined.text.similarity.similarity import SimilarityGrader
 
 
 class TestF1ScoreBasic:

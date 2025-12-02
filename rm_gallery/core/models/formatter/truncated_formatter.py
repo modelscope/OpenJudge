@@ -62,11 +62,7 @@ class TruncatedFormatterBase(BaseFormatter, ABC):
             formatted_msgs = await self._format(msgs)
             n_tokens = await self._count(formatted_msgs)
 
-            if (
-                n_tokens is None
-                or self.max_tokens is None
-                or n_tokens <= self.max_tokens
-            ):
+            if n_tokens is None or self.max_tokens is None or n_tokens <= self.max_tokens:
                 return formatted_msgs
 
             # truncate the input messages
@@ -172,8 +168,7 @@ class TruncatedFormatterBase(BaseFormatter, ABC):
                 # If the system prompt already exceeds the token limit, we
                 # raise an error.
                 raise ValueError(
-                    f"The system prompt message already exceeds the token "
-                    f"limit ({self.max_tokens} tokens).",
+                    f"The system prompt message already exceeds the token " f"limit ({self.max_tokens} tokens).",
                 )
 
             start_index = 1

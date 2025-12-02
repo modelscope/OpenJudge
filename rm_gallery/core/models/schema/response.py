@@ -1,4 +1,11 @@
 # -*- coding: utf-8 -*-
+"""Schema definition for chat model responses.
+
+This module defines the data model for chat responses from language models,
+including content blocks, metadata, and usage information. It's designed to be
+compatible with AgentScope ChatResponse format.
+"""
+
 from datetime import datetime
 from typing import Any, Dict, Literal, Sequence
 
@@ -19,7 +26,8 @@ class ChatResponse(BaseModel):
 
     content: Sequence[TextBlock | ToolUseBlock | ThinkingBlock | AudioBlock] = Field(
         default_factory=list,
-        description="The content of the chat response, which can include text blocks, tool use blocks, or thinking blocks.",
+        description="The content of the chat response, which can include text blocks, tool use blocks,"
+        " or thinking blocks.",
     )
 
     id: str = Field(

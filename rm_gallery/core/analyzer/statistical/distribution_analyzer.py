@@ -103,7 +103,7 @@ class DistributionAnalyzer(BaseAnalyzer):
         Returns:
             DistributionAnalysisResult: The computed distribution analysis result containing
             statistical metrics with metadata.
-            
+
         Example:
             >>> from rm_gallery.core.graders.schema import GraderResult
             >>> dataset = [
@@ -140,11 +140,7 @@ class DistributionAnalyzer(BaseAnalyzer):
         # Extract scores from grader results
         scores = []
         for grader_result in grader_results:
-            if (
-                grader_result
-                and hasattr(grader_result, "score")
-                and grader_result.score is not None
-            ):
+            if grader_result and hasattr(grader_result, "score") and grader_result.score is not None:
                 scores.append(float(grader_result.score))
 
         if not scores:

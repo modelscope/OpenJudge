@@ -42,9 +42,7 @@ class SuperFastAdaptiveMCR2:
                 )
 
                 if rsp.status_code == 200:
-                    embeddings = [
-                        record["embedding"] for record in rsp.output["embeddings"]
-                    ]
+                    embeddings = [record["embedding"] for record in rsp.output["embeddings"]]
                     all_embeddings.extend(embeddings)
                 else:
                     logger.error(
@@ -60,6 +58,7 @@ class SuperFastAdaptiveMCR2:
 
         return np.array(all_embeddings)
 
+    # pylint: disable=unused-variable
     def fast_coding_rate_svd(self, X: np.ndarray, eps: float = 0.1) -> float:
         """Fast coding rate calculation using SVD"""
         n, d = X.shape
@@ -98,6 +97,7 @@ class SuperFastAdaptiveMCR2:
         except Exception:
             return 0.0
 
+    # pylint: disable=too-many-statements
     def ultra_fast_adaptive_selection(
         self,
         texts: List[str],
@@ -158,9 +158,7 @@ class SuperFastAdaptiveMCR2:
         cumulative_samples = [0]
 
         batch_num = 0
-        internal_low_increment_count = (
-            0  # MCR internal patience, separate from pipeline level
-        )
+        internal_low_increment_count = 0  # MCR internal patience, separate from pipeline level
 
         while len(selected_indices) < max_samples and len(candidate_indices) > 0:
             batch_num += 1
@@ -282,6 +280,7 @@ class SuperFastAdaptiveMCR2:
 
         return results
 
+    # pylint: disable=too-many-statements
     def _ultra_fast_batch_selection(
         self,
         X: np.ndarray,
@@ -398,9 +397,7 @@ class SuperFastAdaptiveMCR2:
 
         if len(coding_rates) < 2:
             return {
-                "optimal_sample_count": cumulative_samples[-1]
-                if cumulative_samples
-                else 0,
+                "optimal_sample_count": cumulative_samples[-1] if cumulative_samples else 0,
             }
 
         # Find the point where increment starts to decline significantly

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=too-many-lines
 """
 Query-Specific Rubric Generator with Full Iterative Capability
 
@@ -565,13 +566,14 @@ LISTWISE_REVISION_TEMPLATE = PromptTemplate(
 
 class RubricGenerationOutput(BaseModel):
     """Output model for rubric generation.
-    
+
     Represents the structured output from rubric generation operations.
-    
+
     Attributes:
         rubrics (List[str]): List of generated rubrics.
         reason (str): Reasoning for the generated rubrics.
     """
+
     rubrics: List[str] = Field(description="List of generated rubrics")
     reason: str = Field(description="Reasoning for the generated rubrics")
 
@@ -586,7 +588,7 @@ class QuerySpecificRubricGenerator:
     3. Validate evaluation against ground truth
     4. If incorrect, revise rubrics and repeat
     5. Stop when valid or max_epochs reached
-    
+
     This generator supports both pointwise and listwise evaluation modes,
     and includes built-in validation and revision capabilities for iterative
     improvement of the generated rubrics.
@@ -634,9 +636,7 @@ class QuerySpecificRubricGenerator:
 
         if isinstance(language, str):
             self.language = (
-                LanguageEnum(language)
-                if language in [item.value for item in LanguageEnum]
-                else LanguageEnum.ZH
+                LanguageEnum(language) if language in [item.value for item in LanguageEnum] else LanguageEnum.ZH
             )
         else:
             self.language = language
@@ -647,14 +647,20 @@ class QuerySpecificRubricGenerator:
         self.min_score = min_score
         self.max_score = max_score
 
-        self.generation_template = POINTWISE_GENERATION_TEMPLATE if self.grader_mode == "pointwise" else LISTWISE_GENERATION_TEMPLATE
-        self.evaluation_template = POINTWISE_EVALUATION_TEMPLATE if self.grader_mode == "pointwise" else LISTWISE_EVALUATION_TEMPLATE
-        self.revision_template = POINTWISE_REVISION_TEMPLATE if self.grader_mode == "pointwise" else LISTWISE_REVISION_TEMPLATE
+        self.generation_template = (
+            POINTWISE_GENERATION_TEMPLATE if self.grader_mode == "pointwise" else LISTWISE_GENERATION_TEMPLATE
+        )
+        self.evaluation_template = (
+            POINTWISE_EVALUATION_TEMPLATE if self.grader_mode == "pointwise" else LISTWISE_EVALUATION_TEMPLATE
+        )
+        self.revision_template = (
+            POINTWISE_REVISION_TEMPLATE if self.grader_mode == "pointwise" else LISTWISE_REVISION_TEMPLATE
+        )
 
         logger.info(
             f"QuerySpecificRubricGenerator initialized: mode={grader_mode}, language={language}",
         )
-        
+
     async def generate_iterative(self, data: dict) -> Dict[str, Any]:
         """
         Complete iterative generation and improvement for a single data
@@ -747,10 +753,12 @@ class QuerySpecificRubricGenerator:
             # Get structured data from metadata
             if not response.metadata:
                 raise ValueError("No metadata in response")
-            
+
             if "rubrics" not in response.metadata:
                 logger.error(f"Missing 'rubrics' key in metadata. Available keys: {list(response.metadata.keys())}")
-                raise KeyError(f"'rubrics' key not found in response.metadata. Available keys: {list(response.metadata.keys())}")
+                raise KeyError(
+                    f"'rubrics' key not found in response.metadata. Available keys: {list(response.metadata.keys())}",
+                )
 
             rubrics = response.metadata["rubrics"]
 
@@ -826,10 +834,12 @@ class QuerySpecificRubricGenerator:
             # Get structured data from metadata
             if not response.metadata:
                 raise ValueError("No metadata in response")
-            
+
             if "rubrics" not in response.metadata:
                 logger.error(f"Missing 'rubrics' key in metadata. Available keys: {list(response.metadata.keys())}")
-                raise KeyError(f"'rubrics' key not found in response.metadata. Available keys: {list(response.metadata.keys())}")
+                raise KeyError(
+                    f"'rubrics' key not found in response.metadata. Available keys: {list(response.metadata.keys())}",
+                )
 
             revised_rubrics = response.metadata["rubrics"]
 
@@ -867,7 +877,7 @@ class QuerySpecificRubricGenerator:
         rubrics: List[str],
     ) -> Dict[str, Any]:
         """Evaluate in pointwise mode using ChatTemplate.
-        
+
         Expects data format: {"query": "...", "response": "...", "label_score": 1}
         """
         rubrics_text = self._format_rubrics_text(rubrics)
@@ -891,16 +901,16 @@ class QuerySpecificRubricGenerator:
                 structured_model=GraderScore,
             )
             logger.debug(f"Pointwise evaluation response: {response_obj}")
-            
+
             # Get structured data from metadata
             if response_obj.metadata and "score" in response_obj.metadata:
                 score = response_obj.metadata["score"]
                 score = max(self.min_score, min(self.max_score, score))
             else:
                 score = self.min_score
-                
+
             return {"scores": [score]}
-            
+
         except Exception as e:
             logger.error(f"Evaluation failed: {e}")
             return {"scores": [self.min_score]}
@@ -911,17 +921,17 @@ class QuerySpecificRubricGenerator:
         rubrics: List[str],
     ) -> Dict[str, Any]:
         """Evaluate in listwise mode - model gives complete ranking at once.
-        
+
         Expects data format: {"query": "...", "responses": [...], "label_rank": [1, 2, 3, ...]}
         Note: Smaller rank values indicate better quality (rank=1 is best).
         """
         rubrics_text = self._format_rubrics_text(rubrics)
         query = data.get("query", "")
         responses = data.get("responses", [])
-        
+
         # Format responses for evaluation
         responses_text = "\n\n".join(
-            [f"Response {i+1}:\n{resp}" for i, resp in enumerate(responses)]
+            [f"Response {i+1}:\n{resp}" for i, resp in enumerate(responses)],
         )
 
         try:
@@ -940,7 +950,7 @@ class QuerySpecificRubricGenerator:
                 structured_model=GraderRank,
             )
             logger.debug(f"Listwise evaluation response: {response_obj}")
-            
+
             # Get structured data from metadata
             if response_obj.metadata and "rank" in response_obj.metadata:
                 rank_values = response_obj.metadata["rank"]
@@ -956,7 +966,7 @@ class QuerySpecificRubricGenerator:
                     logger.warning(
                         f"Invalid rank values from structured output: {rank_values}",
                     )
-            
+
             return {"rank_values": []}
 
         except Exception as e:
@@ -971,7 +981,7 @@ class QuerySpecificRubricGenerator:
         evaluation_result: Dict[str, Any],
     ) -> bool:
         """Strict score match for pointwise evaluation.
-        
+
         Expects data format: {"query": "...", "response": "...", "label_score": 1}
         """
         scores = evaluation_result.get("scores", [])
@@ -992,7 +1002,7 @@ class QuerySpecificRubricGenerator:
         evaluation_result: Dict[str, Any],
     ) -> bool:
         """Validate listwise results - supports rank value comparison by relative order.
-        
+
         Expects data format: {"query": "...", "responses": [...], "label_rank": [1, 2, 3, ...]}
         Note: Smaller label_rank values indicate better quality (label_rank=1 is best).
         """
@@ -1011,18 +1021,18 @@ class QuerySpecificRubricGenerator:
         logger.debug(f"Expected ranks: {expected_ranks}, order: {expected_order}")
         predicted_order = self._get_relative_order(rank_values)
         logger.debug(f"Predicted ranks: {rank_values}, order: {predicted_order}")
-        
+
         # Must match relative order exactly
         return expected_order == predicted_order
 
     def _get_relative_order(self, values: List[float]) -> List[int]:
         """Convert rank values to relative order rankings (0-based indices sorted by rank asc).
-        
+
         Note: In ranking, smaller values indicate better quality (label_rank=1 is best).
         Returns indices sorted from best to worst.
         """
         # Create (index, value) pairs
-        indexed_values = [(i, val) for i, val in enumerate(values)]
+        indexed_values = list(enumerate(values))
         # Sort by label_rank value in ascending order (smaller label_rank = better quality)
         indexed_values.sort(key=lambda x: x[1])
         # Return the indices in order from best to worst
@@ -1036,7 +1046,7 @@ class QuerySpecificRubricGenerator:
         evaluation_result: Dict[str, Any],
     ) -> str:
         """Generate simple pointwise feedback.
-        
+
         Expects data format: {"query": "...", "response": "...", "label_score": 1}
         """
         expected_score = data.get("label_score")
@@ -1051,7 +1061,7 @@ class QuerySpecificRubricGenerator:
         evaluation_result: Dict[str, Any],
     ) -> str:
         """Generate simple listwise feedback.
-        
+
         Expects data format: {"query": "...", "responses": [...], "label_rank": [1, 2, 3, ...]}
         Note: Smaller rank values indicate better quality (rank=1 is best).
         """
@@ -1066,44 +1076,44 @@ class QuerySpecificRubricGenerator:
 
     def _format_data_context(self, data: dict) -> str:
         """Format data context for reference - language-neutral data formatting.
-        
+
         Supports two data formats:
         - Pointwise: {"query": "...", "response": "...", "label_score": 1}
         - Listwise: {"query": "...", "responses": [...], "label_rank": [1, 2, 3, ...]}
-        
+
         Note: In ranking, smaller rank values indicate better quality (rank=1 is best).
         """
         lines = []
 
         # Extract query
         query = data.get("query", "")
-        
+
         # Check if this is pointwise or listwise data
         if "response" in data:
             # Pointwise mode: single response with score
             lines.append(f"Query: {query}")
             lines.append(f"Response: {data.get('response', '')}")
-            
+
             score = data.get("label_score")
             if score is not None:
                 lines.append(f"Expected score: {score}")
-                
+
         elif "responses" in data:
             # Listwise mode: multiple responses with rankings
             lines.append(f"Query: {query}")
             lines.append("")
-            
+
             responses = data.get("responses", [])
             ranks = data.get("label_rank", [])
-            
+
             for i, response in enumerate(responses):
                 lines.append(f"Response {i+1}:")
                 lines.append(f"{response}")
-                
+
                 if i < len(ranks):
                     # Smaller rank = better quality (rank=1 is best)
                     lines.append(f"Expected rank: {ranks[i]}")
-                
+
                 lines.append("")
 
         return "\n".join(lines)

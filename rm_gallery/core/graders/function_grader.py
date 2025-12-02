@@ -1,4 +1,21 @@
 # -*- coding: utf-8 -*-
+"""
+Function-based grader implementation for evaluating model responses.
+
+This module provides the FunctionGrader class, which allows users to define custom
+evaluation functions for assessing model responses. Unlike the LLMGrader which uses
+large language models for evaluation, FunctionGrader executes user-defined functions
+that implement specific evaluation logic.
+
+The grader supports both pointwise evaluation (scoring individual responses) and
+listwise evaluation (ranking multiple responses) through custom functions that
+return appropriate GraderScore or GraderRank objects.
+
+Classes:
+    FunctionGrader: Main class for function-based evaluation with support for both
+                   synchronous and asynchronous evaluation functions.
+"""
+
 import asyncio
 from functools import partial
 from typing import Any, Callable

@@ -1,4 +1,10 @@
 # -*- coding: utf-8 -*-
+"""Utilities for managing concurrency in RM-Gallery.
+
+This module provides utilities for controlling concurrent execution of
+evaluations to prevent resource exhaustion and manage system load.
+"""
+
 import asyncio
 
 

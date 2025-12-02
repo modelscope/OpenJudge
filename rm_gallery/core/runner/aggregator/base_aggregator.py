@@ -47,4 +47,3 @@ class BaseAggregator(ABC):
         Returns:
             Aggregated result as a GraderResult object
         """
-        pass

@@ -83,7 +83,7 @@ class ChatMessage(BaseModel):
         description="The related API invocation id",
     )
     id: str = Field(
-        default_factory=lambda: shortuuid.uuid(),
+        default_factory=lambda: shortuuid.uuid(),  # pylint: disable=unnecessary-lambda
         description="Unique identifier for the message",
     )
 
@@ -92,7 +92,7 @@ class ChatMessage(BaseModel):
 
         Args:
             **data: Message data including name, content, role, metadata, etc.
-            
+
         Example:
             >>> msg = ChatMessage(name="Bob", content="Hi there!", role="user")
             >>> print(isinstance(msg.timestamp, str))
@@ -109,7 +109,7 @@ class ChatMessage(BaseModel):
 
         Returns:
             dict: Dictionary representation of the message.
-            
+
         Example:
             >>> msg = ChatMessage(name="Test", content="Hello")
             >>> data = msg.to_dict()
@@ -127,7 +127,7 @@ class ChatMessage(BaseModel):
 
         Returns:
             ChatMessage: Instance created from the JSON data.
-            
+
         Example:
             >>> data = {"name": "Test", "content": "Hello", "role": "user"}
             >>> msg = ChatMessage.from_dict(data)
@@ -140,15 +140,17 @@ class ChatMessage(BaseModel):
 
     def has_content_blocks(
         self,
-        block_type: Literal[
-            "text",
-            "tool_use",
-            "tool_result",
-            "image",
-            "audio",
-            "video",
-        ]
-        | None = None,
+        block_type: (
+            Literal[
+                "text",
+                "tool_use",
+                "tool_result",
+                "image",
+                "audio",
+                "video",
+            ]
+            | None
+        ) = None,
     ) -> bool:
         """Check if the message has content blocks of the given type.
 
@@ -158,7 +160,7 @@ class ChatMessage(BaseModel):
 
         Returns:
             bool: True if the message has content blocks of the specified type, False otherwise.
-            
+
         Example:
             >>> msg = ChatMessage(content=[TextBlock(type="text", text="Hello")])
             >>> print(msg.has_content_blocks("text"))
@@ -173,13 +175,13 @@ class ChatMessage(BaseModel):
 
         Returns:
             str | None: The concatenated text content, or None if no text blocks exist.
-            
+
         Example:
             >>> msg = ChatMessage(content="Hello world")
             >>> print(msg.get_text_content())
             Hello world
             >>>
-            >>> msg = ChatMessage(content=[TextBlock(type="text", text="Hello"), 
+            >>> msg = ChatMessage(content=[TextBlock(type="text", text="Hello"),
             ...                            TextBlock(type="text", text=" world")])
             >>> print(msg.get_text_content())
             Hello world
@@ -200,63 +202,58 @@ class ChatMessage(BaseModel):
     def get_content_blocks(
         self,
         block_type: Literal["text"],
-    ) -> List[TextBlock]:
-        ...
+    ) -> List[TextBlock]: ...
 
     @overload
     def get_content_blocks(
         self,
         block_type: Literal["tool_use"],
-    ) -> List[ToolUseBlock]:
-        ...
+    ) -> List[ToolUseBlock]: ...
 
     @overload
     def get_content_blocks(
         self,
         block_type: Literal["tool_result"],
-    ) -> List[ToolResultBlock]:
-        ...
+    ) -> List[ToolResultBlock]: ...
 
     @overload
     def get_content_blocks(
         self,
         block_type: Literal["image"],
-    ) -> List[ImageBlock]:
-        ...
+    ) -> List[ImageBlock]: ...
 
     @overload
     def get_content_blocks(
         self,
         block_type: Literal["audio"],
-    ) -> List[AudioBlock]:
-        ...
+    ) -> List[AudioBlock]: ...
 
     @overload
     def get_content_blocks(
         self,
         block_type: Literal["video"],
-    ) -> List[VideoBlock]:
-        ...
+    ) -> List[VideoBlock]: ...
 
     @overload
     def get_content_blocks(
         self,
         block_type: None = None,
-    ) -> List[ContentBlock]:
-        ...
+    ) -> List[ContentBlock]: ...
 
     def get_content_blocks(
         self,
-        block_type: Literal[
-            "text",
-            "thinking",
-            "tool_use",
-            "tool_result",
-            "image",
-            "audio",
-            "video",
-        ]
-        | None = None,
+        block_type: (
+            Literal[
+                "text",
+                "thinking",
+                "tool_use",
+                "tool_result",
+                "image",
+                "audio",
+                "video",
+            ]
+            | None
+        ) = None,
     ) -> (
         List[ContentBlock]
         | List[TextBlock]
@@ -276,7 +273,7 @@ class ChatMessage(BaseModel):
 
         Returns:
             List[ContentBlock]: The content blocks.
-            
+
         Example:
             >>> # Get all content blocks
             >>> msg = ChatMessage(content=[TextBlock(type="text", text="Hello")])
@@ -322,7 +319,7 @@ class ChatMessage(BaseModel):
 
         Returns:
             ChatMessage: A copy of the message with formatted content.
-            
+
         Example:
             >>> msg = ChatMessage(content="Hello {name}!")
             >>> formatted_msg = msg.format(name="Alice")

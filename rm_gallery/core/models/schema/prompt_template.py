@@ -47,7 +47,7 @@ class PromptDict(TypedDict, total=False):
         user: Optional user message as string or ChatMessage.
 
     Example:
-        >>> prompt_dict: PromptDict = {"system": "You are a helpful assistant", 
+        >>> prompt_dict: PromptDict = {"system": "You are a helpful assistant",
         ...                             "user": "Hello!"}
     """
 
@@ -125,7 +125,7 @@ class PromptTemplate(BaseModel):
     Example:
         >>> # Monolingual template
         >>> template = PromptTemplate(messages=[ChatMessage(role="user", content="Hello")])
-        >>> 
+        >>>
         >>> # Multilingual template
         >>> multi_template = PromptTemplate(
         ...     messages={
@@ -135,10 +135,13 @@ class PromptTemplate(BaseModel):
         ... )
     """
 
-    messages: List[ChatMessage] | Dict[
-        LanguageEnum,
-        List[ChatMessage],
-    ] = Field(
+    messages: (
+        List[ChatMessage]
+        | Dict[
+            LanguageEnum,
+            List[ChatMessage],
+        ]
+    ) = Field(
         default_factory=list,
         description="messages for generating chat",
     )
@@ -242,10 +245,7 @@ class PromptTemplate(BaseModel):
             2
         """
         return cls(
-            messages={
-                LanguageEnum(lang): _convert_prompt_to_messages(prompt)
-                for lang, prompt in prompt.items()
-            },
+            messages={LanguageEnum(lang): _convert_prompt_to_messages(prompt) for lang, prompt in prompt.items()},
         )
 
     def format(
@@ -272,9 +272,6 @@ class PromptTemplate(BaseModel):
             [{'role': 'user', 'content': 'Hello World'}]
         """
         messages = self.to_messages(language)
-        messages = [
-            ChatMessage(**message) if not isinstance(message, ChatMessage) else message
-            for message in messages
-        ]
+        messages = [ChatMessage(**message) if not isinstance(message, ChatMessage) else message for message in messages]
         messages = [message.format(**kwargs).to_dict() for message in messages]
         return messages

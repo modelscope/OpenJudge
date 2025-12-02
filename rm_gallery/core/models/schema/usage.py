@@ -1,4 +1,10 @@
 # -*- coding: utf-8 -*-
+"""Schema definition for model usage tracking.
+
+This module defines data models for tracking usage statistics of chat models,
+including token consumption and execution time metrics.
+"""
+
 from typing import Literal
 
 from pydantic import BaseModel, Field

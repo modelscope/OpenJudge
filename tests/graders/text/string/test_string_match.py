@@ -5,7 +5,7 @@ Tests for StringMatchGrader
 
 import pytest
 
-from rm_gallery.core.graders.gallery.text.matching.string_match import StringMatchGrader
+from rm_gallery.core.graders.predefined.text.matching.string_match import StringMatchGrader
 
 # pylint: disable=too-many-public-methods
 

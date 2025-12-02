@@ -34,9 +34,7 @@ if TYPE_CHECKING:
     )
 else:
     GenerationResponse = "dashscope.api_entities.dashscope_response.GenerationResponse"
-    MultiModalConversationResponse = (
-        "dashscope.api_entities.dashscope_response.MultiModalConversationResponse"
-    )
+    MultiModalConversationResponse = "dashscope.api_entities.dashscope_response.MultiModalConversationResponse"
 
 
 class DashScopeChatModel(BaseChatModel):
@@ -75,8 +73,7 @@ class DashScopeChatModel(BaseChatModel):
         """
         if enable_thinking and not stream:
             logger.info(
-                "In DashScope API, `stream` must be True when "
-                "`enable_thinking` is True. ",
+                "In DashScope API, `stream` must be True when `enable_thinking` is True. ",
             )
             stream = True
 
@@ -91,6 +88,7 @@ class DashScopeChatModel(BaseChatModel):
 
             dashscope.base_url = base_url
 
+    # pylint: disable=too-many-branches
     async def achat(
         self,
         messages: list[dict[str, Any] | ChatMessage],
@@ -142,10 +140,7 @@ class DashScopeChatModel(BaseChatModel):
         import dashscope
 
         assert isinstance(messages, list), "messages must be a list"
-        messages = [
-            message if isinstance(message, dict) else message.to_dict()
-            for message in messages
-        ]
+        messages = [message if isinstance(message, dict) else message.to_dict() for message in messages]
 
         # For qvq and qwen-vl models, the content field cannot be `None` or
         # `[{"text": None}]`, so we need to convert it to an empty list.
@@ -179,11 +174,7 @@ class DashScopeChatModel(BaseChatModel):
             kwargs["enable_thinking"] = self.enable_thinking
 
         # Check if structured_model is a Pydantic BaseModel class (for structured output)
-        if (
-            structured_model
-            and isinstance(structured_model, type)
-            and issubclass(structured_model, BaseModel)
-        ):
+        if structured_model and isinstance(structured_model, type) and issubclass(structured_model, BaseModel):
             if tools or tool_choice:
                 logger.warning(
                     "structured_model is provided. Both 'tools' and "
@@ -308,21 +299,16 @@ class DashScopeChatModel(BaseChatModel):
                 if "id" in tool_call and tool_call["id"] != acc_tool_calls[index].get(
                     "id",
                 ):
-                    acc_tool_calls[index]["id"] = (
-                        acc_tool_calls[index].get("id", "") + tool_call["id"]
-                    )
+                    acc_tool_calls[index]["id"] = acc_tool_calls[index].get("id", "") + tool_call["id"]
 
                 if "function" in tool_call:
                     func = tool_call["function"]
                     if "name" in func:
-                        acc_tool_calls[index]["name"] = (
-                            acc_tool_calls[index].get("name", "") + func["name"]
-                        )
+                        acc_tool_calls[index]["name"] = acc_tool_calls[index].get("name", "") + func["name"]
 
                     if "arguments" in func:
                         acc_tool_calls[index]["arguments"] = (
-                            acc_tool_calls[index].get("arguments", "")
-                            + func["arguments"]
+                            acc_tool_calls[index].get("arguments", "") + func["arguments"]
                         )
 
             # to content blocks
@@ -499,8 +485,7 @@ class DashScopeChatModel(BaseChatModel):
                 or "function" not in value
             ):
                 raise ValueError(
-                    f"Each schema must be a dict with 'type' as 'function' "
-                    f"and 'function' key, got {value}",
+                    f"Each schema must be a dict with 'type' as 'function' " f"and 'function' key, got {value}",
                 )
 
         return schemas

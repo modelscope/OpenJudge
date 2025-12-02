@@ -102,14 +102,7 @@ def compute_score(  # pylint: disable=unused-argument
 
         # Calculate pairwise reward
         reward = calculate_pairwise_reward(predicted_preference, true_preference)
-        accuracy = (
-            1.0
-            if (
-                predicted_preference == true_preference
-                and predicted_preference != "unknown"
-            )
-            else 0.0
-        )
+        accuracy = 1.0 if (predicted_preference == true_preference and predicted_preference != "unknown") else 0.0
 
         return {
             "score": reward,

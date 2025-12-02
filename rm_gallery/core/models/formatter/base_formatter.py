@@ -85,23 +85,18 @@ class BaseFormatter:
         textual_output = []
         for block in output:
             assert isinstance(block, dict) and "type" in block, (
-                f"Invalid block: {block}, a TextBlock, ImageBlock, or "
-                f"AudioBlock is expected."
+                f"Invalid block: {block}, a TextBlock, ImageBlock, or " f"AudioBlock is expected."
             )
             if block["type"] == "text":
                 textual_output.append(block["text"])
 
             elif block["type"] in ["image", "audio", "video"]:
-                assert "source" in block, (
-                    f"Invalid {block['type']} block: {block}, 'source' key "
-                    "is required."
-                )
+                assert "source" in block, f"Invalid {block['type']} block: {block}, 'source' key " "is required."
                 source = block["source"]
                 # Save the image locally and return the file path
                 if source["type"] == "url":
                     textual_output.append(
-                        f"The returned {block['type']} can be found "
-                        f"at: {source['url']}",
+                        f"The returned {block['type']} can be found " f"at: {source['url']}",
                     )
 
                 elif source["type"] == "base64":
@@ -110,20 +105,17 @@ class BaseFormatter:
                         source["data"],
                     )
                     textual_output.append(
-                        f"The returned {block['type']} can be found "
-                        f"at: {path_temp_file}",
+                        f"The returned {block['type']} can be found " f"at: {path_temp_file}",
                     )
 
                 else:
                     raise ValueError(
-                        f"Invalid image source: {block['source']}, "
-                        "expected 'url' or 'base64'.",
+                        f"Invalid image source: {block['source']}, " "expected 'url' or 'base64'.",
                     )
 
             else:
                 raise ValueError(
-                    f"Unsupported block type: {block['type']}, "
-                    "expected 'text', 'image', 'audio', or 'video'.",
+                    f"Unsupported block type: {block['type']}, " "expected 'text', 'image', 'audio', or 'video'.",
                 )
 
         if len(textual_output) == 1:

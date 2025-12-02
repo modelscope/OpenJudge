@@ -91,7 +91,7 @@ class F1ScoreAnalyzer(BaseValidationAnalyzer):
             prediction_threshold: Threshold for converting scores to binary predictions.
                                Defaults to 0.5.
             **data: Additional data to pass to the parent class.
-            
+
         Example:
             >>> analyzer = F1ScoreAnalyzer(prediction_threshold=0.8)
             >>> print(analyzer.prediction_threshold)
@@ -124,7 +124,7 @@ class F1ScoreAnalyzer(BaseValidationAnalyzer):
         Returns:
             F1ScoreAnalysisResult: The computed F1 score analysis result containing
             precision, recall, and F1 score with metadata.
-            
+
         Example:
             >>> from rm_gallery.core.graders.schema import GraderResult
             >>> dataset = [
@@ -160,7 +160,7 @@ class F1ScoreAnalyzer(BaseValidationAnalyzer):
         total_fn = 0  # False negatives
 
         # Iterate over each sample and compare grader results with label values
-        for i, (sample, grader_result) in enumerate(zip(dataset, grader_results)):
+        for sample, grader_result in zip(dataset, grader_results):
             label_set = self._extract(sample, label_path)
             if label_set is None:
                 continue
@@ -170,10 +170,7 @@ class F1ScoreAnalyzer(BaseValidationAnalyzer):
 
             # Extract predicted set from grader result
             predicted_set = set()
-            if (
-                hasattr(grader_result, "metadata")
-                and "predictions" in grader_result.metadata
-            ):
+            if hasattr(grader_result, "metadata") and "predictions" in grader_result.metadata:
                 predicted_set = set(grader_result.metadata["predictions"])
             elif isinstance(grader_result, GraderScore) and hasattr(
                 grader_result,

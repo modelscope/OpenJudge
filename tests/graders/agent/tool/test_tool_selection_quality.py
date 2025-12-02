@@ -7,14 +7,14 @@ Tests for the ToolSelectionQualityGrader class functionality.
 
 import pytest
 
-from rm_gallery.core.graders.gallery.agent import ToolSelectionQualityGrader
+from rm_gallery.core.graders.predefined.agent import ToolSelectionQualityGrader
 from rm_gallery.core.models.openai_chat_model import OpenAIChatModel
 from rm_gallery.core.models.schema.prompt_template import LanguageEnum
 
 
 def test_tool_selection_quality_grader_creation():
     """Test creating a ToolSelectionQualityGrader instance"""
-    model = OpenAIChatModel(model="qwen-plus", stream=False)
+    model = OpenAIChatModel(model="qwen-plus", api_key="your-key", stream=False)
     grader = ToolSelectionQualityGrader(model=model)
 
     assert grader is not None
@@ -25,7 +25,7 @@ def test_tool_selection_quality_grader_creation():
 
 def test_tool_selection_quality_grader_chinese():
     """Test creating a Chinese grader instance"""
-    model = OpenAIChatModel(model="qwen-plus", stream=False)
+    model = OpenAIChatModel(model="qwen-plus", api_key="your-key", stream=False)
     grader = ToolSelectionQualityGrader(
         model=model,
         threshold=0.8,

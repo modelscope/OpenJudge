@@ -7,7 +7,7 @@ Tests for the ReflectionOutcomeMisinterpretationGrader class functionality.
 
 import pytest
 
-from rm_gallery.core.graders.gallery.agent import (
+from rm_gallery.core.graders.predefined.agent import (
     ReflectionOutcomeMisinterpretationGrader,
 )
 from rm_gallery.core.models.openai_chat_model import OpenAIChatModel
@@ -16,7 +16,7 @@ from rm_gallery.core.models.schema.prompt_template import LanguageEnum
 
 def test_reflection_outcome_misinterpretation_grader_creation():
     """Test creating a ReflectionOutcomeMisinterpretationGrader instance"""
-    model = OpenAIChatModel(model="qwen-plus", stream=False)
+    model = OpenAIChatModel(model="qwen-plus", api_key="your-key", stream=False)
     grader = ReflectionOutcomeMisinterpretationGrader(model=model)
 
     assert grader is not None
@@ -26,7 +26,7 @@ def test_reflection_outcome_misinterpretation_grader_creation():
 
 def test_reflection_outcome_misinterpretation_grader_chinese():
     """Test creating a Chinese grader instance"""
-    model = OpenAIChatModel(model="qwen-plus", stream=False)
+    model = OpenAIChatModel(model="qwen-plus", api_key="your-key", stream=False)
     grader = ReflectionOutcomeMisinterpretationGrader(
         model=model,
         language=LanguageEnum.ZH,
@@ -40,7 +40,7 @@ def test_reflection_outcome_misinterpretation_grader_chinese():
 @pytest.mark.asyncio
 async def test_reflection_outcome_misinterpretation_detection():
     """Test detecting reflection outcome misinterpretation"""
-    model = OpenAIChatModel(model="qwen3-32b", stream=False)
+    model = OpenAIChatModel(model="qwen-plus", api_key="your-key", stream=False)
     grader = ReflectionOutcomeMisinterpretationGrader(model=model)
 
     # Test case with clear misinterpretation
@@ -59,7 +59,7 @@ async def test_reflection_outcome_misinterpretation_detection():
 @pytest.mark.asyncio
 async def test_reflection_outcome_correct():
     """Test with correct reflection"""
-    model = OpenAIChatModel(model="qwen3-32b", stream=False)
+    model = OpenAIChatModel(model="qwen-plus", api_key="your-key", stream=False)
     grader = ReflectionOutcomeMisinterpretationGrader(model=model)
 
     # Test case with correct reflection
@@ -77,7 +77,7 @@ async def test_reflection_outcome_correct():
 @pytest.mark.asyncio
 async def test_reflection_outcome_with_history():
     """Test with history steps"""
-    model = OpenAIChatModel(model="qwen3-32b", stream=False)
+    model = OpenAIChatModel(model="qwen-plus", api_key="your-key", stream=False)
     grader = ReflectionOutcomeMisinterpretationGrader(model=model)
 
     history = [

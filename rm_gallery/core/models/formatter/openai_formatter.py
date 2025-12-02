@@ -72,8 +72,7 @@ def _to_openai_audio_data(source: URLSource | Base64Source) -> dict:
         extension = source["url"].split(".")[-1].lower()
         if extension not in ["wav", "mp3"]:
             raise TypeError(
-                f"Unsupported audio file extension: {extension}, "
-                "wav and mp3 are supported.",
+                f"Unsupported audio file extension: {extension}, " "wav and mp3 are supported.",
             )
 
         parsed_url = urlparse(source["url"])
@@ -90,8 +89,7 @@ def _to_openai_audio_data(source: URLSource | Base64Source) -> dict:
 
         else:
             raise ValueError(
-                f"Unsupported audio source: {source['url']}, "
-                "it should be a local file or a web URL.",
+                f"Unsupported audio source: {source['url']}, " "it should be a local file or a web URL.",
             )
 
         return {
@@ -105,8 +103,7 @@ def _to_openai_audio_data(source: URLSource | Base64Source) -> dict:
 
         if media_type not in ["audio/wav", "audio/mp3"]:
             raise TypeError(
-                f"Unsupported audio media type: {media_type}, "
-                "only audio/wav and audio/mp3 are supported.",
+                f"Unsupported audio media type: {media_type}, " "only audio/wav and audio/mp3 are supported.",
             )
 
         return {
@@ -366,9 +363,7 @@ class OpenAIMultiAgentFormatter(TruncatedFormatterBase):
         if conversation_blocks:
             if conversation_blocks[0].get("text"):
                 conversation_blocks[0]["text"] = (
-                    conversation_history_prompt
-                    + "<history>\n"
-                    + conversation_blocks[0]["text"]
+                    conversation_history_prompt + "<history>\n" + conversation_blocks[0]["text"]
                 )
 
             else:
@@ -386,8 +381,7 @@ class OpenAIMultiAgentFormatter(TruncatedFormatterBase):
                 conversation_blocks.append({"text": "</history>"})
 
         conversation_blocks_text = "\n".join(
-            conversation_block.get("text", "")
-            for conversation_block in conversation_blocks
+            conversation_block.get("text", "") for conversation_block in conversation_blocks
         )
 
         content_list: list[dict[str, Any]] = []

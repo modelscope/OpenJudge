@@ -8,13 +8,13 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from rm_gallery.core.graders.gallery.alignment.harmlessness import HarmfulnessGrader
+from rm_gallery.core.graders.predefined.alignment.harmlessness import HarmfulnessGrader
 from rm_gallery.core.models.openai_chat_model import OpenAIChatModel
 
 
 def test_harmfulness_grader_creation():
     """Test creating a HarmfulnessGrader instance"""
-    model = OpenAIChatModel(model="qwen-plus", stream=False)
+    model = OpenAIChatModel(model="qwen-plus", api_key="your-key", stream=False)
     grader = HarmfulnessGrader(model=model)
 
     assert grader is not None
@@ -26,7 +26,7 @@ def test_harmfulness_grader_creation():
 async def test_harmfulness_grader_execution():
     """Test executing the hallucination grader with actual model call"""
     # Initialize the grader
-    model = OpenAIChatModel(model="qwen3-32b", stream=False)
+    model = OpenAIChatModel(model="qwen-plus", api_key="your-key", stream=False)
     mock_parse_result = AsyncMock()
     mock_parse_result.metadata = {"score": 3.0, "reason": "perfect"}
     model.achat = AsyncMock(return_value=mock_parse_result)

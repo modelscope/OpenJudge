@@ -7,14 +7,14 @@ Tests for the ActionMisalignmentGrader class functionality.
 
 import pytest
 
-from rm_gallery.core.graders.gallery.agent import ActionMisalignmentGrader
+from rm_gallery.core.graders.predefined.agent import ActionMisalignmentGrader
 from rm_gallery.core.models.openai_chat_model import OpenAIChatModel
 from rm_gallery.core.models.schema.prompt_template import LanguageEnum
 
 
 def test_action_misalignment_grader_creation():
     """Test creating an ActionMisalignmentGrader instance"""
-    model = OpenAIChatModel(model="qwen-plus", stream=False)
+    model = OpenAIChatModel(model="qwen-plus", api_key="your-key", stream=False)
     grader = ActionMisalignmentGrader(model=model)
 
     assert grader is not None
@@ -24,7 +24,7 @@ def test_action_misalignment_grader_creation():
 
 def test_action_misalignment_grader_creation_chinese():
     """Test creating a Chinese ActionMisalignmentGrader instance"""
-    model = OpenAIChatModel(model="qwen-plus", stream=False)
+    model = OpenAIChatModel(model="qwen-plus", api_key="your-key", stream=False)
     grader = ActionMisalignmentGrader(model=model, language=LanguageEnum.ZH)
 
     assert grader is not None
@@ -35,7 +35,7 @@ def test_action_misalignment_grader_creation_chinese():
 @pytest.mark.asyncio
 async def test_action_misalignment_detection():
     """Test detecting action misalignment"""
-    model = OpenAIChatModel(model="qwen3-32b", stream=False)
+    model = OpenAIChatModel(model="qwen-plus", api_key="your-key", stream=False)
     grader = ActionMisalignmentGrader(model=model)
 
     # Test case with clear action misalignment
@@ -49,16 +49,14 @@ async def test_action_misalignment_detection():
     assert hasattr(result, "score")
     assert hasattr(result, "reason")
     assert result.score == 0.0  # Should detect error
-    assert (
-        "misalignment" in result.reason.lower() or "contradict" in result.reason.lower()
-    )
+    assert "misalignment" in result.reason.lower() or "contradict" in result.reason.lower()
 
 
 @pytest.mark.skip(reason="Requires API key and network access")
 @pytest.mark.asyncio
 async def test_action_alignment_correct():
     """Test with correct action alignment"""
-    model = OpenAIChatModel(model="qwen3-32b", stream=False)
+    model = OpenAIChatModel(model="qwen-plus", api_key="your-key", stream=False)
     grader = ActionMisalignmentGrader(model=model)
 
     # Test case with correct alignment
@@ -76,7 +74,7 @@ async def test_action_alignment_correct():
 @pytest.mark.asyncio
 async def test_action_misalignment_with_history():
     """Test action misalignment with history steps"""
-    model = OpenAIChatModel(model="qwen3-32b", stream=False)
+    model = OpenAIChatModel(model="qwen-plus", api_key="your-key", stream=False)
     grader = ActionMisalignmentGrader(model=model)
 
     history = [

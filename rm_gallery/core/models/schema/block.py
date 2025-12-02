@@ -1,4 +1,11 @@
 # -*- coding: utf-8 -*-
+"""Schema definitions for content blocks in chat models.
+
+This module defines various content block types that can be used in chat model
+responses, including text, thinking, image, audio, video, and tool-related blocks.
+Each block type has its own structure and formatting capabilities.
+"""
+
 from typing import Any, Dict, List, Literal
 
 from pydantic import BaseModel, Field
@@ -155,7 +162,7 @@ class ToolUseBlock(BaseModel):
         description="The input arguments of the tool function",
     )
 
-    def format(self, **kwargs) -> "ToolUseBlock":
+    def format(self, **kwargs) -> "ToolUseBlock":  # pylint: disable=unused-argument
         """Format the tool use block."""
         return self
 
@@ -181,18 +188,8 @@ class ToolResultBlock(BaseModel):
         if isinstance(block.output, str):
             block.output = block.output.format(**kwargs)
         else:
-            block.output = [
-                output_block.format(**kwargs) for output_block in block.output
-            ]
+            block.output = [output_block.format(**kwargs) for output_block in block.output]
         return block
 
 
-ContentBlock = (
-    TextBlock
-    | ThinkingBlock
-    | ImageBlock
-    | AudioBlock
-    | VideoBlock
-    | ToolUseBlock
-    | ToolResultBlock
-)
+ContentBlock = TextBlock | ThinkingBlock | ImageBlock | AudioBlock | VideoBlock | ToolUseBlock | ToolResultBlock

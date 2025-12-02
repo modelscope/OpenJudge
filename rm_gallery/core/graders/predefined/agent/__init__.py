@@ -18,7 +18,6 @@ from .reflection.reflection_outcome_understanding import ReflectionOutcomeUnders
 from .reflection.reflection_progress_awareness import ReflectionProgressAwarenessGrader
 
 # Tool graders
-from .tool.tool_call_accuracy import ToolCallAccuracyGrader
 from .tool.tool_call_success import ToolCallSuccessGrader
 from .tool.tool_parameter_check import ToolParameterCheckGrader
 from .tool.tool_selection_quality import ToolSelectionQualityGrader

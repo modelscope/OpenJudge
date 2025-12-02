@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
-"""AutoGrader test module.
+"""Iterative Rubric Generator test module.
 
-This module contains unit tests for the AutoGrader functionality
+This module contains unit tests for the Iterative Rubric Generator functionality
 with different configurations and evaluation modes.
 
-Demonstrates AutoGrader workflow:
-1. Create AutoGrader with configuration
-2. Generate rubrics from training data
-3. Evaluate test data using the generated grader
+Demonstrates workflow:
+1. Create generator with configuration
+2. Generate rubrics from training data (with labels)
+3. Evaluate test data using the generated grader (without labels)
 
 Supports pointwise and listwise evaluation modes.
 """
@@ -18,12 +18,12 @@ from copy import deepcopy
 import pytest
 from loguru import logger
 
-from rm_gallery.core.generator.auto_rubric_generator import (
-    ListwiseRubricsGeneratorConfig,
-    PointwiseRubricsGeneratorConfig,
-    RubricsGenerator,
+from rm_gallery.core.generator.iterative_rubric.generator import (
+    IterativeListwiseRubricsGeneratorConfig,
+    IterativePointwiseRubricsGeneratorConfig,
+    IterativeRubricsGenerator,
 )
-from rm_gallery.core.generator.auto_rubric.query_rubric_generator import (
+from rm_gallery.core.generator.iterative_rubric.query_rubric_generator import (
     LISTWISE_EVALUATION_TEMPLATE,
     POINTWISE_EVALUATION_TEMPLATE,
 )
@@ -32,7 +32,11 @@ from rm_gallery.core.models.schema.prompt_template import LanguageEnum
 
 # pylint: disable=line-too-long
 
-# Test data for pointwise mode
+# =============================================================================
+# Test Data
+# =============================================================================
+
+# Pointwise training data (with labels for rubric generation)
 POINTWISE_TRAINING_SAMPLE = [
     {
         "query": "What is the capital of France?",
@@ -41,6 +45,7 @@ POINTWISE_TRAINING_SAMPLE = [
     },
 ]
 
+# Pointwise test data (without labels for evaluation)
 POINTWISE_TEST_SAMPLE = [
     {
         "query": "What is the capital of China?",
@@ -48,7 +53,7 @@ POINTWISE_TEST_SAMPLE = [
     },
 ]
 
-# Test data for listwise mode
+# Listwise training data (with labels for rubric generation)
 LISTWISE_TRAINING_SAMPLE = [
     {
         "query": "Write a short story about a robot learning to paint.",
@@ -61,6 +66,7 @@ LISTWISE_TRAINING_SAMPLE = [
     },
 ]
 
+# Listwise test data (without labels for evaluation)
 LISTWISE_TEST_SAMPLE = [
     {
         "query": "Explain what a for loop does in programming.",
@@ -72,6 +78,11 @@ LISTWISE_TEST_SAMPLE = [
 ]
 
 
+# =============================================================================
+# Helper Functions
+# =============================================================================
+
+
 def get_test_model() -> OpenAIChatModel:
     """Get test model instance.
 
@@ -81,8 +92,13 @@ def get_test_model() -> OpenAIChatModel:
     return OpenAIChatModel(model="qwen3-32b", stream=False)
 
 
+# =============================================================================
+# Pointwise Tests
+# =============================================================================
+
+
 @pytest.mark.asyncio
-async def test_auto_grader_with_pointwise_mode_without_categorization() -> None:
+async def test_iterative_grader_pointwise_without_categorization() -> None:
     """Test pointwise grader generation without categorization.
 
     This test verifies that a pointwise grader can be generated and used
@@ -90,9 +106,9 @@ async def test_auto_grader_with_pointwise_mode_without_categorization() -> None:
     """
     model = get_test_model()
 
-    config = PointwiseRubricsGeneratorConfig(
+    config = IterativePointwiseRubricsGeneratorConfig(
         model=model,
-        grader_name="Rubric-based_Pointwise_Grader",
+        grader_name="Iterative_Pointwise_Grader",
         custom_evaluation_prompt=POINTWISE_EVALUATION_TEMPLATE,
         min_score=0,
         max_score=1,
@@ -101,7 +117,7 @@ async def test_auto_grader_with_pointwise_mode_without_categorization() -> None:
         language=LanguageEnum.EN,
     )
 
-    generator = RubricsGenerator(config)
+    generator = IterativeRubricsGenerator(config)
     grader = await generator.generate(dataset=POINTWISE_TRAINING_SAMPLE)
 
     test_query = POINTWISE_TEST_SAMPLE[0]["query"]
@@ -112,7 +128,7 @@ async def test_auto_grader_with_pointwise_mode_without_categorization() -> None:
 
 
 @pytest.mark.asyncio
-async def test_auto_grader_with_pointwise_mode_with_categorization() -> None:
+async def test_iterative_grader_pointwise_with_categorization() -> None:
     """Test pointwise grader generation with categorization.
 
     This test verifies that a pointwise grader can be generated with
@@ -121,9 +137,9 @@ async def test_auto_grader_with_pointwise_mode_with_categorization() -> None:
     """
     model = get_test_model()
 
-    config = PointwiseRubricsGeneratorConfig(
+    config = IterativePointwiseRubricsGeneratorConfig(
         model=model,
-        grader_name="Rubric-based_Pointwise_Grader",
+        grader_name="Iterative_Pointwise_Grader",
         custom_evaluation_prompt=POINTWISE_EVALUATION_TEMPLATE,
         min_score=0,
         max_score=1,
@@ -133,7 +149,7 @@ async def test_auto_grader_with_pointwise_mode_with_categorization() -> None:
         language=LanguageEnum.EN,
     )
 
-    generator = RubricsGenerator(config)
+    generator = IterativeRubricsGenerator(config)
     # Use larger dataset to trigger smart_sampling mode (>100 samples)
     training_data = [deepcopy(POINTWISE_TRAINING_SAMPLE[0]) for _ in range(200)]
     grader = await generator.generate(dataset=training_data)
@@ -145,8 +161,13 @@ async def test_auto_grader_with_pointwise_mode_with_categorization() -> None:
     logger.info(f"Pointwise mode with categorization result: {result}")
 
 
+# =============================================================================
+# Listwise Tests
+# =============================================================================
+
+
 @pytest.mark.asyncio
-async def test_auto_grader_with_listwise_mode() -> None:
+async def test_iterative_grader_listwise() -> None:
     """Test listwise grader generation.
 
     This test verifies that a listwise grader can be generated and used
@@ -154,9 +175,9 @@ async def test_auto_grader_with_listwise_mode() -> None:
     """
     model = get_test_model()
 
-    config = ListwiseRubricsGeneratorConfig(
+    config = IterativeListwiseRubricsGeneratorConfig(
         model=model,
-        grader_name="Rubric-based_Listwise_Grader",
+        grader_name="Iterative_Listwise_Grader",
         custom_evaluation_prompt=LISTWISE_EVALUATION_TEMPLATE,
         enable_categorization=False,
         language=LanguageEnum.EN,
@@ -164,7 +185,7 @@ async def test_auto_grader_with_listwise_mode() -> None:
         query_specific_generate_number=2,
     )
 
-    generator = RubricsGenerator(config)
+    generator = IterativeRubricsGenerator(config)
     grader = await generator.generate(dataset=LISTWISE_TRAINING_SAMPLE)
 
     test_query = LISTWISE_TEST_SAMPLE[0]["query"]
@@ -181,11 +202,16 @@ async def test_auto_grader_with_listwise_mode() -> None:
     logger.info(f"Listwise mode result: {result}")
 
 
+# =============================================================================
+# Main Entry Point
+# =============================================================================
+
+
 async def main() -> None:
     """Run all test functions."""
-    await test_auto_grader_with_pointwise_mode_without_categorization()
-    await test_auto_grader_with_pointwise_mode_with_categorization()
-    await test_auto_grader_with_listwise_mode()
+    await test_iterative_grader_pointwise_without_categorization()
+    await test_iterative_grader_pointwise_with_categorization()
+    await test_iterative_grader_listwise()
 
 
 if __name__ == "__main__":

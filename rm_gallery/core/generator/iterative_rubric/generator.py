@@ -26,9 +26,9 @@ from typing import List, Union
 
 from loguru import logger
 
-from rm_gallery.core.generator.auto_rubric.categorizer import LLMRubricCategorizer
-from rm_gallery.core.generator.auto_rubric.mcr_selector import SuperFastAdaptiveMCR2
-from rm_gallery.core.generator.auto_rubric.query_rubric_generator import (
+from rm_gallery.core.generator.iterative_rubric.categorizer import LLMRubricCategorizer
+from rm_gallery.core.generator.iterative_rubric.mcr_selector import SuperFastAdaptiveMCR2
+from rm_gallery.core.generator.iterative_rubric.query_rubric_generator import (
     QuerySpecificRubricGenerator,
 )
 from rm_gallery.core.generator.llm_grader_generator import (
@@ -42,7 +42,7 @@ from rm_gallery.core.models.openai_chat_model import OpenAIChatModel
 
 
 @dataclass
-class BaseRubricsGeneratorConfig(LLMGraderGeneratorConfig):
+class IterativeRubricsGeneratorConfig(LLMGraderGeneratorConfig):
     """Base configuration parameters for rubric generators.
 
     This class encapsulates all configuration parameters for rubric generation,
@@ -117,12 +117,12 @@ class BaseRubricsGeneratorConfig(LLMGraderGeneratorConfig):
 
 
 @dataclass
-class PointwiseRubricsGeneratorConfig(BaseRubricsGeneratorConfig):
+class IterativePointwiseRubricsGeneratorConfig(IterativeRubricsGeneratorConfig):
     """Configuration parameters for Pointwise rubrics generator.
 
     This configuration class is for pointwise (scoring) rubric generation.
     It automatically sets grader_mode to POINTWISE. All other parameters
-    are inherited from BaseRubricsGeneratorConfig.
+    are inherited from IterativeRubricsGeneratorConfig.
 
     Attributes:
         min_score: Minimum score value for pointwise mode. Defaults to 0.
@@ -140,12 +140,12 @@ class PointwiseRubricsGeneratorConfig(BaseRubricsGeneratorConfig):
 
 
 @dataclass
-class ListwiseRubricsGeneratorConfig(BaseRubricsGeneratorConfig):
+class IterativeListwiseRubricsGeneratorConfig(IterativeRubricsGeneratorConfig):
     """Configuration parameters for Listwise rubrics generator.
 
     This configuration class is for listwise (ranking) rubric generation.
     It automatically sets grader_mode to LISTWISE. All other parameters
-    are inherited from BaseRubricsGeneratorConfig.
+    are inherited from IterativeRubricsGeneratorConfig.
     """
 
     def __post_init__(self):
@@ -154,7 +154,7 @@ class ListwiseRubricsGeneratorConfig(BaseRubricsGeneratorConfig):
         object.__setattr__(self, "grader_mode", GraderMode.LISTWISE)
 
 
-class RubricsGenerator(LLMGraderGenerator):
+class IterativeRubricsGenerator(LLMGraderGenerator):
     """Generator for creating LLM-based graders with automatically generated rubrics.
 
     This generator implements a training-free framework that extracts evaluation
@@ -178,15 +178,15 @@ class RubricsGenerator(LLMGraderGenerator):
 
     def __init__(
         self,
-        config: Union[PointwiseRubricsGeneratorConfig, ListwiseRubricsGeneratorConfig],
+        config: Union[IterativePointwiseRubricsGeneratorConfig, IterativeListwiseRubricsGeneratorConfig],
     ) -> None:
         """Initialize the rubrics generator with the provided configuration.
 
         Args:
-            config (Union[PointwiseRubricsGeneratorConfig, ListwiseRubricsGeneratorConfig]):
+            config (Union[IterativePointwiseRubricsGeneratorConfig, IterativeListwiseRubricsGeneratorConfig]):
                 Configuration for rubric generation. Can be:
-                - PointwiseRubricsGeneratorConfig for pointwise evaluation
-                - ListwiseRubricsGeneratorConfig for listwise evaluation
+                - IterativePointwiseRubricsGeneratorConfig for pointwise evaluation
+                - IterativeListwiseRubricsGeneratorConfig for listwise evaluation
                 - RubricsGeneratorConfig for backward compatibility
                 The grader_mode is automatically set based on the config type.
 
@@ -199,7 +199,7 @@ class RubricsGenerator(LLMGraderGenerator):
                 - grader_mode (GraderMode): Mode for the generated grader (POINTWISE or LISTWISE).
                 - custom_evaluation_prompt (PromptTemplate | None): Custom template for evaluation.
 
-                From BaseRubricsGeneratorConfig:
+                From IterativeRubricsGeneratorConfig:
                 - language (LanguageEnum): Language for prompts (ZH or EN). Defaults to EN.
                 - enable_categorization (bool): Whether to enable LLM-based categorization. Defaults to False.
                 - query_specific_generate_number (int): Number of rubrics to generate per sample. Defaults to 1.
@@ -213,7 +213,7 @@ class RubricsGenerator(LLMGraderGenerator):
                 - max_iterations (int): Maximum batch iterations allowed. Defaults to 50.
                 - max_total_rubrics (int): Maximum total rubrics to maintain in pool. Defaults to 200.
 
-                From PointwiseRubricsGeneratorConfig (only for pointwise evaluation):
+                From IterativePointwiseRubricsGeneratorConfig (only for pointwise evaluation):
                 - min_score (int): Minimum score value for pointwise mode. Defaults to 0.
                 - max_score (int): Maximum score value for pointwise mode. Defaults to 1.
         """

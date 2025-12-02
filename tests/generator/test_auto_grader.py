@@ -38,14 +38,14 @@ POINTWISE_TRAINING_SAMPLE = [
         "query": "What is the capital of France?",
         "response": "Paris is the capital of France.",
         "label_score": 1,
-    }
+    },
 ]
 
 POINTWISE_TEST_SAMPLE = [
     {
         "query": "What is the capital of China?",
         "response": "Beijing is the capital of China.",
-    }
+    },
 ]
 
 # Test data for listwise mode
@@ -58,7 +58,7 @@ LISTWISE_TRAINING_SAMPLE = [
             "A robot painted a sunset.",
         ],
         "label_rank": [1, 2, 3],
-    }
+    },
 ]
 
 LISTWISE_TEST_SAMPLE = [
@@ -68,7 +68,7 @@ LISTWISE_TEST_SAMPLE = [
             "A for loop is a control structure that repeats a block of code a specific number of times. It consists of three parts: initialization (setting a counter), condition (when to stop), and increment (updating the counter). For example, in Python: 'for i in range(5):' will execute the loop body 5 times, with i taking values 0 through 4.",
             "A for loop repeats code multiple times.",
         ],
-    }
+    },
 ]
 
 

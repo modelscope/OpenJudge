@@ -51,7 +51,7 @@ class BaseValidationAnalyzer(BaseAnalyzer):
 
         Returns:
             Any: The extracted label value.
-            
+
         Example:
             >>> sample = {"labels": {"correct_answer": "A"}}
             >>> analyzer = ComparativeAnalyzer()
@@ -83,11 +83,10 @@ class BaseValidationAnalyzer(BaseAnalyzer):
         Returns:
             AnalysisResult: The computed comparative analysis result containing metrics
                          comparing grader performance to ground truth.
-                         
+
         Example:
             >>> from rm_gallery.core.graders.schema import GraderResult, GraderScore
             >>> # This is an abstract method that must be implemented by subclasses
             >>> # Implementation would compare grader_results with ground truth from data
             >>> # and return a AnalysisResult with computed metrics
         """
-        ...

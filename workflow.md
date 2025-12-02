@@ -39,12 +39,12 @@ graph TD
 ```mermaid
 classDiagram
     direction LR
-    
+
     %% 数据输入
     class InputData {
         List[Dict[str, Any]]
     }
-    
+
     %% 评估器相关类
     class BaseGrader {
         <<abstract>>
@@ -53,15 +53,15 @@ classDiagram
         +description: str
         +aevaluate(**kwargs) GraderResult
     }
-    
+
     class FunctionGrader {
         +aevaluate(**kwargs) GraderResult
     }
-    
+
     class LLMGrader {
         +aevaluate(**kwargs) GraderResult
     }
-    
+
     %% 评估器结果类
     class GraderResult {
         +name: str
@@ -71,40 +71,40 @@ classDiagram
         +rank: List[int]
         +error: str
     }
-    
+
     %% 执行流程类
     class GradingRunner {
         +grader_configs: Dict[str, GraderConfig]
         +max_concurrency: int
         +arun(data) RunnerResult
     }
-    
+
     class GraderConfig {
         +grader: BaseGrader
         +mapper: Dict[str, str] | Callable
     }
-    
+
     class RunnerResult {
         RunnerResult
     }
-    
+
     %% 分析器相关类
     class BaseAnalyzer {
         <<abstract>>
         +name: str
         +analyze(data, grader_results) BaseAnalysis
     }
-    
+
     class BaseStatisticalAnalyzer  {
         <<abstract>>
         +analyze(data, grader_results) BaseAnalysis
     }
-    
+
     class ComparativeAnalyzer {
         <<abstract>>
         +analyze(data, grader_results) BaseAnalysis
     }
-    
+
     %% 分析结果类
     class AnalysisResult {
         +name: str
@@ -117,28 +117,28 @@ classDiagram
         +name: str
         +__call__(results, **kwargs) GraderResult
     }
-    
+
     class WeightedSumAggregator {
         +weights: Dict[str, float]
         +__call__(results, **kwargs) GraderResult
     }
-    
+
     %% 模型类
     class ChatModelBase {
         +model: str
         +achat(messages) ChatResponse
     }
-    
-    
+
+
     %% 继承关系
     BaseGrader --> FunctionGrader : derive
     BaseGrader --> LLMGrader : derive
-    
+
     BaseAnalyzer --> BaseStatisticalAnalyzer  : derive
     BaseAnalyzer --> ComparativeAnalyzer : derive
 
     BaseAggregator --> WeightedSumAggregator : derive
-    
+
     %% 组合关系和数据流向
     InputData --> GradingRunner
     InputData --> BaseAnalyzer

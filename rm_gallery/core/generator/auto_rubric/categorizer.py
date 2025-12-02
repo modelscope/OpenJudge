@@ -143,12 +143,12 @@ RUBRIC_CATEGORIZATION_TEMPLATE = PromptTemplate(
 )
 
 
-class RubricCategory(BaseModel):  #rubric item/summarizer
+class RubricCategory(BaseModel):  # rubric item/summarizer
     """Represents a categorized rubric with theme and tips.
-    
+
     This model defines the structure for a categorized group of rubrics
     with a central theme and specific tips.
-    
+
     Attributes:
         theme (str): Theme statement for the category.
                     A general description that encompasses all grouped rubrics.
@@ -162,9 +162,9 @@ class RubricCategory(BaseModel):  #rubric item/summarizer
 
 class RubricCategorizationOutput(BaseModel):
     """Output model for rubric categorization.
-    
+
     Structured output from the rubric categorization process.
-    
+
     Attributes:
         categories (List[RubricCategory]): List of categorized rubrics.
                                          Each category contains a theme and related tips.
@@ -180,10 +180,10 @@ class RubricCategorizationOutput(BaseModel):
 
 class LLMRubricCategorizer:
     """LLM-based rubric categorizer for semantic aggregation.
-    
+
     This class uses LLMs to semantically categorize evaluation rubrics into
     thematic groups, reducing redundancy and improving organization.
-    
+
     The categorizer works by analyzing the semantic meaning of rubrics and
     grouping similar ones under common themes, each with specific tips.
     """
@@ -227,7 +227,7 @@ class LLMRubricCategorizer:
             tuple: (categorized_rubrics, aggregation_info)
                   categorized_rubrics: List of formatted rubrics organized by category
                   aggregation_info: Dictionary with metadata about the categorization process
-                  
+
         Example:
             >>> categorizer = LLMRubricCategorizer(num_categories=3)
             >>> rubrics = [
@@ -299,4 +299,3 @@ class LLMRubricCategorizer:
         except Exception as e:
             logger.error(f"Rubric categorization failed: {e}")
             return [], {"categorization_successful": False, "error": str(e)}
-

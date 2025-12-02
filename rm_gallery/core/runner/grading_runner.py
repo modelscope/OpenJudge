@@ -17,7 +17,7 @@ from typing import Any, Callable, Dict, List, Tuple
 
 from loguru import logger
 
-from rm_gallery.core.graders.base_grader import BaseGrader, GraderScore
+from rm_gallery.core.graders.base_grader import BaseGrader
 from rm_gallery.core.graders.schema import GraderError, GraderResult
 from rm_gallery.core.runner.aggregator.base_aggregator import BaseAggregator
 from rm_gallery.core.runner.base_runner import BaseRunner, RunnerResult
@@ -68,11 +68,27 @@ class GraderConfig:
     @classmethod
     def create(
         cls,
-        config: dict
-        | Tuple[BaseGrader, Dict[str, str] | Callable | None]
-        | BaseGrader
-        | "GraderConfig",
+        config: dict | Tuple[BaseGrader, Dict[str, str] | Callable | None] | BaseGrader | "GraderConfig",
     ):
+        """Create a GraderConfig from various input formats.
+
+        This factory method provides flexibility in how a GraderConfig can be created,
+        accepting either a GraderConfig object, BaseGrader instance, tuple of grader and mapper,
+        or a dictionary representation.
+
+        Args:
+            config: Can be one of:
+                - Existing GraderConfig object (returned as-is)
+                - BaseGrader instance (wrapped in new GraderConfig)
+                - Tuple of (grader, mapper) where mapper maps data fields to grader inputs
+                - Dictionary representation of a GraderConfig
+
+        Returns:
+            GraderConfig: A properly configured GraderConfig instance
+
+        Raises:
+            ValueError: If config is not one of the accepted types
+        """
         if isinstance(config, cls):
             return config
         elif isinstance(config, BaseGrader):
@@ -130,16 +146,13 @@ class GradingRunner(BaseRunner):
         self,
         grader_configs: Dict[str, GraderConfig | BaseGrader | Tuple[BaseGrader, Dict[str, str] | Callable | None]],
         max_concurrency: int = 32,
-        aggregators: BaseAggregator
-        | Callable
-        | List[BaseAggregator | Callable]
-        | None = None,
+        aggregators: BaseAggregator | Callable | List[BaseAggregator | Callable] | None = None,
     ) -> None:
         """Initialize the grading runner.
 
         Args:
             grader_configs: Dictionary of grader configurations where keys are grader names
-                and values are either GraderConfig instances, BaseGrader instances, tuples of 
+                and values are either GraderConfig instances, BaseGrader instances, tuples of
                 (BaseGrader, mapper) or dictionaries with grader and mapper keys.
             max_concurrency: Maximum number of concurrent operations. Defaults to 32.
                 Controls how many evaluations can run simultaneously to manage resource usage.
@@ -154,10 +167,7 @@ class GradingRunner(BaseRunner):
             ... }
             >>> runner = GradingRunner(grader_configs=configs, max_concurrency=10)
         """
-        self.grader_configs = {
-            name: GraderConfig.create(config)
-            for name, config in grader_configs.items()
-        }
+        self.grader_configs = {name: GraderConfig.create(config) for name, config in grader_configs.items()}
         self.max_concurrency = max_concurrency
         concurrency_manager = ConcurrencyManager()
         concurrency_manager.set_max_concurrency(max_concurrency)
@@ -307,9 +317,7 @@ class GradingRunner(BaseRunner):
             ...             print(f"  Sample {i}: Error - {result.error}")
         """
         # Create a dictionary to store result lists for each grader
-        grader_results: RunnerResult = {
-            name: [] for name in self.grader_configs.keys()
-        }
+        grader_results: RunnerResult = {name: [] for name in self.grader_configs.keys()}
 
         # Create coroutines for all evaluators and all samples
         all_coroutines = []
@@ -345,66 +353,7 @@ class GradingRunner(BaseRunner):
             for i, aggregator in zip(range(len(dataset)), self.aggregators):
                 aggregator_name = aggregator.__name__
                 grader_results[aggregator_name][i] = aggregator(
-                    {
-                        grader_name: results[i]
-                        for grader_name, results in grader_results.items()
-                    },
+                    {grader_name: results[i] for grader_name, results in grader_results.items()},
                 )
 
         return grader_results
-
-
-# Test code
-if __name__ == "__main__":
-    # Mock grader for testing
-    class MockGrader(BaseGrader):
-        def __init__(self, name: str, score_value: float):
-            super().__init__(name=name)
-            self.score_value = score_value
-
-        async def aevaluate(self, **kwargs) -> GraderScore:
-            # Simulate some async work
-            await asyncio.sleep(0.1)
-            return GraderScore(
-                name=self.name,
-                score=self.score_value,
-                reason=f"Mock score of {self.score_value}",
-            )
-
-    async def run_test():
-        # Create mock graders
-        accuracy_grader = MockGrader("accuracy", 0.9)
-        relevance_grader = MockGrader("relevance", 0.8)
-
-        # Create grader configs
-        grader_configs = {
-            "acc": GraderConfig(grader=accuracy_grader),
-            "rel": GraderConfig(grader=relevance_grader),
-        }
-
-        # Test data
-        test_data = [
-            {"query": "What is the capital of France?", "answer": "Paris"},
-            {"query": "What is 2+2?", "answer": "4"},
-            {"query": "Who wrote Romeo and Juliet?", "answer": "Shakespeare"},
-        ]
-
-        # Create runner
-        runner = GradingRunner(
-            grader_configs,
-        )
-
-        # Run evaluation
-        results = await runner.arun(test_data)
-
-        # Print results
-        print("Grading Runner Test Results:")
-        for grader_name, grader_results in results.items():
-            print(f"\n{grader_name} results:")
-            for i, grader_result in enumerate(grader_results):
-                print(
-                    f"  Sample {i+1}: {grader_result.score} ({grader_result.reason})",
-                )
-
-    # Run the test
-    asyncio.run(run_test())

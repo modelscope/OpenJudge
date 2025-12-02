@@ -63,11 +63,10 @@ class BaseTokenizer(BaseModel, ABC):
 
         Returns:
             List[str]: List of token strings.
-            
+
         Example:
             >>> # This is an abstract method that must be implemented by subclasses
         """
-        pass
 
     def preprocess_text(self, text: str, to_lower: bool = False) -> str:
         """
@@ -79,7 +78,7 @@ class BaseTokenizer(BaseModel, ABC):
 
         Returns:
             str: Preprocessed text.
-            
+
         Example:
             >>> tokenizer = BaseTokenizer(name="test")
             >>> result = tokenizer.preprocess_text("  Hello World  ", to_lower=True)
@@ -125,7 +124,7 @@ class TiktokenTokenizer(BaseTokenizer):
 
         Returns:
             List[str]: List of token strings.
-            
+
         Example:
             >>> tokenizer = TiktokenTokenizer()
             >>> tokens = tokenizer.tokenize("Hello world")
@@ -178,7 +177,7 @@ class JiebaTokenizer(BaseTokenizer):
 
         Returns:
             str: Text with only Chinese characters.
-            
+
         Example:
             >>> tokenizer = JiebaTokenizer()
             >>> result = tokenizer._preserve_chinese("Hello 你好123")
@@ -200,7 +199,7 @@ class JiebaTokenizer(BaseTokenizer):
 
         Raises:
             ImportError: If jieba library is not installed.
-            
+
         Example:
             >>> tokenizer = JiebaTokenizer()
             >>> tokens = tokenizer.tokenize("你好 世界")
@@ -213,10 +212,8 @@ class JiebaTokenizer(BaseTokenizer):
             if self.chinese_only:
                 text = self._preserve_chinese(text)
             return list(jieba.cut(text))
-        except ImportError:
-            raise ImportError(
-                "jieba library required for Chinese tokenization: pip install jieba",
-            )
+        except ImportError as e:
+            raise ImportError("jieba library required for Chinese tokenization: pip install jieba") from e
 
 
 class SimpleTokenizer(BaseTokenizer):
@@ -247,7 +244,7 @@ class SimpleTokenizer(BaseTokenizer):
 
         Returns:
             List[str]: List of token strings.
-            
+
         Example:
             >>> tokenizer = SimpleTokenizer()
             >>> tokens = tokenizer.tokenize("hello world")
@@ -277,7 +274,7 @@ def get_tokenizer(
 
     Raises:
         ValueError: If tokenizer_type is not supported.
-        
+
     Example:
         >>> tokenizer = get_tokenizer(TokenizerEnum.simple)
         >>> tokens = tokenizer.tokenize("hello world")
@@ -298,6 +295,5 @@ def get_tokenizer(
         return SimpleTokenizer(**kwargs)
     else:
         raise ValueError(
-            f"Unsupported tokenizer type: {tokenizer_type}. "
-            f"Supported types: tiktoken, jieba, simple",
+            f"Unsupported tokenizer type: {tokenizer_type}. " f"Supported types: tiktoken, jieba, simple",
         )

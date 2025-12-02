@@ -50,7 +50,7 @@ class BaseChatModel(ABC):
         Args:
             model: The name of the model.
             stream: Whether the model output is streaming or not.
-            
+
         Example:
             >>> model = BaseChatModel(model="qwen3-max", stream=True)
             >>> print(model.model)
@@ -75,16 +75,15 @@ class BaseChatModel(ABC):
         Args:
             *args: Variable length argument list.
             **kwargs: Arbitrary keyword arguments.
-            
+
         Returns:
             Union[ChatResponse, AsyncGenerator[ChatResponse, None]]: Either a single
             ChatResponse or an async generator of ChatResponse objects for streaming.
-            
+
         Example:
             >>> # This is an abstract method that must be implemented by subclasses
             >>> # Implementation would handle communication with the specific model service
         """
-        ...
 
     def _validate_tool_choice(
         self,
@@ -97,11 +96,11 @@ class BaseChatModel(ABC):
         Args:
             tool_choice: Tool choice mode or function name.
             tools: Available tools list.
-            
+
         Raises:
             TypeError: If tool_choice is not string.
             ValueError: If tool_choice is invalid.
-            
+
         Example:
             >>> model = BaseChatModel(model="test", stream=False)
             >>> model._validate_tool_choice("auto", None)  # Valid
@@ -119,6 +118,5 @@ class BaseChatModel(ABC):
         if tool_choice not in available_functions:
             all_options = TOOL_CHOICE_MODES + available_functions
             raise ValueError(
-                f"Invalid tool_choice '{tool_choice}'. "
-                f"Available options: {', '.join(sorted(all_options))}",
+                f"Invalid tool_choice '{tool_choice}'. " f"Available options: {', '.join(sorted(all_options))}",
             )

@@ -7,14 +7,14 @@ Tests for the ReflectionProgressMisjudgeGrader class functionality.
 
 import pytest
 
-from rm_gallery.core.graders.gallery.agent import ReflectionProgressMisjudgeGrader
+from rm_gallery.core.graders.predefined.agent import ReflectionProgressMisjudgeGrader
 from rm_gallery.core.models.openai_chat_model import OpenAIChatModel
 from rm_gallery.core.models.schema.prompt_template import LanguageEnum
 
 
 def test_reflection_progress_misjudge_grader_creation():
     """Test creating a ReflectionProgressMisjudgeGrader instance"""
-    model = OpenAIChatModel(model="qwen-plus", stream=False)
+    model = OpenAIChatModel(model="qwen-plus", api_key="your-key", stream=False)
     grader = ReflectionProgressMisjudgeGrader(model=model)
 
     assert grader is not None
@@ -24,7 +24,7 @@ def test_reflection_progress_misjudge_grader_creation():
 
 def test_reflection_progress_misjudge_grader_chinese():
     """Test creating a Chinese grader instance"""
-    model = OpenAIChatModel(model="qwen-plus", stream=False)
+    model = OpenAIChatModel(model="qwen-plus", api_key="your-key", stream=False)
     grader = ReflectionProgressMisjudgeGrader(
         model=model,
         language=LanguageEnum.ZH,
@@ -38,7 +38,7 @@ def test_reflection_progress_misjudge_grader_chinese():
 @pytest.mark.asyncio
 async def test_reflection_progress_overestimation():
     """Test detecting progress overestimation"""
-    model = OpenAIChatModel(model="qwen3-32b", stream=False)
+    model = OpenAIChatModel(model="qwen-plus", api_key="your-key", stream=False)
     grader = ReflectionProgressMisjudgeGrader(model=model)
 
     # Test case with overestimated progress
@@ -57,7 +57,7 @@ async def test_reflection_progress_overestimation():
 @pytest.mark.asyncio
 async def test_reflection_progress_correct():
     """Test with correct progress assessment"""
-    model = OpenAIChatModel(model="qwen3-32b", stream=False)
+    model = OpenAIChatModel(model="qwen-plus", api_key="your-key", stream=False)
     grader = ReflectionProgressMisjudgeGrader(model=model)
 
     result = await grader.aevaluate(
@@ -74,7 +74,7 @@ async def test_reflection_progress_correct():
 @pytest.mark.asyncio
 async def test_reflection_progress_with_history():
     """Test progress misjudge with history showing repeated failures"""
-    model = OpenAIChatModel(model="qwen3-32b", stream=False)
+    model = OpenAIChatModel(model="qwen-plus", api_key="your-key", stream=False)
     grader = ReflectionProgressMisjudgeGrader(model=model)
 
     history = [

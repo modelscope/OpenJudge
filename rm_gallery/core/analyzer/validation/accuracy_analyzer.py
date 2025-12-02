@@ -90,7 +90,7 @@ class AccuracyAnalyzer(BaseValidationAnalyzer):
         Returns:
             AccuracyAnalysisResult: The computed accuracy analysis result containing
             accuracy score and metadata with explanation.
-            
+
         Example:
             >>> from rm_gallery.core.graders.schema import GraderResult, GraderScore
             >>> dataset = [
@@ -125,7 +125,7 @@ class AccuracyAnalyzer(BaseValidationAnalyzer):
         total_predictions = 0
 
         # Iterate over each sample and compare grader results with label values
-        for i, (sample, grader_result) in enumerate(zip(dataset, grader_results)):
+        for sample, grader_result in zip(dataset, grader_results):
             label = self._extract(sample, label_path)
             if label is None:
                 continue

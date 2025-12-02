@@ -24,10 +24,10 @@ def _json_loads_with_repair(
 
     Returns:
         The parsed Python object from the repaired JSON string.
-        
+
     Raises:
         ValueError: If the JSON string cannot be parsed even after repair.
-        
+
     Example:
         >>> result = _json_loads_with_repair('{"key": "value"}')
         >>> print(result)
@@ -47,8 +47,7 @@ def _json_loads_with_repair(
         return json.loads(repaired)
     except json.JSONDecodeError as e:
         raise ValueError(
-            f"Failed to decode JSON string `{json_str}` after repairing it "
-            f"into `{repaired}`. Error: {e}",
+            f"Failed to decode JSON string `{json_str}` after repairing it " f"into `{repaired}`. Error: {e}",
         ) from e
 
 
@@ -61,7 +60,7 @@ def _remove_title_field(schema: dict) -> None:
 
     Args:
         schema: The JSON schema dictionary to modify in-place.
-        
+
     Example:
         >>> schema = {"title": "Test", "properties": {"name": {"title": "Name", "type": "string"}}}
         >>> _remove_title_field(schema)
@@ -120,7 +119,7 @@ def _create_tool_from_base_model(
 
     Example:
         >>> from pydantic import BaseModel
-        >>> 
+        >>>
         >>> class PersonInfo(BaseModel):
         ...     name: str
         ...     age: int
@@ -137,7 +136,8 @@ def _create_tool_from_base_model(
     Note:
         The function automatically removes the 'title' field from
         the JSON schema to ensure compatibility with function calling
-        format. This is handled by the internal [_remove_title_field](file:///mnt3/huangsen.huang/codes/RM-Gallery/rm_gallery/core/utils/utils.py#L33-L55) function.
+        format. This is handled by the internal [_remove_title_field]
+        (file://.rm_gallery/core/utils/utils.py#L33-L55) function.
     """
     schema = structured_model.model_json_schema()
 
@@ -146,8 +146,7 @@ def _create_tool_from_base_model(
         "type": "function",
         "function": {
             "name": tool_name,
-            "description": "Generate the required structured output with "
-            "this function",
+            "description": "Generate the required structured output with " "this function",
             "parameters": schema,
         },
     }
@@ -166,7 +165,7 @@ def trim_and_load_json(response: str, metric: Any = None) -> Dict[str, Any]:
 
     Returns:
         Dict[str, Any]: Parsed JSON dictionary.
-        
+
     Raises:
         ValueError: If JSON cannot be parsed.
 
@@ -199,9 +198,7 @@ def trim_and_load_json(response: str, metric: Any = None) -> Dict[str, Any]:
     try:
         return json.loads(response)
     except json.JSONDecodeError as e:
-        error_msg = (
-            f"Failed to parse JSON from response: {e}\nResponse: {response[:200]}"
-        )
+        error_msg = f"Failed to parse JSON from response: {e}\nResponse: {response[:200]}"
         if metric:
             logger.error(f"{metric.name}: {error_msg}")
         raise ValueError(error_msg) from e

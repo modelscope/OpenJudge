@@ -7,14 +7,14 @@ Tests for the MemoryHallucinationGrader class functionality.
 
 import pytest
 
-from rm_gallery.core.graders.gallery.agent import MemoryHallucinationGrader
+from rm_gallery.core.graders.predefined.agent import MemoryHallucinationGrader
 from rm_gallery.core.models.openai_chat_model import OpenAIChatModel
 from rm_gallery.core.models.schema.prompt_template import LanguageEnum
 
 
 def test_memory_hallucination_grader_creation():
     """Test creating a MemoryHallucinationGrader instance"""
-    model = OpenAIChatModel(model="qwen-plus", stream=False)
+    model = OpenAIChatModel(model="qwen-plus", api_key="fake-api-key", stream=False)
     grader = MemoryHallucinationGrader(model=model)
 
     assert grader is not None
@@ -24,7 +24,7 @@ def test_memory_hallucination_grader_creation():
 
 def test_memory_hallucination_grader_chinese():
     """Test creating a Chinese grader instance"""
-    model = OpenAIChatModel(model="qwen-plus", stream=False)
+    model = OpenAIChatModel(model="qwen-plus", api_key="fake-api-key", stream=False)
     grader = MemoryHallucinationGrader(
         model=model,
         language=LanguageEnum.ZH,
@@ -38,7 +38,7 @@ def test_memory_hallucination_grader_chinese():
 @pytest.mark.asyncio
 async def test_memory_hallucination_detection():
     """Test detecting hallucinated information in memory"""
-    model = OpenAIChatModel(model="qwen3-32b", stream=False)
+    model = OpenAIChatModel(model="qwen3-32b", api_key="fake-api-key", stream=False)
     grader = MemoryHallucinationGrader(model=model)
 
     # Test case with hallucinated memory

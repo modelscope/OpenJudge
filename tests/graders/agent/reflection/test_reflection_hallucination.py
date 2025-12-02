@@ -7,14 +7,14 @@ Tests for the ReflectionHallucinationGrader class functionality.
 
 import pytest
 
-from rm_gallery.core.graders.gallery.agent import ReflectionHallucinationGrader
+from rm_gallery.core.graders.predefined.agent import ReflectionHallucinationGrader
 from rm_gallery.core.models.openai_chat_model import OpenAIChatModel
 from rm_gallery.core.models.schema.prompt_template import LanguageEnum
 
 
 def test_reflection_hallucination_grader_creation():
     """Test creating a ReflectionHallucinationGrader instance"""
-    model = OpenAIChatModel(model="qwen-plus", stream=False)
+    model = OpenAIChatModel(model="qwen-plus", api_key="your-key", stream=False)
     grader = ReflectionHallucinationGrader(model=model)
 
     assert grader is not None
@@ -24,7 +24,7 @@ def test_reflection_hallucination_grader_creation():
 
 def test_reflection_hallucination_grader_chinese():
     """Test creating a Chinese grader instance"""
-    model = OpenAIChatModel(model="qwen-plus", stream=False)
+    model = OpenAIChatModel(model="qwen-plus", api_key="your-key", stream=False)
     grader = ReflectionHallucinationGrader(
         model=model,
         language=LanguageEnum.ZH,
@@ -38,7 +38,7 @@ def test_reflection_hallucination_grader_chinese():
 @pytest.mark.asyncio
 async def test_reflection_hallucination_detection():
     """Test detecting hallucinated information in reflection"""
-    model = OpenAIChatModel(model="qwen3-32b", stream=False)
+    model = OpenAIChatModel(model="qwen-plus", api_key="your-key", stream=False)
     grader = ReflectionHallucinationGrader(model=model)
 
     # Test case with hallucinated details
@@ -57,7 +57,7 @@ async def test_reflection_hallucination_detection():
 @pytest.mark.asyncio
 async def test_reflection_no_hallucination():
     """Test with correct reflection without hallucination"""
-    model = OpenAIChatModel(model="qwen3-32b", stream=False)
+    model = OpenAIChatModel(model="qwen-plus", api_key="your-key", stream=False)
     grader = ReflectionHallucinationGrader(model=model)
 
     result = await grader.aevaluate(
@@ -74,7 +74,7 @@ async def test_reflection_no_hallucination():
 @pytest.mark.asyncio
 async def test_reflection_hallucination_with_history():
     """Test hallucination detection with history"""
-    model = OpenAIChatModel(model="qwen3-32b", stream=False)
+    model = OpenAIChatModel(model="qwen-plus", api_key="your-key", stream=False)
     grader = ReflectionHallucinationGrader(model=model)
 
     history = [

@@ -8,8 +8,8 @@ import asyncio
 import base64
 import os
 
-from rm_gallery.core.graders.gallery.multimodal._internal import MLLMImage
-from rm_gallery.core.graders.gallery.multimodal.image_coherence import (
+from rm_gallery.core.graders.predefined.multimodal._internal import MLLMImage
+from rm_gallery.core.graders.predefined.multimodal.image_coherence import (
     ImageCoherenceGrader,
 )
 from rm_gallery.core.models.openai_chat_model import OpenAIChatModel
@@ -30,9 +30,7 @@ async def test_with_base64_image():
     grader = ImageCoherenceGrader(model=model, threshold=0.7)
 
     # Load local test image
-    test_image_path = (
-        "/Users/boyin.liu/Desktop/code/RM-Gallery-git/data/test_images/html_good_1.png"
-    )
+    test_image_path = "/Users/boyin.liu/Desktop/code/RM-Gallery-git/data/test_images/html_good_1.png"
 
     if os.path.exists(test_image_path):
         # Convert to base64

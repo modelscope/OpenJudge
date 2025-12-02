@@ -1,45 +1,44 @@
 from abc import ABC
 import asyncio
-import re
-from copy import deepcopy
 from typing import Callable, List
 
 from rm_gallery.core.graders.base_grader import BaseGrader
-from rm_gallery.core.graders.schema import GraderMode
+from rm_gallery.core.graders.schema import GraderMode, GraderResult
 from rm_gallery.core.models.base_chat_model import BaseChatModel
 from rm_gallery.core.models.schema.message import ChatMessage
 from rm_gallery.core.models.schema.prompt_template import PromptTemplate
+from rm_gallery.core.models.schema.response import ChatResponse
 from rm_gallery.core.utils.mapping import parse_data_with_mapper
 
 
 def format_messages(messages: List[ChatMessage]) -> str:
     """
-    Formats chat messages into XML-style string representation.
+        Formats chat messages into XML-style string representation.
 
-    Takes a list of ChatMessage objects and converts them into a structured
-    XML-like format where each message is wrapped in tags corresponding to 
-    its role (e.g., <user>, <assistant>).
+        Takes a list of ChatMessage objects and converts them into a structured
+        XML-like format where each message is wrapped in tags corresponding to
+        its role (e.g., <user>, <assistant>).
 
-    Args:
-        messages (List[ChatMessage]): List of ChatMessage objects to format.
-            Each ChatMessage should have 'role' and 'content' attributes.
+        Args:
+            messages (List[ChatMessage]): List of ChatMessage objects to format.
+                Each ChatMessage should have 'role' and 'content' attributes.
 
-    Returns:
-        str: Formatted string with messages wrapped in role-specific tags.
-             Returns empty string if messages list is empty.
+        Returns:
+            str: Formatted string with messages wrapped in role-specific tags.
+                 Returns empty string if messages list is empty.
 
-    Example:
-        >>> messages = [
-        ...     ChatMessage(role="user", content="Hello!"),
-        ...     ChatMessage(role="assistant", content="Hi there!")
-        ... ]
-        >>> formatted = format_messages(messages)
-        >>> print(formatted)
-        "<user>Hello!</user>
-<assistant>Hi there!</assistant>"
+        Example:
+            >>> messages = [
+            ...     ChatMessage(role="user", content="Hello!"),
+            ...     ChatMessage(role="assistant", content="Hi there!")
+            ... ]
+            >>> formatted = format_messages(messages)
+            >>> print(formatted)
+            "<user>Hello!</user>
+    <assistant>Hi there!</assistant>"
     """
     return "\n".join(
-        [f"<{message.role}>{message.content}</{message.role}>" for message in messages]
+        [f"<{message.role}>{message.content}</{message.role}>" for message in messages],
     )
 
 
@@ -70,8 +69,8 @@ GENERATE_RESPONSE_TEMPLATE = PromptTemplate(
         ChatMessage(
             role="user",
             content=GENERATE_RESPONSE_PROMPT,
-        )
-    ]
+        ),
+    ],
 )
 
 
@@ -80,8 +79,8 @@ REFINE_RESPONSE_TEMPLATE = PromptTemplate(
         ChatMessage(
             role="user",
             content=REFINE_RESPONSE_PROMPT,
-        )
-    ]
+        ),
+    ],
 )
 
 
@@ -97,11 +96,11 @@ class LLMRefinement(ABC):
         >>> from rm_gallery.core.graders import LLMPairwiseGrader
         >>> from rm_gallery.core.models import QwenChatModel
         >>> from .refinement import LLMRefinement
-        >>> 
+        >>>
         >>> grader = LLMPairwiseGrader()
         >>> model = OpenAIChatModel(model="qwen3-max")
         >>> refiner = LLMRefinement(grader, model, max_iterations=3)
-        >>> 
+        >>>
         >>> sample = {
         ...     "history": [
         ...         {"role": "user", "content": "How do I sort a list in Python?"},
@@ -109,6 +108,7 @@ class LLMRefinement(ABC):
         ... }
         >>> refined_sample = refiner.refine(sample)
     """
+
     _generate_response_template = GENERATE_RESPONSE_TEMPLATE
     _refine_response_template = REFINE_RESPONSE_TEMPLATE
 
@@ -128,7 +128,7 @@ class LLMRefinement(ABC):
         Example:
             >>> from rm_gallery.core.graders import LLMPairwiseGrader
             >>> from rm_gallery.core.models import QwenChatModel
-            >>> 
+            >>>
             >>> grader = LLMPairwiseGrader()
             >>> model = OpenAIChatModel(model="qwen3-max")
             >>> refiner = LLMRefinement(grader, model, max_iterations=5)
@@ -175,7 +175,7 @@ class LLMRefinement(ABC):
         response = asyncio.run(self.model.achat(messages=messages))
         sample["responses"] = []
         sample["responses"].append(
-            response.model_dump()
+            response.model_dump(),
         )
         return sample
 
@@ -213,15 +213,15 @@ class LLMRefinement(ABC):
         """
         history = format_messages(sample.get("history", []))
         responses = "\n".join(
-                    [
-                        f"<response_{i}>{content}</response_{i}>"
-                        for i, content in enumerate([response["content"] for response in sample["responses"]])
-                    ]
-                )
+            [
+                f"<response_{i}>{content}</response_{i}>"
+                for i, content in enumerate([response["content"] for response in sample["responses"]])
+            ],
+        )
         messages = self._refine_response_template.format(history=history, responses=responses, feedback=feedback)
         response = asyncio.run(self.model.achat(messages=messages))
         sample["responses"].append(
-            response.model_dump()
+            response.model_dump(),
         )
         return sample
 
@@ -267,7 +267,7 @@ class LLMRefinement(ABC):
         2. For each iteration up to max_iterations:
            a. Evaluate latest response using grader to get feedback
            b. Generate refined response based on feedback
-           
+
         The refinement process improves response quality progressively by incorporating
         automated feedback in each iteration.
 
@@ -286,11 +286,11 @@ class LLMRefinement(ABC):
             >>> from rm_gallery.core.graders import LLMPairwiseGrader
             >>> from rm_gallery.core.models import QwenChatModel
             >>> from .refinement import LLMRefinement
-            >>> 
+            >>>
             >>> grader = LLMPairwiseGrader()
             >>> model = OpenAIChatModel(model="qwen3-max")
             >>> refiner = LLMRefinement(grader, model)
-            >>> 
+            >>>
             >>> sample = {
             ...     "history": [
             ...         {"role": "user", "content": "Explain quantum computing in simple terms"},
@@ -315,20 +315,13 @@ class LLMRefinement(ABC):
 
 
 if __name__ == "__main__":
-    import asyncio
-    from rm_gallery.core.graders.base_grader import BaseGrader, GraderMode, GraderResult
-    from rm_gallery.core.models.base_chat_model import BaseChatModel
-    from rm_gallery.core.models.schema.prompt_template import PromptTemplate
-    from rm_gallery.core.models.schema.message import ChatMessage
-    from rm_gallery.core.models.schema.response import ChatResponse
-
     # Mock grader for demonstration purposes
     class MockListwiseGrader(BaseGrader):
         def __init__(self):
             super().__init__(
                 name="mock_listwise_grader",
                 mode=GraderMode.LISTWISE,
-                description="A mock listwise grader for demonstration"
+                description="A mock listwise grader for demonstration",
             )
 
         async def aevaluate(self, **kwargs) -> GraderResult:
@@ -340,13 +333,13 @@ if __name__ == "__main__":
                     name=self.name,
                     reason="The response could be more detailed and provide examples.",
                     score=0.7,
-                    rank=[1]
+                    rank=[1],
                 )
             return GraderResult(
                 name=self.name,
                 reason="Initial response needs improvement.",
                 score=0.5,
-                rank=[1]
+                rank=[1],
             )
 
     # Mock model for demonstration purposes
@@ -357,27 +350,27 @@ if __name__ == "__main__":
         async def achat(self, messages, **kwargs):
             # Simulate a model response
             return ChatResponse(
-                content="This is a simulated model response."
+                content="This is a simulated model response.",
             )
 
     # Example usage of LLMRefinement
     def main():
         # Initialize a mock grader
         grader = MockListwiseGrader()
-        
+
         # Initialize a mock model
         model = MockChatModel()
-        
+
         # Create the refiner
         refiner = LLMRefinement(grader, model, max_iterations=2)
-        
+
         # Sample data for refinement
         sample = {
             "history": [
                 {"role": "user", "content": "Explain quantum computing in simple terms."},
-            ]
+            ],
         }
-        
+
         # Run the refinement process
         print("Starting refinement process...")
         refined_sample = refiner.refine(sample)

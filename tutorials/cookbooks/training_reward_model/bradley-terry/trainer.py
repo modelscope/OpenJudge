@@ -114,11 +114,7 @@ class FSDPBTTrainer:
 
         self.config.data.train_batch_size //= dp_size
 
-        assert (
-            self.config.data.train_batch_size
-            % self.config.data.micro_batch_size_per_gpu
-            == 0
-        )
+        assert self.config.data.train_batch_size % self.config.data.micro_batch_size_per_gpu == 0
 
     def _build_dataloader(self, train_dataset, val_dataset):
         self.train_dataset, self.val_dataset = train_dataset, val_dataset
@@ -262,9 +258,7 @@ class FSDPBTTrainer:
                 forward_prefetch=False,
             )
         elif fsdp_strategy == "fsdp2":
-            assert (
-                CPUOffloadPolicy is not None
-            ), "PyTorch version >= 2.4 is required for FSDP2"
+            assert CPUOffloadPolicy is not None, "PyTorch version >= 2.4 is required for FSDP2"
             mp_policy = MixedPrecisionPolicy(
                 param_dtype=torch.bfloat16,
                 reduce_dtype=torch.float32,
@@ -346,12 +340,8 @@ class FSDPBTTrainer:
             # we need to use strided slicing to correctly separate them
             batch_size = logits.size(0) // 2
 
-            chosen_rewards = logits[
-                0::2
-            ]  # Take every 2nd element starting from 0: chosen responses
-            rejected_rewards = logits[
-                1::2
-            ]  # Take every 2nd element starting from 1: rejected responses
+            chosen_rewards = logits[0::2]  # Take every 2nd element starting from 0: chosen responses
+            rejected_rewards = logits[1::2]  # Take every 2nd element starting from 1: rejected responses
 
             # Check if we have valid pairs
             if batch_size == 0:
@@ -386,9 +376,7 @@ class FSDPBTTrainer:
 
         # For Bradley-Terry training, micro_batch_size should consider pairs (chosen + rejected)
         # Each preference pair produces 2 samples, so micro batch size should be even
-        micro_batch_size = (
-            self.config.data.micro_batch_size_per_gpu * 2
-        )  # Account for pairs
+        micro_batch_size = self.config.data.micro_batch_size_per_gpu * 2  # Account for pairs
 
         micro_batches = batch.split(micro_batch_size)
         n_micro_batches = len(micro_batches)
@@ -527,9 +515,7 @@ class FSDPBTTrainer:
         last_valid_metric = None
         latest_train_metric = {}
 
-        total_training_steps = (
-            len(self.train_dataloader) * self.config.trainer.total_epochs
-        )
+        total_training_steps = len(self.train_dataloader) * self.config.trainer.total_epochs
         if self.config.trainer.total_training_steps is not None:
             total_training_steps = self.config.trainer.total_training_steps
 
@@ -572,15 +558,11 @@ class FSDPBTTrainer:
                 is_save_step = global_step % self.config.trainer.save_freq == 0
 
                 # Validation
-                if is_last_step or (
-                    self.config.trainer.test_freq > 0 and is_valid_step
-                ):
+                if is_last_step or (self.config.trainer.test_freq > 0 and is_valid_step):
                     val_metrics = []
                     for val_data in self.val_dataloader:
                         # Bradley-Terry validation: each preference pair becomes 2 samples
-                        val_actual_batch_size = (
-                            self.config.data.micro_batch_size_per_gpu * 2
-                        )
+                        val_actual_batch_size = self.config.data.micro_batch_size_per_gpu * 2
                         val_data = TensorDict(
                             val_data,
                             batch_size=val_actual_batch_size,
@@ -592,9 +574,7 @@ class FSDPBTTrainer:
                         avg_val_loss = sum(m["val/loss"] for m in val_metrics) / len(
                             val_metrics,
                         )
-                        avg_val_accuracy = sum(
-                            m["val/accuracy"] for m in val_metrics
-                        ) / len(val_metrics)
+                        avg_val_accuracy = sum(m["val/accuracy"] for m in val_metrics) / len(val_metrics)
 
                         metric = {
                             "val/loss": avg_val_loss,

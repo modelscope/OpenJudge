@@ -7,14 +7,14 @@ Tests for the PlanImpossibleActionGrader class functionality.
 
 import pytest
 
-from rm_gallery.core.graders.gallery.agent import PlanImpossibleActionGrader
+from rm_gallery.core.graders.predefined.agent import PlanImpossibleActionGrader
 from rm_gallery.core.models.openai_chat_model import OpenAIChatModel
 from rm_gallery.core.models.schema.prompt_template import LanguageEnum
 
 
 def test_plan_impossible_action_grader_creation():
     """Test creating a PlanImpossibleActionGrader instance"""
-    model = OpenAIChatModel(model="qwen-plus", stream=False)
+    model = OpenAIChatModel(model="qwen-plus", api_key="your-key", stream=False)
     grader = PlanImpossibleActionGrader(model=model)
 
     assert grader is not None
@@ -24,7 +24,7 @@ def test_plan_impossible_action_grader_creation():
 
 def test_plan_impossible_action_grader_chinese():
     """Test creating a Chinese grader instance"""
-    model = OpenAIChatModel(model="qwen-plus", stream=False)
+    model = OpenAIChatModel(model="qwen-plus", api_key="your-key", stream=False)
     grader = PlanImpossibleActionGrader(
         model=model,
         language=LanguageEnum.ZH,
@@ -38,7 +38,7 @@ def test_plan_impossible_action_grader_chinese():
 @pytest.mark.asyncio
 async def test_plan_impossible_action_detection():
     """Test detecting impossible action in plan"""
-    model = OpenAIChatModel(model="qwen3-32b", stream=False)
+    model = OpenAIChatModel(model="qwen-plus", api_key="your-key", stream=False)
     grader = PlanImpossibleActionGrader(model=model)
 
     # Test case with impossible action (using object before obtaining it)
@@ -58,7 +58,7 @@ async def test_plan_impossible_action_detection():
 @pytest.mark.asyncio
 async def test_plan_possible_action():
     """Test with feasible plan"""
-    model = OpenAIChatModel(model="qwen3-32b", stream=False)
+    model = OpenAIChatModel(model="qwen-plus", api_key="your-key", stream=False)
     grader = PlanImpossibleActionGrader(model=model)
 
     result = await grader.aevaluate(
@@ -76,7 +76,7 @@ async def test_plan_possible_action():
 @pytest.mark.asyncio
 async def test_plan_impossible_action_with_history():
     """Test impossible action detection with history"""
-    model = OpenAIChatModel(model="qwen3-32b", stream=False)
+    model = OpenAIChatModel(model="qwen-plus", api_key="your-key", stream=False)
     grader = PlanImpossibleActionGrader(model=model)
 
     history = [

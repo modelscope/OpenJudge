@@ -43,9 +43,7 @@ def _format_audio_data_for_qwen_omni(messages: list[dict]) -> None:
                     and isinstance(block["input_audio"].get("data"), str)
                 ):
                     if not block["input_audio"]["data"].startswith("http"):
-                        block["input_audio"]["data"] = (
-                            "data:;base64," + block["input_audio"]["data"]
-                        )
+                        block["input_audio"]["data"] = "data:;base64," + block["input_audio"]["data"]
 
 
 class OpenAIChatModel(BaseChatModel):
@@ -152,16 +150,12 @@ class OpenAIChatModel(BaseChatModel):
         # checking messages
         if not isinstance(messages, list):
             raise ValueError(
-                "OpenAI `messages` field expected type `list`, "
-                f"got `{type(messages)}` instead.",
+                "OpenAI `messages` field expected type `list`, " f"got `{type(messages)}` instead.",
             )
-        messages = [
-            msg.to_dict() if isinstance(msg, ChatMessage) else msg for msg in messages
-        ]
+        messages = [msg.to_dict() if isinstance(msg, ChatMessage) else msg for msg in messages]
         if not all("role" in msg and "content" in msg for msg in messages):
             raise ValueError(
-                "Each message in the 'messages' list must contain a 'role' "
-                "and 'content' key for OpenAI API.",
+                "Each message in the 'messages' list must contain a 'role' and 'content' key for OpenAI API.",
             )
 
         # Qwen-omni requires different base64 audio format from openai
@@ -314,18 +308,13 @@ class OpenAIChatModel(BaseChatModel):
 
                 if hasattr(choice.delta, "audio") and "data" in choice.delta.audio:
                     audio += choice.delta.audio["data"]
-                if (
-                    hasattr(choice.delta, "audio")
-                    and "transcript" in choice.delta.audio
-                ):
+                if hasattr(choice.delta, "audio") and "transcript" in choice.delta.audio:
                     text += choice.delta.audio["transcript"]
 
                 for tool_call in choice.delta.tool_calls or []:
                     if tool_call.index in tool_calls:
                         if tool_call.function.arguments is not None:
-                            tool_calls[tool_call.index][
-                                "input"
-                            ] += tool_call.function.arguments
+                            tool_calls[tool_call.index]["input"] += tool_call.function.arguments
 
                     else:
                         tool_calls[tool_call.index] = {
@@ -425,10 +414,7 @@ class OpenAIChatModel(BaseChatModel):
 
         if response.choices:
             choice = response.choices[0]
-            if (
-                hasattr(choice.message, "reasoning_content")
-                and choice.message.reasoning_content is not None
-            ):
+            if hasattr(choice.message, "reasoning_content") and choice.message.reasoning_content is not None:
                 content_blocks.append(
                     ThinkingBlock(
                         type="thinking",

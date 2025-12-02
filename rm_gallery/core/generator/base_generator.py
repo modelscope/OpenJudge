@@ -40,14 +40,14 @@ class BaseGraderGenerator(ABC):
         """Initialize the grader generator with the provided configuration.
 
         Args:
-            config (GraderGeneratorConfig): Configuration object containing 
+            config (GraderGeneratorConfig): Configuration object containing
                                           parameters for grader generation.
-                                          
+
                                           The configuration includes:
                                           - grader_name (str): Human-readable name for the generated grader.
         """
         self.config = config
-    
+
     @abstractmethod
     async def generate(
         self,
@@ -63,7 +63,7 @@ class BaseGraderGenerator(ABC):
 
         Args:
             dataset: List of data dictionaries containing examples for grader generation.
-                 Each dictionary should contain the necessary information for 
+                 Each dictionary should contain the necessary information for
                  creating a grader, such as queries, responses, and scores.
             **kwargs: Additional implementation-specific arguments that may be
                      needed by specific generator implementations.
@@ -74,7 +74,7 @@ class BaseGraderGenerator(ABC):
 
         Raises:
             NotImplementedError: If not implemented by subclass.
-            
+
         Example:
             >>> config = GraderGeneratorConfig(grader_name="My Custom Grader")
             >>> dataset = [
@@ -84,4 +84,3 @@ class BaseGraderGenerator(ABC):
             >>> generator = MyGraderGenerator(config)
             >>> grader = await generator.generate(dataset)
         """
-        ...

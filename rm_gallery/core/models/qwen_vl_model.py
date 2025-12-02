@@ -13,7 +13,7 @@ from dashscope import MultiModalConversation
 from loguru import logger
 from pydantic import BaseModel
 
-from rm_gallery.core.graders.gallery.multimodal._internal.helpers import MLLMImage
+from rm_gallery.core.graders.predefined.multimodal._internal.helpers import MLLMImage
 from rm_gallery.core.models.base_chat_model import BaseChatModel
 from rm_gallery.core.models.schema.response import ChatResponse
 
@@ -180,8 +180,7 @@ class QwenVLModel(BaseChatModel):
 
             if response.status_code != 200:
                 raise RuntimeError(
-                    f"API call failed with status {response.status_code}: "
-                    f"{response.message}",
+                    f"API call failed with status {response.status_code}: " f"{response.message}",
                 )
 
             # Extract text response
@@ -379,10 +378,6 @@ class QwenVLModel(BaseChatModel):
         return {
             "total_requests": self._total_requests,
             "total_cost_usd": self._total_cost,
-            "average_cost_per_request": (
-                self._total_cost / self._total_requests
-                if self._total_requests > 0
-                else 0.0
-            ),
+            "average_cost_per_request": (self._total_cost / self._total_requests if self._total_requests > 0 else 0.0),
             "model": self.model,
         }

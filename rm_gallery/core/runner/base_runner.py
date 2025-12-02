@@ -45,7 +45,7 @@ class BaseRunner(ABC):
 
         Args:
             max_concurrency: Maximum number of concurrent operations. Defaults to 32.
-            
+
         Example:
             >>> runner = BaseRunner(max_concurrency=16)
             >>> print(runner.max_concurrency)
@@ -74,12 +74,11 @@ class BaseRunner(ABC):
         Returns:
             RunnerResult: Results of the evaluation run organized by evaluator.
                 The keys are evaluator names and values are lists of GraderResult objects.
-                
+
         Example:
             >>> # This is an abstract method that must be implemented by subclasses
             >>> # Implementation would execute evaluators on data and return results
         """
-        ...
 
     def run(
         self,

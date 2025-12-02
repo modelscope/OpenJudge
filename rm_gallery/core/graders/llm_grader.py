@@ -1,4 +1,18 @@
 # -*- coding: utf-8 -*-
+"""
+LLM-based grader implementation for evaluating model responses.
+
+This module provides the LLMGrader class, which uses large language models to evaluate
+the quality of model responses based on customizable rubrics and templates. The grader
+supports both pointwise evaluation (scoring individual responses) and listwise evaluation
+(ranking multiple responses).
+
+The module integrates with various language models through the BaseChatModel interface
+and provides structured output parsing for consistent evaluation results.
+
+Classes:
+    LLMGrader: Main class for LLM-based evaluation with configurable templates and rubrics.
+"""
 
 import os
 from typing import Any, Callable, Type
@@ -92,9 +106,7 @@ class LLMGrader(BaseGrader):
         if isinstance(language, str):
             # Convert string to LanguageEnum
             self.language = (
-                LanguageEnum(language)
-                if language in [item.value for item in LanguageEnum]
-                else LanguageEnum.EN
+                LanguageEnum(language) if language in [item.value for item in LanguageEnum] else LanguageEnum.EN
             )
         else:
             self.language = language
@@ -140,11 +152,7 @@ class LLMGrader(BaseGrader):
             "name": self.name,
             "mode": self.mode.value,
             "description": self.description,
-            "template": (
-                self.template.model_dump()
-                if isinstance(self.template, PromptTemplate)
-                else self.template
-            ),
+            "template": (self.template.model_dump() if isinstance(self.template, PromptTemplate) else self.template),
             "rubrics": self.rubrics,
         }
 
@@ -289,6 +297,8 @@ class LLMGrader(BaseGrader):
 
             # Create a mock response object with collected data
             class MockResponse:
+                """Mock response object for streaming responses."""
+
                 def __init__(self, content, metadata):
                     self.content = content
                     self.metadata = metadata

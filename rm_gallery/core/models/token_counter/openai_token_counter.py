@@ -215,10 +215,7 @@ def _count_content_tokens_for_openai_vision_model(
 
     num_tokens = 0
     for item in content:
-        assert isinstance(item, dict), (
-            "The content field should be a list of dictionaries, but got "
-            f"{type(item)}."
-        )
+        assert isinstance(item, dict), "The content field should be a list of dictionaries, but got " f"{type(item)}."
 
         typ = item.get("type", None)
         if typ == "text":
@@ -279,14 +276,12 @@ def _count_content_tokens_for_openai_vision_model(
 
                 else:
                     raise ValueError(
-                        f"Unsupported image detail {detail}, expected "
-                        f"one of ['low', 'auto', 'high'].",
+                        f"Unsupported image detail {detail}, expected " f"one of ['low', 'auto', 'high'].",
                     )
 
         else:
             raise ValueError(
-                "The type field currently only supports 'text' "
-                f"and 'image_url', but got {typ}.",
+                "The type field currently only supports 'text' " f"and 'image_url', but got {typ}.",
             )
 
     return num_tokens

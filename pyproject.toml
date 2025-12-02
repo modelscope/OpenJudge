@@ -36,9 +36,11 @@ classifiers = [
     "Intended Audience :: Science/Research",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
-homepage = "https://github.com/modelscope/RM-Gallery"
-repository = "https://github.com/modelscope/RM-Gallery"
-documentation = "https://modelscope.github.io/RM-Gallery/"
+
+[project.urls]
+Homepage = "https://github.com/modelscope/RM-Gallery"
+Repository = "https://github.com/modelscope/RM-Gallery"
+Documentation = "https://modelscope.github.io/RM-Gallery/"
 
 [tool.poetry]
 version = "0.0.0"
@@ -72,6 +74,9 @@ pytest-tornasync = "*"
 pytest-trio = "*"
 pytest-twisted = "*"
 twisted="*"
+rouge-score = "*"
+python-Levenshtein = "*"
+sacrebleu = "*"
 
 [tool.poetry.group.optional.dependencies]
 bitsandbytes = {version = ">=0.46.1", optional = true}

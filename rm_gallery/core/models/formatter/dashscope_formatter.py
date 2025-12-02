@@ -176,8 +176,7 @@ class DashScopeChatFormatter(TruncatedFormatterBase):
 
                     else:
                         raise NotImplementedError(
-                            f"Unsupported source type '{source.get('type')}' "
-                            f"for {typ} block.",
+                            f"Unsupported source type '{source.get('type')}' " f"for {typ} block.",
                         )
 
                 elif typ == "tool_use":
@@ -372,15 +371,13 @@ class DashScopeMultiAgentFormatter(TruncatedFormatterBase):
                         base64_data = block["source"]["data"]
                         conversation_blocks.append(
                             {
-                                block[
-                                    "type"
-                                ]: f"data:{media_type};base64,{base64_data}",
+                                block["type"]: f"data:{media_type};base64,{base64_data}",
                             },
                         )
 
                     else:
                         logger.warning(
-                            "Unsupported block type %s in the message, " "skipped.",
+                            "Unsupported block type %s in the message, skipped.",
                             block["type"],
                         )
 
@@ -390,9 +387,7 @@ class DashScopeMultiAgentFormatter(TruncatedFormatterBase):
         if conversation_blocks:
             if conversation_blocks[0].get("text"):
                 conversation_blocks[0]["text"] = (
-                    conversation_history_prompt
-                    + "<history>\n"
-                    + conversation_blocks[0]["text"]
+                    conversation_history_prompt + "<history>\n" + conversation_blocks[0]["text"]
                 )
 
             else:

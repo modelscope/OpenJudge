@@ -24,7 +24,7 @@ def get_value_by_path(
 
     Returns:
         Any: The value at the path, or None if path doesn't exist.
-        
+
     Example:
         >>> data = {"user": {"name": "Alice", "emails": ["alice@example.com", "alice@work.com"]}}
         >>> get_value_by_path(data, "user.name")
@@ -65,7 +65,7 @@ def get_value_by_mapping(
 
     Returns:
         dict: Mapped dictionary with extracted values.
-        
+
     Example:
         >>> data = {"user": {"name": "Alice", "age": 30}}
         >>> mapping = {"username": "user.name", "user_age": "user.age"}
@@ -95,7 +95,7 @@ def parse_data_with_mapper(
 
     Returns:
         dict: Parsed data.
-        
+
     Example:
         >>> data = {"user": {"name": "Alice"}}
         >>> # Using dictionary mapper
@@ -103,7 +103,7 @@ def parse_data_with_mapper(
         >>> result = parse_data_with_mapper(data, mapper)
         >>> print(result)
         {'username': 'Alice'}
-        >>> 
+        >>>
         >>> # Using callable mapper
         >>> def uppercase_names(d):
         ...     return {k: v.upper() if isinstance(v, str) else v for k, v in d.items()}

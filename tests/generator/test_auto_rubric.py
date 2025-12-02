@@ -47,7 +47,7 @@ def create_test_samples() -> List[List[dict]]:
             "query": "What is 2 + 2? Explain your reasoning.",
             "response": "2 + 2 = 4. This is basic arithmetic where we add two identical numbers.",
             "label_score": 1,
-        }
+        },
     ]
     samples.append(sample_pointwise)
 

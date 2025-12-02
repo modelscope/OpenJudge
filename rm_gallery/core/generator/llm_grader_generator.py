@@ -46,24 +46,23 @@ class LLMGraderGenerator(BaseGraderGenerator):
 
     This class extends BaseGraderGenerator to provide specific functionality
     for generating LLM-based graders. It handles the common pattern of
-    generating rubrics from data and then creating an LLMGrader that uses 
+    generating rubrics from data and then creating an LLMGrader that uses
     those rubrics for evaluation.
 
     Subclasses should implement the generate_rubrics method to define how
     rubrics are created from the provided data.
     """
+
     def __init__(self, config: LLMGraderGeneratorConfig) -> None:
         """Initialize the LLM grader generator with the provided configuration.
 
         Args:
-            config (LLMGraderGeneratorConfig): Configuration object containing 
-                                             parameters for LLM-based grader generation.
-                                             
-                                             The configuration includes:
-                                             - grader_name (str): Human-readable name for the generated grader.
-                                             - model (BaseChatModel | None): Language model to use for generation.
-                                             - grader_mode (GraderMode): Mode for the generated grader (POINTWISE or LISTWISE).
-                                             - custom_evaluation_prompt (PromptTemplate | None): Custom template for evaluation.
+            config (LLMGraderGeneratorConfig): Configuration object containing parameters for
+                LLM-based grader generation. The configuration includes:
+                - grader_name (str): Human-readable name for the generated grader.
+                - model (BaseChatModel | None): Language model to use for generation.
+                - grader_mode (GraderMode): Mode for the generated grader (POINTWISE or LISTWISE).
+                - custom_evaluation_prompt (PromptTemplate | None): Custom template for evaluation.
         """
         super().__init__(config)
 
@@ -88,7 +87,7 @@ class LLMGraderGenerator(BaseGraderGenerator):
         Returns:
             LLMGrader: Generated LLMGrader with rubrics for evaluation.
                       Ready to evaluate new query-response pairs.
-                      
+
         Example:
             >>> config = LLMGraderGeneratorConfig(
             ...     grader_name="My LLM Grader",
@@ -132,11 +131,10 @@ class LLMGraderGenerator(BaseGraderGenerator):
         Returns:
             str: Generated rubrics in a format suitable for LLMGrader.
                 Typically a formatted string that can be inserted into evaluation prompts.
-                
+
         Example:
             >>> dataset = [{"query": "What is 2+2?", "response": "4", "label_score": 5}]
             >>> rubrics = await generator.generate_rubrics(dataset)
             >>> print(rubrics)
             "1. Mathematical accuracy: The response should contain correct mathematical calculations..."
         """
-        ...

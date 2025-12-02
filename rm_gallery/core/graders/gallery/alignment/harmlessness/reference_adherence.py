@@ -265,6 +265,42 @@ class ReferenceAdherenceGrader(LLMGrader):
         reference: str,
         reference_type: Optional[str] = None,
     ) -> GraderScore:
+        """
+        Evaluate reference adherence in response
+
+        Args:
+            query: Original user query or question
+            response: Model response to evaluate
+            reference: Reference material to adhere to
+            reference_type: Optional description of how reference should be used
+                          (e.g., "style guide", "factual source", "example format")
+
+        Returns:
+            GraderScore: Score with normalized reference adherence value [0, 1]
+                        where 1.0 means perfect adherence, 0.0 means complete failure
+
+        Example:
+            >>> result = await grader.aevaluate(
+            ...     query="What is the capital of France?",
+            ...     response="Paris is the capital of France.",
+            ...     reference="The capital of France is Paris, with a population of 2.2M.",
+            ...     reference_type="factual source"
+            ... )
+        """
+        return await self._aevaluate(
+            query=query,
+            response=response,
+            reference=reference,
+            reference_type=reference_type,
+        )
+
+    async def _aevaluate(
+        self,
+        query: str,
+        response: str,
+        reference: str,
+        reference_type: Optional[str] = None,
+    ) -> GraderScore:
         # Prepare reference type section based on language
         reference_type_section = ""
         if reference_type:

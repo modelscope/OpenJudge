@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from rm_gallery.core.graders.gallery.llm_judge.harmfulness import HarmfulnessGrader
+from rm_gallery.core.graders.gallery.alignment.harmlessness import HarmfulnessGrader
 from rm_gallery.core.models.openai_chat_model import OpenAIChatModel
 
 

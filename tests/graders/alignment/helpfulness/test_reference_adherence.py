@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from rm_gallery.core.graders.gallery.llm_judge.reference_adherence import (
+from rm_gallery.core.graders.gallery.alignment.harmlessness import (
     ReferenceAdherenceGrader,
 )
 from rm_gallery.core.models.openai_chat_model import OpenAIChatModel

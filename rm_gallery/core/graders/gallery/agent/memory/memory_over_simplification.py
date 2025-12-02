@@ -7,7 +7,7 @@ losing critical details.
 """
 
 import textwrap
-from typing import Any, Optional
+from typing import Optional
 
 from loguru import logger
 
@@ -164,7 +164,9 @@ class MemoryOverSimplificationGrader(LLMGrader):
     def __init__(
         self,
         model: BaseChatModel | dict,
-        template: Optional[PromptTemplate] = DEFAULT_MEMORY_OVER_SIMPLIFICATION_TEMPLATE,
+        template: Optional[
+            PromptTemplate
+        ] = DEFAULT_MEMORY_OVER_SIMPLIFICATION_TEMPLATE,
         language: LanguageEnum = LanguageEnum.EN,
     ):
         super().__init__(
@@ -222,7 +224,6 @@ class MemoryOverSimplificationGrader(LLMGrader):
         memory: str,
         history_steps: Optional[list] = None,
         task_context: Optional[str] = None,
-        **kwargs: Any,
     ) -> GraderScore:
         """
         Evaluate memory over-simplification
@@ -244,6 +245,20 @@ class MemoryOverSimplificationGrader(LLMGrader):
             ...     task_context="Task: Inventory items with precise locations"
             ... )
         """
+        return await self._aevaluate(
+            observation=observation,
+            memory=memory,
+            history_steps=history_steps,
+            task_context=task_context,
+        )
+
+    async def _aevaluate(
+        self,
+        observation: str,
+        memory: str,
+        history_steps: Optional[list] = None,
+        task_context: Optional[str] = None,
+    ) -> GraderScore:
         # Format trajectory steps
         trajectory_steps = self._format_trajectory_steps(
             observation=observation,

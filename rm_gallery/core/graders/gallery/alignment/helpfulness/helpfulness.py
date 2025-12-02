@@ -185,7 +185,7 @@ class HelpfulnessGrader(LLMGrader):
 
     Example:
         >>> from rm_gallery.core.model.openai_llm import OpenAIChatModel
-        >>> from rm_gallery.core.graders.gallery.llm_judge import HelpfulnessGrader
+        >>> from rm_gallery.core.graders.gallery.alignment.helpfulness import HelpfulnessGrader
         >>>
         >>> # Initialize grader
         >>> model = OpenAIChatModel(api_key="sk-...", model="qwen3-max")
@@ -235,6 +235,41 @@ class HelpfulnessGrader(LLMGrader):
         self.threshold = threshold
 
     async def aevaluate(
+        self,
+        query: str,
+        response: str,
+        context: Optional[str] = None,
+        reference_response: Optional[str] = None,
+    ) -> GraderScore:
+        """
+        Evaluate helpfulness of response
+
+        Args:
+            query: Input query or prompt
+            response: Model response to evaluate
+            context: Optional context or background information
+            reference_response: Optional reference response for comparison
+
+        Returns:
+            GraderScore: Score with normalized helpfulness value [0, 1]
+                        where 1.0 means extremely helpful, 0.0 means not helpful
+
+        Example:
+            >>> result = await grader.aevaluate(
+            ...     query="Explain machine learning",
+            ...     answer="Machine learning is a subset of AI that enables systems to learn from data...",
+            ...     context="Audience: beginners",
+            ...     reference_response="ML is a field of AI focused on learning from data."
+            ... )
+        """
+        return await self._aevaluate(
+            query=query,
+            response=response,
+            context=context,
+            reference_response=reference_response,
+        )
+
+    async def _aevaluate(
         self,
         query: str,
         response: str,

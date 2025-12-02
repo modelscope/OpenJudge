@@ -251,6 +251,36 @@ class InstructionAdherenceGrader(LLMGrader):
         response: str,
         query: Optional[str] = None,
     ) -> GraderScore:
+        """
+        Evaluate instruction adherence in response
+
+        Args:
+            instruction: The instruction or prompt given to the model
+            response: Model response to evaluate
+            query: Optional original user query or question
+
+        Returns:
+            GraderScore: Score with normalized instruction adherence value [0, 1]
+                        where 1.0 means perfect adherence, 0.0 means complete failure
+
+        Example:
+            >>> result = await grader.aevaluate(
+            ...     instruction="Write exactly 3 bullet points about AI safety.",
+            ...     response="• AI safety is important\\n• We need alignment research\\n• Testing is crucial",
+            ... )
+        """
+        return await self._aevaluate(
+            instruction=instruction,
+            response=response,
+            query=query,
+        )
+
+    async def _aevaluate(
+        self,
+        instruction: str,
+        response: str,
+        query: Optional[str] = None,
+    ) -> GraderScore:
         # Prepare input section
         input_section = ""
         if query:

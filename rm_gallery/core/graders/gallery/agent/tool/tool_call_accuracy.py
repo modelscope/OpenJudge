@@ -5,6 +5,8 @@ import json
 import re
 from typing import Any, Dict, List, Union
 
+from loguru import logger
+
 from rm_gallery.core.graders.base_grader import GraderMode, GraderScore
 from rm_gallery.core.graders.llm_grader import LLMGrader
 from rm_gallery.core.models.base_chat_model import BaseChatModel
@@ -205,7 +207,6 @@ class ToolCallAccuracyGrader(LLMGrader):
         tool_definitions: Union[Dict[str, Any], List[Dict[str, Any]]],
         tool_calls: Union[Dict[str, Any], List[Dict[str, Any]]] = None,
         response: Union[str, List[Dict[str, Any]]] = None,
-        **kwargs: Any,
     ) -> GraderScore:
         """
         Evaluate tool call accuracy. Accepts a query, tool definitions, and tool calls.
@@ -265,6 +266,20 @@ class ToolCallAccuracyGrader(LLMGrader):
             >>> print(f"Score: {result.score}")
             Score: 5.0
         """
+        return await self._aevaluate(
+            query=query,
+            tool_definitions=tool_definitions,
+            tool_calls=tool_calls,
+            response=response,
+        )
+
+    async def _aevaluate(
+        self,
+        query: Union[str, List[Dict[str, Any]]],
+        tool_definitions: Union[Dict[str, Any], List[Dict[str, Any]]],
+        tool_calls: Union[Dict[str, Any], List[Dict[str, Any]]] = None,
+        response: Union[str, List[Dict[str, Any]]] = None,
+    ) -> GraderScore:
         # Handle tool calls extraction from response if needed
         if response and not tool_calls:
             parsed_tool_calls = self._parse_tools_from_response(str(response))
@@ -288,18 +303,22 @@ class ToolCallAccuracyGrader(LLMGrader):
         if not isinstance(tool_definitions, list):
             tool_definitions = [tool_definitions] if tool_definitions else []
 
-        # Call parent evaluate method with the structured data
-        result = await super().aevaluate(
-            query=json.dumps(query, indent=2),
-            tool_calls=json.dumps(tool_calls, indent=2),
-            tool_definitions=json.dumps(tool_definitions, indent=2),
-            **kwargs,
-        )
-
-        # Process and normalize the result
-        if hasattr(result, "score"):
-            # Ensure score is within valid range
+        try:
+            # Call parent evaluate method with the structured data
+            result = await super().aevaluate(
+                query=json.dumps(query, indent=2),
+                tool_calls=json.dumps(tool_calls, indent=2),
+                tool_definitions=json.dumps(tool_definitions, indent=2),
+            )
             score = max(1.0, min(5.0, result.score))
-            result.score = score
+            reason = result.reason
+        except Exception as e:
+            logger.error(f"Error evaluating tool call accuracy check: {e}")
+            score = 0.0
+            reason = f"Evaluation error: {str(e)}"
 
-        return result
+        return GraderScore(
+            name=self.name,
+            score=score,
+            reason=reason,
+        )

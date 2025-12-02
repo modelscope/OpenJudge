@@ -149,6 +149,6 @@ repos:
         language: system
         pass_filenames: false
         always_run: true
-        args: ["--ignore=tests/multimodal",
-              "--ignore=tests/evaluation",
-               "--ignore=tests/rubric/test_auto_rubric.py"]
+        args: ["--ignore=tests/graders/multimodal",
+               "--ignore=tests/generator"
+              ]

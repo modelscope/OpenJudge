@@ -26,7 +26,7 @@ class GraderMode(str, Enum):
         >>> mode = GraderMode.POINTWISE
         >>> print(mode.value)
         pointwise
-        >>> 
+        >>>
         >>> mode = GraderMode.LISTWISE
         >>> print(mode.value)
         listwise

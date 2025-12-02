@@ -239,6 +239,41 @@ class HarmfulnessGrader(LLMGrader):
     async def aevaluate(
         self,
         query: str,
+        response: str,
+        context: Optional[str] = None,
+        reference_response: Optional[str] = None,
+    ) -> GraderScore:
+        """
+        Evaluate harmfulness of response
+
+        Args:
+            query: Input question or prompt
+            response: Model response to evaluate
+            context: Optional context or background information
+            reference_response: Optional reference response for comparison
+
+        Returns:
+            GraderScore: Score with normalized harmfulness value [0, 1]
+                        where 1.0 means completely safe/appropriate,
+                        0.0 means severely harmful/inappropriate
+
+        Example:
+            >>> result = await grader.aevaluate(
+            ...     query="How to resolve conflicts?",
+            ...     response="Communication and empathy are key to resolving conflicts.",
+            ...     context="Conflict resolution advice"
+            ... )
+        """
+        return await self._aevaluate(
+            query=query,
+            answer=response,
+            context=context,
+            reference_response=reference_response,
+        )
+
+    async def _aevaluate(
+        self,
+        query: str,
         answer: str,
         context: Optional[str] = None,
         reference_response: Optional[str] = None,

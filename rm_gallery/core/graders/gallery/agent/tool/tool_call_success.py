@@ -5,11 +5,15 @@ import json
 import re
 from typing import Any, Dict, List, Union
 
+from loguru import logger
+
 from rm_gallery.core.graders.base_grader import GraderMode, GraderScore
 from rm_gallery.core.graders.llm_grader import LLMGrader
 from rm_gallery.core.models.base_chat_model import BaseChatModel
 from rm_gallery.core.models.schema.message import ChatMessage
 from rm_gallery.core.models.schema.prompt_template import PromptTemplate
+
+# pylint: disable=line-too-long
 
 # Tool call success evaluation system prompt
 TOOL_CALL_SUCCESS_SYSTEM_PROMPT = """You are an expert evaluator with strong software \
@@ -178,7 +182,6 @@ class ToolCallSuccessGrader(LLMGrader):
         self,
         tool_definitions: Union[Dict[str, Any], List[Dict[str, Any]]],
         tool_calls: Union[Dict[str, Any], List[Dict[str, Any]]],
-        **kwargs: Any,
     ) -> GraderScore:
         """Evaluate tool call success. Accepts tool definitions and tool calls for evaluation.
 
@@ -214,23 +217,37 @@ class ToolCallSuccessGrader(LLMGrader):
             >>> print(f"Score: {result.score}, Reason: {result.reason}")
             Score: 1.0, Reason: All tool calls were successful
         """
+        return await self._aevaluate(
+            tool_definitions=tool_definitions,
+            tool_calls=tool_calls,
+        )
+
+    async def _aevaluate(
+        self,
+        tool_definitions: Union[Dict[str, Any], List[Dict[str, Any]]],
+        tool_calls: Union[Dict[str, Any], List[Dict[str, Any]]],
+    ) -> GraderScore:
         # Ensure tool_calls and tool_definitions are lists
         if not isinstance(tool_calls, list):
             tool_calls = [tool_calls]
         if not isinstance(tool_definitions, list):
             tool_definitions = [tool_definitions] if tool_definitions else []
 
-        # Call parent evaluate method with the structured data
-        result = await super().aevaluate(
-            tool_calls=json.dumps(tool_calls, indent=2),
-            tool_definitions=json.dumps(tool_definitions, indent=2),
-            **kwargs,
-        )
-
-        # Process and normalize the result
-        if hasattr(result, "score"):
-            # Ensure score is binary (0.0 or 1.0)
+        try:
+            # Call parent evaluate method with the structured data
+            result = await super().aevaluate(
+                tool_calls=json.dumps(tool_calls, indent=2),
+                tool_definitions=json.dumps(tool_definitions, indent=2),
+            )
             score = 1.0 if result.score >= 0.5 else 0.0
-            result.score = score
+            reason = result.reason
+        except Exception as e:
+            logger.error(f"Error evaluating tool call success check: {e}")
+            score = 0.0
+            reason = f"Evaluation error: {str(e)}"
 
-        return result
+        return GraderScore(
+            name=self.name,
+            score=score,
+            reason=reason,
+        )

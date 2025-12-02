@@ -8,7 +8,9 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from rm_gallery.core.graders.gallery.llm_judge.helpfulness import HelpfulnessGrader
+from rm_gallery.core.graders.gallery.alignment.helpfulness.helpfulness import (
+    HelpfulnessGrader,
+)
 from rm_gallery.core.models.openai_chat_model import OpenAIChatModel
 
 

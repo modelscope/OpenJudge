@@ -6,7 +6,7 @@ Evaluates whether the agent creates a plan that is semantically illogical or inf
 """
 
 import textwrap
-from typing import Any, Optional
+from typing import Optional
 
 from loguru import logger
 
@@ -225,7 +225,6 @@ class PlanImpossibleActionGrader(LLMGrader):
         memory: str,
         history_steps: Optional[list] = None,
         task_context: Optional[str] = None,
-        **kwargs: Any,
     ) -> GraderScore:
         """
         Evaluate plan impossible action
@@ -249,6 +248,22 @@ class PlanImpossibleActionGrader(LLMGrader):
             ...     task_context="Task: Unlock the door"
             ... )
         """
+        return await self._aevaluate(
+            plan=plan,
+            observation=observation,
+            memory=memory,
+            history_steps=history_steps,
+            task_context=task_context,
+        )
+
+    async def _aevaluate(
+        self,
+        plan: str,
+        observation: str,
+        memory: str,
+        history_steps: Optional[list] = None,
+        task_context: Optional[str] = None,
+    ) -> GraderScore:
         # Format trajectory steps
         trajectory_steps = self._format_trajectory_steps(
             plan=plan,

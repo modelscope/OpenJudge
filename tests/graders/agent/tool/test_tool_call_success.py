@@ -10,9 +10,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from rm_gallery.core.graders.gallery.agent.tool_call_success import (
-    ToolCallSuccessGrader,
-)
+from rm_gallery.core.graders.gallery.agent import ToolCallSuccessGrader
 from rm_gallery.core.models.openai_chat_model import OpenAIChatModel
 
 
@@ -88,9 +86,7 @@ async def test_tool_call_success_grader_execution():
     )
     print(result)
     assert result is not None
-    # error don't have score
-    assert not hasattr(result, "score")
-    assert hasattr(result, "reason")
+    assert "Evaluation error" in result.reason
 
 
 if __name__ == "__main__":

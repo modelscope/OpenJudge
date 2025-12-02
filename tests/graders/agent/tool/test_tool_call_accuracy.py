@@ -8,9 +8,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from rm_gallery.core.graders.gallery.agent.tool_call_accuracy import (
-    ToolCallAccuracyGrader,
-)
+from rm_gallery.core.graders.gallery.agent import ToolCallAccuracyGrader
 from rm_gallery.core.models.openai_chat_model import OpenAIChatModel
 
 

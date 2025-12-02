@@ -58,7 +58,7 @@ class BaseGrader(ABC):
             description: Human-readable description of what this grader evaluates.
             **kwargs: Additional keyword arguments that will be stored and
                      accessible to subclasses.
-                     
+
         Example:
             >>> grader = BaseGrader(
             ...     name="accuracy_grader",
@@ -138,7 +138,6 @@ class BaseGrader(ABC):
             ...
             >>> # Implementation would rank answers by relevance
         """
-        ...
 
     @classmethod
     def from_config(
@@ -158,7 +157,7 @@ class BaseGrader(ABC):
 
         Returns:
             BaseGrader: A new instance of the grader subclass.
-            
+
         Example:
             >>> config = {
             ...     "name": "test_grader",
@@ -190,7 +189,7 @@ class BaseGrader(ABC):
 
         Returns:
             dict: A dictionary containing the serialized grader information.
-            
+
         Example:
             >>> class MyGrader(BaseGrader):
             ...     pass  # Abstract methods not implemented for demo

@@ -17,7 +17,6 @@ from rm_gallery.core.graders.gallery.multimodal._internal.context_utils import (
 
 # Custom Criteria utilities
 from rm_gallery.core.graders.gallery.multimodal._internal.criteria_utils import (
-    MULTIMODAL_CRITERIA_PARAMS,
     construct_params_string,
     format_rubrics,
     get_score_range,

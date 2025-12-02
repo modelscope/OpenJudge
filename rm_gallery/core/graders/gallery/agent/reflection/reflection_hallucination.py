@@ -7,7 +7,7 @@ that does not exist in the observation.
 """
 
 import textwrap
-from typing import Any, Optional
+from typing import Optional
 
 from loguru import logger
 
@@ -222,7 +222,6 @@ class ReflectionHallucinationGrader(LLMGrader):
         reflection: str,
         history_steps: Optional[list] = None,
         task_context: Optional[str] = None,
-        **kwargs: Any,
     ) -> GraderScore:
         """
         Evaluate reflection hallucination
@@ -244,6 +243,20 @@ class ReflectionHallucinationGrader(LLMGrader):
             ...     task_context="Task: Find objects in the room"
             ... )
         """
+        return await self._aevaluate(
+            observation=observation,
+            reflection=reflection,
+            history_steps=history_steps,
+            task_context=task_context,
+        )
+
+    async def _aevaluate(
+        self,
+        observation: str,
+        reflection: str,
+        history_steps: Optional[list] = None,
+        task_context: Optional[str] = None,
+    ) -> GraderScore:
         # Format trajectory steps
         trajectory_steps = self._format_trajectory_steps(
             observation=observation,

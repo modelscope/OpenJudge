@@ -46,17 +46,17 @@ For your analysis:
 5. Assess overall correctness: Determine if the tool call is executable with correct parameters
 </Evaluation Criteria>
 
-<user_query>
-{user_query}
-</user_query>
+<query>
+{query}
+</query>
 
-<tool_definition>
-{tool_definition}
-</tool_definition>
+<tool_definitions>
+{tool_definitions}
+</tool_definitions>
 
-<generated_tool_call>
-{generated_tool_call}
-</generated_tool_call>
+<tool_calls>
+{tool_calls}
+</tool_calls>
 
 {context_section}
 
@@ -100,17 +100,17 @@ TOOL_PARAMETER_CHECK_PROMPT_ZH = """
 5. 评估整体正确性：确定工具调用是否可以用正确的参数执行
 </评估标准>
 
-<user_query>
-{user_query}
-</user_query>
+<query>
+{query}
+</query>
 
-<tool_definition>
-{tool_definition}
-</tool_definition>
+<tool_definitions>
+{tool_definitions}
+</tool_definitions>
 
-<generated_tool_call>
-{generated_tool_call}
-</generated_tool_call>
+<tool_calls>
+{tool_calls}
+</tool_calls>
 
 {context_section}
 
@@ -175,9 +175,9 @@ class ToolParameterCheckGrader(LLMGrader):
         ... )
         >>>
         >>> result = await grader.aevaluate(
-        ...     user_query="Search for Python files in the src directory",
-        ...     tool_definition="search_files(pattern: str, directory: str)",
-        ...     generated_tool_call='search_files(pattern="*.py", directory="src")'
+        ...     query="Search for Python files in the src directory",
+        ...     tool_definitions="search_files(pattern: str, directory: str)",
+        ...     tool_calls='search_files(pattern="*.py", directory="src")'
         ... )
         >>> print(f"Score: {result.score}")  # 1.0 (correct parameters)
     """
@@ -205,7 +205,6 @@ class ToolParameterCheckGrader(LLMGrader):
         query: Union[str, List[Dict[str, Any]]],
         tool_definitions: Union[Dict[str, Any], List[Dict[str, Any]]],
         tool_calls: Union[Dict[str, Any], List[Dict[str, Any]]],
-        **kwargs: Any,
     ) -> GraderScore:
         """
         Evaluate tool parameter extraction correctness
@@ -216,7 +215,6 @@ class ToolParameterCheckGrader(LLMGrader):
             tool_definitions: List of tool definitions available to the agent.
                              Each definition includes name, description, and parameters.
             tool_calls: List of tool calls made by the agent, including arguments and results.
-            **kwargs: Additional arguments
 
         Returns:
             GraderScore: Score with binary value (1.0 = correct, 0.0 = incorrect)
@@ -239,6 +237,18 @@ class ToolParameterCheckGrader(LLMGrader):
             ...     tool_calls=tool_calls
             ... )
         """
+        return await self._aevaluate(
+            query=query,
+            tool_definitions=tool_definitions,
+            tool_calls=tool_calls,
+        )
+
+    async def _aevaluate(
+        self,
+        query: Union[str, List[Dict[str, Any]]],
+        tool_definitions: Union[Dict[str, Any], List[Dict[str, Any]]],
+        tool_calls: Union[Dict[str, Any], List[Dict[str, Any]]],
+    ) -> GraderScore:
         # Ensure tool_calls and tool_definitions are lists
         if not isinstance(tool_calls, list):
             tool_calls = [tool_calls]
@@ -247,26 +257,26 @@ class ToolParameterCheckGrader(LLMGrader):
 
         # Format query as string for the prompt
         if isinstance(query, list):
-            user_query = "\n".join(
+            query = "\n".join(
                 [
                     f"{msg.get('role', 'user')}: {msg.get('content', '')}"
                     for msg in query
                 ],
             )
         else:
-            user_query = str(query)
+            query = str(query)
 
         # Format tool definitions
-        tool_definition = json.dumps(tool_definitions, indent=2)
+        tool_definitions = json.dumps(tool_definitions, indent=2)
 
         # Format tool calls (focus on arguments)
-        generated_tool_call = json.dumps(tool_calls, indent=2)
+        tool_calls = json.dumps(tool_calls, indent=2)
 
         try:
             result = await super().aevaluate(
-                user_query=user_query,
-                tool_definition=tool_definition,
-                generated_tool_call=generated_tool_call,
+                query=query,
+                tool_definitions=tool_definitions,
+                tool_calls=tool_calls,
                 context_section="",
             )
             score = result.score

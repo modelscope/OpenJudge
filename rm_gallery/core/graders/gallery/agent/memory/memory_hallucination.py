@@ -6,7 +6,7 @@ Evaluates whether the agent stores false or fabricated information in its memory
 """
 
 import textwrap
-from typing import Any, Optional
+from typing import Optional
 
 from loguru import logger
 
@@ -218,7 +218,6 @@ class MemoryHallucinationGrader(LLMGrader):
         memory: str,
         history_steps: Optional[list] = None,
         task_context: Optional[str] = None,
-        **kwargs: Any,
     ) -> GraderScore:
         """
         Evaluate memory hallucination
@@ -240,6 +239,20 @@ class MemoryHallucinationGrader(LLMGrader):
             ...     task_context="Task: Inventory room objects"
             ... )
         """
+        return await self._aevaluate(
+            observation=observation,
+            memory=memory,
+            history_steps=history_steps,
+            task_context=task_context,
+        )
+
+    async def _aevaluate(
+        self,
+        observation: str,
+        memory: str,
+        history_steps: Optional[list] = None,
+        task_context: Optional[str] = None,
+    ) -> GraderScore:
         # Format trajectory steps
         trajectory_steps = self._format_trajectory_steps(
             observation=observation,

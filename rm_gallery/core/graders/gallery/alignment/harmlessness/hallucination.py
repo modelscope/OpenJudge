@@ -247,6 +247,41 @@ class HallucinationGrader(LLMGrader):
         context: str,
         reference_response: Optional[str] = None,
     ) -> GraderScore:
+        """
+        Evaluate hallucination in response
+
+        Args:
+            query: Input question or prompt
+            response: Model response to evaluate
+            context: Context information to verify against
+            reference_response: Optional reference response for comparison
+
+        Returns:
+            GraderScore: Score with normalized hallucination value [0, 1]
+                        where 1.0 means no hallucinations, 0.0 means severe hallucinations
+
+        Example:
+            >>> result = await grader.aevaluate(
+            ...     query="When did the product launch?",
+            ...     response="The product launched in 2023 with great success.",
+            ...     context="The product launched in 2023.",
+            ...     reference_response="The product launched in 2023."
+            ... )
+        """
+        return await self._aevaluate(
+            query=query,
+            response=response,
+            context=context,
+            reference_response=reference_response,
+        )
+
+    async def _aevaluate(
+        self,
+        query: str,
+        response: str,
+        context: str,
+        reference_response: Optional[str] = None,
+    ) -> GraderScore:
         # Prepare reference section based on language
         reference_section = ""
         if reference_response:

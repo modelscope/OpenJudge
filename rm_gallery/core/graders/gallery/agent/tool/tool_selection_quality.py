@@ -218,7 +218,6 @@ class ToolSelectionQualityGrader(LLMGrader):
         query: Union[str, List[Dict[str, Any]]],
         tool_definitions: Union[Dict[str, Any], List[Dict[str, Any]]],
         tool_calls: Union[Dict[str, Any], List[Dict[str, Any]]],
-        **kwargs: Any,
     ) -> GraderScore:
         """
         Evaluate tool selection quality
@@ -249,6 +248,18 @@ class ToolSelectionQualityGrader(LLMGrader):
             ...     tool_calls=tool_calls
             ... )
         """
+        return await self._aevaluate(
+            query=query,
+            tool_definitions=tool_definitions,
+            tool_calls=tool_calls,
+        )
+
+    async def _aevaluate(
+        self,
+        query: Union[str, List[Dict[str, Any]]],
+        tool_definitions: Union[Dict[str, Any], List[Dict[str, Any]]],
+        tool_calls: Union[Dict[str, Any], List[Dict[str, Any]]],
+    ) -> GraderScore:
         # Ensure tool_calls and tool_definitions are lists
         if not isinstance(tool_calls, list):
             tool_calls = [tool_calls]

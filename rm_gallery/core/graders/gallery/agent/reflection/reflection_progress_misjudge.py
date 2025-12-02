@@ -7,7 +7,7 @@ in its reflection.
 """
 
 import textwrap
-from typing import Any, Optional
+from typing import Optional
 
 from loguru import logger
 
@@ -165,7 +165,9 @@ class ReflectionProgressMisjudgeGrader(LLMGrader):
     def __init__(
         self,
         model: BaseChatModel | dict,
-        template: Optional[PromptTemplate] = DEFAULT_REFLECTION_PROGRESS_MISJUDGE_TEMPLATE,
+        template: Optional[
+            PromptTemplate
+        ] = DEFAULT_REFLECTION_PROGRESS_MISJUDGE_TEMPLATE,
         language: LanguageEnum = LanguageEnum.EN,
     ):
         super().__init__(
@@ -223,7 +225,6 @@ class ReflectionProgressMisjudgeGrader(LLMGrader):
         reflection: str,
         history_steps: Optional[list] = None,
         task_context: Optional[str] = None,
-        **kwargs: Any,
     ) -> GraderScore:
         """
         Evaluate reflection progress misjudge
@@ -245,6 +246,20 @@ class ReflectionProgressMisjudgeGrader(LLMGrader):
             ...     task_context="Task: Find apples in cabinets"
             ... )
         """
+        return await self._aevaluate(
+            observation=observation,
+            reflection=reflection,
+            history_steps=history_steps,
+            task_context=task_context,
+        )
+
+    async def _aevaluate(
+        self,
+        observation: str,
+        reflection: str,
+        history_steps: Optional[list] = None,
+        task_context: Optional[str] = None,
+    ) -> GraderScore:
         # Format trajectory steps
         trajectory_steps = self._format_trajectory_steps(
             observation=observation,

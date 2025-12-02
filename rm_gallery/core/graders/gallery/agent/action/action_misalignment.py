@@ -6,7 +6,7 @@ Evaluates whether the agent executes an action inconsistent with its stated plan
 """
 
 import textwrap
-from typing import Any, Optional
+from typing import Optional
 
 from loguru import logger
 
@@ -218,7 +218,6 @@ class ActionMisalignmentGrader(LLMGrader):
         action: str,
         history_steps: Optional[list] = None,
         task_context: Optional[str] = None,
-        **kwargs: Any,
     ) -> GraderScore:
         """
         Evaluate action misalignment
@@ -240,6 +239,20 @@ class ActionMisalignmentGrader(LLMGrader):
             ...     task_context="Task: Find the key"
             ... )
         """
+        return await self._aevaluate(
+            plan=plan,
+            action=action,
+            history_steps=history_steps,
+            task_context=task_context,
+        )
+
+    async def _aevaluate(
+        self,
+        plan: str,
+        action: str,
+        history_steps: Optional[list] = None,
+        task_context: Optional[str] = None,
+    ) -> GraderScore:
         # Format trajectory steps
         trajectory_steps = self._format_trajectory_steps(
             plan=plan,

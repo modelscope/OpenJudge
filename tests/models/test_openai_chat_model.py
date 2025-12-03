@@ -18,7 +18,7 @@ from rm_gallery.core.models.schema.message import ChatMessage
 from rm_gallery.core.models.schema.response import ChatResponse
 
 
-class TestPersonModel(BaseModel):
+class PersonModelForTesting(BaseModel):
     """test model."""
 
     name: str
@@ -27,9 +27,6 @@ class TestPersonModel(BaseModel):
 
 class TestOpenAIChatModel:
     """Test cases for OpenAIChatModel class."""
-
-    def __init__(self):
-        self.model = None
 
     @pytest.fixture(autouse=True)
     def setup(self):
@@ -191,7 +188,7 @@ class TestOpenAIChatModel:
             response = asyncio.run(
                 model.achat(
                     messages=messages,
-                    structured_model=TestPersonModel,
+                    structured_model=PersonModelForTesting,
                 ),
             )
 
@@ -206,7 +203,7 @@ class TestOpenAIChatModel:
             call_kwargs = mock_instance.chat.completions.parse.call_args[1]
             assert call_kwargs["model"] == "gpt-3.5-turbo"
             assert "response_format" in call_kwargs
-            assert call_kwargs["response_format"] == TestPersonModel
+            assert call_kwargs["response_format"] == PersonModelForTesting
 
     @patch("rm_gallery.core.models.openai_chat_model.AsyncOpenAI")
     def test_achat_with_chat_message_objects(self, mock_async_openai):

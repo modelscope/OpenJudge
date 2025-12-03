@@ -42,6 +42,16 @@ Points should be deducted for:
 - Over-relying on reference when original synthesis is needed.
 </Scoring Criteria>
 
+<Detailed Scoring Guidelines (0-10 points)>
+0 points: Response completely ignores or contradicts the reference material.
+1-2 points: Response contains major factual errors compared to the reference, omits critical information, or significantly misrepresents the reference content.
+3-4 points: Response partially addresses the reference but has notable omissions or inaccuracies. Some key points from the reference are missing or misrepresented.
+5-6 points: Response covers basic information from the reference but lacks key details, has some inconsistencies, or fails to fully utilize the reference material.
+7-8 points: Response accurately reflects most of the reference material with only minor omissions or stylistic differences. Well-balanced use of reference information.
+9 points: Response accurately follows the reference with very minor issues. Excellent use of reference material with appropriate style and content matching.
+10 points: Response perfectly adheres to the reference in all aspects including facts, key points, style, tone, and format. No errors or omissions.
+</Detailed Scoring Guidelines>
+
 <Guidance>
 - Carefully read the reference material to understand its key facts, style, and content.
 - Compare each claim in the response against the reference material.
@@ -104,6 +114,16 @@ REFERENCE_ADHERENCE_PROMPT_ZH = """
 - 脱离上下文使用参考信息。
 - 在需要原创综合时过度依赖参考。
 </评分标准>
+
+<详细评分指南（0-10分）>
+0分：回复完全忽略或与参考材料相矛盾。
+1-2分：回复与参考相比存在重大事实错误，遗漏关键信息，或严重歪曲参考内容。
+3-4分：回复部分涉及了参考内容，但有明显的遗漏或不准确之处。参考中的某些要点缺失或被误述。
+5-6分：回复涵盖了参考中的基本信息，但缺少关键细节，存在一些不一致，或未能充分利用参考材料。
+7-8分：回复准确反映了参考材料的大部分内容，只有微小的遗漏或风格差异。很好地平衡使用了参考信息。
+9分：回复准确遵循了参考内容，仅有极小的问题。出色地使用了参考材料，在风格和内容上匹配得当。
+10分：回复在各个方面都完美遵循了参考内容，包括事实、要点、风格、语气和格式。没有错误或遗漏。
+</详细评分指南>
 
 <指导>
 - 仔细阅读参考材料以理解其关键事实、风格和内容。

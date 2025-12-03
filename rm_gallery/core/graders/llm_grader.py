@@ -286,24 +286,9 @@ class LLMGrader(BaseGrader):
 
         # Handle both streaming and non-streaming responses
         if hasattr(response, "__aiter__"):
-            # This is a streaming response, we need to collect it first
-            collected_content = []
-            metadata = {}
+            # Collect the last chunk from the async iterator
             async for chunk in response:  # type: ignore
-                if chunk.content:
-                    collected_content.extend(chunk.content)
-                if chunk.metadata:
-                    metadata.update(chunk.metadata)
-
-            # Create a mock response object with collected data
-            class MockResponse:
-                """Mock response object for streaming responses."""
-
-                def __init__(self, content, metadata):
-                    self.content = content
-                    self.metadata = metadata
-
-            response = MockResponse(collected_content, metadata)
+                response = chunk  # Iterate through all chunks, keeping the last one
 
         metadata = getattr(response, "metadata", {}) or {}
 

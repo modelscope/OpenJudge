@@ -1,26 +1,42 @@
 # -*- coding: utf-8 -*-
 """
-Utils for data processing.
+Data Mapping Utilities for RM Gallery
 
 This module provides utility functions for extracting and mapping data from
-nested dictionaries and lists using path-based queries.
+nested dictionaries and lists using path-based queries. It is primarily used
+in RM Gallery's evaluation system to map task and workflow output data to
+evaluator parameters.
+
+Key Features:
+- Path-based data extraction from nested structures
+- Automatic list traversal for batch processing
+- Flexible data mapping with dictionary or callable mappers
+
+The primary use case is mapping task data structures to evaluator input parameters,
+especially in listwise evaluation scenarios where multiple workflow outputs need
+to be processed together.
 """
 
 from typing import Any, Callable, Dict, List, Optional, Union
 
 
+# pylint: disable=too-many-return-statements
 def get_value_by_path(
     data: Union[Dict[str, Any], List[Any]],
     path: str,
 ) -> Optional[Any]:
-    """Get value from dictionary by path, supporting list indexing.
+    """Get value from dictionary by path, supporting list indexing and automatic list traversal.
 
     This function retrieves a value from a nested data structure (dictionary or list)
     using a dot-separated path. It supports both dictionary key access and list indexing.
 
+    Special feature: When accessing a list with a field path like "items.field", it will
+    automatically traverse the list and extract the specified field from each item,
+    returning a list of those values.
+
     Args:
         data: The data dictionary or list to query.
-        path: Dot-separated path, e.g. "item.ticket_text" or "items.0.name".
+        path: Dot-separated path, e.g. "item.ticket_text" or "items.0.name" or "items.name".
 
     Returns:
         Any: The value at the path, or None if path doesn't exist.
@@ -33,21 +49,53 @@ def get_value_by_path(
         'alice@example.com'
         >>> get_value_by_path(data, "user.phone") is None
         True
+        >>> data = {"items": [{"name": "A"}, {"name": "B"}]}
+        >>> get_value_by_path(data, "items.name")
+        ['A', 'B']
     """
-    keys = path.split(".")
-    current = data
+    if not path:
+        return data
 
-    try:
-        for key in keys:
-            # Check if it's a list index (number)
-            if isinstance(current, list) and key.isdigit():
+    keys = path.split(".")
+    key = keys[0]
+    remaining_path = ".".join(keys[1:]) if len(keys) > 1 else ""
+
+    # Handle list data
+    if isinstance(data, list):
+        # If key is a digit, treat as index
+        if key.isdigit():
+            try:
                 index = int(key)
-                current = current[index]
-            else:
-                current = current[key]
-        return current
-    except (KeyError, TypeError, IndexError, ValueError):
-        return None
+                if index < len(data):
+                    return get_value_by_path(data[index], remaining_path)
+                else:
+                    return None
+            except (ValueError, IndexError):
+                return None
+        else:
+            # Auto-traverse list and extract field from each item
+            result = []
+            for item in data:
+                item_value = get_value_by_path(item, path)
+                if item_value is not None:
+                    result.append(item_value)
+            return result if result else None
+
+    # Handle dict data
+    elif isinstance(data, dict):
+        if key in data:
+            return get_value_by_path(data[key], remaining_path)
+        else:
+            return None
+
+    # Handle other data types
+    else:
+        # Can't traverse further
+        if not key:  # If no more keys, return the data
+            return data
+        else:
+            # Trying to access a key on a non-dict/non-list
+            return None
 
 
 def get_value_by_mapping(

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Tool accuracy e2e test."""
 import os
+import asyncio
 
 from rm_gallery.core.graders.agent import ToolCallAccuracyGrader
 
@@ -57,7 +58,7 @@ if __name__ == "__main__":
         },
     ]
 
-    eval_result = evaluator.evaluate(query=query, tool_calls=tool_calls, tools=tools)
+    eval_result = asyncio.run(evaluator.aevaluate(query=query, tool_calls=tool_calls, tool_definitions=tools))
     print(eval_result)
     assert eval_result["score"] > 3
 

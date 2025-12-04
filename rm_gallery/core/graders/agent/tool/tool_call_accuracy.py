@@ -1,9 +1,14 @@
 # -*- coding: utf-8 -*-
-"""Tool call accuracy grader for evaluating agent tool usage."""
+"""
+Tool Call Accuracy Grader
+
+Evaluates the accuracy of tool calls made by an agent.
+"""
 
 import json
 import re
-from typing import Any, Dict, List, Union
+import textwrap
+from typing import Any, Dict, List, Optional, Union
 
 from loguru import logger
 
@@ -11,9 +16,12 @@ from rm_gallery.core.graders.base_grader import GraderMode, GraderScore
 from rm_gallery.core.graders.llm_grader import LLMGrader
 from rm_gallery.core.models.base_chat_model import BaseChatModel
 from rm_gallery.core.models.schema.message import ChatMessage
-from rm_gallery.core.models.schema.prompt_template import PromptTemplate
+from rm_gallery.core.models.schema.prompt_template import LanguageEnum, PromptTemplate
 
-TOOL_CALL_ACCURACY_SYSTEM_PROMPT = """# Instruction
+# pylint: disable=line-too-long
+
+# English Prompt
+TOOL_CALL_ACCURACY_PROMPT_EN = """# Instruction
 ## Goal
 Your are an expert in evaluating the accuracy of a tool call considering relevance and \
 potential usefulness including syntactic and semantic correctness of a proposed tool call \
@@ -38,10 +46,8 @@ Evaluate based on these factors:
 - Score 4: The tool calls are relevant, but some tools returned errors and agent retried calling
             them again and succeeded
 - Score 5: The tool calls are relevant, and all parameters were correctly passed
-"""
 
-
-TOOL_CALL_ACCURACY_USER_PROMPT = """# Data
+# Data
 CONVERSATION : {query}
 TOOL CALLS TO BE EVALUATED: {tool_calls}
 TOOL DEFINITIONS: {tool_definitions}
@@ -57,9 +63,66 @@ Your output should be a JSON object with the following format:
 ```
 """
 
+# Chinese Prompt
+TOOL_CALL_ACCURACY_PROMPT_ZH = """# 指令
+## 目标
+你是评估工具调用准确性的专家，需要考虑相关性和潜在有用性，包括基于提供的定义和数据，对智能系统提出的工具调用的语法和语义正确性进行评估。你的目标是使用提供的信息回答以下问题。
+
+# 定义
+**工具调用准确性**是指智能体在正在进行的对话中响应用户查询所做的工具调用的整体有效性。
+
+# 评估标准
+基于以下因素进行评估：
+1. **工具相关性**：工具调用是否适当地解决了用户的查询？
+2. **参数正确性**：所有参数值是否从对话中提取或合理推断？
+
+# 评分
+- 分数 1：工具调用不相关
+- 分数 2：工具调用部分相关，但调用的工具不足或参数传递不正确
+- 分数 3：工具调用相关，但进行了不必要的、过多的工具调用
+- 分数 4：工具调用相关，但某些工具返回错误，智能体重试调用后成功
+- 分数 5：工具调用相关，且所有参数都正确传递
+
+# 数据
+对话：{query}
+待评估的工具调用：{tool_calls}
+工具定义：{tool_definitions}
+
+# 任务
+请提供对工具调用相对于用户查询和工具定义的评估。
+你的输出应该是具有以下格式的 JSON 对象：
+```json
+{{
+    "score": [工具调用准确性分数],
+    "reason": [分数的原因],
+}}
+```
+"""
+
+# Build default template from prompts
+DEFAULT_TOOL_CALL_ACCURACY_TEMPLATE = PromptTemplate(
+    messages={
+        LanguageEnum.EN: [
+            ChatMessage(
+                role="system",
+                content=textwrap.dedent(TOOL_CALL_ACCURACY_PROMPT_EN),
+            ),
+        ],
+        LanguageEnum.ZH: [
+            ChatMessage(
+                role="system",
+                content=textwrap.dedent(TOOL_CALL_ACCURACY_PROMPT_ZH),
+            ),
+        ],
+    },
+)
+
 
 class ToolCallAccuracyGrader(LLMGrader):
-    """Evaluates the accuracy of tool calls made by an agent.
+    """
+    Tool Call Accuracy Grader
+
+    Evaluates the accuracy of tool calls made by an agent.
 
     The ToolCallAccuracyGrader assesses how accurately an AI uses tools by examining:
     - Relevance to the conversation
@@ -79,9 +142,28 @@ class ToolCallAccuracyGrader(LLMGrader):
     user needs while properly following tool definitions and using information present in the
     conversation history.
 
+    Attributes:
+        name: Grader name
+        model: BaseChatModel instance for evaluation
+        template: Evaluation template
+        language: Language for evaluation prompts (default: LanguageEnum.EN)
+
     Example:
         >>> import asyncio
-        >>> grader = ToolCallAccuracyGrader()
+        >>> from rm_gallery.core.model.openai_llm import OpenAIChatModel
+        >>> from rm_gallery.core.schema.template import LanguageEnum
+        >>>
+        >>> api = OpenAIChatModel(
+        ...     api_key="your-key",  # pragma: allowlist secret
+        ...     model="qwen3-max",
+        ...     generate_kwargs={"temperature": 0.1}
+        ... )
+        >>>
+        >>> grader = ToolCallAccuracyGrader(
+        ...     model=api,
+        ...     language=LanguageEnum.EN
+        ... )
+        >>>
         >>> conversation = [
         ...     {"role": "user", "content": "What's the weather like in New York?"}
         ... ]
@@ -113,7 +195,8 @@ class ToolCallAccuracyGrader(LLMGrader):
     def __init__(
         self,
         model: BaseChatModel | dict,
-        **kwargs: Any,
+        template: Optional[PromptTemplate] = DEFAULT_TOOL_CALL_ACCURACY_TEMPLATE,
+        language: LanguageEnum = LanguageEnum.EN,
     ):
         """Initialize the ToolCallAccuracyGrader.
 
@@ -121,27 +204,18 @@ class ToolCallAccuracyGrader(LLMGrader):
             model: The language model used for evaluation. Can be either a BaseChatModel
                    instance or a dictionary configuration. If a dict is provided, it will
                    be used to initialize an OpenAIChatModel.
-            **kwargs: Additional keyword arguments.
+            template: Evaluation template. Defaults to DEFAULT_TOOL_CALL_ACCURACY_TEMPLATE.
+            language: Language for evaluation prompts (default: LanguageEnum.EN).
         """
         super().__init__(
             name="tool_call_accuracy",
             mode=GraderMode.POINTWISE,
             description="Evaluates the accuracy of tool calls made by an agent",
-            template=PromptTemplate(
-                messages=[
-                    ChatMessage(
-                        role="system",
-                        content=TOOL_CALL_ACCURACY_SYSTEM_PROMPT,
-                    ),
-                    ChatMessage(
-                        role="user",
-                        content=TOOL_CALL_ACCURACY_USER_PROMPT,
-                    ),
-                ],
-            ),
             model=model,
-            **kwargs,
+            template=template,
+            language=language,
         )
+        self.template = template if template is not None else DEFAULT_TOOL_CALL_ACCURACY_TEMPLATE
 
     def _parse_tools_from_response(
         self,
@@ -179,7 +253,7 @@ class ToolCallAccuracyGrader(LLMGrader):
         response: Union[str, List[Dict[str, Any]]] = None,
     ) -> GraderScore:
         """
-        Evaluate tool call accuracy. Accepts a query, tool definitions, and tool calls.
+        Evaluate tool call accuracy
 
         This method evaluates the accuracy of tool calls based on multiple criteria including
         relevance, parameter correctness, completeness, efficiency, and execution success.
@@ -198,19 +272,11 @@ class ToolCallAccuracyGrader(LLMGrader):
                      response will be evaluated.
                      If both response and tool_calls parameters are provided, only the tool calls in
                      tool_calls parameter will be evaluated.
-            **kwargs: Additional keyword arguments passed to the underlying evaluation model.
 
         Returns:
-            GraderScore with the evaluation result containing:
-                - score: A numerical score between 1-5 indicating tool call accuracy
-                - reason: Explanation of how the score was determined
-                - metadata: Additional evaluation information
+            GraderScore: Score from 1.0 to 5.0 indicating tool call accuracy
 
         Example:
-            >>> import asyncio
-            >>> from rm_gallery.core.model.openai_llm import OpenAIChatModel
-            >>> model = OpenAIChatModel(model="qwen3-max")
-            >>> grader = ToolCallAccuracyGrader(model=model)
             >>> conversation = [
             ...     {"role": "user", "content": "What's the weather like in New York?"}
             ... ]
@@ -228,15 +294,12 @@ class ToolCallAccuracyGrader(LLMGrader):
             ...         "result": {"temperature": 25, "condition": "sunny"}
             ...     }
             ... ]
-            >>> result = asyncio.run(grader.aevaluate(
+            >>> result = await grader.aevaluate(
             ...     query=conversation,
             ...     tool_definitions=tool_defs,
             ...     tool_calls=tool_calls
-            ... ))
-            >>> print(f"Score: {result.score}")
-            Score: 5.0
+            ... )
         """
-
         # Handle tool calls extraction from response if needed
         if response and not tool_calls:
             parsed_tool_calls = self._parse_tools_from_response(str(response))
@@ -274,8 +337,20 @@ class ToolCallAccuracyGrader(LLMGrader):
             score = 0.0
             reason = f"Evaluation error: {str(e)}"
 
+        # Prepare metadata
+        metadata = {
+            "raw_score": score,
+        }
+
         return GraderScore(
             name=self.name,
             score=score,
             reason=reason,
+            metadata=metadata,
         )
+
+
+__all__ = [
+    "ToolCallAccuracyGrader",
+    "DEFAULT_TOOL_CALL_ACCURACY_TEMPLATE",
+]

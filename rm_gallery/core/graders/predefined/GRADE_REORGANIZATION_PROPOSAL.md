@@ -23,8 +23,8 @@ gallery/
 │   ├── tool_call_accuracy.py                                   # ToolCallAccuracyGrader: Evaluates the accuracy of tool parameter extraction and usage by agents
 │   ├── tool_call_success.py                                    # ToolCallSuccessGrader: Measures the success rate of tool executions by agents
 │   ├── tool_parameter_check.py                                 # ToolParameterCheckGrader: Validates the correctness of tool parameters used by agents
-│   └── tool_selection_quality.py                               # ToolSelectionQualityGrader: Assesses the appropriateness of tool selection by agents
-├── alignment/                                                 # Alignment evaluation module: Evaluates how well model outputs align with human values, safety requirements, and helpfulness standards
+│   └── tool_selection.py                                       # ToolSelectionGrader: Assesses the appropriateness of tool selection by agents
+├── alignment/                                                  # Alignment evaluation module: Evaluates how well model outputs align with human values, safety requirements, and helpfulness standards
 │   ├── base_alignment.py                                       # Base class for implementing alignment evaluators
 │   ├── harmlessness/                                          # Harmlessness evaluation: Evaluates the model's ability to avoid producing harmful, toxic or dangerous content
 │   │   ├── detoxification.py                                   # DetoxificationGrader: Detects offensive or toxic content in model outputs
@@ -317,7 +317,7 @@ gallery/
 │       ├── tool_call_accuracy.py                               # ToolCallAccuracyGrader
 │       ├── tool_call_success.py                                # ToolCallSuccessGrader
 │       ├── tool_parameter_check.py                             # ToolParameterCheckGrader
-│       └── tool_selection_quality.py                           # ToolSelectionQualityGrader
+│       └── tool_selection.py                                  # ToolSelectionGrader
 ├── alignment/                                                 # Alignment evaluation module (Safety & Ethical Alignment)
 │   ├── __init__.py
 │   ├── harmlessness/                                          # Harmlessness evaluation

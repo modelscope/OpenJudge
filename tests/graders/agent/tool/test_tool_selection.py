@@ -1,32 +1,32 @@
 # -*- coding: utf-8 -*-
 """
-Test Tool Selection Quality Grader
+Test Tool Selection Grader
 
-Tests for the ToolSelectionQualityGrader class functionality.
+Tests for the ToolSelectionGrader class functionality.
 """
 
 import pytest
 
-from rm_gallery.core.graders.predefined.agent import ToolSelectionQualityGrader
+from rm_gallery.core.graders.predefined.agent import ToolSelectionGrader
 from rm_gallery.core.models.openai_chat_model import OpenAIChatModel
 from rm_gallery.core.models.schema.prompt_template import LanguageEnum
 
 
-def test_tool_selection_quality_grader_creation():
-    """Test creating a ToolSelectionQualityGrader instance"""
+def test_tool_selection_grader_creation():
+    """Test creating a ToolSelectionGrader instance"""
     model = OpenAIChatModel(model="qwen-plus", api_key="your-key", stream=False)
-    grader = ToolSelectionQualityGrader(model=model)
+    grader = ToolSelectionGrader(model=model)
 
     assert grader is not None
     assert hasattr(grader, "name")
-    assert grader.name == "tool_selection_quality"
+    assert grader.name == "tool_selection"
     assert grader.threshold == 0.7
 
 
-def test_tool_selection_quality_grader_chinese():
+def test_tool_selection_grader_chinese():
     """Test creating a Chinese grader instance"""
     model = OpenAIChatModel(model="qwen-plus", api_key="your-key", stream=False)
-    grader = ToolSelectionQualityGrader(
+    grader = ToolSelectionGrader(
         model=model,
         threshold=0.8,
         language=LanguageEnum.ZH,
@@ -39,10 +39,10 @@ def test_tool_selection_quality_grader_chinese():
 
 @pytest.mark.skip(reason="Requires API key and network access")
 @pytest.mark.asyncio
-async def test_tool_selection_quality_good():
+async def test_tool_selection_good():
     """Test with good tool selection"""
     model = OpenAIChatModel(model="qwen3-32b", stream=False)
-    grader = ToolSelectionQualityGrader(model=model, threshold=0.7)
+    grader = ToolSelectionGrader(model=model, threshold=0.7)
 
     # Example conversation
     conversation = [
@@ -141,15 +141,15 @@ async def test_tool_selection_quality_good():
 
     assert result is not None
     assert hasattr(result, "score")
-    assert result.score >= 0.7  # Should be good quality
+    assert result.score >= 0.7  # Should be good
 
 
 @pytest.mark.skip(reason="Requires API key and network access")
 @pytest.mark.asyncio
-async def test_tool_selection_quality_poor():
+async def test_tool_selection_poor():
     """Test with poor tool selection"""
     model = OpenAIChatModel(model="qwen3-32b", stream=False)
-    grader = ToolSelectionQualityGrader(model=model, threshold=0.7)
+    grader = ToolSelectionGrader(model=model, threshold=0.7)
 
     # Example conversation
     conversation = [
@@ -214,15 +214,15 @@ async def test_tool_selection_quality_poor():
     )
 
     assert result is not None
-    assert result.score < 0.5  # Should be poor quality
+    assert result.score < 0.5  # Should be poor
 
 
 @pytest.mark.skip(reason="Requires API key and network access")
 @pytest.mark.asyncio
-async def test_tool_selection_quality_with_history():
-    """Test tool selection quality with conversation history"""
+async def test_tool_selection_with_history():
+    """Test tool selection  with conversation history"""
     model = OpenAIChatModel(model="qwen3-32b", stream=False)
-    grader = ToolSelectionQualityGrader(model=model)
+    grader = ToolSelectionGrader(model=model)
 
     # Conversation with history
     conversation = [

@@ -289,10 +289,10 @@ class TrajectoryResolutionGrader(LLMGrader):
     """
 
     def __init__(
-            self,
-            model: Union[BaseChatModel, dict],
-            template: Optional[PromptTemplate] = DEFAULT_TRAJECTORY_RESOLUTION_TEMPLATE,
-            language: LanguageEnum = LanguageEnum.ZH,
+        self,
+        model: Union[BaseChatModel, dict],
+        template: Optional[PromptTemplate] = DEFAULT_TRAJECTORY_RESOLUTION_TEMPLATE,
+        language: LanguageEnum = LanguageEnum.ZH,
     ):
         super().__init__(
             name="trajectory_resolution",
@@ -305,8 +305,8 @@ class TrajectoryResolutionGrader(LLMGrader):
         self.template = template if template is not None else DEFAULT_TRAJECTORY_RESOLUTION_TEMPLATE
 
     def _extract_trajectory_from_messages(
-            self,
-            messages: List[Dict[str, Any]],
+        self,
+        messages: List[Dict[str, Any]],
     ) -> tuple[str, str, str]:
         """
         Extract user query, trajectory, and final answer from messages.
@@ -331,6 +331,7 @@ class TrajectoryResolutionGrader(LLMGrader):
 
         # Format trajectory messages
         trajectory_parts = []
+        # pylint: disable=unused-variable
         for i, msg in enumerate(non_system_messages):
             role = msg.get("role", "")
             content = msg.get("content", "")
@@ -372,10 +373,10 @@ class TrajectoryResolutionGrader(LLMGrader):
         return user_query, trajectory_messages, final_answer
 
     async def aevaluate(
-            self,
-            messages: List[Dict[str, Any]],
-            resolution_threshold: float = 0.9,
-            **kwargs: Any,
+        self,
+        messages: List[Dict[str, Any]],
+        resolution_threshold: float = 0.9,
+        **kwargs: Any,
     ) -> GraderScore:
         """
         Evaluate complete agent trajectory.
@@ -519,4 +520,3 @@ class TrajectoryResolutionGrader(LLMGrader):
             reason=reason,
             metadata=metadata,
         )
-

@@ -354,10 +354,10 @@ class ReportResolutionGrader(LLMGrader):
     """
 
     def __init__(
-            self,
-            model: Union[BaseChatModel, dict],
-            template: Optional[PromptTemplate] = DEFAULT_REPORT_RESOLUTION_TEMPLATE,
-            language: LanguageEnum = LanguageEnum.ZH,
+        self,
+        model: Union[BaseChatModel, dict],
+        template: Optional[PromptTemplate] = DEFAULT_REPORT_RESOLUTION_TEMPLATE,
+        language: LanguageEnum = LanguageEnum.ZH,
     ):
         super().__init__(
             name="report_resolution",
@@ -367,18 +367,16 @@ class ReportResolutionGrader(LLMGrader):
             template=template,
             language=language,
         )
-        self.template = (
-            template if template is not None else DEFAULT_REPORT_RESOLUTION_TEMPLATE
-        )
+        self.template = template if template is not None else DEFAULT_REPORT_RESOLUTION_TEMPLATE
 
     async def aevaluate(
-            self,
-            query: str,
-            answer: str,
-            chat_history: str = "",
-            chat_date: str = "未指定日期",
-            resolution_threshold: float = 0.9,
-            **kwargs: Any,
+        self,
+        query: str,
+        answer: str,
+        chat_history: str = "",
+        chat_date: str = "未指定日期",
+        resolution_threshold: float = 0.9,
+        **kwargs: Any,
     ) -> GraderScore:
         """
         Evaluate deep research agent report resolution rate.
@@ -445,11 +443,11 @@ class ReportResolutionGrader(LLMGrader):
 
             # Calculate total score (should be approximately 100)
             total_raw_score = (
-                    raw_precision_score
-                    + raw_completeness_score
-                    + raw_data_support_score
-                    + raw_logical_rigor_score
-                    + raw_timeliness_score
+                raw_precision_score
+                + raw_completeness_score
+                + raw_data_support_score
+                + raw_logical_rigor_score
+                + raw_timeliness_score
             )
 
             # Normalize total score from 0-100 to 0.0-1.0

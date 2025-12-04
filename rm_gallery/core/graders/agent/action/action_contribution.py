@@ -12,6 +12,7 @@ from rm_gallery.core.models.base_chat_model import BaseChatModel
 from rm_gallery.core.graders.base_grader import GraderMode, GraderScore
 from rm_gallery.core.models.schema.message import ChatMessage
 from rm_gallery.core.models.schema.prompt_template import LanguageEnum, PromptTemplate
+
 # pylint: disable=line-too-long
 # English Prompt
 CONTRIBUTION_PROMPT_EN = """# Task Description
@@ -138,6 +139,8 @@ DEFAULT_CONTRIBUTION_TEMPLATE = PromptTemplate(
         ],
     },
 )
+
+
 class ActionContributionGrader(LLMGrader):
     """
     Action Contribution Grader for evaluating individual tool call contributions.
@@ -162,6 +165,7 @@ class ActionContributionGrader(LLMGrader):
         ... )
         >>> print(f"Contribution score: {result.score}")
     """
+
     def __init__(
         self,
         model: Union[BaseChatModel, dict],
@@ -176,9 +180,8 @@ class ActionContributionGrader(LLMGrader):
             template=template,
             language=language,
         )
-        self.template = (
-            template if template is not None else DEFAULT_CONTRIBUTION_TEMPLATE
-        )
+        self.template = template if template is not None else DEFAULT_CONTRIBUTION_TEMPLATE
+
     async def aevaluate(
         self,
         user_query: str,

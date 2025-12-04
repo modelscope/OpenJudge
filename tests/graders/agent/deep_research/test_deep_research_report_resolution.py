@@ -6,7 +6,6 @@ Tests for the FinancialResolutionGrader class functionality.
 """
 
 import pytest
-
 from rm_gallery.core.models.openai_chat_model import OpenAIChatModel
 from rm_gallery.core.models.schema.prompt_template import LanguageEnum
 from rm_gallery.core.graders.agent.deep_research.report_resolution import ReportResolutionGrader
@@ -14,7 +13,7 @@ from rm_gallery.core.graders.agent.deep_research.report_resolution import Report
 
 def test_report_resolution_grader_creation():
     """Test creating a ReportResolutionGrader instance"""
-    model = OpenAIChatModel(model="qwen3-max", stream=False)
+    model = OpenAIChatModel(model="qwen3-max", api_key="your-key", stream=False)
     grader = ReportResolutionGrader(model=model)
 
     assert grader is not None
@@ -24,7 +23,7 @@ def test_report_resolution_grader_creation():
 
 def test_report_resolution_grader_creation_chinese():
     """Test creating a Chinese ReportResolutionGrader instance"""
-    model = OpenAIChatModel(model="qwen3-max", stream=False)
+    model = OpenAIChatModel(model="qwen3-max", api_key="your-key", stream=False)
     grader = ReportResolutionGrader(model=model, language=LanguageEnum.ZH)
 
     assert grader is not None
@@ -35,7 +34,7 @@ def test_report_resolution_grader_creation_chinese():
 @pytest.mark.asyncio
 async def test_report_resolution_evaluation():
     """Test evaluating report resolution"""
-    model = OpenAIChatModel(model="qwen3-max", stream=False)
+    model = OpenAIChatModel(model="qwen3-max", api_key="your-key", stream=False)
     grader = ReportResolutionGrader(model=model)
 
     result = await grader.aevaluate(
@@ -50,7 +49,7 @@ async def test_report_resolution_evaluation():
     assert hasattr(result, "reason")
     assert hasattr(result, "metadata")
     assert 0.0 <= result.score <= 1.0
-    
+
     # Check metadata structure
     assert "precision_relevance" in result.metadata
     assert "completeness_depth" in result.metadata
@@ -62,7 +61,7 @@ async def test_report_resolution_evaluation():
     assert "is_resolved" in result.metadata
     assert "resolution_threshold" in result.metadata
     assert "evaluation_type" in result.metadata
-    
+
     # Check dimension scores structure
     precision = result.metadata["precision_relevance"]
     assert "raw_score" in precision
@@ -71,7 +70,7 @@ async def test_report_resolution_evaluation():
     assert "reason" in precision
     assert precision["max_score"] == 35.0
     assert 0.0 <= precision["raw_score"] <= 35.0
-    
+
     # Check is_resolved is boolean
     assert isinstance(result.metadata["is_resolved"], bool)
     assert result.metadata["evaluation_type"] == "report_resolution"
@@ -81,7 +80,7 @@ async def test_report_resolution_evaluation():
 @pytest.mark.asyncio
 async def test_report_resolution_with_history():
     """Test with chat history"""
-    model = OpenAIChatModel(model="qwen3-max", stream=False)
+    model = OpenAIChatModel(model="qwen3-max", api_key="your-key", stream=False)
     grader = ReportResolutionGrader(model=model)
 
     chat_history = """
@@ -100,7 +99,7 @@ async def test_report_resolution_with_history():
     assert hasattr(result, "score")
     assert hasattr(result, "metadata")
     assert 0.0 <= result.score <= 1.0
-    
+
     # Verify metadata exists
     assert "is_resolved" in result.metadata
     assert "total_raw_score" in result.metadata
@@ -110,7 +109,7 @@ async def test_report_resolution_with_history():
 @pytest.mark.asyncio
 async def test_report_resolution_incomplete_answer():
     """Test with incomplete answer"""
-    model = OpenAIChatModel(model="qwen3-max", stream=False)
+    model = OpenAIChatModel(model="qwen3-max", api_key="your-key", stream=False)
     grader = ReportResolutionGrader(model=model)
 
     result = await grader.aevaluate(
@@ -125,7 +124,7 @@ async def test_report_resolution_incomplete_answer():
     assert hasattr(result, "metadata")
     # Incomplete answer should have lower score
     assert 0.0 <= result.score <= 1.0
-    
+
     # Incomplete answer likely won't be resolved
     assert "is_resolved" in result.metadata
     # Score should be less than default threshold (0.9)
@@ -136,7 +135,7 @@ async def test_report_resolution_incomplete_answer():
 @pytest.mark.asyncio
 async def test_report_resolution_custom_threshold():
     """Test with custom resolution threshold"""
-    model = OpenAIChatModel(model="qwen3-max", stream=False)
+    model = OpenAIChatModel(model="qwen3-max", api_key="your-key", stream=False)
     grader = ReportResolutionGrader(model=model)
 
     result = await grader.aevaluate(
@@ -200,7 +199,7 @@ def test_report_resolution_metadata_structure():
         "resolution_threshold": 0.9,
         "evaluation_type": "report_resolution",
     }
-    
+
     # Validate structure
     assert "precision_relevance" in metadata
     assert "completeness_depth" in metadata
@@ -212,7 +211,7 @@ def test_report_resolution_metadata_structure():
     assert "is_resolved" in metadata
     assert "resolution_threshold" in metadata
     assert "evaluation_type" in metadata
-    
+
     # Validate total score calculation
     total = (
         metadata["precision_relevance"]["raw_score"]
@@ -222,9 +221,8 @@ def test_report_resolution_metadata_structure():
         + metadata["timeliness"]["raw_score"]
     )
     assert total == metadata["total_raw_score"]
-    
+
     # Validate is_resolved determination
     normalized_score = total / 100.0
     expected_resolved = normalized_score >= metadata["resolution_threshold"]
     assert metadata["is_resolved"] == expected_resolved
-

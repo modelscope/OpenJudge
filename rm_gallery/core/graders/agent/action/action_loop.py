@@ -7,10 +7,12 @@ actions in action sequences.
 import json
 from typing import Any, Dict, List
 from rm_gallery.core.graders.base_grader import BaseGrader, GraderMode, GraderScore
-from rm_gallery.core.graders.predefined.agent.utils import (
+from rm_gallery.core.graders.agent.utils import (
     extract_action_observation_pairs,
     calculate_text_similarity,
 )
+
+
 class ActionLoopDetectionGrader(BaseGrader):
     """
     Detect and penalize similar/repetitive actions in action sequences.
@@ -25,6 +27,7 @@ class ActionLoopDetectionGrader(BaseGrader):
         ... )
         >>> print(f"Loop detection score: {result.score}")
     """
+
     def __init__(
         self,
     ):
@@ -33,6 +36,7 @@ class ActionLoopDetectionGrader(BaseGrader):
             mode=GraderMode.POINTWISE,
             description="Detect and penalize repetitive actions in sequences",
         )
+
     async def aevaluate(
         self,
         messages: List[Dict[str, Any]],
@@ -95,15 +99,12 @@ class ActionLoopDetectionGrader(BaseGrader):
                         similar_pairs.append(
                             (action_signatures[i], action_signatures[j], similarity),
                         )
-            loop_score = (
-                1.0 - (similar_pair_count / total_pair_count)
-                if total_pair_count > 0
-                else 1.0
-            )
+            loop_score = 1.0 - (similar_pair_count / total_pair_count) if total_pair_count > 0 else 1.0
         return GraderScore(
             name=self.name,
             score=loop_score,
-            reason=f"Loop detection: {similar_pair_count}/{total_pair_count} pairs are similar (threshold={similarity_threshold})",
+            reason=f"Loop detection: {similar_pair_count}/{total_pair_count} pairs are "
+            f"similar (threshold={similarity_threshold})",
             metadata={
                 "action_count": n,
                 "similar_pair_count": similar_pair_count,

@@ -7,10 +7,12 @@ in observation observations.
 import math
 from typing import Any, Dict, List
 from rm_gallery.core.graders.base_grader import BaseGrader, GraderMode, GraderScore
-from rm_gallery.core.graders.predefined.agent.utils import (
+from rm_gallery.core.graders.agent.utils import (
     extract_action_observation_pairs,
     calculate_text_similarity,
 )
+
+
 class ObservationInformationGainGrader(BaseGrader):
     """
     Grader for information gain and redundancy in observation observations.
@@ -26,6 +28,7 @@ class ObservationInformationGainGrader(BaseGrader):
         ... )
         >>> print(f"Info gain score: {result.score}")
     """
+
     def __init__(
         self,
         similarity_threshold: float = 0.5,
@@ -36,6 +39,7 @@ class ObservationInformationGainGrader(BaseGrader):
             description="Evaluate information gain and redundancy in observation observations",
         )
         self.similarity_threshold = similarity_threshold
+
     async def aevaluate(
         self,
         messages: List[Dict[str, Any]],
@@ -63,16 +67,14 @@ class ObservationInformationGainGrader(BaseGrader):
         rewards = []
         previous_observations = []
         similarity_list = []
+        # pylint: disable=unused-variable
         for action, observation in action_obs_pairs:
             # Skip if observation is empty or too short
             if not observation or len(observation.strip()) < 10:
                 continue
             # Calculate max similarity to all previous observations
             if previous_observations:
-                similarities = [
-                    calculate_text_similarity(observation, prev_obs)
-                    for prev_obs in previous_observations
-                ]
+                similarities = [calculate_text_similarity(observation, prev_obs) for prev_obs in previous_observations]
                 max_similarity = max(similarities)
             else:
                 max_similarity = 0.0

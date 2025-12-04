@@ -34,17 +34,17 @@ class MathExpressionVerifyGrader(BaseGrader):
         )
         self.timeout_score = timeout_score
 
-    async def aevaluate(self, response: str, reference: str) -> GraderScore:
+    async def aevaluate(self, response: str, ground_truth: str) -> GraderScore:
         """
         Verify mathematical expressions for accuracy by parsing and comparing the response answer
-        against a reference answer using the math_verify library.
+        against a ground truth answer using the math_verify library.
 
         This grader supports both LaTeX and plain mathematical expressions. It parses both the
-        response and reference expressions, then verifies if they are mathematically equivalent.
+        response and ground truth expressions, then verifies if they are mathematically equivalent.
 
         Args:
             response (str): The response mathematical expression to be verified.
-            reference (str): The reference (ground truth) mathematical expression.
+            ground_truth (str): The ground truth mathematical expression.
 
         Returns:
             GraderScore: A GraderScore object containing:
@@ -52,7 +52,7 @@ class MathExpressionVerifyGrader(BaseGrader):
                                On error or timeout, uses the configured timeout_score (default 1.0).
                 - reason (str): Explanation of the verification result.
                 - metadata (Dict[str, Any]): Additional information including the response and
-                                          reference expressions.
+                                          ground_truth expressions.
 
         Examples:
             >>> import asyncio
@@ -73,10 +73,10 @@ class MathExpressionVerifyGrader(BaseGrader):
         reason = "Verification failed or timed out"
 
         try:
-            # Parse the reference (gold) answer
+            # Parse the ground_truth (gold) answer
             # Use both LatexExtractionConfig and ExprExtractionConfig for maximum flexibility
             gold_parsed = parse(
-                reference,
+                ground_truth,
                 extraction_config=[
                     LatexExtractionConfig(),
                     ExprExtractionConfig(),
@@ -119,7 +119,7 @@ class MathExpressionVerifyGrader(BaseGrader):
             reason=reason,
             metadata={
                 "response": response,
-                "reference": reference,
+                "ground_truth": ground_truth,
                 "score": score,
             },
         )

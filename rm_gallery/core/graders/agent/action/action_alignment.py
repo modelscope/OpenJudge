@@ -281,9 +281,3 @@ class ActionAlignmentGrader(LLMGrader):
             reason=reason,
             metadata=metadata,
         )
-
-
-__all__ = [
-    "ActionAlignmentGrader",
-    "DEFAULT_ACTION_ALIGNMENT_TEMPLATE",
-]

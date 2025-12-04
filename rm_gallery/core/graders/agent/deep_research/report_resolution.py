@@ -1,0 +1,537 @@
+# -*- coding: utf-8 -*-
+"""
+Resolution Rate Grader for Deep Research Evaluation
+
+This module provides a grader for evaluating whether deep research agent responses
+adequately resolve user questions based on comprehensive evaluation criteria.
+"""
+
+import textwrap
+from typing import Any, Optional, Union
+
+from loguru import logger
+
+from rm_gallery.core.graders.base_grader import GraderMode, GraderScore
+from rm_gallery.core.graders.llm_grader import LLMGrader
+from rm_gallery.core.models.base_chat_model import BaseChatModel
+from rm_gallery.core.models.schema.message import ChatMessage
+from rm_gallery.core.models.schema.prompt_template import LanguageEnum, PromptTemplate
+
+# pylint: disable=line-too-long
+
+# Chinese Prompt
+REPORT_RESOLUTION_PROMPT_ZH = """### 任务
+你是一个顶级的深度研究报告评估专家,精通跨学科研究方法、信息检索与整合、批判性思维、逻辑推理、数据分析等研究能力。你的任务是站在用户视角,评估深度研究Agent生成的研究报告的质量，并判断其是否深入、全面地满足了用户的研究需求。请仔细阅读以下信息,并按照给定的评分标准进行评估。
+
+### 待评估信息
+1. 这是用户的问题:<user_question>{query}</user_question>
+2. 这是深度研究Agent生成的研究报告:<report_answer>{answer}</report_answer>
+3. 这是报告生成的日期:<date>{chat_date}</date>
+
+### 评估维度与标准(总计100分)
+
+#### **底线问题标准(0分)**
+1. 报告内容违反法律、常识和基本逻辑,属于致命错误!!!
+2. **严格要求报告的核心分析对象与问题主体一致**:若报告的核心分析对象和<user_question>询问的主体不一致,属于致命错误!!!
+3. **严格要求报告内容前后一致**:若报告的关键点、关键指标、核心结论、观点、逻辑等内容存在前后矛盾和不一致情况,会给用户带来困惑,属于致命错误,命中此项得0分!!!
+4. **数据与事实真实性**: 报告中引用的关键数据、事实、事件或引文必须是真实可查的。若出现明显的事实性错误或数据捏造（Hallucination），属于致命错误!!!
+
+
+#### 1. 精准性与相关性(35分)
+评估报告是否精准回答用户问题,研究对象和内容是否与用户需求匹配。
+
+**分数段标准:**
+- **32-35分 (优秀)**: 完全精准回答用户问题,研究对象与用户需求完全匹配,无答非所问,对开放性问题提供全面多角度分析框架
+- **25-31分 (良好)**: 基本精准回答用户问题,研究对象匹配度高,仅有微小偏差,分析框架较为全面
+- **18-24分 (中等)**: 部分回答用户问题,研究对象基本匹配但存在一定偏差,分析框架不够完整
+- **10-17分 (较差)**: 回答偏离用户问题核心,研究对象匹配度低,存在明显答非所问
+- **0-9分 (极差)**: 完全答非所问,研究对象与用户需求不匹配,无参考价值
+
+**评估要点:**
+- 报告的研究对象、内容与用户问题是否精确匹配
+- 是否避免引入与问题无关的内容,保持报告聚焦性
+- 对于开放性研究问题,是否提供多角度的分析框架和合理的研究边界说明
+
+#### 2. 完整性与深度(30分)
+评估报告是否完整覆盖用户问题的所有关键点和需求维度。
+
+**分数段标准:**
+- **27-30分 (优秀)**: 完整覆盖用户问题的所有关键点和需求维度,无遗漏,信息充分详实
+- **21-26分 (良好)**: 覆盖大部分关键点和需求维度,仅有少量次要遗漏,整体信息充足
+- **15-20分 (中等)**: 覆盖部分关键点,存在一些重要遗漏但已说明信息缺口,信息基本够用
+- **8-14分 (较差)**: 覆盖关键点有限,存在重大遗漏且未充分说明,信息不足
+- **0-7分 (极差)**: 几乎未覆盖关键点,严重遗漏且编造结论,信息严重不足
+
+**评估要点:**
+- 是否完整覆盖研究对象、时间范围、对比维度、核心指标等所有需求维度
+- 若关键信息不足,是否明确指出信息缺口并说明合理假设,而非直接编造结论
+
+#### 3. 数据支撑与真实性(20分)
+评估报告的结论和判断是否有充分的数据、事实或案例支撑。
+
+**分数段标准:**
+- **18-20分 (优秀)**: 所有关键结论都有充分数据支撑,数据来源明确可查,无主观臆断
+- **14-17分 (良好)**: 大部分结论有数据支撑,多数数据注明来源,主观推断较少
+- **10-13分 (中等)**: 部分结论有数据支撑,部分数据缺少来源,存在一定主观推断
+- **5-9分 (较差)**: 少量结论有数据支撑,多数数据无来源,主观推断较多
+- **0-4分 (极差)**: 几乎无数据支撑,数据来源不明或存在明显错误,纯主观臆断
+
+**评估要点:**
+- 结论和判断是否有充分的数据、事实或案例支撑
+- 关键数据和信息是否尽可能注明来源
+- 是否避免纯主观推断
+
+#### 4. 逻辑严谨性(10分)
+评估报告的分析逻辑是否严谨,因果关系是否清晰。
+
+**分数段标准:**
+- **9-10分 (优秀)**: 逻辑严密,因果关系清晰,符合领域基本原理,无逻辑跳跃
+- **7-8分 (良好)**: 逻辑基本严密,因果关系较清晰,仅有微小逻辑瑕疵
+- **5-6分 (中等)**: 逻辑基本合理,存在一些逻辑跳跃或未说明的假设
+- **3-4分 (较差)**: 逻辑存在明显问题,因果关系不清,逻辑跳跃较多
+- **0-2分 (极差)**: 逻辑混乱,违背基本原理,无法理解推理过程
+
+**评估要点:**
+- 分析是否符合相关领域的基本原理和逻辑
+- 因果关系是否清晰
+- 是否避免逻辑跳跃或未说明的假设
+
+#### 5. 时效性(5分)
+评估报告是否基于最新可获取的信息、数据和研究证据。
+
+**分数段标准:**
+- **5分 (优秀)**: 基于最新信息和数据,时效性极强
+- **4分 (良好)**: 基于较新信息和数据,时效性良好
+- **3分 (中等)**: 信息和数据较新,时效性尚可
+- **2分 (较差)**: 信息和数据陈旧,时效性较差
+- **0-1分 (极差)**: 信息和数据严重过时,无时效性
+
+**评估要点:**
+- 报告是否基于最新可获取的信息、数据和研究证据
+- 考虑报告生成日期和所引用信息的时间差
+
+#### 6. 报告结构与可读性(附加项,不计入总分但影响整体判断)
+评估报告的结构清晰度和可读性。
+
+**评估要点:**
+- 报告结构是否清晰、层次分明（如包含摘要、正文分析、结论、局限性说明等部分）
+- 语言是否专业且易于理解
+- 是否善用列表等形式,便于用户快速获取核心信息
+
+### 评分流程
+1. 理解<user_question>,并将其归类到一个或多个研究场景类别,以便后续评估参考。场景类别包括但不限于:学术研究、行业分析、技术调研、市场研究、事件解读、综合性探究、其他等
+2. 梳理<user_question>和深度研究Agent生成的报告<report_answer>中的关键点
+3. 根据**评估维度与标准**,对每个维度进行评分。注意:如果命中任意一条<底线问题标准>,跳过后续评估,所有维度得0分
+4. 计算总分(各维度分数相加,满分100分)
+
+### 整体判断
+完成所有评分项的评分后,计算总分(满分100分),并依据以下分级标准进行整体判断:
+- **解决(≥90分)**:全面覆盖并解决用户问题,结论建议实用可执行,报告逻辑严谨合理,证据翔实时效性高
+- **未解决(<90分)**:报告分析肤浅,未能触及核心研究要点,或偏离用户需求,或包含事实错误,或缺乏有效的证据支撑,参考价值低
+
+### 重要说明
+- 五个维度的分数相加应等于总分(满分100分)
+- 结构与可读性作为附加评估项,不计入总分但在reason中说明
+- 确保每个维度的评分都在其规定的分数范围内
+
+请按照以下JSON格式提供你的评估:
+{{
+    "precision_relevance": {{
+        "score": <float (0-35)>,
+        "reason": "<精准性与相关性的详细评估理由>"
+    }},
+    "completeness_depth": {{
+        "score": <float (0-30)>,
+        "reason": "<完整性与深度的详细评估理由>"
+    }},
+    "data_support": {{
+        "score": <float (0-20)>,
+        "reason": "<数据支撑与真实性的详细评估理由>"
+    }},
+    "logical_rigor": {{
+        "score": <float (0-10)>,
+        "reason": "<逻辑严谨性的详细评估理由>"
+    }},
+    "timeliness": {{
+        "score": <float (0-5)>,
+        "reason": "<时效性的详细评估理由>"
+    }},
+    "structure_readability": {{
+        "assessment": "<结构与可读性的评估说明(不计分)>"
+    }}
+}}
+
+JSON:
+"""
+
+# English Prompt
+REPORT_RESOLUTION_PROMPT_EN = """### Task
+You are a top-level deep research report evaluation expert, proficient in interdisciplinary research methodologies, information retrieval and synthesis, critical thinking, logical reasoning, data analysis, and other research capabilities. Your task is to evaluate from the user's perspective the quality of research reports generated by deep research Agents, and determine whether they deeply and comprehensively meet the user's research needs. Please carefully read the following information and evaluate according to the given scoring criteria.
+
+### Information to Evaluate
+1. This is the user's question: <user_question>{query}</user_question>
+2. This is the research report generated by the deep research Agent: <report_answer>{answer}</report_answer>
+3. This is the date the report was generated: <date>{chat_date}</date>
+
+### Evaluation Dimensions and Criteria (Total 100 points)
+
+#### **Bottom Line Standards (0 points)**
+1. Report violates laws, common sense, or fundamental logic - critical error!!!
+2. **Strictly require core analysis subject consistency**: If the core analysis subject in the report is inconsistent with the subject in <user_question>, it's a critical error!!!
+3. **Strictly require content consistency**: If key points, indicators, core conclusions, viewpoints, or reasoning logic are contradictory or inconsistent, causing user confusion, it's a critical error - 0 points!!!
+4. **Data and fact authenticity**: Key data, facts, events, or quotations cited in the report must be verifiable and real. If there are obvious factual errors or data fabrication (Hallucination), it's a critical error!!!
+
+#### 1. Precision and Relevance (35 points)
+Evaluate whether the report precisely answers the user's question and whether research subjects and content match user needs.
+
+**Score Ranges:**
+- **32-35 points (Excellent)**: Completely precise answer to user's question, research subject fully matches user needs, no irrelevant responses, comprehensive multi-perspective analytical framework for open-ended questions
+- **25-31 points (Good)**: Basically precise answer to user's question, high research subject match with only minor deviations, relatively comprehensive analytical framework
+- **18-24 points (Fair)**: Partially answers user's question, research subject basically matches but with some deviations, analytical framework incomplete
+- **10-17 points (Poor)**: Answer deviates from core of user's question, low research subject match, obvious irrelevant responses
+- **0-9 points (Very Poor)**: Completely irrelevant answer, research subject doesn't match user needs, no reference value
+
+**Assessment Focus:**
+- Whether report research subjects and content precisely match user's question
+- Whether irrelevant content is avoided, maintaining report focus
+- For open-ended research questions, whether multi-perspective analytical frameworks and reasonable research boundary explanations are provided
+
+#### 2. Completeness and Depth (30 points)
+Evaluate whether the report completely covers all key points and requirement dimensions of the user's question.
+
+**Score Ranges:**
+- **27-30 points (Excellent)**: Completely covers all key points and requirement dimensions of user's question, no omissions, information is sufficient and detailed
+- **21-26 points (Good)**: Covers most key points and requirement dimensions, only minor secondary omissions, overall information sufficient
+- **15-20 points (Fair)**: Covers some key points, some important omissions but information gaps explained, information basically sufficient
+- **8-14 points (Poor)**: Limited coverage of key points, major omissions not fully explained, information insufficient
+- **0-7 points (Very Poor)**: Almost no coverage of key points, serious omissions with fabricated conclusions, information severely insufficient
+
+**Assessment Focus:**
+- Whether all requirement dimensions are completely covered (research subjects, time range, comparison dimensions, core indicators, etc.)
+- If key information is insufficient, whether information gaps are clearly pointed out and reasonable assumptions explained, rather than directly fabricating conclusions
+
+#### 3. Data Support and Authenticity (20 points)
+Evaluate whether report conclusions and judgments are supported by adequate data, facts, or case studies.
+
+**Score Ranges:**
+- **18-20 points (Excellent)**: All key conclusions have adequate data support, data sources are clear and verifiable, no subjective speculation
+- **14-17 points (Good)**: Most conclusions have data support, most data sources cited, little subjective inference
+- **10-13 points (Fair)**: Some conclusions have data support, some data lack sources, some subjective inference exists
+- **5-9 points (Poor)**: Few conclusions have data support, most data lack sources, considerable subjective inference
+- **0-4 points (Very Poor)**: Almost no data support, data sources unclear or obviously erroneous, purely subjective speculation
+
+**Assessment Focus:**
+- Whether conclusions and judgments are supported by adequate data, facts, or case studies
+- Whether key data and information cite sources whenever possible
+- Whether purely subjective inference is avoided
+
+#### 4. Logical Rigor (10 points)
+Evaluate whether the report's analytical logic is rigorous and causal relationships are clear.
+
+**Score Ranges:**
+- **9-10 points (Excellent)**: Rigorous logic, clear causal relationships, complies with domain fundamental principles, no logical jumps
+- **7-8 points (Good)**: Basically rigorous logic, relatively clear causal relationships, only minor logical flaws
+- **5-6 points (Fair)**: Basically reasonable logic, some logical jumps or unstated assumptions exist
+- **3-4 points (Poor)**: Obvious logical problems, unclear causal relationships, many logical jumps
+- **0-2 points (Very Poor)**: Chaotic logic, violates fundamental principles, reasoning process incomprehensible
+
+**Assessment Focus:**
+- Whether analysis complies with fundamental principles and logic of the relevant domain
+- Whether causal relationships are clear
+- Whether logical jumps or unstated assumptions are avoided
+
+#### 5. Timeliness (5 points)
+Evaluate whether the report is based on the latest available information, data, and research evidence.
+
+**Score Ranges:**
+- **5 points (Excellent)**: Based on latest information and data, extremely strong timeliness
+- **4 points (Good)**: Based on relatively recent information and data, good timeliness
+- **3 points (Fair)**: Information and data relatively recent, acceptable timeliness
+- **2 points (Poor)**: Information and data outdated, poor timeliness
+- **0-1 points (Very Poor)**: Information and data seriously outdated, no timeliness
+
+**Assessment Focus:**
+- Whether report is based on the latest available information, data, and research evidence
+- Consider time difference between report generation date and referenced information
+
+#### 6. Report Structure and Readability (Additional item, not counted in total but affects overall judgment)
+Evaluate report structure clarity and readability.
+
+**Assessment Focus:**
+- Whether report structure is clear and hierarchical (including summary, main analysis, conclusions, limitations, etc.)
+- Whether language is professional yet understandable
+- Whether lists and formatting are well used for quick information retrieval
+
+### Scoring Process
+1. Understand <user_question> and categorize it into one or more research scenario categories for evaluation reference. Scenario categories include but are not limited to: academic research, industry analysis, technical investigation, market research, event interpretation, comprehensive inquiry, other
+2. Outline key points in <user_question> and the report <report_answer> generated by the deep research Agent
+3. Score each dimension according to **Evaluation Dimensions and Criteria**. Note: if any <Bottom Line Standards> is triggered, skip subsequent evaluation and give 0 points for all dimensions
+4. Calculate total score (sum of all dimension scores, out of 100)
+
+### Overall Judgment
+After scoring all items, calculate total score (out of 100), and make overall judgment based on the following grading standards:
+- **Resolved (≥90 points)**: Comprehensively covers and resolves user's question, conclusions and recommendations are practical and executable, reasoning is rigorous, evidence is detailed and timely
+- **Not Resolved (<90 points)**: Report analysis is superficial, fails to address core research points, or deviates from user needs, or contains factual errors, or lacks effective evidence support, with low reference value
+
+### Important Notes
+- The sum of scores from five dimensions should equal the total score (out of 100)
+- Structure and readability is an additional assessment item, not counted in total but explained in reason
+- Ensure each dimension's score is within its specified range
+
+Provide your evaluation in the following structured JSON format:
+{{
+    "precision_relevance": {{
+        "score": <float (0-35)>,
+        "reason": "<detailed evaluation reasoning for precision and relevance>"
+    }},
+    "completeness_depth": {{
+        "score": <float (0-30)>,
+        "reason": "<detailed evaluation reasoning for completeness and depth>"
+    }},
+    "data_support": {{
+        "score": <float (0-20)>,
+        "reason": "<detailed evaluation reasoning for data support and authenticity>"
+    }},
+    "logical_rigor": {{
+        "score": <float (0-10)>,
+        "reason": "<detailed evaluation reasoning for logical rigor>"
+    }},
+    "timeliness": {{
+        "score": <float (0-5)>,
+        "reason": "<detailed evaluation reasoning for timeliness>"
+    }},
+    "structure_readability": {{
+        "assessment": "<assessment explanation for structure and readability (not scored)>"
+    }}
+}}
+
+JSON:
+"""
+
+# Default PromptTemplate
+DEFAULT_REPORT_RESOLUTION_TEMPLATE = PromptTemplate(
+    messages={
+        LanguageEnum.ZH: [
+            ChatMessage(
+                role="user",
+                content=textwrap.dedent(REPORT_RESOLUTION_PROMPT_ZH),
+            ),
+        ],
+        LanguageEnum.EN: [
+            ChatMessage(
+                role="user",
+                content=textwrap.dedent(REPORT_RESOLUTION_PROMPT_EN),
+            ),
+        ],
+    },
+)
+
+
+class ReportResolutionGrader(LLMGrader):
+    """
+    Deep research agent answer resolution rate evaluation grader.
+
+    Evaluates whether a deep research agent's answer adequately resolves
+    the user's research question based on comprehensive evaluation criteria.
+
+    Attributes:
+        name: Grader name
+        model: BaseChatModel instance for evaluation
+        template: Evaluation template
+        language: Language for evaluation prompts
+
+    Example:
+        >>> from rm_gallery.core.models.openai_chat_model import OpenAIChatModel
+        >>> api = OpenAIChatModel(api_key="...", model="gpt-4o")
+        >>> grader = ReportResolutionGrader(model=api)
+        >>> result = await grader.aevaluate(
+        ...     query="What are the latest developments in quantum computing?",
+        ...     answer="Based on recent research and industry reports...",
+        ...     chat_history="",
+        ...     chat_date="2024-01-01"
+        ... )
+        >>> print(f"Score: {result.score}")
+    """
+
+    def __init__(
+            self,
+            model: Union[BaseChatModel, dict],
+            template: Optional[PromptTemplate] = DEFAULT_REPORT_RESOLUTION_TEMPLATE,
+            language: LanguageEnum = LanguageEnum.ZH,
+    ):
+        super().__init__(
+            name="report_resolution",
+            mode=GraderMode.POINTWISE,
+            description="Deep research agent report resolution rate evaluation",
+            model=model,
+            template=template,
+            language=language,
+        )
+        self.template = (
+            template if template is not None else DEFAULT_REPORT_RESOLUTION_TEMPLATE
+        )
+
+    async def aevaluate(
+            self,
+            query: str,
+            answer: str,
+            chat_history: str = "",
+            chat_date: str = "未指定日期",
+            resolution_threshold: float = 0.9,
+            **kwargs: Any,
+    ) -> GraderScore:
+        """
+        Evaluate deep research agent report resolution rate.
+
+        Args:
+            query: User's research question
+            answer: Deep research agent's report
+            chat_history: Previous conversation context (optional)
+            chat_date: Date of conversation (optional)
+            resolution_threshold: Threshold for determining if the report is resolved (default: 0.9)
+            **kwargs: Additional arguments
+
+        Returns:
+            GraderScore: Report resolution rate score (0.0-1.0)
+                - score: Normalized score (0-100 from LLM normalized to 0.0-1.0)
+                - reason: Detailed evaluation with dimension breakdown
+                - metadata: Additional evaluation details including is_resolved status
+
+        Example:
+            >>> result = await grader.aevaluate(
+            ...     query="What are the latest breakthroughs in AI safety research?",
+            ...     report="Based on recent academic publications and industry reports...",
+            ...     chat_date="2024-01-01",
+            ...     resolution_threshold=0.85
+            ... )
+        """
+        try:
+            # Call parent evaluation with formatted parameters
+            result = await super().aevaluate(
+                chat_history=chat_history,
+                query=query,
+                answer=answer,
+                chat_date=chat_date,
+            )
+
+            # Parse the JSON response and extract scores from new structure
+            response_dict = {}
+            if hasattr(result, "metadata") and isinstance(result.metadata, dict):
+                response_dict = result.metadata.get("response", {})
+
+            # Extract evaluation scores from each dimension
+            precision_dict = response_dict.get("precision_relevance", {})
+            raw_precision_score = float(precision_dict.get("score", 0.0))  # 0-35
+            precision_reason = precision_dict.get("reason", "")
+
+            completeness_dict = response_dict.get("completeness_depth", {})
+            raw_completeness_score = float(completeness_dict.get("score", 0.0))  # 0-30
+            completeness_reason = completeness_dict.get("reason", "")
+
+            data_support_dict = response_dict.get("data_support", {})
+            raw_data_support_score = float(data_support_dict.get("score", 0.0))  # 0-20
+            data_support_reason = data_support_dict.get("reason", "")
+
+            logical_rigor_dict = response_dict.get("logical_rigor", {})
+            raw_logical_rigor_score = float(logical_rigor_dict.get("score", 0.0))  # 0-10
+            logical_rigor_reason = logical_rigor_dict.get("reason", "")
+
+            timeliness_dict = response_dict.get("timeliness", {})
+            raw_timeliness_score = float(timeliness_dict.get("score", 0.0))  # 0-5
+            timeliness_reason = timeliness_dict.get("reason", "")
+
+            structure_dict = response_dict.get("structure_readability", {})
+            structure_assessment = structure_dict.get("assessment", "")
+
+            # Calculate total score (should be approximately 100)
+            total_raw_score = (
+                    raw_precision_score
+                    + raw_completeness_score
+                    + raw_data_support_score
+                    + raw_logical_rigor_score
+                    + raw_timeliness_score
+            )
+
+            # Normalize total score from 0-100 to 0.0-1.0
+            normalized_score = total_raw_score / 100.0
+
+            # Ensure score is in valid range
+            normalized_score = max(0.0, min(1.0, normalized_score))
+
+            # Determine resolution status using the specified threshold
+            is_resolved = normalized_score >= resolution_threshold
+
+            reason = (
+                f"Report evaluation (total: {total_raw_score:.1f}/100): "
+                f"precision={raw_precision_score:.1f}/35, "
+                f"completeness={raw_completeness_score:.1f}/30, "
+                f"data_support={raw_data_support_score:.1f}/20, "
+                f"logic={raw_logical_rigor_score:.1f}/10, "
+                f"timeliness={raw_timeliness_score:.1f}/5"
+            )
+
+        except Exception as e:
+            logger.error(f"Error evaluating {self.name}: {e}")
+            normalized_score = 0.0
+            total_raw_score = 0.0
+            raw_precision_score = 0.0
+            precision_reason = ""
+            raw_completeness_score = 0.0
+            completeness_reason = ""
+            raw_data_support_score = 0.0
+            data_support_reason = ""
+            raw_logical_rigor_score = 0.0
+            logical_rigor_reason = ""
+            raw_timeliness_score = 0.0
+            timeliness_reason = ""
+            structure_assessment = ""
+            is_resolved = False
+            reason = f"Evaluation error: {str(e)}"
+
+        # Prepare metadata
+        metadata = {
+            "precision_relevance": {
+                "raw_score": raw_precision_score,
+                "max_score": 35.0,
+                "normalized_score": raw_precision_score / 35.0,
+                "reason": precision_reason,
+            },
+            "completeness_depth": {
+                "raw_score": raw_completeness_score,
+                "max_score": 30.0,
+                "normalized_score": raw_completeness_score / 30.0,
+                "reason": completeness_reason,
+            },
+            "data_support": {
+                "raw_score": raw_data_support_score,
+                "max_score": 20.0,
+                "normalized_score": raw_data_support_score / 20.0,
+                "reason": data_support_reason,
+            },
+            "logical_rigor": {
+                "raw_score": raw_logical_rigor_score,
+                "max_score": 10.0,
+                "normalized_score": raw_logical_rigor_score / 10.0,
+                "reason": logical_rigor_reason,
+            },
+            "timeliness": {
+                "raw_score": raw_timeliness_score,
+                "max_score": 5.0,
+                "normalized_score": raw_timeliness_score / 5.0,
+                "reason": timeliness_reason,
+            },
+            "structure_readability": {
+                "assessment": structure_assessment,
+            },
+            "total_raw_score": total_raw_score,
+            "is_resolved": is_resolved,
+            "resolution_threshold": resolution_threshold,
+            "evaluation_type": "report_resolution",
+        }
+
+        return GraderScore(
+            name=self.name,
+            score=normalized_score,
+            reason=reason,
+            metadata=metadata,
+        )

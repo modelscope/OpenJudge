@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Tool Selection Quality Grader
+Tool Selection Grader
 
-Evaluates the quality of tool selection made by the agent to address the user query.
+Evaluates the tool selection made by the agent to address the user query.
 """
 
 import json
@@ -20,10 +20,10 @@ from rm_gallery.core.models.schema.prompt_template import LanguageEnum, PromptTe
 # pylint: disable=line-too-long
 
 # English Prompt
-TOOL_SELECTION_QUALITY_PROMPT_EN = """
-You are an expert in analyzing tool selection decisions. Your task is to evaluate the quality of tool selection made by an agent to address the user query.
+TOOL_SELECTION_PROMPT_EN = """
+You are an expert in analyzing tool selection decisions. Your task is to evaluate the  of tool selection made by an agent to address the user query.
 
-<Evaluation Dimension: Tool Selection Quality>
+<Evaluation Dimension: Tool Selection >
 Evaluate whether the agent selected the most appropriate tool(s) from the available tools to effectively address the user's query. This includes assessing relevance, completeness, and efficiency of tool selection.
 </Evaluation Dimension>
 
@@ -61,12 +61,12 @@ For your analysis:
 {context_section}
 
 # Scoring Instructions
-Use a scale from 0.0 to 1.0:
-- 1.0: Perfect tool selection - highly relevant, complete, and efficient
-- 0.7-0.9: Good tool selection - relevant with minor inefficiencies
-- 0.4-0.6: Acceptable tool selection - partially addresses the query
-- 0.1-0.3: Poor tool selection - mostly irrelevant or incomplete
-- 0.0: Completely wrong tool selection - fails to address the query
+Use a scale from 1 to 15:
+- 5: Perfect tool selection - highly relevant, complete, and efficient
+- 4: Good tool selection - relevant with minor inefficiencies
+- 3: Acceptable tool selection - partially addresses the query
+- 2: Poor tool selection - mostly irrelevant or incomplete
+- 1: Completely wrong tool selection - fails to address the query
 
 Provide your evaluation in the following structured JSON format:
 {{
@@ -78,7 +78,7 @@ JSON:
 """
 
 # Chinese Prompt
-TOOL_SELECTION_QUALITY_PROMPT_ZH = """
+TOOL_SELECTION_PROMPT_ZH = """
 你是一名分析工具选择决策的专家。你的任务是评估智能体为解决用户查询而做出的工具选择的质量。
 
 <评估维度：工具选择质量>
@@ -119,12 +119,12 @@ TOOL_SELECTION_QUALITY_PROMPT_ZH = """
 {context_section}
 
 # 评分指令
-使用 0.0 到 1.0 的评分标准：
-- 1.0：完美的工具选择 - 高度相关、完整且高效
-- 0.7-0.9：良好的工具选择 - 相关但有轻微的低效
-- 0.4-0.6：可接受的工具选择 - 部分解决了查询
-- 0.1-0.3：较差的工具选择 - 大多不相关或不完整
-- 0.0：完全错误的工具选择 - 无法解决查询
+使用 1 到 5 的评分标准：
+- 5：完美的工具选择 - 高度相关、完整且高效
+- 4：良好的工具选择 - 相关但有轻微的低效
+- 3：可接受的工具选择 - 部分解决了查询
+- 3：较差的工具选择 - 大多不相关或不完整
+- 1：完全错误的工具选择 - 无法解决查询
 
 请按以下结构化 JSON 格式提供你的评估：
 {{
@@ -136,36 +136,36 @@ JSON:
 """
 
 # Build default template from prompts
-DEFAULT_TOOL_SELECTION_QUALITY_TEMPLATE = PromptTemplate(
+DEFAULT_TOOL_SELECTION_TEMPLATE = PromptTemplate(
     messages={
         LanguageEnum.EN: [
             ChatMessage(
                 role="user",
-                content=textwrap.dedent(TOOL_SELECTION_QUALITY_PROMPT_EN),
+                content=textwrap.dedent(TOOL_SELECTION_PROMPT_EN),
             ),
         ],
         LanguageEnum.ZH: [
             ChatMessage(
                 role="user",
-                content=textwrap.dedent(TOOL_SELECTION_QUALITY_PROMPT_ZH),
+                content=textwrap.dedent(TOOL_SELECTION_PROMPT_ZH),
             ),
         ],
     },
 )
 
 
-class ToolSelectionQualityGrader(LLMGrader):
+class ToolSelectionGrader(LLMGrader):
     """
-    Tool Selection Quality Grader
+    Tool Selection Grader
 
-    Evaluates the quality of tool selection made by the agent to address the user query.
+    Evaluates the tool selection made by the agent to address the user query.
 
     Attributes:
         name: Grader name
         model: BaseChatModel instance for evaluation
         template: Evaluation template
         language: Language for evaluation prompts (default: LanguageEnum.EN)
-        threshold: Quality threshold [0, 1] (default: 0.7)
+        threshold: threshold [0, 1] (default: 0.7)
 
     Example:
         >>> from rm_gallery.core.model.openai_llm import OpenAIChatModel
@@ -177,7 +177,7 @@ class ToolSelectionQualityGrader(LLMGrader):
         ...     generate_kwargs={"temperature": 0.1}
         ... )
         >>>
-        >>> grader = ToolSelectionQualityGrader(
+        >>> grader = ToolSelectionGrader(
         ...     model=api,
         ...     threshold=0.7,
         ...     language=LanguageEnum.EN
@@ -195,19 +195,19 @@ class ToolSelectionQualityGrader(LLMGrader):
         self,
         model: BaseChatModel | dict,
         threshold: float = 0.7,
-        template: Optional[PromptTemplate] = DEFAULT_TOOL_SELECTION_QUALITY_TEMPLATE,
+        template: Optional[PromptTemplate] = DEFAULT_TOOL_SELECTION_TEMPLATE,
         language: LanguageEnum = LanguageEnum.EN,
     ):
         super().__init__(
-            name="tool_selection_quality",
+            name="tool_selection",
             mode=GraderMode.POINTWISE,
-            description="Evaluate tool selection quality",
+            description="Evaluate tool selection ",
             model=model,
             template=template,
             language=language,
         )
         self.threshold = threshold
-        self.template = template if template is not None else DEFAULT_TOOL_SELECTION_QUALITY_TEMPLATE
+        self.template = template if template is not None else DEFAULT_TOOL_SELECTION_TEMPLATE
 
     async def aevaluate(
         self,
@@ -216,7 +216,7 @@ class ToolSelectionQualityGrader(LLMGrader):
         tool_calls: Union[Dict[str, Any], List[Dict[str, Any]]],
     ) -> GraderScore:
         """
-        Evaluate tool selection quality
+        Evaluate tool selection
 
         Args:
             query: Query or chat history. Can be a string for simple queries or a list of
@@ -293,7 +293,7 @@ class ToolSelectionQualityGrader(LLMGrader):
             normalized_score = max(0.0, min(1.0, score))
 
         except Exception as e:
-            logger.error(f"Error evaluating tool selection quality: {e}")
+            logger.error(f"Error evaluating tool selection: {e}")
             normalized_score = 0.0
             score = 0.0
             reason = f"Evaluation error: {str(e)}"
@@ -313,6 +313,6 @@ class ToolSelectionQualityGrader(LLMGrader):
 
 
 __all__ = [
-    "ToolSelectionQualityGrader",
-    "DEFAULT_TOOL_SELECTION_QUALITY_TEMPLATE",
+    "ToolSelectionGrader",
+    "DEFAULT_TOOL_SELECTION_TEMPLATE",
 ]

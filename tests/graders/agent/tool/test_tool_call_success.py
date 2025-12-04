@@ -35,7 +35,7 @@ def test_tool_call_success_grader_chinese():
     assert grader.language == LanguageEnum.ZH
 
 
-# @pytest.mark.skip(reason="Requires API key and network access")
+@pytest.mark.skip(reason="Requires API key and network access")
 @pytest.mark.asyncio
 async def test_tool_call_success_with_successful_calls():
     """Test with successful tool calls"""

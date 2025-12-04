@@ -24,7 +24,17 @@ class ConcurrencyManager:
         return cls._instance
 
     def __init__(self, max_concurrency: int = 32):
-        """Initialize the GraderConcurrencyManager as a singleton."""
+        """Initialize the GraderConcurrencyManager as a singleton.
+
+        The initialization logic is guarded so that concurrency settings are
+        only applied on the first construction. Subsequent constructions will
+        reuse the existing semaphore and configuration without resetting the
+        global limit.
+        """
+        if hasattr(self, "_semaphore"):
+            # Already initialized, do not override existing concurrency settings
+            return
+
         self.set_max_concurrency(max_concurrency)
 
     def set_max_concurrency(self, max_concurrency: int = 32):

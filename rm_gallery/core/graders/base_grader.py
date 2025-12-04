@@ -167,17 +167,18 @@ class BaseGrader(ABC):
             >>> # grader = BaseGrader.from_config(config)
             >>> # Note: Cannot instantiate abstract class
         """
-        # Extract standard grader properties
-        name = config.pop("name", "")
-        mode = config.pop("mode", GraderMode.POINTWISE)
-        description = config.pop("description", "")
+        # Extract standard grader properties from a copy to avoid mutating the input config
+        config_copy = dict(config)
+        name = config_copy.pop("name", "")
+        mode = config_copy.pop("mode", GraderMode.POINTWISE)
+        description = config_copy.pop("description", "")
 
         # Create and return new instance with remaining config items as kwargs
         return cls(
             name=name,
             mode=mode,
             description=description,
-            **config,
+            **config_copy,
         )
 
     def to_dict(self) -> dict:

@@ -245,9 +245,9 @@ Grader Types:
 
 #### 通用领域 (General)
 - `AccuracyGrader` - 精确匹配
-- `F1ScoreGrader` - F1分数
-- `RougeLGrader` - ROUGE-L
-- `BLEUGrader` - BLEU (建议新增)
+- `SimilarityGrader` - 统一的文本相似度评估器 (支持 F1 Score, ROUGE-L, BLEU, METEOR 等多种算法)
+- `StringMatchGrader` - 统一的字符串匹配评估器
+- `NumberAccuracyGrader` - 数字准确性检查
 - `BERTScoreGrader` - BERTScore (建议新增)
 
 #### 数学领域 (Math)

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Reference Adherence Grader
+Correctness Grader
 
 Evaluates whether model response align with and properly utilize reference materials,
 including factual consistency, style matching, and appropriate citation/grounding.
@@ -19,7 +19,7 @@ from rm_gallery.core.models.schema.prompt_template import LanguageEnum, PromptTe
 
 
 # English Prompt
-REFERENCE_ADHERENCE_PROMPT_EN = """
+CORRECTNESS_PROMPT_EN = """
 You are a professional data annotator responsible for evaluating whether the model response properly adheres to the provided reference material. Your task is to score according to the following criteria:
 
 <Scoring Criteria>
@@ -41,16 +41,6 @@ Points should be deducted for:
 - Taking reference information out of context.
 - Over-relying on reference when original synthesis is needed.
 </Scoring Criteria>
-
-<Detailed Scoring Guidelines (0-10 points)>
-0 points: Response completely ignores or contradicts the reference material.
-1-2 points: Response contains major factual errors compared to the reference, omits critical information, or significantly misrepresents the reference content.
-3-4 points: Response partially addresses the reference but has notable omissions or inaccuracies. Some key points from the reference are missing or misrepresented.
-5-6 points: Response covers basic information from the reference but lacks key details, has some inconsistencies, or fails to fully utilize the reference material.
-7-8 points: Response accurately reflects most of the reference material with only minor omissions or stylistic differences. Well-balanced use of reference information.
-9 points: Response accurately follows the reference with very minor issues. Excellent use of reference material with appropriate style and content matching.
-10 points: Response perfectly adheres to the reference in all aspects including facts, key points, style, tone, and format. No errors or omissions.
-</Detailed Scoring Guidelines>
 
 <Guidance>
 - Carefully read the reference material to understand its key facts, style, and content.
@@ -84,15 +74,22 @@ Evaluate the following:
 # Output Instructions
 Provide your evaluation in the following structured JSON format:
 {{
-    "score": <integer between 0 and 10, where 10 means perfect reference adherence and 0 means complete failure to adhere to reference>,
+    "score": <integer between 1 and 5, where 5 means perfect reference adherence and 1 means complete failure to adhere to reference>,
     "reason": "<brief explanation for the assigned score, specifically mentioning how the response aligns with or deviates from the reference material>"
 }}
+
+Scoring Scale:
+- 5: Perfect adherence to reference in all aspects
+- 4: Strong adherence with minor stylistic differences
+- 3: Partially follows reference but with notable deviations
+- 2: Significant departures or misrepresentation of reference
+- 1: Completely ignores or contradicts reference material
 
 JSON:
 """
 
 # Chinese Prompt
-REFERENCE_ADHERENCE_PROMPT_ZH = """
+CORRECTNESS_PROMPT_ZH = """
 你是一名专业的数据标注员，负责评估模型输出是否正确遵循提供的参考材料。你的任务是根据以下标准进行评分：
 
 <评分标准>
@@ -114,16 +111,6 @@ REFERENCE_ADHERENCE_PROMPT_ZH = """
 - 脱离上下文使用参考信息。
 - 在需要原创综合时过度依赖参考。
 </评分标准>
-
-<详细评分指南（0-10分）>
-0分：回复完全忽略或与参考材料相矛盾。
-1-2分：回复与参考相比存在重大事实错误，遗漏关键信息，或严重歪曲参考内容。
-3-4分：回复部分涉及了参考内容，但有明显的遗漏或不准确之处。参考中的某些要点缺失或被误述。
-5-6分：回复涵盖了参考中的基本信息，但缺少关键细节，存在一些不一致，或未能充分利用参考材料。
-7-8分：回复准确反映了参考材料的大部分内容，只有微小的遗漏或风格差异。很好地平衡使用了参考信息。
-9分：回复准确遵循了参考内容，仅有极小的问题。出色地使用了参考材料，在风格和内容上匹配得当。
-10分：回复在各个方面都完美遵循了参考内容，包括事实、要点、风格、语气和格式。没有错误或遗漏。
-</详细评分指南>
 
 <指导>
 - 仔细阅读参考材料以理解其关键事实、风格和内容。
@@ -157,35 +144,42 @@ REFERENCE_ADHERENCE_PROMPT_ZH = """
 # 输出指令
 请按以下结构化 JSON 格式提供你的评估：
 {{
-    "score": <0到10之间的整数，其中10表示完美遵循参考，0表示完全未能遵循参考>,
+    "score": <1到5之间的整数，其中5表示完美遵循参考，1表示完全未能遵循参考>,
     "reason": "<对所给分数的简要解释，特别提到输出如何与参考材料一致或偏离>"
 }}
+
+评分标尺：
+- 5: 在所有方面都完美遵循参考
+- 4: 强烈遵循，仅有轻微的风格差异
+- 3: 部分遵循参考，但有明显偏离
+- 2: 明显偏离或误述参考内容
+- 1: 完全忽略或与参考材料矛盾
 
 JSON:
 """
 
 # Build default template from prompts
-DEFAULT_REFERENCE_ADHERENCE_TEMPLATE = PromptTemplate(
+DEFAULT_CORRECTNESS_TEMPLATE = PromptTemplate(
     messages={
         LanguageEnum.EN: [
             ChatMessage(
                 role="user",
-                content=textwrap.dedent(REFERENCE_ADHERENCE_PROMPT_EN),
+                content=textwrap.dedent(CORRECTNESS_PROMPT_EN),
             ),
         ],
         LanguageEnum.ZH: [
             ChatMessage(
                 role="user",
-                content=textwrap.dedent(REFERENCE_ADHERENCE_PROMPT_ZH),
+                content=textwrap.dedent(CORRECTNESS_PROMPT_ZH),
             ),
         ],
     },
 )
 
 
-class ReferenceAdherenceGrader(LLMGrader):
+class CorrectnessGrader(LLMGrader):
     """
-    Reference Adherence Grader
+    Correctness Grader
 
     Purpose:
         Evaluates how well model outputs adhere to provided reference materials, ensuring
@@ -209,30 +203,31 @@ class ReferenceAdherenceGrader(LLMGrader):
         - Brand voice consistency checks
 
     Scoring:
-        - 10: Perfect adherence to reference in all aspects
-        - 7-9: Strong adherence with minor stylistic differences
-        - 4-6: Partially follows reference but with notable deviations
-        - 0-3: Significant departures or misrepresentation of reference
+        - 5: Perfect adherence to reference in all aspects
+        - 4: Strong adherence with minor stylistic differences
+        - 3: Partially follows reference but with notable deviations
+        - 2: Significant departures or misrepresentation of reference
+        - 1: Completely ignores or contradicts reference material
 
     Args:
         model: BaseChatModel instance or dict config for OpenAIChatModel
         threshold: Minimum score [0, 1] to pass (default: 0.7)
-        template: Custom evaluation template (default: DEFAULT_REFERENCE_ADHERENCE_TEMPLATE)
+        template: Custom evaluation template (default: DEFAULT_CORRECTNESS_TEMPLATE)
         language: Prompt language - EN or ZH (default: LanguageEnum.EN)
 
     Returns:
         GraderScore object with:
-            - score: Normalized score [0, 1] where 1.0 = perfect adherence
+            - score: Score [1, 5] where 5 = perfect adherence, 1 = complete failure
             - reason: Explanation of how well output follows reference
-            - metadata: Raw score, threshold, and evaluation details
+            - metadata: Threshold and evaluation details
 
     Example:
         >>> from rm_gallery.core.model.openai_llm import OpenAIChatModel
-        >>> from rm_gallery.core.llm_judge import ReferenceAdherenceGrader
+        >>> from rm_gallery.core.llm_judge import CorrectnessGrader
         >>>
         >>> # Initialize grader
         >>> model = OpenAIChatModel(api_key="sk-...", model="qwen3-max")
-        >>> grader = ReferenceAdherenceGrader(model=model, threshold=0.7)
+        >>> grader = CorrectnessGrader(model=model, threshold=0.7)
         >>>
         >>> # Good adherence
         >>> result = await grader.aevaluate(
@@ -240,7 +235,7 @@ class ReferenceAdherenceGrader(LLMGrader):
         ...     input="When was the product launched?",
         ...     output="The product launched in Q1 2023 in Europe, capturing 50% market share."
         ... )
-        >>> print(result.score)  # 1.0 - accurate to reference
+        >>> print(result.score)  # 5 - accurate to reference
         >>>
         >>> # Poor adherence
         >>> result = await grader.aevaluate(
@@ -248,27 +243,27 @@ class ReferenceAdherenceGrader(LLMGrader):
         ...     response="The product was launched in early 2023 in European markets."
         ...     reference="The product was launched in Q1 2023 in Europe.",
         ... )
-        >>> print(result.score)  # 0.1 - contradicts reference
+        >>> print(result.score)  # 1 - contradicts reference
     """
 
     def __init__(
         self,
         model: BaseChatModel | dict,
         threshold: float = 0.7,
-        template: Optional[PromptTemplate] = DEFAULT_REFERENCE_ADHERENCE_TEMPLATE,
+        template: Optional[PromptTemplate] = DEFAULT_CORRECTNESS_TEMPLATE,
         language: LanguageEnum = LanguageEnum.EN,
     ):
         """
-        Initialize ReferenceAdherenceGrader
+        Initialize CorrectnessGrader
 
         Args:
             model: BaseChatModel instance or dict config for OpenAIChatModel
             threshold: Success threshold [0, 1] (default: 0.7)
-            template: PromptTemplate for evaluation prompts (default: DEFAULT_REFERENCE_ADHERENCE_TEMPLATE)
+            template: PromptTemplate for evaluation prompts (default: DEFAULT_CORRECTNESS_TEMPLATE)
             language: Language for prompts (default: LanguageEnum.EN)
         """
         super().__init__(
-            name="reference_adherence",
+            name="correctness",
             mode=GraderMode.POINTWISE,
             description="Evaluate whether response adheres to provided reference materials",
             model=model,
@@ -282,21 +277,21 @@ class ReferenceAdherenceGrader(LLMGrader):
         query: str,
         response: str,
         reference: str,
-        reference_type: Optional[str] = None,
+        reference_type: str = "",
     ) -> GraderScore:
         """
-        Evaluate reference adherence in response
+        Evaluate correctness in response
 
         Args:
             query: Original user query or question
             response: Model response to evaluate
             reference: Reference material to adhere to
-            reference_type: Optional description of how reference should be used
+            reference_type: Description of how reference should be used. Defaults to empty string.
                           (e.g., "style guide", "factual source", "example format")
 
         Returns:
-            GraderScore: Score with normalized reference adherence value [0, 1]
-                        where 1.0 means perfect adherence, 0.0 means complete failure
+            GraderScore: Score with correctness value [1, 5]
+                        where 5 means perfect adherence, 1 means complete failure
 
         Example:
             >>> result = await grader.aevaluate(
@@ -331,31 +326,27 @@ Evaluate adherence accordingly.
             )
             score = result.score
             reason = result.reason
-            # Normalize score from 0-10 to 0-1
-            normalized_score = score / 10.0
 
         except Exception as e:
-            logger.error(f"Error evaluating reference adherence: {e}")
+            logger.error(f"Error evaluating correctness: {e}")
             score = 0.0
-            normalized_score = 0.0
             reason = f"Evaluation error: {str(e)}"
 
         # Prepare metadata
         metadata = {
             "threshold": self.threshold,
-            "raw_score": score,
             "reference_type": reference_type,
         }
 
         # Generate final reason
-        reason = f"Reference adherence score: {normalized_score:.4f}\n{reason}"
+        reason = f"Correctness score: {score}\n{reason}"
 
         return GraderScore(
             name=self.name,
-            score=normalized_score,
+            score=score,
             reason=reason,
             metadata=metadata,
         )
 
 
-__all__ = ["ReferenceAdherenceGrader", "DEFAULT_REFERENCE_ADHERENCE_TEMPLATE"]
+__all__ = ["CorrectnessGrader", "DEFAULT_CORRECTNESS_TEMPLATE"]

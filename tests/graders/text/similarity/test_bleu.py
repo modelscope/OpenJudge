@@ -7,7 +7,7 @@ Test BLEU score calculation for machine translation evaluation.
 
 import pytest
 
-from rm_gallery.core.graders.text.similarity.similarity import SimilarityGrader
+from rm_gallery.core.graders.text.similarity import SimilarityGrader
 
 
 class TestBLEUBasic:

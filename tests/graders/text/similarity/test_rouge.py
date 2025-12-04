@@ -7,7 +7,7 @@ Test ROUGE (Recall-Oriented Understudy for Gisting Evaluation) metrics.
 
 import pytest
 
-from rm_gallery.core.graders.predefined.text.similarity.similarity import SimilarityGrader
+from rm_gallery.core.graders.text.similarity.similarity import SimilarityGrader
 
 
 class TestROUGEBasic:
@@ -19,7 +19,7 @@ class TestROUGEBasic:
         grader = SimilarityGrader()
         result = await grader.aevaluate(
             reference="the cat is on the mat",
-            candidate="the cat is on the mat",
+            response="the cat is on the mat",
             algorithm="rouge",
         )
 
@@ -31,7 +31,7 @@ class TestROUGEBasic:
         grader = SimilarityGrader()
         result = await grader.aevaluate(
             reference="the cat is on the mat",
-            candidate="hello world foo bar",
+            response="hello world foo bar",
             algorithm="rouge",
         )
 
@@ -43,7 +43,7 @@ class TestROUGEBasic:
         grader = SimilarityGrader()
         result = await grader.aevaluate(
             reference="the cat is on the mat",
-            candidate="the dog is on the rug",
+            response="the dog is on the rug",
             algorithm="rouge",
         )
 
@@ -60,7 +60,7 @@ class TestROUGE1:
         grader = SimilarityGrader()
         result = await grader.aevaluate(
             reference="the cat sat",
-            candidate="the cat sat",
+            response="the cat sat",
             algorithm="rouge",
         )
 
@@ -72,7 +72,7 @@ class TestROUGE1:
         grader = SimilarityGrader()
         result = await grader.aevaluate(
             reference="the cat sat",
-            candidate="sat cat the",
+            response="sat cat the",
             algorithm="rouge1",
         )
 
@@ -85,7 +85,7 @@ class TestROUGE1:
         grader = SimilarityGrader()
         result = await grader.aevaluate(
             reference="the cat sat",
-            candidate="the big cat sat down",
+            response="the big cat sat down",
             algorithm="rouge",
         )
 
@@ -102,7 +102,7 @@ class TestROUGE2:
         grader = SimilarityGrader()
         result = await grader.aevaluate(
             reference="the cat is on the mat",
-            candidate="the cat is on the mat",
+            response="the cat is on the mat",
             algorithm="rouge",
         )
 
@@ -114,7 +114,7 @@ class TestROUGE2:
         grader = SimilarityGrader()
         result = await grader.aevaluate(
             reference="the cat is on the mat",
-            candidate="the mat is on the cat",
+            response="the mat is on the cat",
             algorithm="rouge",
         )
 
@@ -127,7 +127,7 @@ class TestROUGE2:
         grader = SimilarityGrader()
         result = await grader.aevaluate(
             reference="a b c d",
-            candidate="b a d c",
+            response="b a d c",
             algorithm="rouge2",
         )
 
@@ -144,7 +144,7 @@ class TestROUGEL:
         grader = SimilarityGrader()
         result = await grader.aevaluate(
             reference="the cat is on the mat",
-            candidate="the cat is on the mat",
+            response="the cat is on the mat",
             algorithm="rouge",
         )
 
@@ -156,7 +156,7 @@ class TestROUGEL:
         grader = SimilarityGrader()
         result = await grader.aevaluate(
             reference="a b c d e f",
-            candidate="a x b x c x d x e x f",
+            response="a x b x c x d x e x f",
             algorithm="rougeL",
         )
 
@@ -171,12 +171,12 @@ class TestROUGEL:
 
         resultL = await rougeL.aevaluate(
             reference="the cat sat on the mat",
-            candidate="the cat was sitting on the mat",
+            response="the cat was sitting on the mat",
             algorithm="rougeL",
         )
         result2 = await rouge2.aevaluate(
             reference="the cat sat on the mat",
-            candidate="the cat was sitting on the mat",
+            response="the cat was sitting on the mat",
             algorithm="rouge2",
         )
 
@@ -194,7 +194,7 @@ class TestROUGENGram:
         grader = SimilarityGrader()
         result = await grader.aevaluate(
             reference="the cat sat on the mat",
-            candidate="the cat sat on the mat",
+            response="the cat sat on the mat",
             algorithm="rouge",
         )
 
@@ -206,7 +206,7 @@ class TestROUGENGram:
         grader = SimilarityGrader()
         result = await grader.aevaluate(
             reference="the cat sat on the mat",
-            candidate="the cat sat on the mat",
+            response="the cat sat on the mat",
             algorithm="rouge",
         )
 
@@ -218,7 +218,7 @@ class TestROUGENGram:
         grader = SimilarityGrader()
         result = await grader.aevaluate(
             reference="the cat sat on the mat",
-            candidate="the cat sat on the mat",
+            response="the cat sat on the mat",
             algorithm="rouge",
         )
 
@@ -233,17 +233,17 @@ class TestROUGENGram:
 
         result1 = await rouge1.aevaluate(
             reference="the quick brown fox jumps over",
-            candidate="the quick brown fox walks over",
+            response="the quick brown fox walks over",
             algorithm="rouge1",
         )
         result2 = await rouge2.aevaluate(
             reference="the quick brown fox jumps over",
-            candidate="the quick brown fox walks over",
+            response="the quick brown fox walks over",
             algorithm="rouge2",
         )
         result3 = await rouge3.aevaluate(
             reference="the quick brown fox jumps over",
-            candidate="the quick brown fox walks over",
+            response="the quick brown fox walks over",
             algorithm="rouge3",
         )
 
@@ -260,7 +260,7 @@ class TestROUGEEdgeCases:
         grader = SimilarityGrader()
         result = await grader.aevaluate(
             reference="the cat",
-            candidate="",
+            response="",
             algorithm="rouge",
         )
 
@@ -272,7 +272,7 @@ class TestROUGEEdgeCases:
         grader = SimilarityGrader()
         result = await grader.aevaluate(
             reference="",
-            candidate="the cat",
+            response="the cat",
             algorithm="rouge",
         )
 
@@ -284,7 +284,7 @@ class TestROUGEEdgeCases:
         grader = SimilarityGrader()
         result = await grader.aevaluate(
             reference="cat",
-            candidate="cat",
+            response="cat",
             algorithm="rouge1",
         )
 
@@ -296,7 +296,7 @@ class TestROUGEEdgeCases:
         grader = SimilarityGrader()
         result = await grader.aevaluate(
             reference="cat cat cat",
-            candidate="cat dog cat",
+            response="cat dog cat",
             algorithm="rouge1",
         )
 
@@ -313,7 +313,7 @@ class TestROUGEWithStemming:
         grader = SimilarityGrader()
         result = await grader.aevaluate(
             reference="the cats are running",
-            candidate="the cat is running",
+            response="the cat is running",
             algorithm="rouge",
             use_stemmer=True,
         )
@@ -327,7 +327,7 @@ class TestROUGEWithStemming:
         grader = SimilarityGrader()
         result = await grader.aevaluate(
             reference="the cats are running",
-            candidate="the cat is running",
+            response="the cat is running",
             algorithm="rouge",
             use_stemmer=False,
         )

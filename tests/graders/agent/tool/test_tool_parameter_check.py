@@ -9,7 +9,7 @@ import asyncio
 
 import pytest
 
-from rm_gallery.core.graders.predefined.agent import ToolParameterCheckGrader
+from rm_gallery.core.graders.agent import ToolParameterCheckGrader
 from rm_gallery.core.models.openai_chat_model import OpenAIChatModel
 from rm_gallery.core.models.schema.prompt_template import LanguageEnum
 

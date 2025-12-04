@@ -7,7 +7,7 @@ Tests for the ReflectionOutcomeUnderstandingGrader class functionality.
 
 import pytest
 
-from rm_gallery.core.graders.predefined.agent import (
+from rm_gallery.core.graders.agent import (
     ReflectionOutcomeUnderstandingGrader,
 )
 from rm_gallery.core.models.openai_chat_model import OpenAIChatModel

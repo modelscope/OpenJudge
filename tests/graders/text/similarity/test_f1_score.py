@@ -7,7 +7,7 @@ Test token-based F1 score calculation following OpenAI Evals implementation.
 
 import pytest
 
-from rm_gallery.core.graders.predefined.text.similarity.similarity import SimilarityGrader
+from rm_gallery.core.graders.text.similarity.similarity import SimilarityGrader
 
 
 class TestF1ScoreBasic:
@@ -19,7 +19,7 @@ class TestF1ScoreBasic:
         grader = SimilarityGrader()
         result = await grader.aevaluate(
             reference="hello world",
-            candidate="hello world",
+            response="hello world",
             algorithm="f1_score",
         )
 
@@ -33,7 +33,7 @@ class TestF1ScoreBasic:
         grader = SimilarityGrader()
         result = await grader.aevaluate(
             reference="hello world",
-            candidate="goodbye universe",
+            response="goodbye universe",
             algorithm="f1_score",
         )
 
@@ -47,7 +47,7 @@ class TestF1ScoreBasic:
         grader = SimilarityGrader()
         result = await grader.aevaluate(
             reference="the cat is on the mat",
-            candidate="cat on mat",
+            response="cat on mat",
             algorithm="f1_score",
         )
 
@@ -64,12 +64,12 @@ class TestF1ScoreBasic:
 
         result1 = await grader.aevaluate(
             reference="the quick brown fox",
-            candidate="fox brown quick the",
+            response="fox brown quick the",
             algorithm="f1_score",
         )
         result2 = await grader.aevaluate(
             reference="the quick brown fox",
-            candidate="the quick brown fox",
+            response="the quick brown fox",
             algorithm="f1_score",
         )
 
@@ -86,7 +86,7 @@ class TestF1ScoreNormalization:
         grader = SimilarityGrader()
         result = await grader.aevaluate(
             reference="Hello World",
-            candidate="hello world",
+            response="hello world",
             algorithm="f1_score",
             normalize=True,
         )
@@ -100,7 +100,7 @@ class TestF1ScoreNormalization:
         grader = SimilarityGrader()
         result = await grader.aevaluate(
             reference="Hello World",
-            candidate="hello world",
+            response="hello world",
             algorithm="f1_score",
             normalize=False,
         )
@@ -118,7 +118,7 @@ class TestF1ScoreEdgeCases:
         grader = SimilarityGrader()
         result = await grader.aevaluate(
             reference="",
-            candidate="",
+            response="",
             algorithm="f1_score",
         )
 
@@ -131,7 +131,7 @@ class TestF1ScoreEdgeCases:
         grader = SimilarityGrader()
         result = await grader.aevaluate(
             reference="",
-            candidate="hello",
+            response="hello",
             algorithm="f1_score",
         )
 
@@ -143,7 +143,7 @@ class TestF1ScoreEdgeCases:
         grader = SimilarityGrader()
         result = await grader.aevaluate(
             reference="hello",
-            candidate="",
+            response="",
             algorithm="f1_score",
         )
 
@@ -155,7 +155,7 @@ class TestF1ScoreEdgeCases:
         grader = SimilarityGrader()
         result = await grader.aevaluate(
             reference="hello",
-            candidate="hello",
+            response="hello",
             algorithm="f1_score",
         )
 
@@ -167,7 +167,7 @@ class TestF1ScoreEdgeCases:
         grader = SimilarityGrader()
         result = await grader.aevaluate(
             reference="hello hello world",
-            candidate="hello world world",
+            response="hello world world",
             algorithm="f1_score",
         )
 
@@ -184,7 +184,7 @@ class TestF1ScorePrecisionRecall:
         grader = SimilarityGrader()
         result = await grader.aevaluate(
             reference="the quick brown fox jumps over the lazy dog",
-            candidate="quick brown fox",
+            response="quick brown fox",
             algorithm="f1_score",
         )
 
@@ -198,7 +198,7 @@ class TestF1ScorePrecisionRecall:
         grader = SimilarityGrader()
         result = await grader.aevaluate(
             reference="quick brown fox",
-            candidate="the quick brown fox jumps over the lazy dog",
+            response="the quick brown fox jumps over the lazy dog",
             algorithm="f1_score",
         )
 
@@ -216,7 +216,7 @@ class TestTokenF1Alias:
         grader = SimilarityGrader()
         result = await grader.aevaluate(
             reference="hello world",
-            candidate="hello world",
+            response="hello world",
             algorithm="token_f1",
         )
 

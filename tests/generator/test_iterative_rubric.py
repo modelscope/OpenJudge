@@ -7,7 +7,7 @@ with different configurations and evaluation modes.
 Demonstrates workflow:
 1. Create generator with configuration
 2. Generate rubrics from training data (with labels)
-3. Evaluate test data using the generated grader (without labels)
+3. Evaluate test data using the response grader (without labels)
 
 Supports pointwise and listwise evaluation modes.
 """
@@ -101,7 +101,7 @@ def get_test_model() -> OpenAIChatModel:
 async def test_iterative_grader_pointwise_without_categorization() -> None:
     """Test pointwise grader generation without categorization.
 
-    This test verifies that a pointwise grader can be generated and used
+    This test verifies that a pointwise grader can be response and used
     for evaluation without enabling rubric categorization.
     """
     model = get_test_model()
@@ -131,7 +131,7 @@ async def test_iterative_grader_pointwise_without_categorization() -> None:
 async def test_iterative_grader_pointwise_with_categorization() -> None:
     """Test pointwise grader generation with categorization.
 
-    This test verifies that a pointwise grader can be generated with
+    This test verifies that a pointwise grader can be response with
     LLM-based categorization enabled. Uses larger training dataset to
     trigger smart sampling mode.
     """
@@ -170,7 +170,7 @@ async def test_iterative_grader_pointwise_with_categorization() -> None:
 async def test_iterative_grader_listwise() -> None:
     """Test listwise grader generation.
 
-    This test verifies that a listwise grader can be generated and used
+    This test verifies that a listwise grader can be response and used
     for ranking multiple responses.
     """
     model = get_test_model()

@@ -7,7 +7,7 @@ Test fuzzy matching functionality including exact match, partial match, and toke
 
 import pytest
 
-from rm_gallery.core.graders.predefined.text.similarity.similarity import SimilarityGrader
+from rm_gallery.core.graders.text.similarity.similarity import SimilarityGrader
 
 
 class TestFuzzyMatchBasic:
@@ -19,7 +19,7 @@ class TestFuzzyMatchBasic:
         grader = SimilarityGrader()
         result = await grader.aevaluate(
             reference="hello world",
-            candidate="hello world",
+            response="hello world",
             algorithm="fuzzy_match",
         )
 
@@ -33,7 +33,7 @@ class TestFuzzyMatchBasic:
         grader = SimilarityGrader()
         result = await grader.aevaluate(
             reference="hello world",
-            candidate="goodbye universe",
+            response="goodbye universe",
             algorithm="fuzzy_match",
         )
 
@@ -46,7 +46,7 @@ class TestFuzzyMatchBasic:
         grader = SimilarityGrader()
         result = await grader.aevaluate(
             reference="hello world",
-            candidate="hello worl",
+            response="hello worl",
             algorithm="fuzzy_match",  # Missing 'd'
         )
 
@@ -60,7 +60,7 @@ class TestFuzzyMatchBasic:
         grader = SimilarityGrader()
         result = await grader.aevaluate(
             reference="Hello World",
-            candidate="hello world",
+            response="hello world",
             algorithm="fuzzy_match",
         )
 
@@ -77,7 +77,7 @@ class TestFuzzyMatchMethods:
         grader = SimilarityGrader()
         result = await grader.aevaluate(
             reference="the quick brown fox",
-            candidate="the quick brown fox",
+            response="the quick brown fox",
             algorithm="fuzzy_match",
             method="ratio",
         )
@@ -91,7 +91,7 @@ class TestFuzzyMatchMethods:
         grader = SimilarityGrader()
         result = await grader.aevaluate(
             reference="the quick brown fox jumps",
-            candidate="quick brown fox",
+            response="quick brown fox",
             algorithm="fuzzy_match",
             method="partial_ratio",
         )
@@ -105,7 +105,7 @@ class TestFuzzyMatchMethods:
         grader = SimilarityGrader()
         result = await grader.aevaluate(
             reference="brown quick the fox",
-            candidate="the quick brown fox",
+            response="the quick brown fox",
             algorithm="fuzzy_match",
             method="token_sort_ratio",
         )
@@ -131,7 +131,7 @@ class TestFuzzyMatchMultipleReferences:
         for ref in references:
             result = await grader.aevaluate(
                 reference=ref,
-                candidate=candidate,
+                response=candidate,
                 algorithm="fuzzy_match",
             )
             scores.append(result.score)
@@ -151,7 +151,7 @@ class TestFuzzyMatchMultipleReferences:
         for ref in references:
             result = await grader.aevaluate(
                 reference=ref,
-                candidate=candidate,
+                response=candidate,
                 algorithm="fuzzy_match",
             )
             scores.append(result.score)
@@ -171,7 +171,7 @@ class TestFuzzyMatchMultipleReferences:
         for ref in references:
             result = await grader.aevaluate(
                 reference=ref,
-                candidate=candidate,
+                response=candidate,
                 algorithm="fuzzy_match",
             )
             scores.append(result.score)
@@ -189,7 +189,7 @@ class TestFuzzyMatchEdgeCases:
         grader = SimilarityGrader()
         result = await grader.aevaluate(
             reference="",
-            candidate="",
+            response="",
             algorithm="fuzzy_match",
         )
 
@@ -202,7 +202,7 @@ class TestFuzzyMatchEdgeCases:
         grader = SimilarityGrader()
         result = await grader.aevaluate(
             reference="",
-            candidate="hello",
+            response="hello",
             algorithm="fuzzy_match",
         )
 
@@ -215,7 +215,7 @@ class TestFuzzyMatchEdgeCases:
         long_text = "word " * 1000  # 1000 words
         result = await grader.aevaluate(
             reference=long_text,
-            candidate=long_text,
+            response=long_text,
             algorithm="fuzzy_match",
         )
 
@@ -227,7 +227,7 @@ class TestFuzzyMatchEdgeCases:
         grader = SimilarityGrader()
         result = await grader.aevaluate(
             reference="hello@world#2024!",
-            candidate="hello@world#2024!",
+            response="hello@world#2024!",
             algorithm="fuzzy_match",
         )
 
@@ -239,7 +239,7 @@ class TestFuzzyMatchEdgeCases:
         grader = SimilarityGrader()
         result = await grader.aevaluate(
             reference="你好世界",
-            candidate="你好世界",
+            response="你好世界",
             algorithm="fuzzy_match",
         )
 
@@ -257,7 +257,7 @@ class TestFuzzyMatchThreshold:
         # High similarity - should match
         result = await grader.aevaluate(
             reference="the quick brown fox",
-            candidate="the quick brown fo",
+            response="the quick brown fo",
             algorithm="fuzzy_match",
             threshold=0.9,
         )
@@ -275,7 +275,7 @@ class TestFuzzyMatchThreshold:
         grader_strict = SimilarityGrader()
         result_strict = await grader_strict.aevaluate(
             reference="hello world",
-            candidate="hello worl",
+            response="hello worl",
             algorithm="fuzzy_match",
             threshold=0.99,
         )
@@ -284,7 +284,7 @@ class TestFuzzyMatchThreshold:
         grader_lenient = SimilarityGrader()
         result_lenient = await grader_lenient.aevaluate(
             reference="hello world",
-            candidate="hello worl",
+            response="hello worl",
             algorithm="fuzzy_match",
             threshold=0.80,
         )

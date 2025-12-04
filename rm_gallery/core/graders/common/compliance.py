@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Instruction Adherence Grader
+Compliance Grader
 
 Evaluates whether model response correctly follow the given instructions, including
 content requirements, format constraints, style guidelines, and other specified criteria.
@@ -19,7 +19,7 @@ from rm_gallery.core.models.schema.prompt_template import LanguageEnum, PromptTe
 
 
 # English Prompt
-INSTRUCTION_ADHERENCE_PROMPT_EN = """
+COMPLIANCE_PROMPT_EN = """
 You are a professional data annotator responsible for evaluating whether the model response follows the given instructions. Your task is to score according to the following criteria:
 
 <Scoring Criteria>
@@ -68,15 +68,22 @@ Evaluate the following:
 # Output Instructions
 Provide your evaluation in the following structured JSON format:
 {{
-    "score": <integer between 0 and 10, where 10 means perfect instruction adherence and 0 means complete failure to follow instructions>,
+    "score": <integer between 1 and 5, where 5 means perfect instruction adherence and 1 means complete failure to follow instructions>,
     "reason": "<brief explanation for the assigned score, specifically mentioning which instruction requirements were met or violated>"
 }}
+
+Scoring Scale:
+- 5: Perfect adherence to all instruction aspects
+- 4: Follows most instructions with minor deviations
+- 3: Partial adherence, misses some requirements
+- 2: Significant instruction violations, misses major requirements
+- 1: Complete failure to follow instructions or major misunderstanding
 
 JSON:
 """
 
 # Chinese Prompt
-INSTRUCTION_ADHERENCE_PROMPT_ZH = """
+COMPLIANCE_PROMPT_ZH = """
 你是一名专业的数据标注员，负责评估模型输出是否遵循给定的指令。你的任务是根据以下标准进行评分：
 
 <评分标准>
@@ -125,36 +132,43 @@ INSTRUCTION_ADHERENCE_PROMPT_ZH = """
 # 输出指令
 请按以下结构化 JSON 格式提供你的评估：
 {{
-    "score": <0到10之间的整数，其中10表示完美遵循指令，0表示完全未能遵循指令>,
+    "score": <1到5之间的整数，其中5表示完美遵循指令，1表示完全未能遵循指令>,
     "reason": "<对所给分数的简要解释，特别提到满足或违反了哪些指令要求>"
 }}
+
+评分标尺：
+- 5: 完美遵循指令的所有方面
+- 4: 遵循大部分指令，有轻微偏离
+- 3: 部分遵循，遗漏一些要求
+- 2: 明显违反指令，遗漏主要要求
+- 1: 完全未能遵循指令或严重误解
 
 JSON:
 """
 
 
 # Build default template from prompts
-DEFAULT_INSTRUCTION_ADHERENCE_TEMPLATE = PromptTemplate(
+DEFAULT_COMPLIANCE_TEMPLATE = PromptTemplate(
     messages={
         LanguageEnum.EN: [
             ChatMessage(
                 role="user",
-                content=textwrap.dedent(INSTRUCTION_ADHERENCE_PROMPT_EN),
+                content=textwrap.dedent(COMPLIANCE_PROMPT_EN),
             ),
         ],
         LanguageEnum.ZH: [
             ChatMessage(
                 role="user",
-                content=textwrap.dedent(INSTRUCTION_ADHERENCE_PROMPT_ZH),
+                content=textwrap.dedent(COMPLIANCE_PROMPT_ZH),
             ),
         ],
     },
 )
 
 
-class InstructionAdherenceGrader(LLMGrader):
+class ComplianceGrader(LLMGrader):
     """
-    Instruction Adherence Grader
+    Compliance Grader
 
     Purpose:
         Evaluates how precisely model outputs follow given instructions across content,
@@ -177,30 +191,31 @@ class InstructionAdherenceGrader(LLMGrader):
         - Testing AI assistants' ability to follow complex instructions
 
     Scoring:
-        - 10: Perfect adherence to all instruction aspects
-        - 7-9: Follows most instructions with minor deviations
-        - 4-6: Partial adherence, misses some requirements
-        - 0-3: Significant instruction violations or misunderstanding
+        - 5: Perfect adherence to all instruction aspects
+        - 4: Follows most instructions with minor deviations
+        - 3: Partial adherence, misses some requirements
+        - 2: Significant instruction violations, misses major requirements
+        - 1: Complete failure to follow instructions or major misunderstanding
 
     Args:
         model: BaseChatModel instance or dict config for OpenAIChatModel
         threshold: Minimum score [0, 1] to pass (default: 0.7)
-        template: Custom evaluation template (default: DEFAULT_INSTRUCTION_ADHERENCE_TEMPLATE)
+        template: Custom evaluation template (default: DEFAULT_COMPLIANCE_TEMPLATE)
         language: Prompt language - EN or ZH (default: LanguageEnum.EN)
 
     Returns:
         GraderScore object with:
-            - score: Normalized score [0, 1] where 1.0 = perfect adherence
+            - score: Score [1, 5] where 5 = perfect adherence, 1 = complete failure
             - reason: Detailed analysis of adherence and violations
-            - metadata: Raw score, threshold, and evaluation details
+            - metadata: Threshold and evaluation details
 
     Example:
         >>> from rm_gallery.core.model.openai_llm import OpenAIChatModel
-        >>> from rm_gallery.core.llm_judge import InstructionAdherenceGrader
+        >>> from rm_gallery.core.llm_judge import ComplianceGrader
         >>>
         >>> # Initialize grader
         >>> model = OpenAIChatModel(api_key="sk-...", model="qwen3-max")
-        >>> grader = InstructionAdherenceGrader(model=model, threshold=0.7)
+        >>> grader = ComplianceGrader(model=model, threshold=0.7)
         >>>
         >>> # Good adherence
         >>> result = await grader.aevaluate(
@@ -208,7 +223,7 @@ class InstructionAdherenceGrader(LLMGrader):
         ...     output="Climate change poses serious risks. Research shows rising temperatures."
         ...            "Action is urgently needed."
         ... )
-        >>> print(result.score)  # 1.0 - follows all requirements
+        >>> print(result.score)  # 5 - follows all requirements
         >>>
         >>> # Poor adherence
         >>> result = await grader.aevaluate(
@@ -216,27 +231,27 @@ class InstructionAdherenceGrader(LLMGrader):
         ...     response="Climate change is a big problem. It's getting hotter. We need to act now!",
         ...     query="Summarize the climate situation."
         ... )
-        >>> print(result.score)  # 0.3 - informal tone, poor structure
+        >>> print(result.score)  # 2 - informal tone, poor structure
     """
 
     def __init__(
         self,
         model: BaseChatModel | dict,
         threshold: float = 0.7,
-        template: Optional[PromptTemplate] = DEFAULT_INSTRUCTION_ADHERENCE_TEMPLATE,
+        template: Optional[PromptTemplate] = DEFAULT_COMPLIANCE_TEMPLATE,
         language: LanguageEnum = LanguageEnum.EN,
     ):
         """
-        Initialize InstructionAdherenceGrader
+        Initialize ComplianceGrader
 
         Args:
             model: BaseChatModel instance or dict config for OpenAIChatModel
             threshold: Success threshold [0, 1] (default: 0.7)
-            template: PromptTemplate for evaluation prompts (default: DEFAULT_INSTRUCTION_ADHERENCE_TEMPLATE)
+            template: PromptTemplate for evaluation prompts (default: DEFAULT_COMPLIANCE_TEMPLATE)
             language: Language for prompts (default: LanguageEnum.EN)
         """
         super().__init__(
-            name="instruction_adherence",
+            name="compliance",
             mode=GraderMode.POINTWISE,
             description="Evaluate whether response follows the given instructions",
             model=model,
@@ -249,19 +264,19 @@ class InstructionAdherenceGrader(LLMGrader):
         self,
         instruction: str,
         response: str,
-        query: Optional[str] = None,
+        query: str = "",
     ) -> GraderScore:
         """
-        Evaluate instruction adherence in response
+        Evaluate compliance in response
 
         Args:
             instruction: The instruction or prompt given to the model
             response: Model response to evaluate
-            query: Optional original user query or question
+            query: Original user query or question. Defaults to empty string.
 
         Returns:
-            GraderScore: Score with normalized instruction adherence value [0, 1]
-                        where 1.0 means perfect adherence, 0.0 means complete failure
+            GraderScore: Score with compliance value [1, 5]
+                        where 5 means perfect adherence, 1 means complete failure
 
         Example:
             >>> result = await grader.aevaluate(
@@ -284,30 +299,26 @@ class InstructionAdherenceGrader(LLMGrader):
             )
             score = result.score
             reason = result.reason
-            # Normalize score from 0-10 to 0-1
-            normalized_score = score / 10.0
 
         except Exception as e:
-            logger.error(f"Error evaluating instruction adherence: {e}")
+            logger.error(f"Error evaluating compliance: {e}")
             score = 0.0
-            normalized_score = 0.0
             reason = f"Evaluation error: {str(e)}"
 
         # Prepare metadata
         metadata = {
             "threshold": self.threshold,
-            "raw_score": score,
         }
 
         # Generate final reason
-        reason = f"Instruction adherence score: {normalized_score:.4f}\n{reason}"
+        reason = f"Compliance score: {score}\n{reason}"
 
         return GraderScore(
             name=self.name,
-            score=normalized_score,
+            score=score,
             reason=reason,
             metadata=metadata,
         )
 
 
-__all__ = ["InstructionAdherenceGrader", "DEFAULT_INSTRUCTION_ADHERENCE_TEMPLATE"]
+__all__ = ["ComplianceGrader", "DEFAULT_COMPLIANCE_TEMPLATE"]

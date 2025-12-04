@@ -63,9 +63,16 @@ The goal is to evaluate the helpfulness, depth, and appropriateness of the respo
 # Output Instructions
 Provide your evaluation in the following structured JSON format:
 {{
-    "score": <integer between 0 and 10, where 10 means extremely helpful and 0 means not helpful at all>,
+    "score": <integer between 1 and 5, where 5 means extremely helpful and 1 means not helpful at all>,
     "reason": "<brief explanation for the assigned score, specifically mentioning strengths or weaknesses in helpfulness, depth, and appropriateness>"
 }}
+
+Scoring Scale:
+- 5: Exceptionally helpful, comprehensive, and well-organized
+- 4: Helpful and relevant with good depth
+- 3: Provides some useful information but lacks depth or clarity
+- 2: Limited helpfulness, mostly superficial or unclear
+- 1: Not helpful, irrelevant, or confusing
 
 JSON:
 """
@@ -115,9 +122,16 @@ HELPFULNESS_PROMPT_ZH = """
 # 输出指令
 请按以下结构化 JSON 格式提供你的评估：
 {{
-    "score": <0到10之间的整数，其中10表示非常有用，0表示完全没有帮助>,
+    "score": <1到5之间的整数，其中5表示非常有用，1表示完全没有帮助>,
     "reason": "<对所给分数的简要解释，特别提到有用性、深度和适当性方面的优势或劣势>"
 }}
+
+评分标尺：
+- 5: 极其有用、全面且组织良好
+- 4: 有用且相关，有良好的深度
+- 3: 提供了一些有用信息，但缺乏深度或清晰度
+- 2: 帮助有限，大多肤浅或不清楚
+- 1: 没有帮助、无关或令人困惑
 
 JSON:
 """
@@ -166,10 +180,11 @@ class HelpfulnessGrader(LLMGrader):
         - A/B testing different response generation strategies
 
     Scoring:
-        - 10: Exceptionally helpful, comprehensive, and well-organized
-        - 7-9: Helpful and relevant with good depth
-        - 4-6: Provides some useful information but lacks depth or clarity
-        - 0-3: Unhelpful, irrelevant, or confusing
+        - 5: Exceptionally helpful, comprehensive, and well-organized
+        - 4: Helpful and relevant with good depth
+        - 3: Provides some useful information but lacks depth or clarity
+        - 2: Limited helpfulness, mostly superficial or unclear
+        - 1: Unhelpful, irrelevant, or confusing
 
     Args:
         model: BaseChatModel instance or dict config for OpenAIChatModel
@@ -179,9 +194,9 @@ class HelpfulnessGrader(LLMGrader):
 
     Returns:
         GraderScore object with:
-            - score: Normalized score [0, 1] where 1.0 = maximally helpful
+            - score: Score [1, 5] where 5 = maximally helpful, 1 = not helpful
             - reason: Explanation of strengths and weaknesses
-            - metadata: Raw score, threshold, and evaluation details
+            - metadata: Threshold and evaluation details
 
     Example:
         >>> from rm_gallery.core.model.openai_llm import OpenAIChatModel
@@ -196,7 +211,7 @@ class HelpfulnessGrader(LLMGrader):
         ...     input="What are Python decorators?",
         ...     output="Decorators are functions that modify other functions. They use @syntax..."
         ... )
-        >>> print(result.score)  # 0.9 - very helpful with good explanation
+        >>> print(result.score)  # 5 - very helpful with good explanation
         >>>
         >>> # Unhelpful output
         >>> result = await grader.aevaluate(
@@ -205,7 +220,7 @@ class HelpfulnessGrader(LLMGrader):
         ...     context="User needs help understanding Python decorators.",
         ...     reference_response="Decorators are a Python feature for wrapping functions."
         ... )
-        >>> print(result.score)  # 0.2 - too vague and lacks depth
+        >>> print(result.score)  # 2 - too vague and lacks depth
     """
 
     def __init__(
@@ -238,8 +253,8 @@ class HelpfulnessGrader(LLMGrader):
         self,
         query: str,
         response: str,
-        context: Optional[str] = None,
-        reference_response: Optional[str] = None,
+        context: str = "",
+        reference_response: str = "",
     ) -> GraderScore:
         """
         Evaluate helpfulness of response
@@ -247,12 +262,12 @@ class HelpfulnessGrader(LLMGrader):
         Args:
             query: Input query or prompt
             response: Model response to evaluate
-            context: Optional context or background information
-            reference_response: Optional reference response for comparison
+            context: Context or background information. Defaults to empty string.
+            reference_response: Reference response for comparison. Defaults to empty string.
 
         Returns:
-            GraderScore: Score with normalized helpfulness value [0, 1]
-                        where 1.0 means extremely helpful, 0.0 means not helpful
+            GraderScore: Score with helpfulness value [1, 5]
+                        where 5 means extremely helpful, 1 means not helpful
 
         Example:
             >>> result = await grader.aevaluate(
@@ -292,27 +307,23 @@ class HelpfulnessGrader(LLMGrader):
             )
             score = result.score
             reason = result.reason
-            # Normalize score from 0-10 to 0-1
-            normalized_score = score / 10.0
 
         except Exception as e:
             logger.error(f"Error evaluating helpfulness: {e}")
             score = 0.0
-            normalized_score = 0.0
             reason = f"Evaluation error: {str(e)}"
 
         # Prepare metadata
         metadata = {
             "threshold": self.threshold,
-            "raw_score": score,
         }
 
         # Generate final reason
-        reason = f"Helpfulness evaluation score: {normalized_score:.4f}\n{reason}"
+        reason = f"Helpfulness evaluation score: {score}\n{reason}"
 
         return GraderScore(
             name=self.name,
-            score=normalized_score,
+            score=score,
             reason=reason,
             metadata=metadata,
         )

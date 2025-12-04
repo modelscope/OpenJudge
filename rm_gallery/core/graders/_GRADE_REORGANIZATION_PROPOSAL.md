@@ -64,9 +64,6 @@ gallery/
 │   ├── json_match.py                                           # JsonMatchGrader: Recursively compares JSON structures element by element
 │   │                                                           # JsonValidatorGrader: Validates if the candidate text is valid JSON
 ├── general.py                                                  # AccuracyGrader: Calculates exact match accuracy between generated and reference text
-│                                                                # F1ScoreGrader: Computes F1 score at word level between generated and reference text
-│                                                                # RougeLGrader: Calculates ROUGE-L (Longest Common Subsequence) scores
-│                                                                # NumberAccuracyGrader: Checks numerical calculation accuracy by comparing numbers in texts
 ├── llm_judge/                                                 # LLM judge evaluation module: Uses large language models as judges to evaluate model output quality
 │   ├── hallucination.py                                        # HallucinationGrader: Detects hallucinations or fabricated information not supported by context
 │   ├── harmfulness.py                                          # HarmfulnessGrader: Evaluates harmfulness in model responses
@@ -370,12 +367,22 @@ gallery/
 │   │       ├── fuzzy_match.py
 │   │       ├── jaccard.py
 │   │       └── meteor.py
-│   └── general/                                               # General text metrics moved from general.py
+│   ├── matching/                                              # String matching and number accuracy
+│   │   ├── __init__.py
+│   │   ├── string_match.py                                     # StringMatchGrader
+│   │   └── number_accuracy.py                                  # NumberAccuracyGrader (moved from general/)
+│   ├── similarity/                                            # Text similarity metrics
+│   │   ├── __init__.py
+│   │   └── similarity.py                                       # SimilarityGrader (unified similarity grader)
+│   │                                                           # Note: ROUGE-L is available via SimilarityGrader with algorithm="rougeL"
+│   │                                                           # Note: F1 Score is available via SimilarityGrader with algorithm="f1_score"
+│   └── utils/                                                 # Shared utilities for text graders
 │       ├── __init__.py
-│       ├── accuracy.py                                         # AccuracyGrader
-│       ├── f1_score.py                                         # F1ScoreGrader
-│       ├── rouge_l.py                                          # RougeLGrader
-│       └── number_accuracy.py                                  # NumberAccuracyGrader
+│       ├── compute.py                                          # Core computation functions
+│       ├── string_match_compute.py                             # String matching computations
+│       ├── normalization.py                                    # Text normalization utilities
+│       ├── tokenization.py                                     # Tokenization utilities
+│       └── setup_nltk_data.py                                  # NLTK data setup
 ├── code/                                                      # Code evaluation module (Code capability)
 │   ├── __init__.py
 │   ├── code.py                                                 # SyntaxCheckGrader, ExecutionVerificationGrader

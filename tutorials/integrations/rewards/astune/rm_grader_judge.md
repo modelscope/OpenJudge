@@ -66,14 +66,15 @@ astuner:
     judge_type: customized_protocol
     judge_protocol: astuner.task_judge.rm_grader_judge->RMGraderJudge
     grader:
-      class_name: "F1ScoreGrader"
-      module_path: "rm_gallery.core.graders.text.general.f1_score"
+      class_name: "SimilarityGrader"
+      module_path: "rm_gallery.core.graders.text.similarity"
       kwargs:
         name: "f1_score_evaluator"
-        mode: "pointwise"
+        normalize: true
     mapper:
       reference: "task.reference_answer"
-      prediction: "workflow_output.metadata.final_answer"
+      response: "workflow_output.metadata.final_answer"
+      algorithm: "f1_score"
 ```
 
 ### LLM-based Evaluation

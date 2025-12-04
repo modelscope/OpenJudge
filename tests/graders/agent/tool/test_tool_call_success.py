@@ -37,6 +37,7 @@ def test_tool_call_success_grader_chinese():
 
 @pytest.mark.skip(reason="Requires API key and network access")
 @pytest.mark.asyncio
+@pytest.mark.skip(reason="Model configuration issue with qwen3-32b enable_thinking parameter")
 async def test_tool_call_success_with_successful_calls():
     """Test with successful tool calls"""
     model = OpenAIChatModel(model="qwen3-32b", api_key="your-key", stream=False)

@@ -8,7 +8,6 @@ This module contains graders for multimodal evaluation tasks including:
 - Image reference quality
 - Text-to-image generation quality
 - Image editing quality
-- Flexible custom criteria framework for multimodal evaluation
 """
 
 from rm_gallery.core.graders.multimodal._internal import MLLMImage
@@ -29,12 +28,12 @@ from rm_gallery.core.graders.multimodal.text_to_image import TextToImageGrader
 
 __all__ = [
     # Graders
+    "CustomCriteriaGrader",
     "ImageCoherenceGrader",
     "ImageHelpfulnessGrader",
     "ImageReferenceGrader",
     "ImageEditingGrader",
     "TextToImageGrader",
-    "CustomCriteriaGrader",
     # Multimodal data types
     "MLLMImage",
 ]

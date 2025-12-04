@@ -7,7 +7,7 @@ Test ROUGE (Recall-Oriented Understudy for Gisting Evaluation) metrics.
 
 import pytest
 
-from rm_gallery.core.graders.text.similarity.similarity import SimilarityGrader
+from rm_gallery.core.graders.text.similarity import SimilarityGrader
 
 
 class TestROUGEBasic:

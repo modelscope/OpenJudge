@@ -221,12 +221,10 @@ RM-Gallery 是一个全面的评估框架，提供了丰富的评估器（Evalua
 | | SummarizationGrader | 评估文本摘要的质量 | alignment/helpfulness |
 | | TranslationGrader | 评估翻译质量 | alignment/helpfulness |
 | | FactualityGrader | 评估模型响应的真实性和事实准确性 | alignment/honesty |
-| Text Similarity & Matching (文本相似性与匹配) | StringMatchGrader | 支持多种算法的字符串匹配评估器，包括精确匹配、前缀匹配、后缀匹配、正则表达式匹配、子串匹配、包含全部、包含任意、词汇重叠、字符重叠等 | text/matching |
-| | SimilarityGrader | 支持多种算法的文本相似度评估器，包括BLEU、sentence_bleu、GLEU、CHRF、METEOR、ROUGE系列、F1分数、token F1、模糊匹配、编辑距离、余弦相似度、Jaccard相似度等 | text/similarity |
-| | AccuracyGrader | 计算生成文本与参考文本之间的精确匹配准确率 | text/general |
-| | F1ScoreGrader | 计算生成文本与参考文本之间的词级F1分数 | text/general |
-| | RougeLGrader | 计算ROUGE-L（最长公共子序列）分数 | text/general |
-| | NumberAccuracyGrader | 通过比较文本中的数字来检查数值计算准确性 | text/general |
+| Text Similarity & Matching (文本相似性与匹配) | StringMatchGrader | 支持多种算法的字符串匹配评估器，包括精确匹配、前缀匹配、后缀匹配、正则表达式匹配、子串匹配、包含全部、包含任意、词汇重叠、字符重叠等 | text |
+| | SimilarityGrader | 支持多种算法的文本相似度评估器，包括BLEU、sentence_bleu、GLEU、CHRF、METEOR、ROUGE系列、F1分数、token F1、模糊匹配、编辑距离、余弦相似度、Jaccard相似度等 | text |
+| | AccuracyGrader | 计算生成文本与参考文本之间的精确匹配准确率 | text |
+| | NumberAccuracyGrader | 通过比较文本中的数字来检查数值计算准确性 | text |
 | Code Evaluation (代码评估) | SyntaxCheckGrader | 使用抽象语法树检查代码语法以验证Python代码块 | code |
 | | ExecutionVerificationGrader | 验证代码执行并检查输出正确性 | code |
 | Math Evaluation (数学评估) | MathVerifyGrader | 使用数学验证库评估数学问题解决能力 | math |
@@ -257,9 +255,7 @@ RM-Gallery 是一个全面的评估框架，提供了丰富的评估器（Evalua
 | RM-Gallery评估器 | 能力领域 | 功能描述 | OpenAI Evals对应项 | Azure AI Evaluation对应项 | LangSmith对应项 | COZE对应项 | Google ADK对应项 | Arize AI Phoenix对应项 | DeepEval对应项 |
 |------------------|---------|----------|-------------------|--------------------------|----------------|------------|------------------|-----------------------|----------------|
 | AccuracyGrader | Text Similarity & Matching | 计算生成文本与参考文本之间的精确匹配准确率 | Exact Match Grader | - | Exact Match Evaluator | - | - | Accuracy Evaluator | CorrectnessMetric |
-| F1ScoreGrader | Text Similarity & Matching | 计算生成文本与参考文本之间的词级F1分数 | F1 Score Grader | F1ScoreEvaluator | - | - | - | - | F1ScoreMetric (via RAGAS) |
-| RougeLGrader | Text Similarity & Matching | 计算ROUGE-L（最长公共子序列）分数 | ROUGE Score Grader | RougeScoreEvaluator | - | - | - | - | RAGAS Metrics |
-| SimilarityGrader | Text Similarity & Matching | 文本相似度计算 | - | SimilarityEvaluator | Embedding Distance Evaluator | - | - | - | - |
+| SimilarityGrader | Text Similarity & Matching | 统一的文本相似度评估器，支持F1分数(algorithm="f1_score")、ROUGE-L(algorithm="rougeL")、BLEU、METEOR等多种算法 | F1 Score Grader, ROUGE Score Grader | F1ScoreEvaluator, SimilarityEvaluator, RougeScoreEvaluator | Embedding Distance Evaluator | - | - | - | F1ScoreMetric, RAGAS Metrics |
 | StringMatchGrader | Text Similarity & Matching | 字符串匹配评估 | - | - | Regex Evaluator | - | - | - | - |
 | FactualityGrader | Safety & Ethical Alignment | 评估模型响应的真实性和事实准确性 | - | - | Factuality Evaluator | Factual Accuracy Evaluator | Factuality Evaluator | Factuality Evaluator | FactualityMetric (via GEval) |
 | HallucinationGrader | LLM-based Evaluation | 检测没有上下文支持的幻觉或虚构信息 | - | - | Harmfulness Evaluator | Hallucination Evaluator | - | Hallucination Evaluator | HallucinationMetric |
@@ -314,10 +310,10 @@ RM-Gallery 是一个全面的评估框架，提供了丰富的评估器（Evalua
   - `instruction`
 
 - **生成文本/候选文本**:
-  - `generated` (F1ScoreGrader, RougeLGrader, NumberAccuracyGrader, MathExpressionVerifyGrader)
+  - `generated` (NumberAccuracyGrader, MathExpressionVerifyGrader)
   - `candidate` (StringMatchGrader)
   - `answer` (大多数LLM-based Grader, 如PrivacyLeakageGrader, CodeExecutionGrader)
-  - `response` (在某些示例中)
+  - `response` (SimilarityGrader, 在某些示例中)
   - `output` (在某些示例中)
   - `generated_text` (在某些示例中)
   - `prediction` (在某些示例中)
@@ -326,7 +322,7 @@ RM-Gallery 是一个全面的评估框架，提供了丰富的评估器（Evalua
   - 建议统一为: `response`
 
 - **参考文本/标准答案**:
-  - `reference` (F1ScoreGrader, RougeLGrader, NumberAccuracyGrader, MathExpressionVerifyGrader, StringMatchGrader)
+  - `reference` (SimilarityGrader, NumberAccuracyGrader, MathExpressionVerifyGrader, StringMatchGrader)
   - `context` (StringMatchGrader)
   - `expected` (在某些示例中)
   - 建议统一为: `reference`

@@ -90,5 +90,7 @@ repos:
         always_run: true
         args: [
           "--ignore=tests/graders/multimodal",
-          "--ignore=tests/generator"
+          "--ignore=tests/generator",
+          "--ignore=data",
+          "--ignore=examples"
         ]

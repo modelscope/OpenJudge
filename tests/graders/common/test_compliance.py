@@ -1,36 +1,36 @@
 # -*- coding: utf-8 -*-
 """
-Test InstructionAdherenceGrader Grader
+Test ComplianceGrader Grader
 
-Tests for the InstructionAdherenceGrader class functionality.
+Tests for the ComplianceGrader class functionality.
 """
 from unittest.mock import AsyncMock
 
 import pytest
-from rm_gallery.core.graders.common.instruction_adherence import InstructionAdherenceGrader
+from rm_gallery.core.graders.common.compliance import ComplianceGrader
 from rm_gallery.core.models.openai_chat_model import OpenAIChatModel
 
 
-def test_instruction_adherence_grader_creation():
-    """Test creating a InstructionAdherenceGrader instance"""
+def test_compliance_grader_creation():
+    """Test creating a ComplianceGrader instance"""
     model = OpenAIChatModel(model="qwen-plus", api_key="fake-api-key", stream=False)
-    grader = InstructionAdherenceGrader(model=model)
+    grader = ComplianceGrader(model=model)
 
     assert grader is not None
     assert hasattr(grader, "name")
-    assert grader.name == "instruction_adherence"
+    assert grader.name == "compliance"
 
 
 @pytest.mark.asyncio
-async def test_instruction_adherence_grader_execution():
-    """Test executing the hallucination grader with actual model call"""
+async def test_compliance_grader_execution():
+    """Test executing the compliance grader with actual model call"""
     # Initialize the grader
     model = OpenAIChatModel(model="qwen3-32b", api_key="fake-api-key", stream=False)
     mock_parse_result = AsyncMock()
     mock_parse_result.metadata = {"score": 3.0, "reason": "perfect"}
     model.achat = AsyncMock(return_value=mock_parse_result)
 
-    grader = InstructionAdherenceGrader(model=model)
+    grader = ComplianceGrader(model=model)
     instruction = "Write exactly 3 bullet points about AI safety."
     response = "• AI safety is important\\n• We need alignment research\\n• Testing is crucial"
     # Execute the grader

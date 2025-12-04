@@ -8,7 +8,7 @@ Tests for the ToolCallSuccessGrader class functionality.
 import pytest
 import asyncio
 
-from rm_gallery.core.graders.predefined.agent import ToolCallSuccessGrader
+from rm_gallery.core.graders.agent import ToolCallSuccessGrader
 from rm_gallery.core.models.openai_chat_model import OpenAIChatModel
 from rm_gallery.core.models.schema.prompt_template import LanguageEnum
 
@@ -39,7 +39,7 @@ def test_tool_call_success_grader_chinese():
 @pytest.mark.asyncio
 async def test_tool_call_success_with_successful_calls():
     """Test with successful tool calls"""
-    model = OpenAIChatModel(model="qwen3-32b", stream=False)
+    model = OpenAIChatModel(model="qwen3-32b", api_key="your-key", stream=False)
     grader = ToolCallSuccessGrader(model=model)
 
     # Define tool definitions
@@ -105,7 +105,7 @@ async def test_tool_call_success_with_successful_calls():
 @pytest.mark.asyncio
 async def test_tool_call_success_with_failed_calls():
     """Test with failed tool calls"""
-    model = OpenAIChatModel(model="qwen3-32b", stream=False)
+    model = OpenAIChatModel(model="qwen3-32b", api_key="your-key", stream=False)
     grader = ToolCallSuccessGrader(model=model)
 
     # Define tool definitions

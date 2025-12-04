@@ -7,7 +7,7 @@ Tests for the MemoryRetrievalEffectivenessGrader class functionality.
 
 import pytest
 
-from rm_gallery.core.graders.predefined.agent import MemoryRetrievalEffectivenessGrader
+from rm_gallery.core.graders.agent import MemoryRetrievalEffectivenessGrader
 from rm_gallery.core.models.openai_chat_model import OpenAIChatModel
 from rm_gallery.core.models.schema.prompt_template import LanguageEnum
 

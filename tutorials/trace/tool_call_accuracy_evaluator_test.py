@@ -2,7 +2,7 @@
 """Tool accuracy e2e test."""
 import os
 
-from rm_gallery.core.graders.predefined.agent import ToolCallAccuracyGrader
+from rm_gallery.core.graders.agent import ToolCallAccuracyGrader
 
 # pylint: disable=line-too-long
 

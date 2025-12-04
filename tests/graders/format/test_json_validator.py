@@ -1,6 +1,6 @@
 import pytest
 
-from rm_gallery.core.graders.predefined.format.json.json_validator import JsonValidatorGrader
+from rm_gallery.core.graders.format.json.json_validator import JsonValidatorGrader
 
 
 class TestJsonValidatorGrader:
@@ -13,7 +13,7 @@ class TestJsonValidatorGrader:
 
         result = await grader.aevaluate(
             reference="",
-            candidate='{"name": "Alice", "age": 30}',  # Not used
+            response='{"name": "Alice", "age": 30}',  # Not used
         )
 
         assert result.score == 1.0
@@ -24,7 +24,7 @@ class TestJsonValidatorGrader:
         """Test valid JSON array"""
         grader = JsonValidatorGrader()
 
-        result = await grader.aevaluate(reference="", candidate='[1, 2, 3, "test"]')
+        result = await grader.aevaluate(reference="", response='[1, 2, 3, "test"]')
 
         assert result.score == 1.0
         assert result.metadata["is_valid"] is True
@@ -35,19 +35,19 @@ class TestJsonValidatorGrader:
         grader = JsonValidatorGrader()
 
         # String
-        result = await grader.aevaluate(reference="", candidate='"hello"')
+        result = await grader.aevaluate(reference="", response='"hello"')
         assert result.score == 1.0
 
         # Number
-        result = await grader.aevaluate(reference="", candidate="42")
+        result = await grader.aevaluate(reference="", response="42")
         assert result.score == 1.0
 
         # Boolean
-        result = await grader.aevaluate(reference="", candidate="true")
+        result = await grader.aevaluate(reference="", response="true")
         assert result.score == 1.0
 
         # Null
-        result = await grader.aevaluate(reference="", candidate="null")
+        result = await grader.aevaluate(reference="", response="null")
         assert result.score == 1.0
 
     @pytest.mark.asyncio
@@ -57,7 +57,7 @@ class TestJsonValidatorGrader:
 
         result = await grader.aevaluate(
             reference="",
-            candidate='{"name": "Alice"',  # Missing closing brace
+            response='{"name": "Alice"',  # Missing closing brace
         )
 
         assert result.score == 0.0
@@ -71,7 +71,7 @@ class TestJsonValidatorGrader:
 
         result = await grader.aevaluate(
             reference="",
-            candidate="This is just plain text",
+            response="This is just plain text",
         )
 
         assert result.score == 0.0
@@ -82,7 +82,7 @@ class TestJsonValidatorGrader:
         """Test empty string is invalid JSON"""
         grader = JsonValidatorGrader()
 
-        result = await grader.aevaluate(reference="", candidate="")
+        result = await grader.aevaluate(reference="", response="")
 
         assert result.score == 0.0
         assert result.metadata["is_valid"] is False

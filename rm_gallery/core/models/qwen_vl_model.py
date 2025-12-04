@@ -13,7 +13,7 @@ from dashscope import MultiModalConversation
 from loguru import logger
 from pydantic import BaseModel
 
-from rm_gallery.core.graders.predefined.multimodal._internal.helpers import MLLMImage
+from rm_gallery.core.graders.multimodal._internal.helpers import MLLMImage
 from rm_gallery.core.models.base_chat_model import BaseChatModel
 from rm_gallery.core.models.schema.response import ChatResponse
 

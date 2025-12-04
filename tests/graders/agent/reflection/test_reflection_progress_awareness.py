@@ -7,7 +7,7 @@ Tests for the ReflectionProgressAwarenessGrader class functionality.
 
 import pytest
 
-from rm_gallery.core.graders.predefined.agent import ReflectionProgressAwarenessGrader
+from rm_gallery.core.graders.agent import ReflectionProgressAwarenessGrader
 from rm_gallery.core.models.openai_chat_model import OpenAIChatModel
 from rm_gallery.core.models.schema.prompt_template import LanguageEnum
 

@@ -64,7 +64,7 @@ def init_instance_by_config(
         >>> # From config dict
         >>> config = {
         ...     'class_name': 'StringMatchGrader',
-        ...     'module_path': 'rm_gallery.core.graders.gallery.text.string_match',
+        ...     'module_path': 'rm_gallery.core.text.string_match',
         ...     'kwargs': {'ignore_case': True}
         ... }
         >>> # instance = init_instance_by_config(config)

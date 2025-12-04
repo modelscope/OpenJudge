@@ -7,7 +7,7 @@ Test BLEU score calculation for machine translation evaluation.
 
 import pytest
 
-from rm_gallery.core.graders.predefined.text.similarity.similarity import SimilarityGrader
+from rm_gallery.core.graders.text.similarity.similarity import SimilarityGrader
 
 
 class TestBLEUBasic:
@@ -19,7 +19,7 @@ class TestBLEUBasic:
         grader = SimilarityGrader()
         result = await grader.aevaluate(
             reference="the cat is on the mat",
-            candidate="the cat is on the mat",
+            response="the cat is on the mat",
             algorithm="bleu",
         )
 
@@ -32,7 +32,7 @@ class TestBLEUBasic:
         grader = SimilarityGrader()
         result = await grader.aevaluate(
             reference="the cat is on the mat",
-            candidate="hello world foo bar baz qux",
+            response="hello world foo bar baz qux",
             algorithm="bleu",
         )
 
@@ -44,7 +44,7 @@ class TestBLEUBasic:
         grader = SimilarityGrader()
         result = await grader.aevaluate(
             reference="the cat is on the mat",
-            candidate="the dog is on the mat",
+            response="the dog is on the mat",
             algorithm="bleu",
         )
 
@@ -57,7 +57,7 @@ class TestBLEUBasic:
         grader = SimilarityGrader()
         result = await grader.aevaluate(
             reference="the cat is on the mat",
-            candidate="the mat on is cat the",
+            response="the mat on is cat the",
             algorithm="bleu",
         )
 
@@ -76,7 +76,7 @@ class TestBLEUParameters:
             grader = SimilarityGrader()
             result = await grader.aevaluate(
                 reference="the quick brown fox jumps over the lazy dog",
-                candidate="the quick brown fox jumps over the lazy dog",
+                response="the quick brown fox jumps over the lazy dog",
                 algorithm="bleu",
                 max_ngram_order=n,
             )
@@ -91,7 +91,7 @@ class TestBLEUParameters:
             grader = SimilarityGrader()
             result = await grader.aevaluate(
                 reference="the cat sat on the mat",
-                candidate="the cat",
+                response="the cat",
                 algorithm="bleu",
                 smooth_method=method,
             )
@@ -107,7 +107,7 @@ class TestBLEUEdgeCases:
         grader = SimilarityGrader()
         result = await grader.aevaluate(
             reference="the cat is on the mat",
-            candidate="",
+            response="",
             algorithm="bleu",
         )
 
@@ -120,7 +120,7 @@ class TestBLEUEdgeCases:
         grader = SimilarityGrader()
         result = await grader.aevaluate(
             reference="",
-            candidate="the cat",
+            response="the cat",
             algorithm="bleu",
         )
 
@@ -133,7 +133,7 @@ class TestBLEUEdgeCases:
         grader = SimilarityGrader()
         result = await grader.aevaluate(
             reference="cat",
-            candidate="cat",
+            response="cat",
             algorithm="bleu",
         )
 
@@ -146,7 +146,7 @@ class TestBLEUEdgeCases:
         long_sentence = " ".join(["word"] * 500)
         result = await grader.aevaluate(
             reference=long_sentence,
-            candidate=long_sentence,
+            response=long_sentence,
             algorithm="bleu",
         )
 
@@ -162,7 +162,7 @@ class TestBLEUDetails:
         grader = SimilarityGrader()
         result = await grader.aevaluate(
             reference="the cat is on the mat",
-            candidate="the cat is on the mat",
+            response="the cat is on the mat",
             algorithm="bleu",
             max_ngram_order=4,
         )
@@ -181,7 +181,7 @@ class TestBLEUDetails:
         # Short candidate
         result = await grader.aevaluate(
             reference="the cat is on the mat",
-            candidate="the cat",
+            response="the cat",
             algorithm="bleu",
         )
 
@@ -195,7 +195,7 @@ class TestBLEUDetails:
         grader = SimilarityGrader()
         result = await grader.aevaluate(
             reference="the cat is on the mat",
-            candidate="the dog is on the rug",
+            response="the dog is on the rug",
             algorithm="bleu",
         )
 
@@ -213,7 +213,7 @@ class TestSentenceBLEU:
         grader = SimilarityGrader()
         result = await grader.aevaluate(
             reference="the cat is on the mat",
-            candidate="the cat is on the mat",
+            response="the cat is on the mat",
             algorithm="sentence_bleu",
         )
 
@@ -226,12 +226,12 @@ class TestSentenceBLEU:
 
         sentence_result = await grader.aevaluate(
             reference="the cat is on the mat",
-            candidate="the dog is on the mat",
+            response="the dog is on the mat",
             algorithm="sentence_bleu",
         )
         corpus_result = await grader.aevaluate(
             reference="the cat is on the mat",
-            candidate="the dog is on the mat",
+            response="the dog is on the mat",
             algorithm="bleu",
         )
 

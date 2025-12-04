@@ -1,0 +1,182 @@
+# -*- coding: utf-8 -*-
+# https://arxiv.org/pdf/2410.21545
+"""Cramo grader for evaluation of AI assistant responses."""
+
+from typing import Any
+
+from rm_gallery.core.graders.base_grader import GraderMode, GraderRank
+from rm_gallery.core.graders.llm_grader import LLMGrader
+from rm_gallery.core.models.base_chat_model import BaseChatModel
+from rm_gallery.core.models.schema.message import ChatMessage
+from rm_gallery.core.models.schema.prompt_template import PromptTemplate
+from rm_gallery.core.utils.utils import _json_loads_with_repair
+
+# Criteria Generation System Prompt
+CRITERIA_GENERATION_SYSTEM_PROMPT = (
+    "You are an impartial judge tasked with generating rubrics for evaluating "
+    "responses provided by AI assistants to an query."
+)
+
+# Criteria Generation User Prompt
+CRITERIA_GENERATION_USER_PROMPT = """# Task Description
+- Your job is to identify important rubrics, along with detailed descriptions, \
+that a human would use to objectively evaluate the quality of the response based \
+on the given query.
+- The rubrics should ensure that responses accurately fulfill the requirements \
+of the query.
+- The rubrics should be designed to ensure that responses are honest, helpful, \
+and harmless (do not contain offensive content).
+- The descriptions of the rubrics should be framed as chain-of-thought detailed \
+questions that assess whether the response meets the user's query.
+- The length of the response should only be considered a rubric if it is \
+specified in the query.\n
+# Input
+## Instruction
+{query}
+
+# Output Requirements
+```json
+{
+    "rubrics": [
+        "rubric 1",
+        ...
+    ]
+}
+```"""
+
+# Relative Evaluation System Prompt
+RELATIVE_EVALUATION_SYSTEM_PROMPT = (
+    "Please act as an impartial judge and evaluate the quality of the responses "
+    "provided by two AI assistants to the user query shown below."
+)
+
+# Relative Evaluation User Prompt
+RELATIVE_EVALUATION_USER_PROMPT = """Task Description
+- Please act as an impartial judge and evaluate the quality of the responses \
+provided by two AI assistants to the user query shown below. You should \
+choose the assistant that follows the user's querys and answers the user's \
+query better.
+- Your evaluation should consider the provided rubrics.
+- Provide detailed reasons assessing the quality of the responses based on each \
+rubric individually. Clearly specify which assistant performed better for each rubric.
+- After assessing all rubrics, provide a final verdict based on the overall \
+performance of the assistants.
+- Don't be influenced by the order in which the responses are presented. Do not \
+favor certain names of the assistants. Be as objective as possible.\n
+# Input
+## Instruction
+{query}
+
+## Rubrics
+{rubrics}
+
+## Completion
+{response}
+
+# Output Requirements
+```json
+{{
+    "rank": "The rank of each responses",
+    "reason": "The reason for the rank."
+}}
+```"""
+
+CriteriaGenerationTemplate = PromptTemplate(
+    messages=[
+        ChatMessage(
+            role="system",
+            content=CRITERIA_GENERATION_SYSTEM_PROMPT,
+        ),
+        ChatMessage(
+            role="user",
+            content=CRITERIA_GENERATION_USER_PROMPT,
+        ),
+    ],
+)
+
+RelativeEvaluationTemplate = PromptTemplate(
+    messages=[
+        ChatMessage(
+            role="system",
+            content=RELATIVE_EVALUATION_SYSTEM_PROMPT,
+        ),
+        ChatMessage(
+            role="user",
+            content=RELATIVE_EVALUATION_USER_PROMPT,
+        ),
+    ],
+)
+
+
+class Cramo(LLMGrader):
+    """Cramo grader for evaluation of AI assistant responses.
+
+    Implements the CRAMO (Criteria-Aware Relative Evaluation of Model Outputs) approach
+    for evaluating responses from AI assistants. This grader first generates
+    evaluation criteria based on the query, then evaluates the response
+    using those criteria.
+
+    The grader uses two-stage evaluation:
+    1. Criteria Generation: Generates rubrics for evaluating responses based on the query
+    2. Response Evaluation: Evaluates the response based on the generated rubrics
+    """
+
+    def __init__(self, model: BaseChatModel | dict):
+        """Initialize a Cramo grader."""
+        super().__init__(
+            name="cramo_eval",
+            mode=GraderMode.LISTWISE,
+            template=RelativeEvaluationTemplate,
+            model=model,
+        )
+
+    async def aevaluate(
+        self,
+        query: str,
+        response: str,
+        **kwargs: Any,
+    ) -> GraderRank:
+        """Evaluate and rank responses using criteria-aware relative evaluation.
+
+        This method implements the CRAMO approach which first automatically generates
+        evaluation criteria (rubrics) based on the query, then evaluates and ranks
+        the responses based on these criteria.
+
+        Args:
+            query: The query to evaluate the response against.
+            response: The response to evaluate.
+            **kwargs: Additional keyword arguments.
+
+        Returns:
+            GraderRank: A grader rank with ranking and reason.
+
+        Example:
+            >>> from rm_gallery.core.model.dashscope_llm import DashScopeLLM
+            >>> model_config = {"model": "qwen-plus"}
+            >>> grader = Cramo(name="cramo_eval", model=model_config)
+            >>> result = await grader.aevaluate(
+            ...     query="Explain the process of photosynthesis",
+            ...     response="Photosynthesis is a process used by plants..."
+            ... )
+            >>> print(result.rank)
+            >>> print(result.reason)
+        """
+        # Generate rubrics using CriteriaGenerationTemplate
+        messages = CriteriaGenerationTemplate.format(
+            query=query,
+            response=response,
+        )
+        response = await self.model.achat(
+            messages=messages,
+            callback=_json_loads_with_repair,
+        )
+        rubrics = response.metadata.get("rubrics", [])
+
+        # Evaluate the response using the generated rubrics
+        result = await super().aevaluate(
+            query=query,
+            response=response,
+            rubrics="\n".join(rubrics),
+            **kwargs,
+        )
+        return result

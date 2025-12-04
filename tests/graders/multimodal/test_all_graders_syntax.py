@@ -19,7 +19,7 @@ def test_imports():
     # Test ImageCoherenceGrader
     print("\n1. Testing ImageCoherenceGrader...")
     try:
-        from rm_gallery.core.graders.predefined.multimodal.image_coherence import (
+        from rm_gallery.core.graders.multimodal.image_coherence import (
             ImageCoherenceGrader,
         )
 
@@ -31,7 +31,7 @@ def test_imports():
     # Test ImageHelpfulnessGrader
     print("\n2. Testing ImageHelpfulnessGrader...")
     try:
-        from rm_gallery.core.graders.predefined.multimodal.image_helpfulness import (
+        from rm_gallery.core.graders.multimodal.image_helpfulness import (
             ImageHelpfulnessGrader,
         )
 
@@ -43,7 +43,7 @@ def test_imports():
     # Test ImageReferenceGrader
     print("\n3. Testing ImageReferenceGrader...")
     try:
-        from rm_gallery.core.graders.predefined.multimodal.image_reference import (
+        from rm_gallery.core.graders.multimodal.image_reference import (
             ImageReferenceGrader,
         )
 
@@ -55,7 +55,7 @@ def test_imports():
     # Test ImageEditingGrader
     print("\n4. Testing ImageEditingGrader...")
     try:
-        from rm_gallery.core.graders.predefined.multimodal.image_editing import (
+        from rm_gallery.core.graders.multimodal.image_editing import (
             ImageEditingGrader,
         )
 
@@ -67,7 +67,7 @@ def test_imports():
     # Test TextToImageGrader
     print("\n5. Testing TextToImageGrader...")
     try:
-        from rm_gallery.core.graders.predefined.multimodal.text_to_image import (
+        from rm_gallery.core.graders.multimodal.text_to_image import (
             TextToImageGrader,
         )
 
@@ -79,7 +79,7 @@ def test_imports():
     # Test MultimodalGEvalGrader
     print("\n6. Testing MultimodalGEvalGrader...")
     try:
-        from rm_gallery.core.graders.predefined.multimodal.multimodal_geval import (
+        from rm_gallery.core.graders.multimodal.multimodal_geval import (
             MultimodalGEvalGrader,
         )
 
@@ -112,22 +112,22 @@ def test_grader_signatures():
     import inspect
 
     # Import all graders
-    from rm_gallery.core.graders.predefined.multimodal.image_coherence import (
+    from rm_gallery.core.graders.multimodal.image_coherence import (
         ImageCoherenceGrader,
     )
-    from rm_gallery.core.graders.predefined.multimodal.image_editing import (
+    from rm_gallery.core.graders.multimodal.image_editing import (
         ImageEditingGrader,
     )
-    from rm_gallery.core.graders.predefined.multimodal.image_helpfulness import (
+    from rm_gallery.core.graders.multimodal.image_helpfulness import (
         ImageHelpfulnessGrader,
     )
-    from rm_gallery.core.graders.predefined.multimodal.image_reference import (
+    from rm_gallery.core.graders.multimodal.image_reference import (
         ImageReferenceGrader,
     )
-    from rm_gallery.core.graders.predefined.multimodal.multimodal_geval import (
+    from rm_gallery.core.graders.multimodal.multimodal_geval import (
         MultimodalGEvalGrader,
     )
-    from rm_gallery.core.graders.predefined.multimodal.text_to_image import (
+    from rm_gallery.core.graders.multimodal.text_to_image import (
         TextToImageGrader,
     )
 

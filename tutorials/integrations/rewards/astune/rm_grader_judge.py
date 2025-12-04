@@ -274,7 +274,7 @@ if __name__ == "__main__":
                 "task_judge": {
                     "grader": {
                         "class_name": "HelpfulnessGrader",
-                        "module_path": "rm_gallery.core.graders.predefined.alignment.helpfulness.helpfulness",
+                        "module_path": "rm_gallery.core.graders.alignment.helpfulness.helpfulness",
                         "kwargs": {
                             "model": {
                                 "model": "qwen-plus",

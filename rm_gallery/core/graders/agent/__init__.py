@@ -3,6 +3,15 @@
 
 # Action graders
 from .action.action_alignment import ActionAlignmentGrader
+from .action.action_contribution import ActionContributionGrader
+from .action.action_loop import ActionLoopDetectionGrader
+
+# Deep research graders
+from .deep_research.report_resolution import ReportResolutionGrader
+from .deep_research.trajectory_resolution import TrajectoryResolutionGrader
+
+# Observation graders
+from .observation.observation_information_gain import ObservationInformationGainGrader
 
 # Memory graders
 from .memory.memory_accuracy import MemoryAccuracyGrader
@@ -18,6 +27,7 @@ from .reflection.reflection_outcome_understanding import ReflectionOutcomeUnders
 from .reflection.reflection_progress_awareness import ReflectionProgressAwarenessGrader
 
 # Tool graders
+from .tool.tool_call_sequence_match import ToolCallSequenceMatchGrader
 from .tool.tool_call_accuracy import ToolCallAccuracyGrader
 from .tool.tool_call_success import ToolCallSuccessGrader
 from .tool.tool_parameter_check import ToolParameterCheckGrader

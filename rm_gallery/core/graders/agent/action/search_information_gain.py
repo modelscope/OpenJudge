@@ -78,6 +78,7 @@ class ObservationInformationGainGrader(BaseGrader):
         previous_observations = []
         similarity_list = []
 
+        # pylint: disable=unused-variable
         for action, observation in action_obs_pairs:
             # Skip if observation is empty or too short
             if not observation or len(observation.strip()) < 10:
@@ -85,10 +86,7 @@ class ObservationInformationGainGrader(BaseGrader):
 
             # Calculate max similarity to all previous observations
             if previous_observations:
-                similarities = [
-                    calculate_text_similarity(observation, prev_obs)
-                    for prev_obs in previous_observations
-                ]
+                similarities = [calculate_text_similarity(observation, prev_obs) for prev_obs in previous_observations]
                 max_similarity = max(similarities)
             else:
                 max_similarity = 0.0
@@ -127,4 +125,3 @@ class ObservationInformationGainGrader(BaseGrader):
                 "similarity_threshold": self.similarity_threshold,
             },
         )
-

@@ -11,7 +11,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 
 def extract_action_observation_pairs(
-        messages: List[Dict[str, Any]],
+    messages: List[Dict[str, Any]],
 ) -> List[Tuple[Dict, str]]:
     """
     Extract action-observation pairs from a sequence of messages.
@@ -66,7 +66,7 @@ def extract_action_observation_pairs(
                 # tool_call_id provided but not found in pending actions
                 raise ValueError(
                     f"Tool call ID '{tool_call_id}' not found in pending actions. "
-                    f"Available IDs: {list(pending_actions.keys())}"
+                    f"Available IDs: {list(pending_actions.keys())}",
                 )
             elif not tool_call_id and pending_actions_no_id:
                 # Fallback to FIFO matching for tool calls without IDs
@@ -77,7 +77,7 @@ def extract_action_observation_pairs(
                 # No tool_call_id and no pending actions without IDs
                 raise ValueError(
                     "Tool/function response without tool_call_id, but no pending actions without IDs. "
-                    "This may indicate a mismatch between tool calls and responses."
+                    "This may indicate a mismatch between tool calls and responses.",
                 )
     return pairs
 

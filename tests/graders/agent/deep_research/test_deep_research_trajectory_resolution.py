@@ -14,7 +14,7 @@ from rm_gallery.core.graders.agent.deep_research.trajectory_resolution import Tr
 
 def test_trajectory_resolution_grader_creation():
     """Test creating a TrajectoryResolutionGrader instance"""
-    model = OpenAIChatModel(model="qwen-plus", stream=False)
+    model = OpenAIChatModel(model="qwen3-max", api_key="your-key", stream=False)
     grader = TrajectoryResolutionGrader(model=model)
 
     assert grader is not None
@@ -24,7 +24,7 @@ def test_trajectory_resolution_grader_creation():
 
 def test_trajectory_resolution_grader_creation_chinese():
     """Test creating a Chinese TrajectoryResolutionGrader instance"""
-    model = OpenAIChatModel(model="qwen-plus", stream=False)
+    model = OpenAIChatModel(model="qwen3-max", api_key="your-key", stream=False)
     grader = TrajectoryResolutionGrader(model=model, language=LanguageEnum.ZH)
 
     assert grader is not None
@@ -35,7 +35,7 @@ def test_trajectory_resolution_grader_creation_chinese():
 @pytest.mark.asyncio
 async def test_trajectory_resolution_evaluation():
     """Test evaluating trajectory resolution with standard messages format"""
-    model = OpenAIChatModel(model="qwen3-32b", stream=False)
+    model = OpenAIChatModel(model="qwen3-max", api_key="your-key", stream=False)
     grader = TrajectoryResolutionGrader(model=model)
 
     messages = [
@@ -45,7 +45,7 @@ async def test_trajectory_resolution_evaluation():
             "role": "assistant",
             "content": "",
             "tool_calls": [
-                {"function": {"name": "search", "arguments": '{"query": "test"}'}}
+                {"function": {"name": "search", "arguments": '{"query": "test"}'}},
             ],
         },
         {"role": "tool", "name": "search", "content": "Found relevant information"},
@@ -53,7 +53,7 @@ async def test_trajectory_resolution_evaluation():
             "role": "assistant",
             "content": "",
             "tool_calls": [
-                {"function": {"name": "analyze", "arguments": '{"data": "test"}'}}
+                {"function": {"name": "analyze", "arguments": '{"data": "test"}'}},
             ],
         },
         {"role": "tool", "name": "analyze", "content": "Analysis complete"},
@@ -70,7 +70,7 @@ async def test_trajectory_resolution_evaluation():
     assert hasattr(result, "reason")
     assert hasattr(result, "metadata")
     assert 0.0 <= result.score <= 1.0
-    
+
     # Check metadata structure
     assert "problem_solving" in result.metadata
     assert "trajectory_quality" in result.metadata
@@ -80,7 +80,7 @@ async def test_trajectory_resolution_evaluation():
     assert "is_resolved" in result.metadata
     assert "resolution_threshold" in result.metadata
     assert "evaluation_type" in result.metadata
-    
+
     # Check dimension scores structure
     problem_solving = result.metadata["problem_solving"]
     assert "raw_score" in problem_solving
@@ -89,18 +89,18 @@ async def test_trajectory_resolution_evaluation():
     assert "reason" in problem_solving
     assert problem_solving["max_score"] == 40.0
     assert 0.0 <= problem_solving["raw_score"] <= 40.0
-    
+
     trajectory_quality = result.metadata["trajectory_quality"]
     assert trajectory_quality["max_score"] == 35.0
     assert 0.0 <= trajectory_quality["raw_score"] <= 35.0
-    
+
     efficiency = result.metadata["efficiency"]
     assert efficiency["max_score"] == 25.0
     assert 0.0 <= efficiency["raw_score"] <= 25.0
-    
+
     # Check step_evaluations is a list
     assert isinstance(result.metadata["step_evaluations"], list)
-    
+
     # Check is_resolved is boolean
     assert isinstance(result.metadata["is_resolved"], bool)
     assert result.metadata["evaluation_type"] == "trajectory_resolution"
@@ -110,7 +110,7 @@ async def test_trajectory_resolution_evaluation():
 @pytest.mark.asyncio
 async def test_trajectory_resolution_single_step():
     """Test with single step trajectory"""
-    model = OpenAIChatModel(model="qwen3-32b", stream=False)
+    model = OpenAIChatModel(model="qwen3-max", api_key="your-key", stream=False)
     grader = TrajectoryResolutionGrader(model=model)
 
     messages = [
@@ -120,7 +120,7 @@ async def test_trajectory_resolution_single_step():
             "role": "assistant",
             "content": "",
             "tool_calls": [
-                {"function": {"name": "search", "arguments": '{"query": "test"}'}}
+                {"function": {"name": "search", "arguments": '{"query": "test"}'}},
             ],
         },
         {"role": "tool", "name": "search", "content": "Found information"},
@@ -133,7 +133,7 @@ async def test_trajectory_resolution_single_step():
     assert hasattr(result, "score")
     assert hasattr(result, "metadata")
     assert 0.0 <= result.score <= 1.0
-    
+
     # Verify metadata exists
     assert "is_resolved" in result.metadata
     assert "total_raw_score" in result.metadata
@@ -144,7 +144,7 @@ async def test_trajectory_resolution_single_step():
 @pytest.mark.asyncio
 async def test_trajectory_resolution_custom_threshold():
     """Test with custom resolution threshold"""
-    model = OpenAIChatModel(model="qwen3-32b", stream=False)
+    model = OpenAIChatModel(model="qwen3-max", api_key="your-key", stream=False)
     grader = TrajectoryResolutionGrader(model=model)
 
     messages = [
@@ -154,7 +154,7 @@ async def test_trajectory_resolution_custom_threshold():
             "role": "assistant",
             "content": "",
             "tool_calls": [
-                {"function": {"name": "search", "arguments": '{"query": "test"}'}}
+                {"function": {"name": "search", "arguments": '{"query": "test"}'}},
             ],
         },
         {"role": "tool", "name": "search", "content": "Found relevant information"},
@@ -179,7 +179,7 @@ async def test_trajectory_resolution_custom_threshold():
 @pytest.mark.asyncio
 async def test_trajectory_resolution_empty_messages():
     """Test with empty messages"""
-    model = OpenAIChatModel(model="qwen3-32b", stream=False)
+    model = OpenAIChatModel(model="qwen3-max", api_key="your-key", stream=False)
     grader = TrajectoryResolutionGrader(model=model)
 
     result = await grader.aevaluate(messages=[])
@@ -220,14 +220,14 @@ def test_trajectory_resolution_metadata_structure():
                 "step_description": "Search for information",
                 "contribution_level": "critical",
                 "reason": "Essential step",
-            }
+            },
         ],
         "total_raw_score": 85.0,
         "is_resolved": False,
         "resolution_threshold": 0.9,
         "evaluation_type": "trajectory_resolution",
     }
-    
+
     # Validate structure
     assert "problem_solving" in metadata
     assert "trajectory_quality" in metadata
@@ -237,7 +237,7 @@ def test_trajectory_resolution_metadata_structure():
     assert "is_resolved" in metadata
     assert "resolution_threshold" in metadata
     assert "evaluation_type" in metadata
-    
+
     # Validate total score calculation
     total = (
         metadata["problem_solving"]["raw_score"]
@@ -245,12 +245,12 @@ def test_trajectory_resolution_metadata_structure():
         + metadata["efficiency"]["raw_score"]
     )
     assert total == metadata["total_raw_score"]
-    
+
     # Validate is_resolved determination
     normalized_score = total / 100.0
     expected_resolved = normalized_score >= metadata["resolution_threshold"]
     assert metadata["is_resolved"] == expected_resolved
-    
+
     # Validate step_evaluations structure
     assert isinstance(metadata["step_evaluations"], list)
     if metadata["step_evaluations"]:
@@ -259,4 +259,3 @@ def test_trajectory_resolution_metadata_structure():
         assert "step_description" in step
         assert "contribution_level" in step
         assert "reason" in step
-

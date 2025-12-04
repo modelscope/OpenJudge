@@ -31,10 +31,10 @@ class ToolCallSequenceMatchGrader(BaseGrader):
     """
 
     def __init__(
-            self,
-            strict_mode: bool = True,
-            use_jaccard_similarity: bool = True,
-            **kwargs,
+        self,
+        strict_mode: bool = True,
+        use_jaccard_similarity: bool = True,
+        **kwargs,
     ):
         super().__init__(
             name="tool_call_sequence",
@@ -46,8 +46,8 @@ class ToolCallSequenceMatchGrader(BaseGrader):
         self.use_jaccard_similarity = use_jaccard_similarity
 
     def extract_predicted_tool_sequence(
-            self,
-            messages: List[Dict[str, Any]],
+        self,
+        messages: List[Dict[str, Any]],
     ) -> Dict[int, List[Dict[str, Any]]]:
         """
         Extract the predicted tool call sequence from model messages, organized by steps.
@@ -83,8 +83,8 @@ class ToolCallSequenceMatchGrader(BaseGrader):
         return step_tools
 
     def extract_ground_truth_tool_sequence(
-            self,
-            ground_truth_tool_calls: List[Dict[str, Any]],
+        self,
+        ground_truth_tool_calls: List[Dict[str, Any]],
     ) -> Dict[int, List[Dict[str, Any]]]:
         """
         Extract ground truth tool call sequence from reference tool calls, organized by steps.
@@ -135,9 +135,9 @@ class ToolCallSequenceMatchGrader(BaseGrader):
         return elements
 
     def calculate_param_similarity(
-            self,
-            ref_tool: Dict[str, Any],
-            model_tool: Dict[str, Any],
+        self,
+        ref_tool: Dict[str, Any],
+        model_tool: Dict[str, Any],
     ) -> float:
         """
         Calculate F1 score for complete tool parameters matching.
@@ -164,9 +164,9 @@ class ToolCallSequenceMatchGrader(BaseGrader):
         return f1_score
 
     def is_subsequence_unordered(
-            self,
-            list1: List[str],
-            list2: List[str],
+        self,
+        list1: List[str],
+        list2: List[str],
     ) -> Tuple[bool, List[str]]:
         """
         Check if all elements of list1 are present in list2, regardless of order.
@@ -186,9 +186,9 @@ class ToolCallSequenceMatchGrader(BaseGrader):
         return is_subsequence, missing_elements
 
     def calculate_step_matching_score(
-            self,
-            predicted_tool_steps: Dict[int, List[Dict[str, Any]]],
-            ground_truth_tool_steps: Dict[int, List[Dict[str, Any]]],
+        self,
+        predicted_tool_steps: Dict[int, List[Dict[str, Any]]],
+        ground_truth_tool_steps: Dict[int, List[Dict[str, Any]]],
     ) -> float:
         """
         Calculate step matching score by comparing each step between predicted and ground truth tool calls.
@@ -260,9 +260,9 @@ class ToolCallSequenceMatchGrader(BaseGrader):
         return total_score / total_steps if total_steps > 0 else 0.0
 
     def calculate_jaccard_similarity_score(
-            self,
-            predicted_tool_steps: Dict[int, List[Dict[str, Any]]],
-            ground_truth_tool_steps: Dict[int, List[Dict[str, Any]]],
+        self,
+        predicted_tool_steps: Dict[int, List[Dict[str, Any]]],
+        ground_truth_tool_steps: Dict[int, List[Dict[str, Any]]],
     ) -> Tuple[float, Set[str], Set[str]]:
         """
         Calculate Jaccard similarity score for tool calls, ignoring step order.
@@ -310,10 +310,10 @@ class ToolCallSequenceMatchGrader(BaseGrader):
         return score, intersection_set, union_set
 
     async def aevaluate(
-            self,
-            messages: List[Dict[str, Any]],
-            ground_truth_tool_calls: List[Dict[str, Any]],
-            **kwargs: Any,
+        self,
+        messages: List[Dict[str, Any]],
+        ground_truth_tool_calls: List[Dict[str, Any]],
+        **kwargs: Any,
     ) -> GraderScore:
         """
         Evaluate tool call sequence matching against ground truth.

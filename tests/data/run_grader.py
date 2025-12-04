@@ -3,7 +3,7 @@ import json
 import asyncio
 import argparse
 
-from rm_gallery.core.graders.predefined.agent import ToolCallAccuracyGrader
+from rm_gallery.core.graders.agent import ToolCallAccuracyGrader
 
 
 def run_cases(case_file: str, skip: int):

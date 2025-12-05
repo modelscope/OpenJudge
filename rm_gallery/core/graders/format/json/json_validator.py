@@ -73,11 +73,41 @@ class JsonValidatorGrader(BaseGrader):
     # pylint: disable=unused-argument
     async def aevaluate(
         self,
-        reference: str = "",
         response: str = "",
         **kwargs: Any,
     ) -> GraderScore:
-        """Validate JSON format"""
+        """
+        Validate JSON format of the response.
+
+        Attempts to parse the response string as JSON and returns a score indicating
+        whether the parsing was successful. This grader does not compare against
+        ground truth since it only validates the format.
+
+        Args:
+            response (str, optional): The JSON string to validate. Defaults to empty string.
+            **kwargs (Any): Additional keyword arguments (not used in this implementation).
+
+        Returns:
+            GraderScore: A score object containing:
+                - score (float): 1.0 if the response is valid JSON, 0.0 otherwise
+                - reason (str): Explanation of the validation result
+                - metadata (dict): Detailed information about the validation including:
+                    - is_valid (bool): Whether the JSON is valid
+                    - response_length (int): Length of the response string
+                    - error_message (str, optional): Error details if validation failed
+
+        Example:
+            >>> grader = JsonValidatorGrader()
+            >>> result = await grader.aevaluate(
+            ...     response='{"name": "Alice", "age": 30, "skills": ["Python", "AI"]}'
+            ... )
+            >>> print(result.score)  # 1.0 (valid JSON)
+            >>>
+            >>> invalid_result = await grader.aevaluate(
+            ...     response='{"name": "Alice", "age": 30'  # Invalid JSON - missing closing brace
+            ... )
+            >>> print(result.score)  # 0.0 (invalid JSON)
+        """
         is_valid, details = self._compute(response)
 
         if not is_valid:

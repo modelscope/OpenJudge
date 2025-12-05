@@ -22,12 +22,12 @@ ROLE_PLAYING_SYSTEM_PROMPT_ZH = "你是一个擅长奖励评估的助手。请�
 # Role Playing Listwise User Prompt
 ROLE_PLAYING_USER_PROMPT_EN = """# Task Description
 Your role is that of a professional evaluation expert. I will provide you with a \
-question and several candidate answers. Your task is to select the single best answer \
+question and several candidate responses. Your task is to select the single best answer \
 from the candidates.
 I will also provide you with a set of rubrics, listed under the heading #Rubrics. These rubrics \
 are ordered from highest to lowest importance.These rubrics can serve as supplementary knowledge \
 for your judgment, though not necessarily required. First, think independently. Use these rubrics \
-only when unsure about certain answers, selecting specific ones based on the questions and answers.
+only when unsure about certain responses, selecting specific ones based on the questions and responses.
 
 # Rubrics
 Character and Contextual Fidelity:
@@ -51,8 +51,8 @@ Engagement Quality:
 # Query
 {query}
 
-# Answers
-{answers}
+# Responses
+{responses}
 
 # Output Requirement
 ```json
@@ -83,7 +83,7 @@ ROLE_PLAYING_USER_PROMPT_ZH = """# 任务描述
 {query}
 
 # 回答
-{answers}
+{responses}
 
 # 输出要求
 ```json
@@ -145,7 +145,7 @@ class RolePlayingGrader(LLMGrader):
     async def aevaluate(
         self,
         query: str,
-        answers: List[str],
+        responses: List[str],
         **kwargs: Any,
     ) -> GraderRank:
         """Evaluate the quality of the role playing response based on the query.
@@ -157,11 +157,11 @@ class RolePlayingGrader(LLMGrader):
 
         Args:
             query (str): The role playing scenario or prompt.
-            answers (List[str]): The role playing responses to evaluate and rank.
+            responses (List[str]): The role playing responses to evaluate and rank.
             **kwargs: Additional arguments for the evaluation.
 
         Returns:
-            GraderRank: The evaluation result containing the rank of answers and reasoning.
+            GraderRank: The evaluation result containing the rank of responses and reasoning.
 
         Example:
             >>> # Example for listwise role playing grader
@@ -172,7 +172,7 @@ class RolePlayingGrader(LLMGrader):
             >>> grader = RolePlayingGrader(model=model)
             >>> result = asyncio.run(grader.aevaluate(
             ...     query="You are a medieval blacksmith. A knight approaches requesting a sword.",
-            ...     answers=[
+            ...     responses=[
             ...         "Ah, good sir knight! I shall forge you a blade worthy of your noble quest. "
             ...         "What specifications would you desire in your weapon?",
             ...         "Hello, how can I help you today?"
@@ -181,5 +181,5 @@ class RolePlayingGrader(LLMGrader):
             >>> print(result.rank, result.reason)
             [1, 2] 第一个回答更好地维持了角色一致性和情境真实性。
         """
-        answers_str = "\n".join([f"{i}. {answer}" for i, answer in enumerate(answers, start=1)])
-        return await super().aevaluate(query=query, answers=answers_str, **kwargs)
+        responses_str = "\n".join([f"{i}. {answer}" for i, answer in enumerate(responses, start=1)])
+        return await super().aevaluate(query=query, responses=responses_str, **kwargs)

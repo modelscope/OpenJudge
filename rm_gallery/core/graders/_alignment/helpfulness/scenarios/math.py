@@ -20,13 +20,13 @@ MATH_SYSTEM_PROMPT_ZH = "你是一个擅长奖励评估的助手。请根据给�
 # Math Listwise User Prompt
 MATH_USER_PROMPT_EN = """# Task Description
 Your role is that of a professional evaluation expert. I will provide you with a \
-question and several candidate answers. Your task is to select the single best answer \
+question and several candidate responses. Your task is to select the single best answer \
 from the candidates.
 I will also provide you with a set of rubrics, listed under the heading #Rubrics. \
 These rubrics are ordered from highest to lowest importance. You must check each \
 candidate answer in turn to see if it violates any rubric, and provide reasons for \
 any violations you find. These reasons should be used as references for ranking \
-the answers.
+the responses.
 You may organize your reasoning as you see fit, but keep your thought process as concise as possible.
 
 # Rubrics
@@ -47,8 +47,8 @@ required format without omitting critical details or providing extraneous inform
 # Query
 {query}
 
-# Answers
-{answers}
+# Responses
+{responses}
 
 # Output Requirement
 ```json
@@ -78,7 +78,7 @@ MATH_USER_PROMPT_ZH = """# 任务描述
 {query}
 
 # 回答
-{answers}
+{responses}
 
 # 输出要求
 ```json
@@ -135,7 +135,7 @@ class MathGrader(LLMGrader):
     async def aevaluate(
         self,
         query: str,
-        answers: List[str],
+        responses: List[str],
         **kwargs: Any,
     ) -> GraderRank:
         """Evaluate the mathematical correctness of the response based on the query.
@@ -146,11 +146,11 @@ class MathGrader(LLMGrader):
 
         Args:
             query (str): The mathematical problem or query to evaluate.
-            answers (List[str]): The mathematical solutions to evaluate and rank.
+            responses (List[str]): The mathematical solutions to evaluate and rank.
             **kwargs: Additional arguments for the evaluation.
 
         Returns:
-            GraderRank: The evaluation result containing the rank of answers and reasoning.
+            GraderRank: The evaluation result containing the rank of responses and reasoning.
 
         Example:
             >>> # Example for listwise math grader
@@ -161,7 +161,7 @@ class MathGrader(LLMGrader):
             >>> grader = MathGrader(model=model)
             >>> result = asyncio.run(grader.aevaluate(
             ...     query="Solve for x: 2x + 5 = 15",
-            ...     answers=[
+            ...     responses=[
             ...         "2x + 5 = 15\\n2x = 15 - 5\\n2x = 10\\nx = 5",
             ...         "2x + 5 = 15\\n2x = 10\\nx = 5"
             ...     ]
@@ -169,5 +169,5 @@ class MathGrader(LLMGrader):
             >>> print(result.rank, result.reason)
             [1, 2] The first answer shows all steps clearly while the second omits one step.
         """
-        answers_str = "\n".join([f"{i}. {answer}" for i, answer in enumerate(answers, start=1)])
-        return await super().aevaluate(query=query, answers=answers_str, **kwargs)
+        responses_str = "\n".join([f"{i}. {answer}" for i, answer in enumerate(responses, start=1)])
+        return await super().aevaluate(query=query, responses=responses_str, **kwargs)

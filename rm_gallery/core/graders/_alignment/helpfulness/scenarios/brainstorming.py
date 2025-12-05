@@ -20,7 +20,7 @@ BRAINSTORMING_SYSTEM_PROMPT_ZH = "你是一个擅长奖励评估的助手。请�
 # Brainstorming Listwise User Prompt
 BRAINSTORMING_USER_PROMPT_EN = """# Task Description
 Your role is that of a professional evaluation expert. I will provide you with a \
-question and several candidate answers. Your task is to select the single best answer \
+question and several candidate responses. Your task is to select the single best answer \
 from the candidates.
 
 # Rubrics
@@ -34,8 +34,8 @@ Structural Coherence and Logical Organization:
 # Query
 {query}
 
-# Answers
-{answers}
+# Responses
+{responses}
 
 # Output Requirement
 ```json
@@ -61,7 +61,7 @@ BRAINSTORMING_USER_PROMPT_ZH = """# 任务描述
 {query}
 
 # 回答
-{answers}
+{responses}
 
 # 输出要求
 ```json
@@ -118,7 +118,7 @@ class BrainstormingGrader(LLMGrader):
     async def aevaluate(
         self,
         query: str,
-        answers: List[str],
+        responses: List[str],
         **kwargs: Any,
     ) -> GraderRank:
         """Evaluate the brainstorming response based on the query.
@@ -130,22 +130,22 @@ class BrainstormingGrader(LLMGrader):
 
         Args:
             query (str): The query to evaluate.
-            answers (List[str]): The list of answers to evaluate and rank.
+            responses (List[str]): The list of responses to evaluate and rank.
             **kwargs: Additional arguments for the evaluation.
 
         Returns:
-            GraderRank: The evaluation result containing the rank of answers and reasoning.
+            GraderRank: The evaluation result containing the rank of responses and reasoning.
 
         Example:
             >>> grader = BrainstormingGrader()
             >>> result = await grader.aevaluate(
             ...     query="Give me ideas for a birthday gift for my 10-year-old",
-            ...     answers=[
+            ...     responses=[
             ...         "Here are some ideas: 1) Art supplies kit, 2) Science experiment set,"
             ...         " 3) Board game, 4) Book series",
             ...         "Consider these options: toys, games, books, or educational kits"
             ...     ]
             ... )
         """
-        answers_str = "\n".join([f"{i}. {answer}" for i, answer in enumerate(answers, start=1)])
-        return await super().aevaluate(query=query, answers=answers_str, **kwargs)
+        responses_str = "\n".join([f"{i}. {answer}" for i, answer in enumerate(responses, start=1)])
+        return await super().aevaluate(query=query, responses=responses_str, **kwargs)

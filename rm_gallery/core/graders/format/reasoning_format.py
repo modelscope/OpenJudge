@@ -36,7 +36,7 @@ class ReasoningFormatGrader(BaseGrader):
         self.answer_token = answer_token
 
     # pylint: disable=unused-argument
-    async def aevaluate(self, answer: str, *args: Any, **kwargs: Any) -> GraderScore:
+    async def aevaluate(self, response: str, *args: Any, **kwargs: Any) -> GraderScore:
         """
         Check format and calculate reward for reasoning tags.
 
@@ -45,7 +45,7 @@ class ReasoningFormatGrader(BaseGrader):
         tags and assigns a score of 1.0 only if both are present, otherwise 0.0.
 
         Args:
-            answer: The response text to evaluate for proper formatting.
+            response: The response text to evaluate for proper formatting.
             *args: Additional positional arguments (not used in this implementation).
             **kwargs: Additional keyword arguments (not used in this implementation).
 
@@ -73,11 +73,11 @@ class ReasoningFormatGrader(BaseGrader):
 
         # Check thinking format tags
         think_pattern = f"<{self.think_token}>.*?</{self.think_token}>"
-        has_think_tag = bool(re.search(think_pattern, answer, re.DOTALL))
+        has_think_tag = bool(re.search(think_pattern, response, re.DOTALL))
 
         # Check answer format tags
         answer_pattern = f"<{self.answer_token}>.*?</{self.answer_token}>"
-        has_answer_tag = bool(re.search(answer_pattern, answer, re.DOTALL))
+        has_answer_tag = bool(re.search(answer_pattern, response, re.DOTALL))
 
         # Calculate reward
         reward = 1.0 if has_think_tag and has_answer_tag else 0.0

@@ -19,7 +19,7 @@ REASONING_SYSTEM_PROMPT_ZH = "你是一个擅长奖励评估的助手。请根�
 # Reasoning Listwise User Prompt
 REASONING_USER_PROMPT_EN = """# Task Description
 Your role is that of a professional evaluation expert. I will provide you with a \
-question and several candidate answers. Your task is to select the single best answer \
+question and several candidate responses. Your task is to select the single best answer \
 from the candidates.
 
 # Rubrics
@@ -39,8 +39,8 @@ Comprehensiveness:
 # Query
 {query}
 
-# Answers
-{answers}
+# Responses
+{responses}
 
 # Output Requirement
 ```json
@@ -68,7 +68,7 @@ REASONING_USER_PROMPT_ZH = """# 任务描述
 {query}
 
 # 回答
-{answers}
+{responses}
 
 # 输出要求
 ```json
@@ -140,7 +140,7 @@ class ReasoningGrader(LLMGrader):
     async def aevaluate(
         self,
         query: str,
-        answers: List[str],
+        responses: List[str],
         **kwargs: Any,
     ) -> GraderRank:
         """Evaluate the reasoning quality of the response based on the query.
@@ -152,11 +152,11 @@ class ReasoningGrader(LLMGrader):
 
         Args:
             query (str): The query to evaluate.
-            answers (List[str]): The list of answers to evaluate and rank.
+            responses (List[str]): The list of responses to evaluate and rank.
             **kwargs: Additional arguments for the evaluation.
 
         Returns:
-            GraderRank: The evaluation result containing the rank of answers and reasoning.
+            GraderRank: The evaluation result containing the rank of responses and reasoning.
 
         Example:
             >>> # Example for listwise reasoning grader
@@ -167,7 +167,7 @@ class ReasoningGrader(LLMGrader):
             >>> result = asyncio.run(grader.aevaluate(
             ...     query="If all roses are flowers and some flowers are red, is it true that "
             ...           "some roses are red?",
-            ...     answers=[
+            ...     responses=[
             ...         "This is undetermined because we don't know which flowers are red.",
             ...         "Yes, since roses are flowers and some flowers are red, some roses must be red."
             ...     ]
@@ -176,5 +176,5 @@ class ReasoningGrader(LLMGrader):
             [1, 2] The first answer demonstrates better logical reasoning by correctly identifying
                   the undetermined nature of the statement.
         """
-        answers_str = "\n".join([f"{i}. {answer}" for i, answer in enumerate(answers, start=1)])
-        return await super().aevaluate(query=query, answers=answers_str, **kwargs)
+        responses_str = "\n".join([f"{i}. {answer}" for i, answer in enumerate(responses, start=1)])
+        return await super().aevaluate(query=query, responses=responses_str, **kwargs)

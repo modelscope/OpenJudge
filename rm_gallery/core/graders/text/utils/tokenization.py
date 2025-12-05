@@ -32,6 +32,7 @@ def simple_tokenize(text: str, lowercase: bool = False) -> List[str]:
 _non_word_space_pattern = re.compile(r"[^\w\s]")
 _word_punctuation_pattern = re.compile(r"\w+|[^\w\s]")
 
+
 def word_tokenize(text: str, remove_punctuation: bool = True) -> List[str]:
     """
     单词级分词
@@ -117,6 +118,7 @@ def ngram_tokenize(text: str, n: int = 2, char_level: bool = False) -> List[str]
 
 _sentence_split_pattern = re.compile(r"(?<=[.!?])\s+")
 
+
 def sentence_tokenize(text: str) -> List[str]:
     """
     句子分词
@@ -140,6 +142,7 @@ def sentence_tokenize(text: str) -> List[str]:
 
 
 _word_pattern = re.compile(r"\b\w+\b")
+
 
 def tokenize_preserving_case(text: str) -> List[str]:
     """

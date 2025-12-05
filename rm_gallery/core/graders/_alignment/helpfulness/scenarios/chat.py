@@ -17,13 +17,13 @@ CHAT_SYSTEM_PROMPT = (
 # Chat Rank User Prompt (English)
 CHAT_USER_PROMPT = """# Task Description
 Your role is that of a professional evaluation expert. I will provide you with a \
-question and several candidate answers. Your task is to select the single best answer \
+question and several candidate responses. Your task is to select the single best answer \
 from the candidates.
 I will also provide you with a set of rubrics, listed under the heading #Rubrics. \
 These rubrics are ordered from highest to lowest importance. You must check each \
 candidate answer in turn to see if it violates any rubric, and provide reasons for \
 any violations you find. These reasons should be used as references for ranking \
-the answers.
+the responses.
 You may organize your reasoning as you see fit, but keep your thought process as concise as possible.
 
 # Rubrics
@@ -43,8 +43,8 @@ interpretations.
 # Query
 {query}
 
-# Answers
-{answers}
+# Responses
+{responses}
 
 # Output Requirement
 ```json
@@ -80,7 +80,7 @@ CHAT_USER_PROMPT_ZH = """# 任务描述
 {query}
 
 # 答案
-{answers}
+{responses}
 
 # 输出要求
 ```json
@@ -150,7 +150,7 @@ class ChatGrader(LLMGrader):
     async def aevaluate(
         self,
         query: str,
-        answers: List[str],
+        responses: List[str],
         **kwargs: Any,
     ) -> GraderRank:
         """Evaluate the quality of the chat response based on the query.
@@ -162,7 +162,7 @@ class ChatGrader(LLMGrader):
 
         Args:
             query (str): The query to evaluate.
-            answers (List[str]): The answer(s) to evaluate. For LISTWISE mode,
+            responses (List[str]): The answer(s) to evaluate. For LISTWISE mode,
                 this should be a list of strings.
             **kwargs: Additional arguments for the evaluation.
 
@@ -170,7 +170,7 @@ class ChatGrader(LLMGrader):
             GraderRank: The evaluation result.
 
                 Each GraderRank contains:
-                    - rank: A ranked list of the answers
+                    - rank: A ranked list of the responses
                     - reason: Explanation of how the ranking was determined
                     - metadata: Optional additional information from the evaluation
 
@@ -182,5 +182,5 @@ class ChatGrader(LLMGrader):
             ...             "Fine. What do you want?"]
             ... )
         """
-        answers_str = "\n".join([f"{i}. {answer}" for i, answer in enumerate(answers, start=1)])
-        return await super().aevaluate(query=query, answers=answers_str, **kwargs)
+        responses_str = "\n".join([f"{i}. {answer}" for i, answer in enumerate(responses, start=1)])
+        return await super().aevaluate(query=query, responses=responses_str, **kwargs)

@@ -47,7 +47,7 @@ A score from 0 to 10 will be given based on the success of the editing. (0 indic
 A second score from 0 to 10 will rate the degree of overediting in the second image. (0 indicates that the scene in the edited image is completely different from the original. 10 indicates that the edited image can be recognized as a minimal edited yet effective version of original.)
 Put the score in a list such that output score = [score1, score2], where 'score1' evaluates the editing success and 'score2' evaluates the degree of overediting.
 
-Editing instruction: {edit_instruction}
+Editing instruction: {instruction}
 """
 
 IMAGE_EDITING_PERCEPTUAL_PROMPT_EN = """
@@ -100,7 +100,7 @@ IMAGE_EDITING_SEMANTIC_PROMPT_ZH = """
 第二个分数从0到10，将评估第二张图像的过度编辑程度。（0表示编辑后的图像中的场景与原始图像完全不同。10表示编辑后的图像可以被识别为原始图像的最小编辑但有效的版本。）
 将分数放在列表中，输出分数 = [score1, score2]，其中'score1'评估编辑成功程度，'score2'评估过度编辑程度。
 
-编辑指令：{edit_instruction}
+编辑指令：{instruction}
 """
 
 IMAGE_EDITING_PERCEPTUAL_PROMPT_ZH = """
@@ -217,7 +217,7 @@ class ImageEditingGrader(BaseGrader):
         >>>
         >>> result = await grader.aevaluate(
         ...     original_image=MLLMImage(url="https://example.com/room.jpg"),
-        ...     edit_instruction="Change sofa color to blue",
+        ...     instruction="Change sofa color to blue",
         ...     edited_image=MLLMImage(url="https://example.com/room_edited.jpg")
         ... )
         >>> print(result.score)  # 0.85 - good edit quality
@@ -255,22 +255,22 @@ class ImageEditingGrader(BaseGrader):
     async def _aevaluate_semantic_consistency(
         self,
         original_image: MLLMImage,
-        edit_instruction: str,
+        instruction: str,
         edited_image: MLLMImage,
     ) -> Tuple[List[float], str]:
         """Evaluate semantic consistency asynchronously"""
         messages = self.semantic_template.to_messages(self.language)
-        prompt = messages[0].format(edit_instruction=edit_instruction).content
+        prompt = messages[0].format(instruction=instruction).content
 
         try:
             content = format_image_content(prompt, [original_image, edited_image])
-            response = await self.model.achat(
+            chat_response = await self.model.achat(
                 messages=[{"role": "user", "content": content}],
                 structured_model=GraderScoreCallback,
             )
-            score = response.metadata["score"]
+            score = chat_response.metadata["score"]
             score = score if isinstance(score, list) else [score]
-            reason = response.metadata["reason"]
+            reason = chat_response.metadata["reason"]
             return score, reason
 
         except Exception as e:
@@ -287,13 +287,13 @@ class ImageEditingGrader(BaseGrader):
 
         try:
             content = format_image_content(prompt, [edited_image])
-            response = await self.model.achat(
+            chat_response = await self.model.achat(
                 messages=[{"role": "user", "content": content}],
                 structured_model=GraderScoreCallback,
             )
-            score = response.metadata["score"]
+            score = chat_response.metadata["score"]
             score = score[:2] if isinstance(score, list) else [score, score]
-            reason = response.metadata["reason"]
+            reason = chat_response.metadata["reason"]
             return score, reason
 
         except Exception as e:
@@ -303,7 +303,7 @@ class ImageEditingGrader(BaseGrader):
     async def _acompute(
         self,
         original_image: MLLMImage,
-        edit_instruction: str,
+        instruction: str,
         edited_image: MLLMImage,
         **_kwargs: Any,
     ) -> Tuple[float, dict]:
@@ -312,7 +312,7 @@ class ImageEditingGrader(BaseGrader):
 
         Args:
             original_image: Original image before editing
-            edit_instruction: Editing instruction
+            instruction: Editing instruction
             edited_image: Edited image to evaluate
 
         Returns:
@@ -326,7 +326,7 @@ class ImageEditingGrader(BaseGrader):
         ) = await asyncio.gather(
             self._aevaluate_semantic_consistency(
                 original_image,
-                edit_instruction,
+                instruction,
                 edited_image,
             ),
             self._aevaluate_perceptual_quality(edited_image),
@@ -356,7 +356,7 @@ class ImageEditingGrader(BaseGrader):
     async def aevaluate(
         self,
         original_image: Union[MLLMImage, List[MLLMImage]],
-        edit_instruction: str,
+        instruction: str,
         edited_image: Union[MLLMImage, List[MLLMImage]],
         **kwargs: Any,
     ) -> GraderScore:
@@ -365,7 +365,7 @@ class ImageEditingGrader(BaseGrader):
 
         Args:
             original_image: Original image before editing (MLLMImage or list)
-            edit_instruction: Editing instruction (string)
+            instruction: Editing instruction (string)
             edited_image: Edited image to evaluate (MLLMImage or list)
             **kwargs: Additional arguments (ignored)
 
@@ -375,7 +375,7 @@ class ImageEditingGrader(BaseGrader):
         Example:
             >>> result = await grader.aevaluate(
             ...     original_image=MLLMImage(url="original.jpg"),
-            ...     edit_instruction="Change the sofa color to blue",
+            ...     instruction="Change the sofa color to blue",
             ...     edited_image=MLLMImage(url="edited.jpg")
             ... )
         """
@@ -413,7 +413,7 @@ class ImageEditingGrader(BaseGrader):
 
         score, details = await self._acompute(
             original_image,
-            edit_instruction,
+            instruction,
             edited_image,
             **kwargs,
         )

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Open QA Grader
 
-Provides comprehensive, nuanced answers to open-ended questions without definitive correct
+Provides comprehensive, nuanced responses to open-ended questions without definitive correct
 responses.
 """
 from typing import Any, List
@@ -21,13 +21,13 @@ OPEN_QA_SYSTEM_PROMPT_ZH = """你是一个擅长奖励评估的助手。请根�
 # Open QA Rank User Prompt
 OPEN_QA_USER_PROMPT_EN = """# Task Description
 Your role is that of a professional evaluation expert. I will provide you with a \
-question and several candidate answers. Your task is to select the single best answer \
+question and several candidate responses. Your task is to select the single best answer \
 from the candidates.
 I will also provide you with a set of rubrics, listed under the heading #Rubrics. \
 These rubrics are ordered from highest to lowest importance. You must check each \
 candidate answer in turn to see if it violates any rubric, and provide reasons for \
 any violations you find. These reasons should be used as references for ranking \
-the answers.
+the responses.
 You may organize your reasoning as you see fit, but keep your thought process as concise as possible.
 
 # Rubrics
@@ -51,8 +51,8 @@ paragraphs, and transitions.
 # Query
 {query}
 
-# Answers
-{answers}
+# Responses
+{responses}
 
 # Output Requirement
 ```json
@@ -82,7 +82,7 @@ OPEN_QA_USER_PROMPT_ZH = """# 任务描述
 {query}
 
 # 回答
-{answers}
+{responses}
 
 # 输出要求
 ```json
@@ -122,7 +122,7 @@ OPEN_QA_TEMPLATE = PromptTemplate(
 class OpenQAGrader(LLMGrader):
     """OpenQAGrader
 
-    Provides comprehensive, nuanced answers to open-ended questions without definitive correct
+    Provides comprehensive, nuanced responses to open-ended questions without definitive correct
     responses.
     """
 
@@ -148,7 +148,7 @@ class OpenQAGrader(LLMGrader):
             model=model,
             template=template,
             language=language,
-            description="Provides comprehensive, nuanced answers to open-ended questions without "
+            description="Provides comprehensive, nuanced responses to open-ended questions without "
             "definitive correct responses.",
             **kwargs,
         )
@@ -156,7 +156,7 @@ class OpenQAGrader(LLMGrader):
     async def aevaluate(
         self,
         query: str,
-        answers: List[str],
+        responses: List[str],
         **kwargs: Any,
     ) -> GraderRank:
         """Evaluate the quality of the open QA response based on the query.
@@ -167,7 +167,7 @@ class OpenQAGrader(LLMGrader):
 
         Args:
             query (str): The open-ended question to evaluate.
-            answers (List[str]): The responses to evaluate and rank.
+            responses (List[str]): The responses to evaluate and rank.
             **kwargs: Additional arguments for the evaluation.
 
         Returns:
@@ -185,7 +185,7 @@ class OpenQAGrader(LLMGrader):
             >>> grader = OpenQAGrader(model=model)
             >>> result = asyncio.run(grader.aevaluate(
             ...     query="What are the potential impacts of climate change on global agriculture?",
-            ...     answers=[
+            ...     responses=[
             ...         "Climate change can impact global agriculture in several ways...",
             ...         "Global warming affects farming practices worldwide..."
             ...     ]
@@ -193,5 +193,5 @@ class OpenQAGrader(LLMGrader):
             >>> print(result.rank, result.reason)
             [1, 2] The first answer is more comprehensive and better organized.
         """
-        answers_str = "\n".join([f"{i}. {answer}" for i, answer in enumerate(answers, start=1)])
-        return await super().aevaluate(query=query, answers=answers_str, **kwargs)
+        responses_str = "\n".join([f"{i}. {answer}" for i, answer in enumerate(responses, start=1)])
+        return await super().aevaluate(query=query, responses=responses_str, **kwargs)

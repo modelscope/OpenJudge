@@ -43,7 +43,7 @@ Improved Readability:
 {query}
 
 # Rewritten Versions
-{answers}
+{responses}
 
 # Output Requirement
 ```json
@@ -139,7 +139,7 @@ class RewriteGrader(LLMGrader):
     async def aevaluate(
         self,
         query: str,
-        answers: List[str],
+        responses: List[str],
         **kwargs: Any,
     ) -> GraderRank:
         """Evaluate the quality of the rewritten text based on the query.
@@ -150,7 +150,7 @@ class RewriteGrader(LLMGrader):
 
         Args:
             query (str): The original text to be rewritten.
-            answers (List[str]): The rewritten texts to evaluate and rank.
+            responses (List[str]): The rewritten texts to evaluate and rank.
             **kwargs: Additional arguments for the evaluation.
 
         Returns:
@@ -167,13 +167,13 @@ class RewriteGrader(LLMGrader):
             >>> grader = RewriteGrader(model=model)
             >>> result = asyncio.run(grader.aevaluate(
             ...     query="This is a bad writen sentance with alot of erors.",
-            ...     answers=[
+            ...     responses=[
             ...         "This is a poorly written sentence with many errors.",
             ...         "This sentence has grammatical mistakes that need fixing."
             ...     ]
             ... ))
             >>> print(result.rank, result.reason)
         """
-        # Format answers as numbered list
-        formatted_answers = "\n".join([f"{i}. {ans}" for i, ans in enumerate(answers, start=1)])
-        return await super().aevaluate(query=query, answer=formatted_answers, **kwargs)
+        # Format responses as numbered list
+        formatted_responses = "\n".join([f"{i}. {ans}" for i, ans in enumerate(responses, start=1)])
+        return await super().aevaluate(query=query, answer=formatted_responses, **kwargs)

@@ -16,11 +16,12 @@ class TestROUGEBasic:
     @pytest.mark.asyncio
     async def test_rouge_perfect_match(self):
         """Test perfect match returns score of 1.0"""
-        grader = SimilarityGrader()
-        result = await grader.aevaluate(
-            reference="the cat is on the mat",
-            response="the cat is on the mat",
+        grader = SimilarityGrader(
             algorithm="rouge",
+        )
+        result = await grader.aevaluate(
+            ground_truth="the cat is on the mat",
+            response="the cat is on the mat",
         )
 
         assert result.score == 1.0
@@ -28,11 +29,12 @@ class TestROUGEBasic:
     @pytest.mark.asyncio
     async def test_rouge_complete_mismatch(self):
         """Test completely different text"""
-        grader = SimilarityGrader()
-        result = await grader.aevaluate(
-            reference="the cat is on the mat",
-            response="hello world foo bar",
+        grader = SimilarityGrader(
             algorithm="rouge",
+        )
+        result = await grader.aevaluate(
+            ground_truth="the cat is on the mat",
+            response="hello world foo bar",
         )
 
         assert result.score < 0.1
@@ -40,11 +42,12 @@ class TestROUGEBasic:
     @pytest.mark.asyncio
     async def test_rouge_partial_match(self):
         """Test partial overlapping text"""
-        grader = SimilarityGrader()
-        result = await grader.aevaluate(
-            reference="the cat is on the mat",
-            response="the dog is on the rug",
+        grader = SimilarityGrader(
             algorithm="rouge",
+        )
+        result = await grader.aevaluate(
+            ground_truth="the cat is on the mat",
+            response="the dog is on the rug",
         )
 
         # Some overlap in words like "the", "is", "on"
@@ -57,11 +60,12 @@ class TestROUGE1:
     @pytest.mark.asyncio
     async def test_rouge1_perfect_match(self):
         """Test ROUGE-1 perfect match"""
-        grader = SimilarityGrader()
-        result = await grader.aevaluate(
-            reference="the cat sat",
-            response="the cat sat",
+        grader = SimilarityGrader(
             algorithm="rouge",
+        )
+        result = await grader.aevaluate(
+            ground_truth="the cat sat",
+            response="the cat sat",
         )
 
         assert result.score == 1.0
@@ -69,11 +73,12 @@ class TestROUGE1:
     @pytest.mark.asyncio
     async def test_rouge1_word_order_independent(self):
         """Test that ROUGE-1 is independent of word order"""
-        grader = SimilarityGrader()
-        result = await grader.aevaluate(
-            reference="the cat sat",
-            response="sat cat the",
+        grader = SimilarityGrader(
             algorithm="rouge1",
+        )
+        result = await grader.aevaluate(
+            ground_truth="the cat sat",
+            response="sat cat the",
         )
 
         # ROUGE-1 should give high score for same words different order
@@ -82,11 +87,12 @@ class TestROUGE1:
     @pytest.mark.asyncio
     async def test_rouge1_extra_words(self):
         """Test ROUGE-1 with extra words in candidate"""
-        grader = SimilarityGrader()
-        result = await grader.aevaluate(
-            reference="the cat sat",
-            response="the big cat sat down",
+        grader = SimilarityGrader(
             algorithm="rouge",
+        )
+        result = await grader.aevaluate(
+            ground_truth="the cat sat",
+            response="the big cat sat down",
         )
 
         # Should have high recall but lower precision
@@ -99,11 +105,12 @@ class TestROUGE2:
     @pytest.mark.asyncio
     async def test_rouge2_perfect_match(self):
         """Test ROUGE-2 perfect match"""
-        grader = SimilarityGrader()
-        result = await grader.aevaluate(
-            reference="the cat is on the mat",
-            response="the cat is on the mat",
+        grader = SimilarityGrader(
             algorithm="rouge",
+        )
+        result = await grader.aevaluate(
+            ground_truth="the cat is on the mat",
+            response="the cat is on the mat",
         )
 
         assert result.score == 1.0
@@ -111,11 +118,12 @@ class TestROUGE2:
     @pytest.mark.asyncio
     async def test_rouge2_word_order_matters(self):
         """Test that ROUGE-2 is sensitive to word order"""
-        grader = SimilarityGrader()
-        result = await grader.aevaluate(
-            reference="the cat is on the mat",
-            response="the mat is on the cat",
+        grader = SimilarityGrader(
             algorithm="rouge",
+        )
+        result = await grader.aevaluate(
+            ground_truth="the cat is on the mat",
+            response="the mat is on the cat",
         )
 
         # Different word order means different bigrams
@@ -124,11 +132,12 @@ class TestROUGE2:
     @pytest.mark.asyncio
     async def test_rouge2_no_bigram_overlap(self):
         """Test ROUGE-2 with no bigram overlap"""
-        grader = SimilarityGrader()
-        result = await grader.aevaluate(
-            reference="a b c d",
-            response="b a d c",
+        grader = SimilarityGrader(
             algorithm="rouge2",
+        )
+        result = await grader.aevaluate(
+            ground_truth="a b c d",
+            response="b a d c",
         )
 
         # No matching bigrams
@@ -141,11 +150,12 @@ class TestROUGEL:
     @pytest.mark.asyncio
     async def test_rougeL_perfect_match(self):
         """Test ROUGE-L perfect match"""
-        grader = SimilarityGrader()
-        result = await grader.aevaluate(
-            reference="the cat is on the mat",
-            response="the cat is on the mat",
+        grader = SimilarityGrader(
             algorithm="rouge",
+        )
+        result = await grader.aevaluate(
+            ground_truth="the cat is on the mat",
+            response="the cat is on the mat",
         )
 
         assert result.score == 1.0
@@ -153,11 +163,12 @@ class TestROUGEL:
     @pytest.mark.asyncio
     async def test_rougeL_subsequence(self):
         """Test ROUGE-L with common subsequence"""
-        grader = SimilarityGrader()
-        result = await grader.aevaluate(
-            reference="a b c d e f",
-            response="a x b x c x d x e x f",
+        grader = SimilarityGrader(
             algorithm="rougeL",
+        )
+        result = await grader.aevaluate(
+            ground_truth="a b c d e f",
+            response="a x b x c x d x e x f",
         )
 
         # All reference words present in order (with gaps)
@@ -166,18 +177,20 @@ class TestROUGEL:
     @pytest.mark.asyncio
     async def test_rougeL_vs_rouge2(self):
         """Compare ROUGE-L and ROUGE-2 behavior"""
-        rougeL = SimilarityGrader()
-        rouge2 = SimilarityGrader()
-
-        resultL = await rougeL.aevaluate(
-            reference="the cat sat on the mat",
-            response="the cat was sitting on the mat",
+        rougeL = SimilarityGrader(
             algorithm="rougeL",
         )
-        result2 = await rouge2.aevaluate(
-            reference="the cat sat on the mat",
-            response="the cat was sitting on the mat",
+        rouge2 = SimilarityGrader(
             algorithm="rouge2",
+        )
+
+        resultL = await rougeL.aevaluate(
+            ground_truth="the cat sat on the mat",
+            response="the cat was sitting on the mat",
+        )
+        result2 = await rouge2.aevaluate(
+            ground_truth="the cat sat on the mat",
+            response="the cat was sitting on the mat",
         )
 
         # Both should detect some overlap
@@ -191,11 +204,12 @@ class TestROUGENGram:
     @pytest.mark.asyncio
     async def test_rouge3_perfect_match(self):
         """Test ROUGE-3 perfect match"""
-        grader = SimilarityGrader()
-        result = await grader.aevaluate(
-            reference="the cat sat on the mat",
-            response="the cat sat on the mat",
+        grader = SimilarityGrader(
             algorithm="rouge",
+        )
+        result = await grader.aevaluate(
+            ground_truth="the cat sat on the mat",
+            response="the cat sat on the mat",
         )
 
         assert result.score == 1.0
@@ -203,11 +217,12 @@ class TestROUGENGram:
     @pytest.mark.asyncio
     async def test_rouge4_perfect_match(self):
         """Test ROUGE-4 perfect match"""
-        grader = SimilarityGrader()
-        result = await grader.aevaluate(
-            reference="the cat sat on the mat",
-            response="the cat sat on the mat",
+        grader = SimilarityGrader(
             algorithm="rouge",
+        )
+        result = await grader.aevaluate(
+            ground_truth="the cat sat on the mat",
+            response="the cat sat on the mat",
         )
 
         assert result.score == 1.0
@@ -215,11 +230,12 @@ class TestROUGENGram:
     @pytest.mark.asyncio
     async def test_rouge5_perfect_match(self):
         """Test ROUGE-5 perfect match"""
-        grader = SimilarityGrader()
-        result = await grader.aevaluate(
-            reference="the cat sat on the mat",
-            response="the cat sat on the mat",
+        grader = SimilarityGrader(
             algorithm="rouge",
+        )
+        result = await grader.aevaluate(
+            ground_truth="the cat sat on the mat",
+            response="the cat sat on the mat",
         )
 
         assert result.score == 1.0
@@ -227,24 +243,27 @@ class TestROUGENGram:
     @pytest.mark.asyncio
     async def test_higher_ngram_more_strict(self):
         """Test that higher n-grams are more strict"""
-        rouge1 = SimilarityGrader()
-        rouge2 = SimilarityGrader()
-        rouge3 = SimilarityGrader()
-
-        result1 = await rouge1.aevaluate(
-            reference="the quick brown fox jumps over",
-            response="the quick brown fox walks over",
+        rouge1 = SimilarityGrader(
             algorithm="rouge1",
         )
-        result2 = await rouge2.aevaluate(
-            reference="the quick brown fox jumps over",
-            response="the quick brown fox walks over",
+        rouge2 = SimilarityGrader(
             algorithm="rouge2",
         )
-        result3 = await rouge3.aevaluate(
-            reference="the quick brown fox jumps over",
-            response="the quick brown fox walks over",
+        rouge3 = SimilarityGrader(
             algorithm="rouge3",
+        )
+
+        result1 = await rouge1.aevaluate(
+            ground_truth="the quick brown fox jumps over",
+            response="the quick brown fox walks over",
+        )
+        result2 = await rouge2.aevaluate(
+            ground_truth="the quick brown fox jumps over",
+            response="the quick brown fox walks over",
+        )
+        result3 = await rouge3.aevaluate(
+            ground_truth="the quick brown fox jumps over",
+            response="the quick brown fox walks over",
         )
 
         # Higher n-grams should be more sensitive to differences
@@ -257,11 +276,12 @@ class TestROUGEEdgeCases:
     @pytest.mark.asyncio
     async def test_empty_candidate(self):
         """Test handling of empty candidate"""
-        grader = SimilarityGrader()
-        result = await grader.aevaluate(
-            reference="the cat",
-            response="",
+        grader = SimilarityGrader(
             algorithm="rouge",
+        )
+        result = await grader.aevaluate(
+            ground_truth="the cat",
+            response="",
         )
 
         assert result.score == 0.0
@@ -269,11 +289,12 @@ class TestROUGEEdgeCases:
     @pytest.mark.asyncio
     async def test_empty_reference(self):
         """Test handling of empty reference"""
-        grader = SimilarityGrader()
-        result = await grader.aevaluate(
-            reference="",
-            response="the cat",
+        grader = SimilarityGrader(
             algorithm="rouge",
+        )
+        result = await grader.aevaluate(
+            ground_truth="",
+            response="the cat",
         )
 
         assert result.score == 0.0
@@ -281,11 +302,12 @@ class TestROUGEEdgeCases:
     @pytest.mark.asyncio
     async def test_single_word(self):
         """Test single word texts"""
-        grader = SimilarityGrader()
-        result = await grader.aevaluate(
-            reference="cat",
-            response="cat",
+        grader = SimilarityGrader(
             algorithm="rouge1",
+        )
+        result = await grader.aevaluate(
+            ground_truth="cat",
+            response="cat",
         )
 
         assert result.score == 1.0
@@ -293,11 +315,12 @@ class TestROUGEEdgeCases:
     @pytest.mark.asyncio
     async def test_repeated_words(self):
         """Test handling of repeated words"""
-        grader = SimilarityGrader()
-        result = await grader.aevaluate(
-            reference="cat cat cat",
-            response="cat dog cat",
+        grader = SimilarityGrader(
             algorithm="rouge1",
+        )
+        result = await grader.aevaluate(
+            ground_truth="cat cat cat",
+            response="cat dog cat",
         )
 
         # Should handle repeated words correctly
@@ -310,11 +333,12 @@ class TestROUGEWithStemming:
     @pytest.mark.asyncio
     async def test_with_stemming(self):
         """Test ROUGE with stemming enabled"""
-        grader = SimilarityGrader()
-        result = await grader.aevaluate(
-            reference="the cats are running",
-            response="the cat is running",
+        grader = SimilarityGrader(
             algorithm="rouge",
+        )
+        result = await grader.aevaluate(
+            ground_truth="the cats are running",
+            response="the cat is running",
             use_stemmer=True,
         )
 
@@ -324,11 +348,12 @@ class TestROUGEWithStemming:
     @pytest.mark.asyncio
     async def test_without_stemming(self):
         """Test ROUGE without stemming"""
-        grader = SimilarityGrader()
-        result = await grader.aevaluate(
-            reference="the cats are running",
-            response="the cat is running",
+        grader = SimilarityGrader(
             algorithm="rouge",
+        )
+        result = await grader.aevaluate(
+            ground_truth="the cats are running",
+            response="the cat is running",
             use_stemmer=False,
         )
 

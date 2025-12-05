@@ -19,12 +19,12 @@ and cultural appropriateness."""
 
 TRANSLATION_USER_PROMPT_EN = """# Task Description
 Your role is that of a professional evaluation expert. I will provide you with a \
-question and several candidate answers. Your task is to select the single best answer \
+question and several candidate responses. Your task is to select the single best answer \
 from the candidates.
 I will also provide you with a set of rubrics, listed under the heading #Rubrics. These rubrics are
 ordered from highest to lowest importance.These rubrics can serve as supplementary knowledge for
 your judgment. If you find any of the rubrics helpful for the current problem, feel free to use them
- as supplements.If all answers meet all rubrics, you can judge and choose one answer by yourself.
+ as supplements.If all responses meet all rubrics, you can judge and choose one answer by yourself.
 
 # Rubrics
 Accuracy in Translation:
@@ -43,8 +43,8 @@ Cultural Sensitivity:
 # Query
 {query}
 
-# Answers
-{answers}
+# Responses
+{responses}
 
 # Output Requirement
 ```json
@@ -79,7 +79,7 @@ TRANSLATION_USER_PROMPT_ZH = """# 任务描述
 {query}
 
 # 答案
-{answers}
+{responses}
 
 # 输出要求
 ```json
@@ -156,7 +156,7 @@ class TranslationGrader(LLMGrader):
     async def aevaluate(
         self,
         query: str,
-        answers: List[str],
+        responses: List[str],
         **kwargs: Any,
     ) -> GraderRank:
         """Evaluate the quality of the translation based on the query.
@@ -185,10 +185,10 @@ class TranslationGrader(LLMGrader):
             >>> grader = TranslationGrader(mode=GraderMode.LISTWISE, model=model)
             >>> result = asyncio.run(grader.aevaluate(
             ...     query="Hello, how are you today?",
-            ...     answers=["Hola, ¿cómo estás hoy?", "¡Hola! ¿Qué tal?"]
+            ...     responses=["Hola, ¿cómo estás hoy?", "¡Hola! ¿Qué tal?"]
             ... ))
             >>> print(result.rank, result.reason)
             [1, 2] The first translation is more accurate and preserves the formal tone.
         """
-        answers_str = "\n".join([f"{i}. {answer}" for i, answer in enumerate(answers, start=1)])
-        return await super().aevaluate(query=query, answers=answers_str, **kwargs)
+        responses_str = "\n".join([f"{i}. {answer}" for i, answer in enumerate(responses, start=1)])
+        return await super().aevaluate(query=query, responses=responses_str, **kwargs)

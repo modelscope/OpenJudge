@@ -46,7 +46,7 @@ async def test_plan_feasibility_poor():
         plan="I will use the key to unlock the door.",
         observation="The drawer is closed. You don't have any items.",
         memory="The key is inside the drawer, but the drawer is not opened yet.",
-        task_context="Task: Unlock the door to exit",
+        context="Task: Unlock the door to exit",
     )
 
     assert result is not None
@@ -65,7 +65,7 @@ async def test_plan_feasibility_good():
         plan="I will first open the drawer to get the key, then unlock the door.",
         observation="Drawer is closed. Key is inside.",
         memory="Key is in drawer 1.",
-        task_context="Task: Unlock the door",
+        context="Task: Unlock the door",
     )
 
     assert result is not None
@@ -88,7 +88,7 @@ async def test_plan_feasibility_with_history():
         plan="I will close the door.",  # Door is already locked, can't close - infeasible
         observation="Door is locked, cannot be closed further.",
         memory="Door is locked.",
-        history_steps=history,
+        history=history,
     )
 
     assert result is not None

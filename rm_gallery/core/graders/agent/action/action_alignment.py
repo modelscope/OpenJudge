@@ -165,6 +165,15 @@ class ActionAlignmentGrader(LLMGrader):
         template: Optional[PromptTemplate] = DEFAULT_ACTION_ALIGNMENT_TEMPLATE,
         language: LanguageEnum = LanguageEnum.EN,
     ):
+        """
+        Initialize ActionAlignmentGrader.
+
+        Args:
+            model: The chat model to use for evaluation, either as a BaseChatModel instance or config dict
+            template: The prompt template for action alignment evaluation.
+                     Defaults to DEFAULT_ACTION_ALIGNMENT_TEMPLATE.
+            language: The language for the evaluation prompt. Defaults to LanguageEnum.EN.
+        """
         super().__init__(
             name="action_alignment",
             mode=GraderMode.POINTWISE,
@@ -179,14 +188,14 @@ class ActionAlignmentGrader(LLMGrader):
         self,
         plan: str,
         action: str,
-        history_steps: Optional[list] = None,
+        history: Optional[list] = None,
     ) -> str:
         """Format trajectory steps for evaluation.
 
         Args:
             plan: Agent's planning/reasoning
             action: Agent's chosen action
-            history_steps: Optional list of previous step dictionaries
+            history: Optional list of previous step dictionaries
 
         Returns:
             Formatted trajectory string
@@ -194,8 +203,8 @@ class ActionAlignmentGrader(LLMGrader):
         lines = []
 
         # Add history steps if provided
-        if history_steps:
-            for i, hist_step in enumerate(history_steps):
+        if history:
+            for i, hist_step in enumerate(history):
                 lines.append(f"Step {i + 1}:")
                 for key, value in hist_step.items():
                     if value:
@@ -203,7 +212,7 @@ class ActionAlignmentGrader(LLMGrader):
                 lines.append("")
 
         # Add current step
-        step_number = len(history_steps) + 1 if history_steps else 1
+        step_number = len(history) + 1 if history else 1
         lines.append(f"Step {step_number}:")
         lines.append(f"Plan: {plan}")
         lines.append(f"Action: {action}")
@@ -214,8 +223,8 @@ class ActionAlignmentGrader(LLMGrader):
         self,
         plan: str,
         action: str,
-        history_steps: Optional[list] = None,
-        task_context: Optional[str] = None,
+        history: Optional[list] = None,
+        context: Optional[str] = None,
         **kwargs: Any,
     ) -> GraderScore:
         """
@@ -224,8 +233,8 @@ class ActionAlignmentGrader(LLMGrader):
         Args:
             plan: Agent's planning/reasoning
             action: Agent's chosen action
-            history_steps: Optional list of previous step dictionaries for context
-            task_context: Optional task context (task description, environment, available actions)
+            history: Optional list of previous step dictionaries for context
+            context: Optional task context (task description, environment, available actions)
             **kwargs: Additional arguments
 
         Returns:
@@ -235,22 +244,22 @@ class ActionAlignmentGrader(LLMGrader):
             >>> result = await grader.aevaluate(
             ...     plan="I will open drawer 1 to find the key.",
             ...     action="open drawer 1",
-            ...     task_context="Task: Find the key"
+            ...     context="Task: Find the key"
             ... )
         """
         # Format trajectory steps
         trajectory_steps = self._format_trajectory_steps(
             plan=plan,
             action=action,
-            history_steps=history_steps,
+            history=history,
         )
 
         # Prepare context section
         context_section = ""
-        if task_context:
-            context_section = f"""<task_context>
-{task_context}
-</task_context>"""
+        if context:
+            context_section = f"""<context>
+{context}
+</context>"""
 
         try:
             result = await super().aevaluate(

@@ -38,7 +38,7 @@ class LengthPenaltyGrader(BaseGrader):
         self.max_length = max_length
         self.penalty_rate = penalty_rate
 
-    async def aevaluate(self, answer) -> GraderScore:
+    async def aevaluate(self, response: str) -> GraderScore:
         """
         Calculate length-based penalty for text content.
 
@@ -78,7 +78,7 @@ class LengthPenaltyGrader(BaseGrader):
             True
         """
 
-        length = len(answer)
+        length = len(response)
 
         penalty = 0.0
         reason_parts = []

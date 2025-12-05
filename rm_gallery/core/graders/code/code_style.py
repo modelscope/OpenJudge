@@ -84,15 +84,15 @@ class CodeStyleGrader(BaseGrader):
             f"Naming convention: {good_names}/{total_names} names follow snake_case",
         )
 
-    async def aevaluate(self, answer: str) -> GraderScore:
-        """Evaluate code style in the provided answer.
+    async def aevaluate(self, response: str) -> GraderScore:
+        """Evaluate code style in the provided response.
 
         Performs basic code style checking including indentation consistency and
         naming conventions. Extracts Python code blocks from markdown-style code
         fences and evaluates each one for style compliance.
 
         Args:
-            answer (str): The answer containing code blocks to check for style issues.
+            response (str): The response containing code blocks to check for style issues.
                         Code blocks should be enclosed in markdown-style fences (```python).
 
         Returns:
@@ -106,21 +106,22 @@ class CodeStyleGrader(BaseGrader):
 
         Example:
             >>> grader = CodeStyleGrader()
-            >>> answer = "Here's a function with correct style:"
+            >>> response = "Here's a function with correct style:"
             >>>          "```python\\ndef calculate_sum(a,b):\\n    return a+b\\n```"
-            >>> result = await grader.aevaluate(answer=answer)
+            >>> result = await grader.aevaluate(response=response)
             >>> print(result.score, result.reason)
             1.0 Code style score: 1.000; Consistent indentation; Naming convention: 2/2 names follow snake_case
 
             >>> # Example with style issues
-            >>> answer = "Here's a function with style issues:\\n```python\\ndef CalculateSum(a,b):\\n	return a+b\\n```"
-            >>> result = await grader.aevaluate(answer=answer)
+            >>> response = "Here's a function with style issues:\\n```python\\ndef CalculateSum(a,b):\\n
+                return a+b\\n```"
+            >>> result = await grader.aevaluate(response=response)
             >>> print(result.score, result.reason)
             0.5 Code style score: 0.500; Consistent indentation; Naming convention: 1/2 names follow snake_case
         """
         # Extract code blocks
         code_pattern = r"```(?:python)?\n(.*?)\n```"
-        code_blocks = re.findall(code_pattern, answer, re.DOTALL)
+        code_blocks = re.findall(code_pattern, response, re.DOTALL)
 
         if not code_blocks:
             return GraderScore(

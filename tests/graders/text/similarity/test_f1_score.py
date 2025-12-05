@@ -16,11 +16,12 @@ class TestF1ScoreBasic:
     @pytest.mark.asyncio
     async def test_exact_match(self):
         """Test exact match returns perfect F1 score"""
-        grader = SimilarityGrader()
-        result = await grader.aevaluate(
-            reference="hello world",
-            response="hello world",
+        grader = SimilarityGrader(
             algorithm="f1_score",
+        )
+        result = await grader.aevaluate(
+            ground_truth="hello world",
+            response="hello world",
         )
 
         assert result.score == 1.0
@@ -30,11 +31,12 @@ class TestF1ScoreBasic:
     @pytest.mark.asyncio
     async def test_no_overlap(self):
         """Test completely different strings return 0 F1 score"""
-        grader = SimilarityGrader()
-        result = await grader.aevaluate(
-            reference="hello world",
-            response="goodbye universe",
+        grader = SimilarityGrader(
             algorithm="f1_score",
+        )
+        result = await grader.aevaluate(
+            ground_truth="hello world",
+            response="goodbye universe",
         )
 
         assert result.score == 0.0
@@ -44,11 +46,12 @@ class TestF1ScoreBasic:
     @pytest.mark.asyncio
     async def test_partial_overlap(self):
         """Test partial token overlap"""
-        grader = SimilarityGrader()
-        result = await grader.aevaluate(
-            reference="the cat is on the mat",
-            response="cat on mat",
+        grader = SimilarityGrader(
             algorithm="f1_score",
+        )
+        result = await grader.aevaluate(
+            ground_truth="the cat is on the mat",
+            response="cat on mat",
         )
 
         # Tokens: reference has more tokens, candidate has subset
@@ -60,17 +63,17 @@ class TestF1ScoreBasic:
     @pytest.mark.asyncio
     async def test_word_order_matters(self):
         """Test that word order doesn't affect F1 (token-based)"""
-        grader = SimilarityGrader()
-
-        result1 = await grader.aevaluate(
-            reference="the quick brown fox",
-            response="fox brown quick the",
+        grader = SimilarityGrader(
             algorithm="f1_score",
         )
+
+        result1 = await grader.aevaluate(
+            ground_truth="the quick brown fox",
+            response="fox brown quick the",
+        )
         result2 = await grader.aevaluate(
-            reference="the quick brown fox",
+            ground_truth="the quick brown fox",
             response="the quick brown fox",
-            algorithm="f1_score",
         )
 
         # Both should have similar F1 (same tokens, may differ due to normalization)
@@ -83,11 +86,12 @@ class TestF1ScoreNormalization:
     @pytest.mark.asyncio
     async def test_with_normalization(self):
         """Test with normalization enabled"""
-        grader = SimilarityGrader()
-        result = await grader.aevaluate(
-            reference="Hello World",
-            response="hello world",
+        grader = SimilarityGrader(
             algorithm="f1_score",
+        )
+        result = await grader.aevaluate(
+            ground_truth="Hello World",
+            response="hello world",
             normalize=True,
         )
 
@@ -97,11 +101,12 @@ class TestF1ScoreNormalization:
     @pytest.mark.asyncio
     async def test_without_normalization(self):
         """Test that disabling normalization preserves case"""
-        grader = SimilarityGrader()
-        result = await grader.aevaluate(
-            reference="Hello World",
-            response="hello world",
+        grader = SimilarityGrader(
             algorithm="f1_score",
+        )
+        result = await grader.aevaluate(
+            ground_truth="Hello World",
+            response="hello world",
             normalize=False,
         )
 
@@ -115,11 +120,12 @@ class TestF1ScoreEdgeCases:
     @pytest.mark.asyncio
     async def test_empty_strings(self):
         """Test handling of empty strings"""
-        grader = SimilarityGrader()
-        result = await grader.aevaluate(
-            reference="",
-            response="",
+        grader = SimilarityGrader(
             algorithm="f1_score",
+        )
+        result = await grader.aevaluate(
+            ground_truth="",
+            response="",
         )
 
         # Both empty - perfect match
@@ -128,11 +134,12 @@ class TestF1ScoreEdgeCases:
     @pytest.mark.asyncio
     async def test_empty_reference(self):
         """Test empty reference with non-empty candidate"""
-        grader = SimilarityGrader()
-        result = await grader.aevaluate(
-            reference="",
-            response="hello",
+        grader = SimilarityGrader(
             algorithm="f1_score",
+        )
+        result = await grader.aevaluate(
+            ground_truth="",
+            response="hello",
         )
 
         assert result.score == 0.0
@@ -140,11 +147,12 @@ class TestF1ScoreEdgeCases:
     @pytest.mark.asyncio
     async def test_empty_candidate(self):
         """Test non-empty reference with empty candidate"""
-        grader = SimilarityGrader()
-        result = await grader.aevaluate(
-            reference="hello",
-            response="",
+        grader = SimilarityGrader(
             algorithm="f1_score",
+        )
+        result = await grader.aevaluate(
+            ground_truth="hello",
+            response="",
         )
 
         assert result.score == 0.0
@@ -152,11 +160,12 @@ class TestF1ScoreEdgeCases:
     @pytest.mark.asyncio
     async def test_single_token(self):
         """Test single token matching"""
-        grader = SimilarityGrader()
-        result = await grader.aevaluate(
-            reference="hello",
-            response="hello",
+        grader = SimilarityGrader(
             algorithm="f1_score",
+        )
+        result = await grader.aevaluate(
+            ground_truth="hello",
+            response="hello",
         )
 
         assert result.score == 1.0
@@ -164,11 +173,12 @@ class TestF1ScoreEdgeCases:
     @pytest.mark.asyncio
     async def test_duplicate_tokens(self):
         """Test handling of duplicate tokens"""
-        grader = SimilarityGrader()
-        result = await grader.aevaluate(
-            reference="hello hello world",
-            response="hello world world",
+        grader = SimilarityGrader(
             algorithm="f1_score",
+        )
+        result = await grader.aevaluate(
+            ground_truth="hello hello world",
+            response="hello world world",
         )
 
         # Should handle token counts correctly
@@ -181,11 +191,12 @@ class TestF1ScorePrecisionRecall:
     @pytest.mark.asyncio
     async def test_high_precision_low_recall(self):
         """Test case with high precision but low recall"""
-        grader = SimilarityGrader()
-        result = await grader.aevaluate(
-            reference="the quick brown fox jumps over the lazy dog",
-            response="quick brown fox",
+        grader = SimilarityGrader(
             algorithm="f1_score",
+        )
+        result = await grader.aevaluate(
+            ground_truth="the quick brown fox jumps over the lazy dog",
+            response="quick brown fox",
         )
 
         # All candidate tokens should be in reference (high precision)
@@ -195,11 +206,12 @@ class TestF1ScorePrecisionRecall:
     @pytest.mark.asyncio
     async def test_low_precision_high_recall(self):
         """Test case with low precision but high recall"""
-        grader = SimilarityGrader()
-        result = await grader.aevaluate(
-            reference="quick brown fox",
-            response="the quick brown fox jumps over the lazy dog",
+        grader = SimilarityGrader(
             algorithm="f1_score",
+        )
+        result = await grader.aevaluate(
+            ground_truth="quick brown fox",
+            response="the quick brown fox jumps over the lazy dog",
         )
 
         # All reference tokens should be in candidate (high recall)
@@ -213,11 +225,12 @@ class TestTokenF1Alias:
     @pytest.mark.asyncio
     async def test_alias_works(self):
         """Test that TokenF1Grader works"""
-        grader = SimilarityGrader()
-        result = await grader.aevaluate(
-            reference="hello world",
-            response="hello world",
+        grader = SimilarityGrader(
             algorithm="token_f1",
+        )
+        result = await grader.aevaluate(
+            ground_truth="hello world",
+            response="hello world",
         )
 
         assert result.score == 1.0

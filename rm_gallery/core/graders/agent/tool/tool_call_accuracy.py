@@ -8,7 +8,7 @@ Evaluates the accuracy of tool calls made by an agent.
 import json
 import re
 import textwrap
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from loguru import logger
 
@@ -245,10 +245,10 @@ class ToolCallAccuracyGrader(LLMGrader):
 
     async def aevaluate(
         self,
-        query: Union[str, List[Dict[str, Any]]],
-        tool_definitions: Union[Dict[str, Any], List[Dict[str, Any]]],
-        tool_calls: Union[Dict[str, Any], List[Dict[str, Any]]] = None,
-        response: Union[str, List[Dict[str, Any]]] = None,
+        query: str | List[Dict[str, Any]],
+        tool_definitions: Dict[str, Any] | List[Dict[str, Any]],
+        tool_calls: Dict[str, Any] | List[Dict[str, Any]] | None = None,
+        response: str | List[Dict[str, Any]] | None = None,
     ) -> GraderScore:
         """
         Evaluate tool call accuracy

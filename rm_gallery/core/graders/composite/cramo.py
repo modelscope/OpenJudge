@@ -166,11 +166,11 @@ class Cramo(LLMGrader):
             query=query,
             response=response,
         )
-        response = await self.model.achat(
+        chat_response = await self.model.achat(
             messages=messages,
             callback=repair_and_load_json,
         )
-        rubrics = response.metadata.get("rubrics", [])
+        rubrics = chat_response.metadata.get("rubrics", [])
 
         # Evaluate the response using the generated rubrics
         result = await super().aevaluate(

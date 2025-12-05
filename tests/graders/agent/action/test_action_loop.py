@@ -22,9 +22,9 @@ def test_action_loop_detection_grader_creation():
 @pytest.mark.asyncio
 async def test_action_loop_detection_grader_no_actions():
     """Test with no actions in messages"""
-    grader = ActionLoopDetectionGrader()
+    grader = ActionLoopDetectionGrader(similarity_threshold=1.0)
 
-    result = await grader.aevaluate(messages=[], similarity_threshold=1.0)
+    result = await grader.aevaluate(messages=[])
 
     assert result is not None
     assert hasattr(result, "score")
@@ -34,7 +34,7 @@ async def test_action_loop_detection_grader_no_actions():
 @pytest.mark.asyncio
 async def test_action_loop_detection_grader_with_loops():
     """Test detecting repetitive actions"""
-    grader = ActionLoopDetectionGrader()
+    grader = ActionLoopDetectionGrader(similarity_threshold=1.0)
 
     # Messages with repetitive tool calls
     messages = [
@@ -45,8 +45,8 @@ async def test_action_loop_detection_grader_with_loops():
                     "function": {
                         "name": "search",
                         "arguments": '{"query": "test"}',
-                    }
-                }
+                    },
+                },
             ],
         },
         {"role": "function", "content": "result 1"},
@@ -57,14 +57,14 @@ async def test_action_loop_detection_grader_with_loops():
                     "function": {
                         "name": "search",
                         "arguments": '{"query": "test"}',
-                    }
-                }
+                    },
+                },
             ],
         },
         {"role": "function", "content": "result 2"},
     ]
 
-    result = await grader.aevaluate(messages=messages, similarity_threshold=1.0)
+    result = await grader.aevaluate(messages=messages)
 
     assert result is not None
     assert hasattr(result, "score")
@@ -75,7 +75,7 @@ async def test_action_loop_detection_grader_with_loops():
 @pytest.mark.asyncio
 async def test_action_loop_detection_grader_no_loops():
     """Test with different actions (no loops)"""
-    grader = ActionLoopDetectionGrader()
+    grader = ActionLoopDetectionGrader(similarity_threshold=1.0)
 
     # Messages with different tool calls
     messages = [
@@ -86,8 +86,8 @@ async def test_action_loop_detection_grader_no_loops():
                     "function": {
                         "name": "search",
                         "arguments": '{"query": "test1"}',
-                    }
-                }
+                    },
+                },
             ],
         },
         {"role": "function", "content": "result 1"},
@@ -98,16 +98,15 @@ async def test_action_loop_detection_grader_no_loops():
                     "function": {
                         "name": "calculate",
                         "arguments": '{"value": 42}',
-                    }
-                }
+                    },
+                },
             ],
         },
         {"role": "function", "content": "result 2"},
     ]
 
-    result = await grader.aevaluate(messages=messages, similarity_threshold=1.0)
+    result = await grader.aevaluate(messages=messages)
 
     assert result is not None
     assert hasattr(result, "score")
     assert result.score >= 0.0
-

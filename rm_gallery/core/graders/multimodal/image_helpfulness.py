@@ -168,7 +168,7 @@ class ImageHelpfulnessGrader(LLMGrader):
         >>> grader = ImageHelpfulnessGrader(model=model)
         >>>
         >>> result = await grader.aevaluate(
-        ...     actual_output=[
+        ...     response=[
         ...         "The system architecture has three layers.",
         ...         MLLMImage(url="https://example.com/arch_diagram.jpg"),
         ...         "Each layer handles specific functions."
@@ -225,17 +225,17 @@ class ImageHelpfulnessGrader(LLMGrader):
 
         try:
             content = format_image_content(prompt, [image])
-            response = await self.model.achat(
+            chat_response = await self.model.achat(
                 messages=[{"role": "user", "content": content}],
                 structured_model=GraderScoreCallback,
             )
 
             # Handle both streaming and non-streaming responses
-            if hasattr(response, "__aiter__"):
+            if hasattr(chat_response, "__aiter__"):
                 # This is a streaming response, we need to collect it first
                 collected_content = []
                 metadata = {}
-                async for chunk in response:
+                async for chunk in chat_response:
                     if chunk.content:
                         collected_content.extend(chunk.content)
                     if chunk.metadata:
@@ -246,8 +246,8 @@ class ImageHelpfulnessGrader(LLMGrader):
                 reason = metadata.get("reason", "")
             else:
                 # Non-streaming response
-                score = response.metadata["score"]
-                reason = response.metadata["reason"]
+                score = chat_response.metadata["score"]
+                reason = chat_response.metadata["reason"]
             return score, reason
 
         except Exception as e:
@@ -256,16 +256,16 @@ class ImageHelpfulnessGrader(LLMGrader):
 
     async def _acompute(
         self,
-        actual_output: List[Union[str, MLLMImage]],
+        response: List[Union[str, MLLMImage]],
         **_kwargs: Any,
     ) -> Tuple[float, dict]:
         """Compute image helpfulness score (asynchronous)"""
 
-        image_indices = get_image_indices(actual_output)
+        image_indices = get_image_indices(response)
 
         if not image_indices:
             return 0.0, {
-                "error": "No images found in actual_output",
+                "error": "No images found in response",
                 "num_images": 0,
             }
 
@@ -273,10 +273,10 @@ class ImageHelpfulnessGrader(LLMGrader):
         for image_index in image_indices:
             context_above, context_below = get_image_context(
                 image_index,
-                actual_output,
+                response,
                 self.max_context_size,
             )
-            image = actual_output[image_index]
+            image = response[image_index]
             tasks.append(
                 self._aevaluate_single_image(
                     image,
@@ -307,14 +307,14 @@ class ImageHelpfulnessGrader(LLMGrader):
 
     async def aevaluate(
         self,
-        actual_output: List[Union[str, MLLMImage]],
+        response: List[Union[str, MLLMImage]],
         **kwargs: Any,
     ) -> GraderScore:
         """
         Evaluate image helpfulness
 
         Args:
-            actual_output: List containing text and images (mixed)
+            response: List containing text and images (mixed)
             **kwargs: Additional arguments (ignored)
 
         Returns:
@@ -322,14 +322,14 @@ class ImageHelpfulnessGrader(LLMGrader):
 
         Example:
             >>> result = await grader.aevaluate(
-            ...     actual_output=[
+            ...     response=[
             ...         "The system architecture:",
             ...         MLLMImage(url="diagram.jpg"),
             ...         "shows the component interactions"
             ...     ]
             ... )
         """
-        score, details = await self._acompute(actual_output, **kwargs)
+        score, details = await self._acompute(response, **kwargs)
 
         if "error" in details:
             return GraderScore(

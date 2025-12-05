@@ -46,7 +46,7 @@ async def test_memory_retrieval_effectiveness_poor():
         plan="I will search for the key in drawer 1.",
         observation="You are in the room.",
         memory="The key was already found in drawer 1 in step 3. Key is in inventory.",
-        task_context="Task: Use the key to unlock the door",
+        context="Task: Use the key to unlock the door",
     )
 
     assert result is not None
@@ -65,7 +65,7 @@ async def test_memory_retrieval_effectiveness_good():
         plan="I will use the key I found earlier to unlock the door.",
         observation="You are near the locked door. Key is in inventory.",
         memory="Key-A was found in drawer 1.",
-        task_context="Task: Unlock the door",
+        context="Task: Unlock the door",
     )
 
     assert result is not None
@@ -88,7 +88,7 @@ async def test_memory_retrieval_effectiveness_with_history():
         plan="I should search all drawers to find a key.",  # Ignoring memory - poor effectiveness
         observation="Standing in the room with key in inventory.",
         memory="Key is in inventory.",
-        history_steps=history,
+        history=history,
     )
 
     assert result is not None

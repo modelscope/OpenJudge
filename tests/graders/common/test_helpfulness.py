@@ -42,7 +42,7 @@ async def test_helpfulness_grader_execution():
         query=query,
         response=response,
         context=context,
-        reference_response=reference_response,
+        ground_truth=reference_response,
     )
     print(result)
 

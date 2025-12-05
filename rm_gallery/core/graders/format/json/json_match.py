@@ -130,12 +130,40 @@ class JsonMatchGrader(BaseGrader):
 
     async def aevaluate(
         self,
-        reference: str,
+        ground_truth: str,
         response: str,
         **kwargs: Any,
     ) -> GraderScore:
-        """Evaluate JSON match"""
-        matched, details = self._compute(reference, response)
+        """
+        Evaluate JSON match between ground truth and response.
+
+        Performs a deep comparison of two JSON strings to determine if they match
+        according to configured matching rules (strict order, ignoring extra keys, etc).
+
+        Args:
+            ground_truth (str): The reference JSON string that serves as the expected result
+            response (str): The actual JSON string to be evaluated
+            **kwargs (Any): Additional keyword arguments (not used in this implementation)
+
+        Returns:
+            GraderScore: A score object containing:
+                - score (float): 1.0 if JSON structures match, 0.0 otherwise
+                - reason (str): Explanation of the matching result
+                - metadata (dict): Detailed information about the comparison including:
+                    - matched (bool): Whether the JSON structures matched
+                    - strict_order (bool): Whether list order was strictly enforced
+                    - ignore_extra_keys (bool): Whether extra keys in response were ignored
+                    - error information if parsing failed
+
+        Example:
+            >>> grader = JsonMatchGrader(strict_order=False)
+            >>> result = await grader.aevaluate(
+            ...     ground_truth='{"name": "Alice", "hobbies": ["reading", "swimming"]}',
+            ...     response='{"name": "Alice", "hobbies": ["swimming", "reading"]}'
+            ... )
+            >>> print(result.score)  # 1.0 (matches because strict_order=False)
+        """
+        matched, details = self._compute(ground_truth, response)
 
         if "error" in details:
             return GraderScore(

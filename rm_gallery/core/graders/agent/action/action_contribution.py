@@ -25,7 +25,7 @@ Consider these evaluation dimensions:
 4. **Efficiency**: Is this tool call necessary or redundant?
 5. **Factual Grounding**: How well does this tool call support or contradict the final answer?
 # User Query
-{user_query}
+{query}
 # Context Before Tool Call
 {context_before}
 # Tool Call Information
@@ -35,7 +35,7 @@ Consider these evaluation dimensions:
 # Context After Tool Call
 {context_after}
 # Final Answer
-{final_answer}
+{response}
 # Evaluation Guidelines
 ## Scoring Framework
 - Score 0.8-1.0: Critical contribution, essential for solving the problem, provides accurate and verifiable information that properly supports the final answer
@@ -79,7 +79,7 @@ CONTRIBUTION_PROMPT_ZH = """# 任务描述
 4. **效率**: 此工具调用是必要的还是冗余的?
 5. **事实依据**: 此工具调用对最终答案的支持或矛盾程度如何?
 # 用户查询
-{user_query}
+{query}
 # 工具调用前的上下文
 {context_before}
 # 工具调用信息
@@ -89,7 +89,7 @@ CONTRIBUTION_PROMPT_ZH = """# 任务描述
 # 工具调用后的上下文
 {context_after}
 # 最终答案
-{final_answer}
+{response}
 # 评估指南
 ## 评分框架
 - 分数 0.8-1.0: 关键贡献,解决问题必不可少,提供准确可验证的信息,恰当支持最终答案
@@ -156,12 +156,12 @@ class ActionContributionGrader(LLMGrader):
         >>> api = OpenAIChatModel(api_key="...", model="gpt-4o")
         >>> grader = ActionContributionGrader(model=api)
         >>> result = await grader.aevaluate(
-        ...     user_query="帮我找投资建议",
+        ...     query="帮我找投资建议",
         ...     tool_calls="Tool: search\\nArguments: {...}",
         ...     tool_responses="搜索结果...",
         ...     context_before="之前的对话...",
         ...     context_after="之后的对话...",
-        ...     final_answer="根据分析..."
+        ...     response="根据分析..."
         ... )
         >>> print(f"Contribution score: {result.score}")
     """
@@ -184,22 +184,22 @@ class ActionContributionGrader(LLMGrader):
 
     async def aevaluate(
         self,
-        user_query: str,
+        query: str,
         tool_calls: str,
         tool_responses: str,
         context_before: str = "No context before",
         context_after: str = "No context after",
-        final_answer: str = "",
+        response: str = "",
     ) -> GraderScore:
         """
         Evaluate individual tool call contribution.
         Args:
-            user_query: Original user question
+            query: Original user question
             tool_calls: Tool call information
             tool_responses: Tool response content
             context_before: Context before the tool call (optional)
             context_after: Context after the tool call (optional)
-            final_answer: Final answer from the agent (optional)
+            response: Final answer from the agent (optional)
         Returns:
             GraderScore: Contribution score (0.0-1.0)
                 - score: Contribution score
@@ -207,21 +207,21 @@ class ActionContributionGrader(LLMGrader):
                 - metadata: Additional evaluation details
         Example:
             >>> result = await grader.aevaluate(
-            ...     user_query="帮我找投资建议",
+            ...     query="帮我找投资建议",
             ...     tool_calls="Tool: search\\nArguments: {...}",
             ...     tool_responses="搜索结果...",
-            ...     final_answer="根据分析..."
+            ...     response="根据分析..."
             ... )
         """
         try:
             # Call parent evaluation with formatted parameters
             result = await super().aevaluate(
-                user_query=user_query,
+                query=query,
                 tool_calls=tool_calls,
                 tool_responses=tool_responses,
                 context_before=context_before,
                 context_after=context_after,
-                final_answer=final_answer,
+                response=response,
             )
             score = result.score
             reason = result.reason

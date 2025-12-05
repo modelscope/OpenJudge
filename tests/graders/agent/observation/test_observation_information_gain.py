@@ -46,8 +46,8 @@ async def test_observation_information_gain_diverse_observations():
                     "function": {
                         "name": "search",
                         "arguments": '{"query": "test1"}',
-                    }
-                }
+                    },
+                },
             ],
         },
         {"role": "function", "content": "Information about topic A with unique details"},
@@ -58,8 +58,8 @@ async def test_observation_information_gain_diverse_observations():
                     "function": {
                         "name": "search",
                         "arguments": '{"query": "test2"}',
-                    }
-                }
+                    },
+                },
             ],
         },
         {
@@ -88,8 +88,8 @@ async def test_observation_information_gain_redundant_observations():
                     "function": {
                         "name": "search",
                         "arguments": '{"query": "test"}',
-                    }
-                }
+                    },
+                },
             ],
         },
         {"role": "function", "content": "The same information repeated multiple times"},
@@ -100,8 +100,8 @@ async def test_observation_information_gain_redundant_observations():
                     "function": {
                         "name": "search",
                         "arguments": '{"query": "test"}',
-                    }
-                }
+                    },
+                },
             ],
         },
         {"role": "function", "content": "The same information repeated multiple times"},
@@ -113,4 +113,3 @@ async def test_observation_information_gain_redundant_observations():
     assert hasattr(result, "score")
     # Score should be lower due to redundancy
     assert 0.0 <= result.score <= 1.0
-

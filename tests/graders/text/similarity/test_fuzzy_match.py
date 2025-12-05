@@ -16,11 +16,10 @@ class TestFuzzyMatchBasic:
     @pytest.mark.asyncio
     async def test_exact_match(self):
         """Test exact match returns perfect score"""
-        grader = SimilarityGrader()
+        grader = SimilarityGrader(algorithm="fuzzy_match")
         result = await grader.aevaluate(
-            reference="hello world",
+            ground_truth="hello world",
             response="hello world",
-            algorithm="fuzzy_match",
         )
 
         assert result.score == 1.0
@@ -30,11 +29,10 @@ class TestFuzzyMatchBasic:
     @pytest.mark.asyncio
     async def test_complete_mismatch(self):
         """Test completely different strings return low score"""
-        grader = SimilarityGrader()
+        grader = SimilarityGrader(algorithm="fuzzy_match")
         result = await grader.aevaluate(
-            reference="hello world",
+            ground_truth="hello world",
             response="goodbye universe",
-            algorithm="fuzzy_match",
         )
 
         assert 0.0 <= result.score < 0.5
@@ -43,11 +41,12 @@ class TestFuzzyMatchBasic:
     @pytest.mark.asyncio
     async def test_partial_match(self):
         """Test partial matching"""
-        grader = SimilarityGrader()
+        grader = SimilarityGrader(
+            algorithm="fuzzy_match",
+        )
         result = await grader.aevaluate(
-            reference="hello world",
+            ground_truth="hello world",
             response="hello worl",
-            algorithm="fuzzy_match",  # Missing 'd'
         )
 
         assert 0.9 < result.score < 1.0
@@ -57,11 +56,10 @@ class TestFuzzyMatchBasic:
         """Test case insensitive matching"""
         # Note: FuzzyMatchGrader doesn't have normalize_text parameter
         # Case sensitivity is handled by the fuzzy matching algorithm
-        grader = SimilarityGrader()
+        grader = SimilarityGrader(algorithm="fuzzy_match")
         result = await grader.aevaluate(
-            reference="Hello World",
+            ground_truth="Hello World",
             response="hello world",
-            algorithm="fuzzy_match",
         )
 
         # Fuzzy match is case-sensitive, so won't be 1.0, but should be high
@@ -74,11 +72,10 @@ class TestFuzzyMatchMethods:
     @pytest.mark.asyncio
     async def test_ratio_method(self):
         """Test standard ratio method"""
-        grader = SimilarityGrader()
+        grader = SimilarityGrader(algorithm="fuzzy_match")
         result = await grader.aevaluate(
-            reference="the quick brown fox",
+            ground_truth="the quick brown fox",
             response="the quick brown fox",
-            algorithm="fuzzy_match",
             method="ratio",
         )
 
@@ -88,11 +85,10 @@ class TestFuzzyMatchMethods:
     @pytest.mark.asyncio
     async def test_partial_ratio_method(self):
         """Test partial ratio for substring matching"""
-        grader = SimilarityGrader()
+        grader = SimilarityGrader(algorithm="fuzzy_match")
         result = await grader.aevaluate(
-            reference="the quick brown fox jumps",
+            ground_truth="the quick brown fox jumps",
             response="quick brown fox",
-            algorithm="fuzzy_match",
             method="partial_ratio",
         )
 
@@ -102,11 +98,10 @@ class TestFuzzyMatchMethods:
     @pytest.mark.asyncio
     async def test_token_sort_ratio_method(self):
         """Test token sort ratio for order-independent matching"""
-        grader = SimilarityGrader()
+        grader = SimilarityGrader(algorithm="fuzzy_match")
         result = await grader.aevaluate(
-            reference="brown quick the fox",
+            ground_truth="brown quick the fox",
             response="the quick brown fox",
-            algorithm="fuzzy_match",
             method="token_sort_ratio",
         )
 
@@ -122,7 +117,7 @@ class TestFuzzyMatchMultipleReferences:
         """Test exact match with multiple references"""
         # Note: Grader architecture evaluates single reference at a time
         # For multiple references, we evaluate each separately and take the best
-        grader = SimilarityGrader()
+        grader = SimilarityGrader(algorithm="fuzzy_match")
 
         references = ["hello world", "hi there", "greetings"]
         candidate = "hello world"
@@ -130,9 +125,8 @@ class TestFuzzyMatchMultipleReferences:
         scores = []
         for ref in references:
             result = await grader.aevaluate(
-                reference=ref,
+                ground_truth=ref,
                 response=candidate,
-                algorithm="fuzzy_match",
             )
             scores.append(result.score)
 
@@ -142,7 +136,7 @@ class TestFuzzyMatchMultipleReferences:
     @pytest.mark.asyncio
     async def test_multiple_references_best_match(self):
         """Test that best matching reference is selected"""
-        grader = SimilarityGrader()
+        grader = SimilarityGrader(algorithm="fuzzy_match")
 
         references = ["completely different text", "hello world", "another text"]
         candidate = "hello world"
@@ -150,9 +144,8 @@ class TestFuzzyMatchMultipleReferences:
         scores = []
         for ref in references:
             result = await grader.aevaluate(
-                reference=ref,
+                ground_truth=ref,
                 response=candidate,
-                algorithm="fuzzy_match",
             )
             scores.append(result.score)
 
@@ -162,7 +155,7 @@ class TestFuzzyMatchMultipleReferences:
     @pytest.mark.asyncio
     async def test_multiple_references_partial_match(self):
         """Test partial matching with multiple references"""
-        grader = SimilarityGrader()
+        grader = SimilarityGrader(algorithm="fuzzy_match")
 
         references = ["hello", "world", "foo bar"]
         candidate = "hello world"
@@ -170,9 +163,8 @@ class TestFuzzyMatchMultipleReferences:
         scores = []
         for ref in references:
             result = await grader.aevaluate(
-                reference=ref,
+                ground_truth=ref,
                 response=candidate,
-                algorithm="fuzzy_match",
             )
             scores.append(result.score)
 
@@ -186,11 +178,10 @@ class TestFuzzyMatchEdgeCases:
     @pytest.mark.asyncio
     async def test_empty_strings(self):
         """Test handling of empty strings"""
-        grader = SimilarityGrader()
+        grader = SimilarityGrader(algorithm="fuzzy_match")
         result = await grader.aevaluate(
-            reference="",
+            ground_truth="",
             response="",
-            algorithm="fuzzy_match",
         )
 
         # Empty strings should match perfectly
@@ -199,11 +190,10 @@ class TestFuzzyMatchEdgeCases:
     @pytest.mark.asyncio
     async def test_empty_reference_non_empty_candidate(self):
         """Test empty reference with non-empty candidate"""
-        grader = SimilarityGrader()
+        grader = SimilarityGrader(algorithm="fuzzy_match")
         result = await grader.aevaluate(
-            reference="",
+            ground_truth="",
             response="hello",
-            algorithm="fuzzy_match",
         )
 
         assert result.score == 0.0
@@ -211,12 +201,11 @@ class TestFuzzyMatchEdgeCases:
     @pytest.mark.asyncio
     async def test_very_long_strings(self):
         """Test performance with long strings"""
-        grader = SimilarityGrader()
+        grader = SimilarityGrader(algorithm="fuzzy_match")
         long_text = "word " * 1000  # 1000 words
         result = await grader.aevaluate(
-            reference=long_text,
+            ground_truth=long_text,
             response=long_text,
-            algorithm="fuzzy_match",
         )
 
         assert result.score == 1.0
@@ -224,11 +213,10 @@ class TestFuzzyMatchEdgeCases:
     @pytest.mark.asyncio
     async def test_special_characters(self):
         """Test handling of special characters"""
-        grader = SimilarityGrader()
+        grader = SimilarityGrader(algorithm="fuzzy_match")
         result = await grader.aevaluate(
-            reference="hello@world#2024!",
+            ground_truth="hello@world#2024!",
             response="hello@world#2024!",
-            algorithm="fuzzy_match",
         )
 
         assert result.score == 1.0
@@ -236,11 +224,10 @@ class TestFuzzyMatchEdgeCases:
     @pytest.mark.asyncio
     async def test_unicode_characters(self):
         """Test handling of Unicode characters"""
-        grader = SimilarityGrader()
+        grader = SimilarityGrader(algorithm="fuzzy_match")
         result = await grader.aevaluate(
-            reference="你好世界",
+            ground_truth="你好世界",
             response="你好世界",
-            algorithm="fuzzy_match",
         )
 
         assert result.score == 1.0
@@ -252,14 +239,15 @@ class TestFuzzyMatchThreshold:
     @pytest.mark.asyncio
     async def test_threshold_matching(self):
         """Test threshold-based matching decision"""
-        grader = SimilarityGrader()
+        grader = SimilarityGrader(
+            algorithm="fuzzy_match",
+            threshold=0.9,
+        )
 
         # High similarity - should match
         result = await grader.aevaluate(
-            reference="the quick brown fox",
+            ground_truth="the quick brown fox",
             response="the quick brown fo",
-            algorithm="fuzzy_match",
-            threshold=0.9,
         )
 
         if result.score >= 0.9:
@@ -272,21 +260,23 @@ class TestFuzzyMatchThreshold:
         """Test different threshold values"""
 
         # Strict threshold
-        grader_strict = SimilarityGrader()
-        result_strict = await grader_strict.aevaluate(
-            reference="hello world",
-            response="hello worl",
+        grader_strict = SimilarityGrader(
             algorithm="fuzzy_match",
             threshold=0.99,
         )
+        result_strict = await grader_strict.aevaluate(
+            ground_truth="hello world",
+            response="hello worl",
+        )
 
         # Lenient threshold
-        grader_lenient = SimilarityGrader()
-        result_lenient = await grader_lenient.aevaluate(
-            reference="hello world",
-            response="hello worl",
+        grader_lenient = SimilarityGrader(
             algorithm="fuzzy_match",
             threshold=0.80,
+        )
+        result_lenient = await grader_lenient.aevaluate(
+            ground_truth="hello world",
+            response="hello worl",
         )
 
         # Scores should be the same, but matching decision may differ

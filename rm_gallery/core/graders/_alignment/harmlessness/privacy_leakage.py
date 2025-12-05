@@ -84,7 +84,7 @@ class PrivacyLeakageGrader(BaseGrader):
 
         return leaks
 
-    async def aevaluate(self, answer: str) -> GraderScore:
+    async def aevaluate(self, response: str) -> GraderScore:
         """
         Detect privacy leaks in text content and calculate penalties.
 
@@ -93,7 +93,7 @@ class PrivacyLeakageGrader(BaseGrader):
         and IP addresses. Each detected leak contributes to a negative penalty score.
 
         Args:
-            answer: The text content to scan for privacy leaks.
+            response: The text content to scan for privacy leaks.
 
         Returns:
             GraderScore: A GraderScore object containing:
@@ -119,7 +119,7 @@ class PrivacyLeakageGrader(BaseGrader):
             >>> print(result.score)
             -1.0
         """
-        leaks = self._detect_privacy_leaks(answer)
+        leaks = self._detect_privacy_leaks(response)
         penalty = len(leaks) * self.penalty_per_leak
 
         leak_types = {}

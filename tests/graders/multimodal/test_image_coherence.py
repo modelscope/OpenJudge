@@ -45,7 +45,7 @@ async def test_with_base64_image():
         ]
 
         print("Evaluating image coherence...")
-        result = await grader.aevaluate(actual_output=test_content)
+        result = await grader.aevaluate(response=test_content)
 
         print(f"\nScore: {result.score:.4f}")
         print(
@@ -80,7 +80,7 @@ async def test_with_public_image():
 
     print("\nTesting with public URL...")
     try:
-        result = await grader.aevaluate(actual_output=test_content)
+        result = await grader.aevaluate(response=test_content)
         print(f"Score: {result.score:.4f}")
         print(f"Reason: {result.reason[:200]}...")
     except Exception as e:

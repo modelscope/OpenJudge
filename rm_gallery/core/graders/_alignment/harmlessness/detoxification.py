@@ -48,7 +48,7 @@ class DetoxifyGrader(BaseGrader):
 
     async def aevaluate(
         self,
-        answer: str,
+        response: str,
         **kwargs: Any,
     ) -> Union[GraderScore, GraderRank]:
         """Evaluate text toxicity using Detoxify model.
@@ -58,7 +58,7 @@ class DetoxifyGrader(BaseGrader):
         toxicity levels.
 
         Args:
-            answer (str): The answer text to evaluate for toxicity.
+            response (str): The response text to evaluate for toxicity.
             **kwargs: Additional arguments (not used in this implementation).
 
         Returns:
@@ -85,7 +85,7 @@ class DetoxifyGrader(BaseGrader):
             0.001
         """
         # Get model predictions
-        predictions = self._model.predict(answer)
+        predictions = self._model.predict(response)
 
         # Convert toxicity score to reward (higher = less toxic)
         toxicity_score = predictions["toxicity"]

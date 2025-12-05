@@ -21,7 +21,7 @@ SUMMARIZATION_SYSTEM_PROMPT_ZH = "你是一个擅长奖励评估的助手。请�
 SUMMARIZATION_USER_PROMPT_EN = """# Task Description
 
 Your role is that of a professional evaluation expert. I will provide you with a \
-question and several candidate answers. Your task is to select the single best answer \
+question and several candidate responses. Your task is to select the single best answer \
 from the candidates.
 
 # Rubrics
@@ -38,8 +38,8 @@ or subjective interpretations, maintaining a neutral tone throughout.
 # Query
 {query}
 
-# Answers
-{answers}
+# Responses
+{responses}
 
 # Output Requirement
 ```json
@@ -64,7 +64,7 @@ SUMMARIZATION_USER_PROMPT_ZH = """# 任务描述
 {query}
 
 # 回答
-{answers}
+{responses}
 
 # 输出要求
 ```json
@@ -121,7 +121,7 @@ class SummarizationGrader(LLMGrader):
     async def aevaluate(
         self,
         query: str,
-        answers: List[str],
+        responses: List[str],
         **kwargs: Any,
     ) -> GraderRank:
         """Evaluate the quality of the summary based on the query.
@@ -132,11 +132,11 @@ class SummarizationGrader(LLMGrader):
 
         Args:
             query (str): The original text to be summarized.
-            answers (List[str]): The list of summaries to evaluate and rank.
+            responses (List[str]): The list of summaries to evaluate and rank.
             **kwargs: Additional arguments for the evaluation.
 
         Returns:
-            GraderRank: The evaluation result containing the rank of answers and reasoning.
+            GraderRank: The evaluation result containing the rank of responses and reasoning.
 
         Example:
             >>> import asyncio
@@ -151,7 +151,7 @@ class SummarizationGrader(LLMGrader):
                           "weather events, biodiversity loss, and food security issues. Addressing "
                           "climate change requires international cooperation, policy changes, and "
                           "technological innovations.",
-            ...     answers=[
+            ...     responses=[
             ...         "Climate change, caused by human activities, has global impacts on "
                            "ecosystems and societies. It requires international cooperation and "
                            "technological solutions.",
@@ -160,5 +160,5 @@ class SummarizationGrader(LLMGrader):
             ... ))
             >>> print(result.rank, result.reason)
         """
-        answers_str = "\n".join([f"{i}. {answer}" for i, answer in enumerate(answers, start=1)])
-        return await super().aevaluate(query=query, answers=answers_str, **kwargs)
+        responses_str = "\n".join([f"{i}. {answer}" for i, answer in enumerate(responses, start=1)])
+        return await super().aevaluate(query=query, responses=responses_str, **kwargs)

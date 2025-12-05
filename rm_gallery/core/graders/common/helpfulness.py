@@ -58,7 +58,7 @@ The goal is to evaluate the helpfulness, depth, and appropriateness of the respo
 {response}
 </response>
 
-{reference_section}
+{ground_truth_section}
 
 # Output Instructions
 Provide your evaluation in the following structured JSON format:
@@ -117,7 +117,7 @@ HELPFULNESS_PROMPT_ZH = """
 {response}
 </response>
 
-{reference_section}
+{ground_truth_section}
 
 # 输出指令
 请按以下结构化 JSON 格式提供你的评估：
@@ -218,7 +218,7 @@ class HelpfulnessGrader(LLMGrader):
         ...     query="What are decorators in Python?",
         ...     response="Decorators are functions that modify other functions...",
         ...     context="User needs help understanding Python decorators.",
-        ...     reference_response="Decorators are a Python feature for wrapping functions."
+        ...     ground_truth="Decorators are a Python feature for wrapping functions."
         ... )
         >>> print(result.score)  # 2 - too vague and lacks depth
     """
@@ -254,7 +254,7 @@ class HelpfulnessGrader(LLMGrader):
         query: str,
         response: str,
         context: str = "",
-        reference_response: str = "",
+        ground_truth: str = "",
     ) -> GraderScore:
         """
         Evaluate helpfulness of response
@@ -263,7 +263,7 @@ class HelpfulnessGrader(LLMGrader):
             query: Input query or prompt
             response: Model response to evaluate
             context: Context or background information. Defaults to empty string.
-            reference_response: Reference response for comparison. Defaults to empty string.
+            ground_truth: Reference response for comparison. Defaults to empty string.
 
         Returns:
             GraderScore: Score with helpfulness value [1, 5]
@@ -274,7 +274,7 @@ class HelpfulnessGrader(LLMGrader):
             ...     query="Explain machine learning",
             ...     answer="Machine learning is a subset of AI that enables systems to learn from data...",
             ...     context="Audience: beginners",
-            ...     reference_response="ML is a field of AI focused on learning from data."
+            ...     ground_truth="ML is a field of AI focused on learning from data."
             ... )
         """
         # Prepare context section
@@ -284,26 +284,26 @@ class HelpfulnessGrader(LLMGrader):
 {context}
 </context>"""
 
-        # Prepare reference section based on language
-        reference_section = ""
-        if reference_response:
+        # Prepare ground truth section based on language
+        ground_truth_section = ""
+        if ground_truth:
             if self.language == LanguageEnum.ZH:
-                reference_section = f"""如有需要，你也可以使用以下参考输出进行比较：
-<reference_response>
-{reference_response}
-</reference_response>"""
+                ground_truth_section = f"""如有需要，你也可以使用以下参考输出进行比较：
+<ground_truth>
+{ground_truth}
+</ground_truth>"""
             else:
-                reference_section = f"""If available, you may also use the following reference response for comparison:
-<reference_response>
-{reference_response}
-</reference_response>"""
+                ground_truth_section = f"""If available, you may also use the following reference response for comparison:
+<ground_truth>
+{ground_truth}
+</ground_truth>"""
 
         try:
             result = await super().aevaluate(
                 query=query,
                 response=response,
                 context_section=context_section,
-                reference_section=reference_section,
+                ground_truth_section=ground_truth_section,
             )
             score = result.score
             reason = result.reason

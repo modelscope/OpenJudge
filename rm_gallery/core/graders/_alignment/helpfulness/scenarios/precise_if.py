@@ -22,13 +22,13 @@ PRECISE_IF_SYSTEM_PROMPT_ZH = "你是一个擅长奖励评估的助手。请根�
 # Precise If Listwise User Prompt
 PRECISE_IF_USER_PROMPT_EN = """# Task Description
 Your role is that of a professional evaluation expert. I will provide you with a \
-question and several candidate answers. Your task is to select the single best answer \
+question and several candidate responses. Your task is to select the single best answer \
 from the candidates.
 I will also provide you with a set of rubrics, listed under the heading #Rubrics. \
 These rubrics are ordered from highest to lowest importance. You must check each \
 candidate answer in turn to see if it violates any rubric, and provide reasons for \
 any violations you find. These reasons should be used as references for ranking \
-the answers.
+the responses.
 You may organize your reasoning as you see fit, but keep your thought process as concise as possible.
 
 # Rubrics
@@ -44,7 +44,7 @@ Explicit Condition Matching:
 # Query
 {query}
 
-# Answers
+# Responses
 {answer}
 
 # Output Requirement
@@ -147,7 +147,7 @@ class PreciseIfGrader(LLMGrader):
     async def aevaluate(
         self,
         query: str,
-        answers: List[str],
+        responses: List[str],
         **kwargs: Any,
     ) -> GraderRank:
         """Evaluate the precision of the IF response based on the query.
@@ -158,11 +158,11 @@ class PreciseIfGrader(LLMGrader):
 
         Args:
             query (str): The conditional query to evaluate.
-            answers (List[str]): The responses to evaluate and rank.
+            responses (List[str]): The responses to evaluate and rank.
             **kwargs: Additional arguments for the evaluation.
 
         Returns:
-            GraderRank: The evaluation result containing the rank of answers and reasoning.
+            GraderRank: The evaluation result containing the rank of responses and reasoning.
 
         Example:
             >>> # Example for listwise precise IF grader
@@ -173,7 +173,7 @@ class PreciseIfGrader(LLMGrader):
             >>> grader = PreciseIfGrader(model=model)
             >>> result = asyncio.run(grader.aevaluate(
             ...     query="If the temperature is above 30°C, what should I wear?",
-            ...     answers=[
+            ...     responses=[
             ...         "If the temperature is above 30°C, wear light, breathable clothing such as shorts "
             ...         "and a t-shirt.",
             ...         "Wear whatever you want."
@@ -183,5 +183,5 @@ class PreciseIfGrader(LLMGrader):
             [1, 2] The first response directly addresses the conditional query with specific, appropriate
                 suggestions.
         """
-        answers_str = "\n".join([f"{i}. {answer}" for i, answer in enumerate(answers, start=1)])
-        return await super().aevaluate(query=query, answers=answers_str, **kwargs)
+        responses_str = "\n".join([f"{i}. {answer}" for i, answer in enumerate(responses, start=1)])
+        return await super().aevaluate(query=query, responses=responses_str, **kwargs)

@@ -19,7 +19,7 @@ CODE_SYSTEM_PROMPT_ZH = "你是一个擅长奖励评估的助手。请根据给�
 # Code Listwise User Prompt
 CODE_USER_PROMPT_EN = """# Task Description
 Your role is that of a professional evaluation expert. I will provide you with a \
-question and several candidate answers. Your task is to select the single best answer \
+question and several candidate responses. Your task is to select the single best answer \
 from the candidates.
 
 # Rubrics
@@ -44,7 +44,7 @@ inputs, making the code robust and production-ready.
 # Query
 {query}
 
-# Answers
+# Responses
 {answer}
 
 # Output Requirement
@@ -144,7 +144,7 @@ class CodeGrader(LLMGrader):
     async def aevaluate(
         self,
         query: str,
-        answers: List[str],
+        responses: List[str],
         **kwargs: Any,
     ) -> GraderRank:
         """Evaluate the quality of the code response based on the query.
@@ -155,7 +155,7 @@ class CodeGrader(LLMGrader):
 
         Args:
             query (str): The programming problem or query to evaluate.
-            answers (List[str]): The code solutions to evaluate and rank.
+            responses (List[str]): The code solutions to evaluate and rank.
             **kwargs: Additional arguments for the evaluation.
 
         Returns:
@@ -172,7 +172,7 @@ class CodeGrader(LLMGrader):
             >>> grader = CodeGrader(model=model)
             >>> result = asyncio.run(grader.aevaluate(
             ...     query="Write a function to calculate the factorial of a number",
-            ...     answers=[
+            ...     responses=[
             ...         "def factorial(n):\\n    if n <= 1:\\n        return 1\\n    return n * factorial(n-1)",
             ...         "def fact(n):\\n    result = 1\\n    for i in range(1, n+1):"
             ...         "\\n        result *= i\\n    return result"
@@ -181,5 +181,5 @@ class CodeGrader(LLMGrader):
             >>> print(result.rank, result.reason)
             [1, 2] The first answer uses recursion which is more elegant for factorial calculation.
         """
-        answers_str = "\n".join([f"{i}. {answer}" for i, answer in enumerate(answers, start=1)])
-        return await super().aevaluate(query=query, answers=answers_str, **kwargs)
+        responses_str = "\n".join([f"{i}. {answer}" for i, answer in enumerate(responses, start=1)])
+        return await super().aevaluate(query=query, responses=responses_str, **kwargs)

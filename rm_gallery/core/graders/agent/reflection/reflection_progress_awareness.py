@@ -195,7 +195,7 @@ class ReflectionProgressAwarenessGrader(LLMGrader):
         >>> result = await grader.aevaluate(
         ...     observation="Cabinet 1 now has apples. Task complete.",
         ...     reflection="Good progress! I've successfully found the apples.",
-        ...     task_context="Task: Find apples in cabinets"
+        ...     context="Task: Find apples in cabinets"
         ... )
         >>> print(f"Score: {result.score}")  # 1.0 (accurate awareness)
     """
@@ -220,14 +220,14 @@ class ReflectionProgressAwarenessGrader(LLMGrader):
         self,
         observation: str,
         reflection: str,
-        history_steps: Optional[list] = None,
+        history: Optional[list] = None,
     ) -> str:
         """Format trajectory steps for evaluation.
 
         Args:
             observation: Agent's observation from the environment
             reflection: Agent's reflection on the situation
-            history_steps: Optional list of previous step dictionaries
+            history: Optional list of previous step dictionaries
 
         Returns:
             Formatted trajectory string
@@ -235,8 +235,8 @@ class ReflectionProgressAwarenessGrader(LLMGrader):
         lines = []
 
         # Add history steps if provided
-        if history_steps:
-            for i, hist_step in enumerate(history_steps):
+        if history:
+            for i, hist_step in enumerate(history):
                 lines.append(f"Step {i + 1}:")
                 for key, value in hist_step.items():
                     if value:
@@ -244,7 +244,7 @@ class ReflectionProgressAwarenessGrader(LLMGrader):
                 lines.append("")
 
         # Add current step
-        step_number = len(history_steps) + 1 if history_steps else 1
+        step_number = len(history) + 1 if history else 1
         lines.append(f"Step {step_number}:")
         lines.append(f"Observation: {observation}")
         lines.append(f"Reflection: {reflection}")
@@ -255,8 +255,8 @@ class ReflectionProgressAwarenessGrader(LLMGrader):
         self,
         observation: str,
         reflection: str,
-        history_steps: Optional[list] = None,
-        task_context: Optional[str] = None,
+        history: Optional[list] = None,
+        context: Optional[str] = None,
         **kwargs: Any,
     ) -> GraderScore:
         """
@@ -265,8 +265,8 @@ class ReflectionProgressAwarenessGrader(LLMGrader):
         Args:
             observation: Agent's observation from the environment
             reflection: Agent's reflection on the situation
-            history_steps: Optional list of previous step dictionaries for context
-            task_context: Optional task context (task description, environment, available actions)
+            history: Optional list of previous step dictionaries for context
+            context: Optional task context (task description, environment, available actions)
             **kwargs: Additional arguments
 
         Returns:
@@ -276,22 +276,22 @@ class ReflectionProgressAwarenessGrader(LLMGrader):
             >>> result = await grader.aevaluate(
             ...     observation="Cabinet 1 now has apples. Task complete.",
             ...     reflection="Good progress! I've successfully found the apples.",
-            ...     task_context="Task: Find apples in cabinets"
+            ...     context="Task: Find apples in cabinets"
             ... )
         """
         # Format trajectory steps
         trajectory_steps = self._format_trajectory_steps(
             observation=observation,
             reflection=reflection,
-            history_steps=history_steps,
+            history=history,
         )
 
         # Prepare context section
         context_section = ""
-        if task_context:
-            context_section = f"""<task_context>
-{task_context}
-</task_context>"""
+        if context:
+            context_section = f"""<context>
+{context}
+</context>"""
 
         try:
             result = await super().aevaluate(

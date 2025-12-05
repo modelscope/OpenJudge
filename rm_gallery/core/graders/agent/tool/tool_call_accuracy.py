@@ -39,13 +39,11 @@ Evaluate based on these factors:
     from the CONVERSATION?
 
 # Ratings
-- Score 1: The tool calls are irrelevant
-- Score 2: The tool calls are partially relevant, but not enough tools were called or the
-            parameters were not correctly passed
-- Score 3: The tool calls are relevant, but there were unnecessary, excessive tool calls made
-- Score 4: The tool calls are relevant, but some tools returned errors and agent retried calling
-            them again and succeeded
-- Score 5: The tool calls are relevant, and all parameters were correctly passed
+- Score 1: The tool calls were irrelevant to answer the user query, all names of tool calls could not be found as one of the function names in the tool definitions, or parameters of tool calls were incorrect.
+- Score 2: The tool calls were irrelevant to answer the user query, some names of tool calls could not be found as one of the function names in tool definitions, or parameters of tool calls were incorrect.
+- Score 3: The tool calls were partially relevant to answer the user query, and the description in tool definitions, all names of tool calls could be found as one of the function names in tool definitions, and parameters of tool calls were correct but irrelevant with the description in tool definitions.
+- Score 4: The tool calls were fairly relevant to answer the user query, all names of tool calls could be found as one of the function names in tool definitions, and parameters of tool calls were correct and relevant with the description in tool definition.
+- Score 5: The tool calls were fully relevant to answer the user query, all names of tool calls could be found as one of the function names in tool definitions, and parameters of tool calls were correct and relevant with the description in tool definition.
 
 # Data
 CONVERSATION : {query}
@@ -77,11 +75,11 @@ TOOL_CALL_ACCURACY_PROMPT_ZH = """# 指令
 2. **参数正确性**：所有参数值是否从对话中提取或合理推断？
 
 # 评分
-- 分数 1：工具调用不相关
-- 分数 2：工具调用部分相关，但调用的工具不足或参数传递不正确
-- 分数 3：工具调用相关，但进行了不必要的、过多的工具调用
-- 分数 4：工具调用相关，但某些工具返回错误，智能体重试调用后成功
-- 分数 5：工具调用相关，且所有参数都正确传递
+- 分数 1：工具调用与回答用户问题无关，所有工具调用名称均未在工具定义中找到对应的函数名称，或者工具调用的参数不正确。
+- 分数 2：工具调用与回答用户问题无关，部分工具调用名称未在工具定义中找到对应的函数名称，或者工具调用的参数不正确。
+- 分数 3：工具调用与回答用户问题部分相关，工具定义中的描述与用户问题相关，所有工具调用名称均在工具定义中找到对应的函数名称，并且工具调用的参数正确，但与工具定义中的描述无关。
+- 分数 4：工具调用与回答用户问题基本相关，所有工具调用名称均在工具定义中找到对应的函数名称，并且工具调用的参数正确，与工具定义中的描述相关。
+- 分数 5：工具调用与回答用户查询完全相关，所有工具调用的名称都可以在工具定义中找到，并且工具调用的参数与工具定义中的描述一致且正确。
 
 # 数据
 对话：{query}

@@ -29,6 +29,9 @@ def simple_tokenize(text: str, lowercase: bool = False) -> List[str]:
     return text.split()
 
 
+_non_word_space_pattern = re.compile(r"[^\w\s]")
+_word_punctuation_pattern = re.compile(r"\w+|[^\w\s]")
+
 def word_tokenize(text: str, remove_punctuation: bool = True) -> List[str]:
     """
     单词级分词
@@ -50,11 +53,11 @@ def word_tokenize(text: str, remove_punctuation: bool = True) -> List[str]:
     """
     if remove_punctuation:
         # 只保留字母、数字和空格
-        text = re.sub(r"[^\w\s]", " ", text)
+        text = _non_word_space_pattern.sub(" ", text)
         tokens = text.split()
     else:
         # 保留标点，但将其作为独立的token
-        tokens = re.findall(r"\w+|[^\w\s]", text)
+        tokens = _word_punctuation_pattern.findall(text)
 
     return [t for t in tokens if t.strip()]
 
@@ -112,6 +115,8 @@ def ngram_tokenize(text: str, n: int = 2, char_level: bool = False) -> List[str]
     return ngrams
 
 
+_sentence_split_pattern = re.compile(r"(?<=[.!?])\s+")
+
 def sentence_tokenize(text: str) -> List[str]:
     """
     句子分词
@@ -130,9 +135,11 @@ def sentence_tokenize(text: str) -> List[str]:
         ['Hello world.', 'How are you?', "I'm fine!"]
     """
     # 简单的句子分割规则
-    sentences = re.split(r"(?<=[.!?])\s+", text)
+    sentences = _sentence_split_pattern.split(text)
     return [s.strip() for s in sentences if s.strip()]
 
+
+_word_pattern = re.compile(r"\b\w+\b")
 
 def tokenize_preserving_case(text: str) -> List[str]:
     """
@@ -148,7 +155,7 @@ def tokenize_preserving_case(text: str) -> List[str]:
         >>> tokenize_preserving_case("Hello World")
         ['Hello', 'World']
     """
-    return re.findall(r"\b\w+\b", text)
+    return _word_pattern.findall(text)
 
 
 def whitespace_tokenize(text: str) -> List[str]:

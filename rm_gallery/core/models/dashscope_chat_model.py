@@ -21,7 +21,7 @@ from pydantic import BaseModel
 
 from rm_gallery.core.models.schema.message import ChatMessage
 
-from ..utils.utils import _create_tool_from_base_model, _json_loads_with_repair
+from ..utils.utils import create_tool_from_base_model, repair_and_load_json
 from .base_chat_model import BaseChatModel
 from .schema.block import TextBlock, ThinkingBlock, ToolUseBlock
 from .schema.response import ChatResponse
@@ -182,7 +182,7 @@ class DashScopeChatModel(BaseChatModel):
                     "ignored. The model will only perform structured output "
                     "generation without calling any other tools.",
                 )
-            format_tool = _create_tool_from_base_model(structured_model)
+            format_tool = create_tool_from_base_model(structured_model)
             kwargs["tools"] = self._format_tools_json_schemas(
                 [format_tool],
             )
@@ -330,7 +330,7 @@ class DashScopeChatModel(BaseChatModel):
                 )
 
             for tool_call in acc_tool_calls.values():
-                repaired_input = _json_loads_with_repair(
+                repaired_input = repair_and_load_json(
                     tool_call.get("arguments", "{}") or "{}",
                 )
 
@@ -430,7 +430,7 @@ class DashScopeChatModel(BaseChatModel):
 
         if message.get("tool_calls"):
             for tool_call in message["tool_calls"]:
-                input_ = _json_loads_with_repair(
+                input_ = repair_and_load_json(
                     tool_call["function"].get(
                         "arguments",
                         "{}",

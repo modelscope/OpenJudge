@@ -9,7 +9,7 @@ from rm_gallery.core.graders.llm_grader import LLMGrader
 from rm_gallery.core.models.base_chat_model import BaseChatModel
 from rm_gallery.core.models.schema.message import ChatMessage
 from rm_gallery.core.models.schema.prompt_template import PromptTemplate
-from rm_gallery.core.utils.utils import _json_loads_with_repair
+from rm_gallery.core.utils.utils import repair_and_load_json
 
 # Criteria Generation System Prompt
 CRITERIA_GENERATION_SYSTEM_PROMPT = (
@@ -168,7 +168,7 @@ class Cramo(LLMGrader):
         )
         response = await self.model.achat(
             messages=messages,
-            callback=_json_loads_with_repair,
+            callback=repair_and_load_json,
         )
         rubrics = response.metadata.get("rubrics", [])
 

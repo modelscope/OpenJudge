@@ -20,7 +20,7 @@ from rm_gallery.core.models.schema.block import (
 from rm_gallery.core.models.schema.message import ChatMessage
 from rm_gallery.core.models.schema.response import ChatResponse
 from rm_gallery.core.models.schema.usage import ChatUsage
-from rm_gallery.core.utils.utils import _json_loads_with_repair
+from rm_gallery.core.utils.utils import repair_and_load_json
 
 
 def _format_audio_data_for_qwen_omni(messages: list[dict]) -> None:
@@ -359,7 +359,7 @@ class OpenAIChatModel(BaseChatModel):
                     )
 
                     if structured_model:
-                        metadata = _json_loads_with_repair(text)
+                        metadata = repair_and_load_json(text)
 
                 for tool_call in tool_calls.values():
                     contents.append(
@@ -367,7 +367,7 @@ class OpenAIChatModel(BaseChatModel):
                             type=tool_call["type"],
                             id=tool_call["id"],
                             name=tool_call["name"],
-                            input=_json_loads_with_repair(
+                            input=repair_and_load_json(
                                 tool_call["input"] or "{}",
                             ),
                         ),
@@ -459,7 +459,7 @@ class OpenAIChatModel(BaseChatModel):
                         type="tool_use",
                         id=tool_call.id,
                         name=tool_call.function.name,
-                        input=_json_loads_with_repair(
+                        input=repair_and_load_json(
                             tool_call.function.arguments,
                         ),
                     ),
@@ -469,7 +469,7 @@ class OpenAIChatModel(BaseChatModel):
                 try:
                     metadata = choice.message.parsed.model_dump()
                 except AttributeError:
-                    metadata = _json_loads_with_repair(
+                    metadata = repair_and_load_json(
                         choice.message.content,
                     )
 

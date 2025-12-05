@@ -13,7 +13,7 @@ from loguru import logger
 from pydantic import BaseModel
 
 
-def _json_loads_with_repair(
+def repair_and_load_json(
     json_str: str,
 ) -> dict | list | str | float | int | bool | None:
     """The given json_str maybe incomplete, e.g. '{"key', so we need to
@@ -29,11 +29,11 @@ def _json_loads_with_repair(
         ValueError: If the JSON string cannot be parsed even after repair.
 
     Example:
-        >>> result = _json_loads_with_repair('{"key": "value"}')
+        >>> result = repair_and_load_json('{"key": "value"}')
         >>> print(result)
         {'key': 'value'}
         >>>
-        >>> result = _json_loads_with_repair('{"key"')  # Incomplete JSON
+        >>> result = repair_and_load_json('{"key"')  # Incomplete JSON
         >>> print(result)  # Repaired and parsed
         {'key': None}
     """
@@ -93,7 +93,7 @@ def _remove_title_field(schema: dict) -> None:
         )
 
 
-def _create_tool_from_base_model(
+def create_tool_from_base_model(
     structured_model: Type[BaseModel],
     tool_name: str = "generate_structured_output",
 ) -> Dict[str, Any]:
@@ -125,7 +125,7 @@ def _create_tool_from_base_model(
         ...     age: int
         ...     email: str
         ...
-        >>> tool = _create_tool_from_base_model(PersonInfo, "extract_person")
+        >>> tool = create_tool_from_base_model(PersonInfo, "extract_person")
         >>> print(tool["function"]["name"])
         extract_person
         >>> print(tool["type"])

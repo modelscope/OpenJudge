@@ -3,7 +3,9 @@ import json
 import asyncio
 import argparse
 
-from rm_gallery.core.graders.agent import ToolCallAccuracyGrader
+from rm_gallery.core.graders.agent import *
+from rm_gallery.core.graders.common import *
+from rm_gallery.core.models.schema.prompt_template import LanguageEnum
 
 
 def run_cases(case_file: str, skip: int):
@@ -24,19 +26,19 @@ def run_cases(case_file: str, skip: int):
             index = case["index"]
 
             try:
-                grader = eval(cls_name)(model=model_config)
+                grader = eval(cls_name)(model=model_config, language=LanguageEnum.ZH)
                 result = asyncio.run(grader.aevaluate(**kwargs))
 
                 if "min_expect_score" in case:
                     if result.score < case["min_expect_score"]:
-                        print(f"FAILED, index: {index}, result: {result}")
+                        print(f"\033[91mFAILED\033[0m, index: {index}, result: {result}")
                         continue
                 elif "max_expect_score" in case:
                     if result.score > case["max_expect_score"]:
-                        print(f"FAILED, index: {index}, result: {result}")
+                        print(f"\033[91mFAILED\033[0m, index: {index}, result: {result}")
                         continue
                 else:
-                    print(f"ERROR: index: {index}, missing min_expect_score or max_expect_score")
+                    print(f"\033[91mFAILED\033[0m: index: {index}, missing min_expect_score or max_expect_score")
                     continue
 
                 print(f"PASSED: index: {index}, score: {result.score}")

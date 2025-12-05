@@ -48,7 +48,7 @@ A score from 0 to 10 will be given based on the success in following the prompt.
 
 Put the score in a list such that output score = [score].
 
-Text Prompt: {text_prompt}
+Text Prompt: {query}
 """
 
 TEXT_TO_IMAGE_PERCEPTUAL_PROMPT_EN = """
@@ -102,7 +102,7 @@ TEXT_TO_IMAGE_SEMANTIC_PROMPT_ZH = """
 
 将分数放在列表中，输出分数 = [score]。
 
-文本提示：{text_prompt}
+文本提示：{query}
 """
 
 TEXT_TO_IMAGE_PERCEPTUAL_PROMPT_ZH = """
@@ -218,8 +218,8 @@ class TextToImageGrader(BaseGrader):
         >>> grader = TextToImageGrader(model=model)
         >>>
         >>> result = await grader.aevaluate(
-        ...     text_prompt="A fluffy orange cat sitting on a blue sofa",
-        ...     generated_image=MLLMImage(url="https://example.com/generated.jpg")
+        ...     query="A fluffy orange cat sitting on a blue sofa",
+        ...     response=MLLMImage(url="https://example.com/generated.jpg")
         ... )
         >>> print(result.score)  # 0.92 - excellent prompt following and quality
     """
@@ -255,26 +255,26 @@ class TextToImageGrader(BaseGrader):
 
     async def _aevaluate_semantic_consistency(
         self,
-        text_prompt: str,
-        generated_image: MLLMImage,
+        query: str,
+        response: MLLMImage,
     ) -> Tuple[List[float], str]:
         """Evaluate semantic consistency asynchronously"""
         messages = self.semantic_template.to_messages(self.language)
-        prompt = messages[0].format(text_prompt=text_prompt).content
+        prompt = messages[0].format(query=query).content
 
         try:
-            content = format_image_content(prompt, [generated_image])
-            response = await self.model.achat(
+            content = format_image_content(prompt, [response])
+            chat_response = await self.model.achat(
                 messages=[{"role": "user", "content": content}],
                 structured_model=GraderScoreCallback,
             )
 
             # Handle both streaming and non-streaming responses
-            if hasattr(response, "__aiter__"):
+            if hasattr(chat_response, "__aiter__"):
                 # This is a streaming response, we need to collect it first
                 collected_content = []
                 metadata = {}
-                async for chunk in response:
+                async for chunk in chat_response:
                     if chunk.content:
                         collected_content.extend(chunk.content)
                     if chunk.metadata:
@@ -285,9 +285,9 @@ class TextToImageGrader(BaseGrader):
                 reason = metadata.get("reason", "")
             else:
                 # Non-streaming response
-                score = response.metadata["score"]
+                score = chat_response.metadata["score"]
                 score = score if isinstance(score, list) else [score]
-                reason = response.metadata["reason"]
+                reason = chat_response.metadata["reason"]
             return score, reason
 
         except Exception as e:
@@ -296,21 +296,21 @@ class TextToImageGrader(BaseGrader):
 
     async def _aevaluate_perceptual_quality(
         self,
-        generated_image: MLLMImage,
+        response: MLLMImage,
     ) -> Tuple[List[float], str]:
         """Evaluate perceptual quality asynchronously"""
         messages = self.perceptual_template.to_messages(self.language)
         prompt = messages[0].content
 
         try:
-            content = format_image_content(prompt, [generated_image])
-            response = await self.model.achat(
+            content = format_image_content(prompt, [response])
+            chat_response = await self.model.achat(
                 messages=[{"role": "user", "content": content}],
                 structured_model=GraderScoreCallback,
             )
-            score = response.metadata["score"]
+            score = chat_response.metadata["score"]
             score = score[:2] if isinstance(score, list) else [score, score]
-            reason = response.metadata["reason"]
+            reason = chat_response.metadata["reason"]
             return score, reason
 
         except Exception as e:
@@ -319,16 +319,16 @@ class TextToImageGrader(BaseGrader):
 
     async def _a_compute(
         self,
-        text_prompt: str,
-        generated_image: MLLMImage,
+        query: str,
+        response: MLLMImage,
         **_kwargs: Any,
     ) -> Tuple[float, dict]:
         """
         Compute text-to-image quality score (asynchronous)
 
         Args:
-            text_prompt: Original text prompt
-            generated_image: Generated image to evaluate
+            query: Original text prompt
+            response: Generated image to evaluate
 
         Returns:
             tuple[float, dict]: (normalized_score [0,1], details)
@@ -340,10 +340,10 @@ class TextToImageGrader(BaseGrader):
             pq_reason,
         ) = await asyncio.gather(
             self._aevaluate_semantic_consistency(
-                text_prompt,
-                generated_image,
+                query,
+                response,
             ),
-            self._aevaluate_perceptual_quality(generated_image),
+            self._aevaluate_perceptual_quality(response),
         )
 
         # Calculate final score using geometric mean
@@ -369,16 +369,16 @@ class TextToImageGrader(BaseGrader):
 
     async def aevaluate(
         self,
-        text_prompt: str,
-        generated_image: Union[MLLMImage, List[MLLMImage]],
+        query: str,
+        response: Union[MLLMImage, List[MLLMImage]],
         **kwargs: Any,
     ) -> GraderScore:
         """
         Evaluate text-to-image generation quality
 
         Args:
-            text_prompt: Original text prompt (string)
-            generated_image: Generated image (MLLMImage or list with single MLLMImage)
+            query: Original text prompt (string)
+            response: Generated image (MLLMImage or list with single MLLMImage)
             **kwargs: Additional arguments (ignored)
 
         Returns:
@@ -386,30 +386,30 @@ class TextToImageGrader(BaseGrader):
 
         Example:
             >>> result = await grader.aevaluate(
-            ...     text_prompt="A cat sitting on a blue sofa",
-            ...     generated_image=MLLMImage(url="cat.jpg")
+            ...     query="A cat sitting on a blue sofa",
+            ...     response=MLLMImage(url="cat.jpg")
             ... )
         """
-        # Handle if generated_image is a list
-        if isinstance(generated_image, list):
-            if not generated_image:
+        # Handle if response is a list
+        if isinstance(response, list):
+            if not response:
                 return GraderScore(
                     name=self.name,
                     score=0.0,
                     reason="No generated image provided",
                     metadata={"error": "Empty image list"},
                 )
-            generated_image = generated_image[0]
+            response = response[0]
 
-        if not isinstance(generated_image, MLLMImage):
+        if not isinstance(response, MLLMImage):
             return GraderScore(
                 name=self.name,
                 score=0.0,
                 reason="Invalid image type",
-                metadata={"error": "generated_image must be MLLMImage"},
+                metadata={"error": "response must be MLLMImage"},
             )
 
-        score, details = await self._a_compute(text_prompt, generated_image, **kwargs)
+        score, details = await self._a_compute(query, response, **kwargs)
 
         # Generate comprehensive reason
         reason = f"""Text-to-Image Quality Score: {score:.4f}

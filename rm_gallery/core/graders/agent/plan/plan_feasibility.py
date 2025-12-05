@@ -181,7 +181,7 @@ class PlanFeasibilityGrader(LLMGrader):
         plan: str,
         observation: str,
         memory: str,
-        history_steps: Optional[list] = None,
+        history: Optional[list] = None,
     ) -> str:
         """Format trajectory steps for evaluation.
 
@@ -189,7 +189,7 @@ class PlanFeasibilityGrader(LLMGrader):
             plan: Agent's planning/reasoning
             observation: Agent's observation from the environment
             memory: Agent's memory content
-            history_steps: Optional list of previous step dictionaries
+            history: Optional list of previous step dictionaries
 
         Returns:
             Formatted trajectory string
@@ -197,8 +197,8 @@ class PlanFeasibilityGrader(LLMGrader):
         lines = []
 
         # Add history steps if provided
-        if history_steps:
-            for i, hist_step in enumerate(history_steps):
+        if history:
+            for i, hist_step in enumerate(history):
                 lines.append(f"Step {i + 1}:")
                 for key, value in hist_step.items():
                     if value:
@@ -206,7 +206,7 @@ class PlanFeasibilityGrader(LLMGrader):
                 lines.append("")
 
         # Add current step
-        step_number = len(history_steps) + 1 if history_steps else 1
+        step_number = len(history) + 1 if history else 1
         lines.append(f"Step {step_number}:")
         lines.append(f"Plan: {plan}")
         lines.append(f"Observation: {observation}")
@@ -219,8 +219,8 @@ class PlanFeasibilityGrader(LLMGrader):
         plan: str,
         observation: str,
         memory: str,
-        history_steps: Optional[list] = None,
-        task_context: Optional[str] = None,
+        history: Optional[list] = None,
+        context: Optional[str] = None,
         **kwargs: Any,
     ) -> GraderScore:
         """
@@ -230,8 +230,8 @@ class PlanFeasibilityGrader(LLMGrader):
             plan: Agent's planning/reasoning
             observation: Agent's observation from the environment
             memory: Agent's memory content
-            history_steps: Optional list of previous step dictionaries for context
-            task_context: Optional task context (task description, environment, available actions)
+            history: Optional list of previous step dictionaries for context
+            context: Optional task context (task description, environment, available actions)
             **kwargs: Additional arguments
 
         Returns:
@@ -242,7 +242,7 @@ class PlanFeasibilityGrader(LLMGrader):
             ...     plan="I will first open the drawer to get the key, then use it.",
             ...     observation="The drawer is closed. You don't have any items.",
             ...     memory="The key is inside the drawer.",
-            ...     task_context="Task: Unlock the door"
+            ...     context="Task: Unlock the door"
             ... )
         """
         # Format trajectory steps
@@ -250,15 +250,15 @@ class PlanFeasibilityGrader(LLMGrader):
             plan=plan,
             observation=observation,
             memory=memory,
-            history_steps=history_steps,
+            history=history,
         )
 
         # Prepare context section
         context_section = ""
-        if task_context:
-            context_section = f"""<task_context>
-{task_context}
-</task_context>"""
+        if context:
+            context_section = f"""<context>
+{context}
+</context>"""
 
         try:
             result = await super().aevaluate(

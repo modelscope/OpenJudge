@@ -278,19 +278,19 @@ class LLMGrader(BaseGrader):
         params = {"rubrics": self.rubrics, **self.kwargs}
         params.update(kwargs)
         messages = self.template.format(language=self.language, **params)
-        response = await self.model.achat(
+        chat_response = await self.model.achat(
             messages=list(messages),
             structured_model=self.structured_model,
             callback=self.callback,
         )
 
         # Handle both streaming and non-streaming responses
-        if hasattr(response, "__aiter__"):
+        if hasattr(chat_response, "__aiter__"):
             # Collect the last chunk from the async iterator
-            async for chunk in response:  # type: ignore
-                response = chunk  # Iterate through all chunks, keeping the last one
+            async for chunk in chat_response:  # type: ignore
+                chat_response = chunk  # Iterate through all chunks, keeping the last one
 
-        metadata = getattr(response, "metadata", {}) or {}
+        metadata = getattr(chat_response, "metadata", {}) or {}
 
         if self.mode == GraderMode.LISTWISE:
             rank = metadata.pop("rank")

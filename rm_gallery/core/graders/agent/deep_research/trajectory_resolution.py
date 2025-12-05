@@ -134,7 +134,10 @@ JSON:
 TRAJECTORY_RESOLUTION_PROMPT_EN = """# Task Description
 You are a professional evaluation expert responsible for assessing the contribution of each tool call step in an agent trajectory and the overall problem-solving capability.
 
-You need to provide independent and consistent evaluation for each tool call step in the trajectory, considering their respective contributions and relative importance. Additionally, you must evaluate whether all tool call returns collectively can solve the user query.
+You need to provide independent and consistent evaluation for each tool call step
+in the trajectory, considering their respective contributions and relative importance.
+Additionally, you must evaluate whether all tool call returns collectively can solve
+the user query.
 
 # User Query
 {user_query}
@@ -272,11 +275,12 @@ class TrajectoryResolutionGrader(LLMGrader):
         name: Grader name
         model: ChatModelBase instance for evaluation
         language: Language for evaluation prompts
+        resolution_threshold: Threshold for determining if the trajectory is resolved (default: 0.9)
 
     Example:
         >>> from rm_gallery.core.models.openai_chat_model import OpenAIChatModel
         >>> api = OpenAIChatModel(api_key="...", model="gpt-4o")
-        >>> grader = TrajectoryResolutionGrader(model=api)
+        >>> grader = TrajectoryResolutionGrader(model=api, resolution_threshold=0.85)
         >>> result = await grader.aevaluate(
         ...     messages=[
         ...         {"role": "system", "content": "..."},
@@ -293,7 +297,27 @@ class TrajectoryResolutionGrader(LLMGrader):
         model: Union[BaseChatModel, dict],
         template: Optional[PromptTemplate] = DEFAULT_TRAJECTORY_RESOLUTION_TEMPLATE,
         language: LanguageEnum = LanguageEnum.ZH,
+        resolution_threshold: float = 0.9,
     ):
+        """
+        Initialize the TrajectoryResolutionGrader.
+
+        Args:
+            model (Union[BaseChatModel, dict]): The chat model to use for evaluation.
+                Can be either a BaseChatModel instance or a dictionary configuration.
+            template (Optional[PromptTemplate]): The prompt template for trajectory evaluation.
+                Defaults to DEFAULT_TRAJECTORY_RESOLUTION_TEMPLATE.
+            language (LanguageEnum): Language for the evaluation prompt.
+                Defaults to LanguageEnum.ZH (Chinese).
+            resolution_threshold (float): Threshold for determining if the trajectory is resolved.
+                Scores greater than or equal to this value are considered resolved.
+                Defaults to 0.9 (90%).
+
+        Example:
+            >>> from rm_gallery.core.models.openai_chat_model import OpenAIChatModel
+            >>> api = OpenAIChatModel(api_key="...", model="gpt-4o")
+            >>> grader = TrajectoryResolutionGrader(model=api, resolution_threshold=0.85)
+        """
         super().__init__(
             name="trajectory_resolution",
             mode=GraderMode.POINTWISE,
@@ -302,7 +326,7 @@ class TrajectoryResolutionGrader(LLMGrader):
             template=template,
             language=language,
         )
-        self.template = template if template is not None else DEFAULT_TRAJECTORY_RESOLUTION_TEMPLATE
+        self.resolution_threshold = resolution_threshold
 
     def _extract_trajectory_from_messages(
         self,
@@ -375,7 +399,6 @@ class TrajectoryResolutionGrader(LLMGrader):
     async def aevaluate(
         self,
         messages: List[Dict[str, Any]],
-        resolution_threshold: float = 0.9,
         **kwargs: Any,
     ) -> GraderScore:
         """
@@ -383,7 +406,6 @@ class TrajectoryResolutionGrader(LLMGrader):
 
         Args:
             messages: List of messages (standard format, including system, user, assistant, tool)
-            resolution_threshold: Threshold for determining if the trajectory is resolved (default: 0.9)
             **kwargs: Additional arguments
 
         Returns:
@@ -398,8 +420,7 @@ class TrajectoryResolutionGrader(LLMGrader):
             ...         {"role": "user", "content": "帮我找投资建议"},
             ...         {"role": "assistant", "content": "...", "tool_calls": [...]},
             ...         ...
-            ...     ],
-            ...     resolution_threshold=0.85
+            ...     ]
             ... )
         """
         # Extract trajectory from messages
@@ -461,7 +482,7 @@ class TrajectoryResolutionGrader(LLMGrader):
             efficiency_score = raw_efficiency_score / 25.0  # Normalize to 0-1
 
             # Determine resolution status using the specified threshold
-            is_resolved = normalized_score >= resolution_threshold
+            is_resolved = normalized_score >= self.resolution_threshold
 
             reason = (
                 f"Trajectory evaluation (total: {total_raw_score:.1f}/100): "
@@ -510,7 +531,7 @@ class TrajectoryResolutionGrader(LLMGrader):
             "step_evaluations": step_evaluations,
             "total_raw_score": total_raw_score,
             "is_resolved": is_resolved,
-            "resolution_threshold": resolution_threshold,
+            "resolution_threshold": self.resolution_threshold,
             "evaluation_type": "trajectory_resolution",
         }
 

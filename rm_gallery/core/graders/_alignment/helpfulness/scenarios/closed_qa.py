@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Closed QA Grader
 
-Provides precise, fact-based answers to questions with definitive correct responses.
+Provides precise, fact-based responses to questions with definitive correct responses.
 """
 from typing import Any, List
 
@@ -23,7 +23,7 @@ CLOSED_QA_SYSTEM_PROMPT_ZH = "你是一个擅长奖励评估的助手。请根�
 # Closed QA Listwise User Prompt (English)
 CLOSED_QA_USER_PROMPT_EN = """# Task Description
 Your role is that of a professional evaluation expert. I will provide you with a \
-question and several candidate answers. Your task is to select the single best answer \
+question and several candidate responses. Your task is to select the single best answer \
 from the candidates.
 
 # Rubrics
@@ -44,8 +44,8 @@ Logical Coherence:
 # Query
 {query}
 
-# Answers
-{answers}
+# Responses
+{responses}
 
 # Output Requirement
 ```json
@@ -74,7 +74,7 @@ CLOSED_QA_USER_PROMPT_ZH = """# 任务描述
 {query}
 
 # 回答
-{answers}
+{responses}
 
 # 输出要求
 ```json
@@ -114,7 +114,7 @@ CLOSED_QA_TEMPLATE = PromptTemplate(
 class ClosedQAGrader(LLMGrader):
     """Closed QA
 
-    Provides precise, fact-based answers to questions with definitive correct responses.
+    Provides precise, fact-based responses to questions with definitive correct responses.
     """
 
     def __init__(
@@ -139,30 +139,30 @@ class ClosedQAGrader(LLMGrader):
             model=model,
             template=template,
             language=language,
-            description="Provides precise, fact-based answers to questions with definitive " "correct responses.",
+            description="Provides precise, fact-based responses to questions with definitive " "correct responses.",
             **kwargs,
         )
 
     async def aevaluate(
         self,
         query: str,
-        answers: List[str],
+        responses: List[str],
         **kwargs: Any,
     ) -> GraderRank:
         """Evaluate the closed QA response based on the query.
 
         Evaluates closed QA responses for their ability to provide precise,
-        fact-based answers to questions with definitive correct responses.
+        fact-based responses to questions with definitive correct responses.
         The grader emphasizes precision in fact-based responses, avoids
         hallucinations, and focuses on explicit requirements.
 
         Args:
             query (str): The query to evaluate.
-            answers (List[str]): The list of answers to evaluate and rank.
+            responses (List[str]): The list of responses to evaluate and rank.
             **kwargs: Additional arguments for the evaluation.
 
         Returns:
-            GraderRank: The evaluation result containing the rank of answers and reasoning.
+            GraderRank: The evaluation result containing the rank of responses and reasoning.
 
         Example:
             >>> # Example for listwise closed QA grader
@@ -173,7 +173,7 @@ class ClosedQAGrader(LLMGrader):
             >>> grader = ClosedQAGrader(model=model)
             >>> result = asyncio.run(grader.aevaluate(
             ...     query="What is the capital of France?",
-            ...     answers=[
+            ...     responses=[
             ...         "The capital of France is Paris.",
             ...         "The capital of France is Lyon."
             ...     ]
@@ -181,5 +181,5 @@ class ClosedQAGrader(LLMGrader):
             >>> print(result.rank, result.reason)
             [1, 2] The first answer correctly identifies Paris as the capital of France.
         """
-        answers_str = "\n".join([f"{i}. {answer}" for i, answer in enumerate(answers, start=1)])
-        return await super().aevaluate(query=query, answers=answers_str, **kwargs)
+        responses_str = "\n".join([f"{i}. {answer}" for i, answer in enumerate(responses, start=1)])
+        return await super().aevaluate(query=query, responses=responses_str, **kwargs)

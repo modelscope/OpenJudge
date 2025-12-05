@@ -20,40 +20,46 @@ class ActionLoopDetectionGrader(BaseGrader):
     all pairs of actions for similarity and penalizing based on the proportion
     of similar action pairs found.
     Example:
-        >>> grader = ActionLoopDetectionGrader()
+        >>> grader = ActionLoopDetectionGrader(similarity_threshold=1.0)
         >>> result = await grader.aevaluate(
         ...     messages=[...],
-        ...     similarity_threshold=1.0,
         ... )
         >>> print(f"Loop detection score: {result.score}")
     """
 
     def __init__(
         self,
+        similarity_threshold: float = 1.0,
     ):
+        """
+        Initialize ActionLoopDetectionGrader.
+
+        Args:
+            similarity_threshold (float): Threshold to consider actions as similar.
+                                         Defaults to 1.0.
+        """
         super().__init__(
             name="action_loop_detection",
             mode=GraderMode.POINTWISE,
             description="Detect and penalize repetitive actions in sequences",
         )
+        self.similarity_threshold = similarity_threshold
 
     async def aevaluate(
         self,
         messages: List[Dict[str, Any]],
-        similarity_threshold: float = 1.0,
+        **kwargs: Any,
     ) -> GraderScore:
         """
         Detect loops in action sequences by comparing all pairs of action signatures.
         Args:
             messages: List of message dicts containing agent interactions
-            similarity_threshold: Threshold to consider actions as similar (default: 1.0)
         Returns:
             GraderScore: Loop detection score (1.0 = no loops, 0.0 = many loops)
         Example:
-            >>> grader = ActionLoopDetectionGrader()
+            >>> grader = ActionLoopDetectionGrader(similarity_threshold=1.0)
             >>> result = await grader.aevaluate(
             ...     messages=[...],
-            ...     similarity_threshold=1.0,
             ... )
             >>> print(f"Loop detection score: {result.score}")
         """
@@ -94,7 +100,7 @@ class ActionLoopDetectionGrader(BaseGrader):
                         action_signatures[i],
                         action_signatures[j],
                     )
-                    if similarity >= similarity_threshold:
+                    if similarity >= self.similarity_threshold:
                         similar_pair_count += 1
                         similar_pairs.append(
                             (action_signatures[i], action_signatures[j], similarity),
@@ -104,13 +110,13 @@ class ActionLoopDetectionGrader(BaseGrader):
             name=self.name,
             score=loop_score,
             reason=f"Loop detection: {similar_pair_count}/{total_pair_count} pairs are "
-            f"similar (threshold={similarity_threshold})",
+            f"similar (threshold={self.similarity_threshold})",
             metadata={
                 "action_count": n,
                 "similar_pair_count": similar_pair_count,
                 "total_pair_count": total_pair_count,
                 "similar_pairs": similar_pairs,
-                "similarity_threshold": similarity_threshold,
+                "similarity_threshold": self.similarity_threshold,
                 "signatures": action_signatures,
             },
         )

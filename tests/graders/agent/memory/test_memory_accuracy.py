@@ -45,7 +45,7 @@ async def test_memory_accuracy_poor():
     result = await grader.aevaluate(
         observation="You see a closed cabinet.",
         memory="There is a red vase inside the cabinet with gold trim.",
-        task_context="Task: Inventory room objects",
+        context="Task: Inventory room objects",
     )
 
     assert result is not None
@@ -63,7 +63,7 @@ async def test_memory_accuracy_good():
     result = await grader.aevaluate(
         observation="Cabinet 1 contains 3 red apples.",
         memory="Cabinet 1 has 3 red apples.",
-        task_context="Task: Inventory items",
+        context="Task: Inventory items",
     )
 
     assert result is not None

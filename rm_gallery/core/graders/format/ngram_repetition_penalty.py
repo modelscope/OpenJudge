@@ -1,13 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Format Graders Module
-
-This module provides graders for evaluating the format of responses, including:
-- ReasoningFormatGrader: Checks for proper thinking and answer tags
-- ReasoningToolCallFormatGrader: Validates tool call format with JSON validation
-- LengthPenaltyGrader: Applies penalties for text that is too short or too long
 - NgramRepetitionPenaltyGrader: Calculates N-gram repetition penalty with Chinese support
-- PrivacyLeakageGrader: Detects privacy information leakage in response content
 """
 
 import re
@@ -113,7 +106,7 @@ class NgramRepetitionPenaltyGrader(BaseGrader):
                 return -(repetition_rate - self.penalty_threshold) * self.penalty_rate
             return 0.0
 
-    async def aevaluate(self, answer: str, **kwargs: Any) -> GraderScore:
+    async def aevaluate(self, response: str, **kwargs: Any) -> GraderScore:
         """
         Calculate N-gram repetition penalty for text content.
 
@@ -123,7 +116,7 @@ class NgramRepetitionPenaltyGrader(BaseGrader):
         threshold and soft penalty modes.
 
         Args:
-            answer: The text content to evaluate for N-gram repetitions.
+            response: The text content to evaluate for N-gram repetitions.
             **kwargs: Additional keyword arguments (not used in current implementation).
 
         Returns:
@@ -155,7 +148,7 @@ class NgramRepetitionPenaltyGrader(BaseGrader):
 
         # Select text based on analysis scope
         if self.analyze_scope == "thought":
-            text_to_analyze = self._extract_thought_process(answer)
+            text_to_analyze = self._extract_thought_process(response)
             if not text_to_analyze:
                 return GraderScore(
                     name=self.name,
@@ -168,7 +161,7 @@ class NgramRepetitionPenaltyGrader(BaseGrader):
                 )
 
         else:
-            text_to_analyze = answer
+            text_to_analyze = response
 
         # Tokenization using unified tokenizer
         preprocessed_text = self.tokenizer.preprocess_text(

@@ -55,7 +55,7 @@ Focus only on factual accuracy. If context is provided, verify support from the 
 {response}
 </response>
 
-{reference_section}
+{ground_truth_section}
 
 # Output Instructions
 Provide your evaluation in the following structured JSON format:
@@ -110,7 +110,7 @@ HALLUCINATION_PROMPT_ZH = """
 {response}
 </response>
 
-{reference_section}
+{ground_truth_section}
 
 # 输出指令
 请按以下结构化 JSON 格式提供你的评估：
@@ -262,7 +262,7 @@ class HallucinationGrader(LLMGrader):
         query: str,
         response: str,
         context: str = "",
-        reference_response: str = "",
+        ground_truth: str = "",
     ) -> GraderScore:
         """
         Evaluate hallucination in response
@@ -272,7 +272,7 @@ class HallucinationGrader(LLMGrader):
             response: Model response to evaluate
             context: Context information to verify against. If empty string (default),
                     evaluation will be based on general factual consistency and common knowledge.
-            reference_response: Reference response for comparison. Defaults to empty string.
+            ground_truth: Reference response for comparison. Defaults to empty string.
 
         Returns:
             GraderScore: Score with hallucination value [1, 5]
@@ -284,7 +284,7 @@ class HallucinationGrader(LLMGrader):
             ...     query="When did the product launch?",
             ...     response="The product launched in 2023 with great success.",
             ...     context="The product launched in 2023.",
-            ...     reference_response="The product launched in 2023."
+            ...     ground_truth="The product launched in 2023."
             ... )
             >>> # Without context
             >>> result = await grader.aevaluate(
@@ -311,26 +311,26 @@ class HallucinationGrader(LLMGrader):
             else:
                 context_section = """Note: No context is provided. Please evaluate whether the response contains hallucinations, false information, or unreasonable claims based on common knowledge, established facts, and logical consistency."""
 
-        # Prepare reference section based on language
-        reference_section = ""
-        if reference_response:
+        # Prepare ground truth section based on language
+        ground_truth_section = ""
+        if ground_truth:
             if self.language == LanguageEnum.ZH:
-                reference_section = f"""如有需要，你也可以使用以下参考输出来帮助识别回答中的幻觉：
-<reference_response>
-{reference_response}
-</reference_response>"""
+                ground_truth_section = f"""如有需要，你也可以使用以下参考输出来帮助识别回答中的幻觉：
+<ground_truth>
+{ground_truth}
+</ground_truth>"""
             else:
-                reference_section = f"""If available, you may also use the following reference response to help you identify hallucinations in the response:
-<reference_response>
-{reference_response}
-</reference_response>"""
+                ground_truth_section = f"""If available, you may also use the following reference response to help you identify hallucinations in the response:
+<ground_truth>
+{ground_truth}
+</ground_truth>"""
 
         try:
             result = await super().aevaluate(
                 query=query,
                 response=response,
                 context_section=context_section,
-                reference_section=reference_section,
+                ground_truth_section=ground_truth_section,
             )
             score = result.score
             reason = result.reason

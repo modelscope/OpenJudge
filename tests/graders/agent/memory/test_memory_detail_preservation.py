@@ -45,7 +45,7 @@ async def test_memory_detail_preservation_poor():
     result = await grader.aevaluate(
         observation="Cabinet 1 at coordinates (3.5, 2.1) contains 5 red apples and 3 green apples.",
         memory="Found some apples in a cabinet.",  # Too vague
-        task_context="Task: Inventory items with precise locations and quantities",
+        context="Task: Inventory items with precise locations and quantities",
     )
 
     assert result is not None
@@ -63,7 +63,7 @@ async def test_memory_detail_preservation_good():
     result = await grader.aevaluate(
         observation="Cabinet 1 at (3.5, 2.1) contains 5 red apples.",
         memory="Cabinet 1 at coordinates (3.5, 2.1): 5 red apples.",
-        task_context="Task: Precise inventory",
+        context="Task: Precise inventory",
     )
 
     assert result is not None
@@ -84,7 +84,7 @@ async def test_memory_detail_preservation_with_history():
     result = await grader.aevaluate(
         observation="Drawer 5 in Room B at position (10.2, 5.8) contains key-A123.",
         memory="Found a key somewhere.",  # Lost critical details
-        history_steps=history,
+        history=history,
     )
 
     assert result is not None

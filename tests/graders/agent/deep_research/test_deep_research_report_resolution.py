@@ -39,8 +39,8 @@ async def test_report_resolution_evaluation():
 
     result = await grader.aevaluate(
         query="What are the best investment options for a conservative investor?",
-        answer="For conservative investors, I recommend government bonds, high-grade corporate bonds, and dividend-paying blue-chip stocks. These options provide stable returns with lower risk.",
-        chat_history="",
+        response="For conservative investors, I recommend government bonds, high-grade corporate bonds, and dividend-paying blue-chip stocks. These options provide stable returns with lower risk.",
+        history="",
         chat_date="2024-01-15",
     )
 
@@ -90,8 +90,8 @@ async def test_report_resolution_with_history():
 
     result = await grader.aevaluate(
         query="What should I invest in?",
-        answer="Given your conservative risk profile, I recommend bonds and stable dividend stocks.",
-        chat_history=chat_history,
+        response="Given your conservative risk profile, I recommend bonds and stable dividend stocks.",
+        history=chat_history,
         chat_date="2024-01-15",
     )
 
@@ -114,8 +114,8 @@ async def test_report_resolution_incomplete_answer():
 
     result = await grader.aevaluate(
         query="What are the risks and returns of investing in tech stocks?",
-        answer="Tech stocks can be good investments.",
-        chat_history="",
+        response="Tech stocks can be good investments.",
+        history="",
         chat_date="2024-01-15",
     )
 
@@ -140,8 +140,8 @@ async def test_report_resolution_custom_threshold():
 
     result = await grader.aevaluate(
         query="What are the best investment options for a conservative investor?",
-        answer="For conservative investors, I recommend government bonds, high-grade corporate bonds, and dividend-paying blue-chip stocks. These options provide stable returns with lower risk.",
-        chat_history="",
+        response="For conservative investors, I recommend government bonds, high-grade corporate bonds, and dividend-paying blue-chip stocks. These options provide stable returns with lower risk.",
+        history="",
         chat_date="2024-01-15",
         resolution_threshold=0.85,
     )

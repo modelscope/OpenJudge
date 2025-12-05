@@ -14,230 +14,218 @@ from rm_gallery.core.graders.text.string_match import StringMatchGrader
 class TestStringMatchGrader:
     """Test cases for unified StringMatchGrader"""
 
-    @pytest.fixture
-    def grader(self):
-        """Create grader instance"""
-        return StringMatchGrader()
-
-    async def test_exact_match_case_sensitive(self, grader):
+    async def test_exact_match_case_sensitive(self):
         """Test exact match with case sensitivity"""
+        grader = StringMatchGrader(algorithm="exact_match", case_sensitive=True)
         result = await grader.aevaluate(
-            reference="Hello World",
+            ground_truth="Hello World",
             response="Hello World",
-            algorithm="exact_match",
-            case_sensitive=True,
         )
         assert result.score == 1.0
         assert result.metadata["matched"] is True
 
-    async def test_exact_match_case_insensitive(self, grader):
+    async def test_exact_match_case_insensitive(self):
         """Test exact match without case sensitivity"""
+        grader = StringMatchGrader(algorithm="exact_match", case_sensitive=False)
         result = await grader.aevaluate(
-            reference="Hello World",
+            ground_truth="Hello World",
             response="hello world",
-            algorithm="exact_match",
-            case_sensitive=False,
         )
         assert result.score == 1.0
         assert result.metadata["matched"] is True
 
-    async def test_exact_match_ignore_whitespace(self, grader):
+    async def test_exact_match_ignore_whitespace(self):
         """Test exact match ignoring whitespace"""
+        grader = StringMatchGrader(algorithm="exact_match", ignore_whitespace=True)
         result = await grader.aevaluate(
-            reference="Hello World",
+            ground_truth="Hello World",
             response="HelloWorld",
-            algorithm="exact_match",
-            ignore_whitespace=True,
         )
         assert result.score == 1.0
         assert result.metadata["matched"] is True
 
-    async def test_prefix_match_success(self, grader):
+    async def test_prefix_match_success(self):
         """Test prefix match success"""
+        grader = StringMatchGrader(algorithm="prefix_match")
         result = await grader.aevaluate(
-            reference="Hello",
+            ground_truth="Hello",
             response="Hello World",
-            algorithm="prefix_match",
         )
         assert result.score == 1.0
         assert result.metadata["matched"] is True
 
-    async def test_prefix_match_failure(self, grader):
+    async def test_prefix_match_failure(self):
         """Test prefix match failure"""
+        grader = StringMatchGrader(algorithm="prefix_match")
         result = await grader.aevaluate(
-            reference="World",
+            ground_truth="World",
             response="Hello World",
-            algorithm="prefix_match",
         )
         assert result.score == 0.0
         assert result.metadata["matched"] is False
 
-    async def test_suffix_match_success(self, grader):
+    async def test_suffix_match_success(self):
         """Test suffix match success"""
+        grader = StringMatchGrader(algorithm="suffix_match")
         result = await grader.aevaluate(
-            reference="World",
+            ground_truth="World",
             response="Hello World",
-            algorithm="suffix_match",
         )
         assert result.score == 1.0
         assert result.metadata["matched"] is True
 
-    async def test_suffix_match_failure(self, grader):
+    async def test_suffix_match_failure(self):
         """Test suffix match failure"""
+        grader = StringMatchGrader(algorithm="suffix_match")
         result = await grader.aevaluate(
-            reference="Hello",
+            ground_truth="Hello",
             response="Hello World",
-            algorithm="suffix_match",
         )
         assert result.score == 0.0
         assert result.metadata["matched"] is False
 
-    async def test_regex_match_success(self, grader):
+    async def test_regex_match_success(self):
         """Test regex match success"""
+        grader = StringMatchGrader(algorithm="regex_match")
         result = await grader.aevaluate(
-            reference=r"\d{3}-\d{4}",
+            ground_truth=r"\d{3}-\d{4}",
             response="My phone is 123-4567",
-            algorithm="regex_match",
         )
         assert result.score == 1.0
         assert result.metadata["matched"] is True
 
-    async def test_regex_match_with_pattern_param(self, grader):
+    async def test_regex_match_with_pattern_param(self):
         """Test regex match with pattern parameter"""
+        grader = StringMatchGrader(algorithm="regex_match")
         result = await grader.aevaluate(
-            reference="",
+            ground_truth="",
             response="test@example.com",
-            algorithm="regex_match",
             pattern=r"[\w.-]+@[\w.-]+\.\w+",
         )
         assert result.score == 1.0
         assert result.metadata["matched"] is True
 
-    async def test_regex_match_invalid_pattern(self, grader):
+    async def test_regex_match_invalid_pattern(self):
         """Test regex match with invalid pattern"""
+        grader = StringMatchGrader(algorithm="regex_match")
         result = await grader.aevaluate(
-            reference="[invalid(",
+            ground_truth="[invalid(",
             response="test",
-            algorithm="regex_match",
         )
         assert result.score == 0.0
         assert "error" in result.metadata
 
-    async def test_substring_match_success(self, grader):
+    async def test_substring_match_success(self):
         """Test substring match success"""
+        grader = StringMatchGrader(algorithm="substring_match")
         result = await grader.aevaluate(
-            reference="cat",
+            ground_truth="cat",
             response="The cat sat on the mat",
-            algorithm="substring_match",
         )
         assert result.score == 1.0
         assert result.metadata["matched"] is True
 
-    async def test_substring_match_failure(self, grader):
+    async def test_substring_match_failure(self):
         """Test substring match failure"""
+        grader = StringMatchGrader(algorithm="substring_match")
         result = await grader.aevaluate(
-            reference="dog",
+            ground_truth="dog",
             response="The cat sat on the mat",
-            algorithm="substring_match",
         )
         assert result.score == 0.0
         assert result.metadata["matched"] is False
 
-    async def test_substring_match_bidirectional(self, grader):
+    async def test_substring_match_bidirectional(self):
         """Test substring match bidirectional"""
+        grader = StringMatchGrader(algorithm="substring_match")
         result = await grader.aevaluate(
-            reference="The cat sat on the mat",
+            ground_truth="The cat sat on the mat",
             response="cat",
-            algorithm="substring_match",
             bidirectional=True,
         )
         assert result.score == 1.0
         assert result.metadata["matched"] is True
 
-    async def test_contains_all_success(self, grader):
+    async def test_contains_all_success(self):
         """Test contains all success"""
+        grader = StringMatchGrader(algorithm="contains_all")
         result = await grader.aevaluate(
-            reference="",
+            ground_truth="",
             response="The cat sat on the mat",
-            algorithm="contains_all",
             substrings=["cat", "mat"],
         )
         assert result.score == 1.0
         assert result.metadata["matched"] is True
         assert len(result.metadata["missing_substrings"]) == 0
 
-    async def test_contains_all_partial(self, grader):
+    async def test_contains_all_partial(self):
         """Test contains all partial match"""
+        grader = StringMatchGrader(algorithm="contains_all")
         result = await grader.aevaluate(
-            reference="",
+            ground_truth="",
             response="The cat sat on the mat",
-            algorithm="contains_all",
             substrings=["cat", "dog", "mat"],
         )
         assert result.score == pytest.approx(2.0 / 3.0)
         assert result.metadata["matched"] is False
         assert "dog" in result.metadata["missing_substrings"]
 
-    async def test_contains_any_success(self, grader):
+    async def test_contains_any_success(self):
         """Test contains any success"""
+        grader = StringMatchGrader(algorithm="contains_any")
         result = await grader.aevaluate(
-            reference="",
+            ground_truth="",
             response="The cat sat on the mat",
-            algorithm="contains_any",
             substrings=["dog", "cat"],
         )
         assert result.score == 1.0
         assert result.metadata["matched"] is True
         assert "cat" in result.metadata["matched_substrings"]
 
-    async def test_contains_any_failure(self, grader):
+    async def test_contains_any_failure(self):
         """Test contains any failure"""
+        grader = StringMatchGrader(algorithm="contains_any")
         result = await grader.aevaluate(
-            reference="",
+            ground_truth="",
             response="The cat sat on the mat",
-            algorithm="contains_any",
             substrings=["dog", "bird"],
         )
         assert result.score == 0.0
         assert result.metadata["matched"] is False
 
-    async def test_word_overlap(self, grader):
+    async def test_word_overlap(self):
         """Test word overlap"""
+        grader = StringMatchGrader(algorithm="word_overlap")
         result = await grader.aevaluate(
-            reference="the cat sat on the mat",
+            ground_truth="the cat sat on the mat",
             response="the dog sat on the rug",
-            algorithm="word_overlap",
         )
-        # Overlapping words: "the", "sat", "on" = 3 out of 5 unique words in reference
+        # Overlapping words: "the", "sat", "on" = 3 out of 5 unique words in ground_truth
         # Reference has: {"the", "cat", "sat", "on", "mat"} = 5 unique words
         # Overlap: {"the", "sat", "on"} = 3 words
         assert result.score == pytest.approx(3.0 / 5.0)
 
-    async def test_char_overlap(self, grader):
+    async def test_char_overlap(self):
         """Test character overlap"""
+        grader = StringMatchGrader(algorithm="char_overlap")
         result = await grader.aevaluate(
-            reference="hello",
+            ground_truth="hello",
             response="helo",
-            algorithm="char_overlap",
         )
         # All characters in "hello" {h, e, l, o} are in "helo"
         assert result.score == 1.0
 
-    async def test_invalid_algorithm(self, grader):
+    async def test_invalid_algorithm(self):
         """Test invalid algorithm"""
         with pytest.raises(ValueError) as exc_info:
-            await grader.aevaluate(
-                reference="test",
-                response="test",
-                algorithm="invalid_algorithm",
-            )
-        assert "Unknown algorithm" in str(exc_info.value)
+            StringMatchGrader(algorithm="invalid_algorithm")
+        assert "Unknown self.algorithm" in str(exc_info.value)
 
-    async def test_algorithm_metadata(self, grader):
+    async def test_algorithm_metadata(self):
         """Test that algorithm is included in metadata"""
+        grader = StringMatchGrader(algorithm="exact_match")
         result = await grader.aevaluate(
-            reference="test",
+            ground_truth="test",
             response="test",
-            algorithm="exact_match",
         )
         assert result.metadata["algorithm"] == "exact_match"

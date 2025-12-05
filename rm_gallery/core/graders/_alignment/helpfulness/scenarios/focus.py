@@ -23,13 +23,13 @@ FOCUS_SYSTEM_PROMPT_ZH = "你是一个擅长奖励评估的助手。请根据给
 # Focus Listwise User Prompt
 FOCUS_USER_PROMPT_EN = """# Task Description
 Your role is that of a professional evaluation expert. I will provide you with a \
-question and several candidate answers. Your task is to select the single best answer \
+question and several candidate responses. Your task is to select the single best answer \
 from the candidates.
 I will also provide you with a set of rubrics, listed under the heading #Rubrics. \
 These rubrics are ordered from highest to lowest importance. You must check each \
 candidate answer in turn to see if it violates any rubric, and provide reasons for \
 any violations you find. These reasons should be used as references for ranking \
-the answers.
+the responses.
 You may organize your reasoning as you see fit, but keep your thought process as concise as possible.
 
 # Rubrics
@@ -50,8 +50,8 @@ elaboration, keeping the focus sharp and concise.
 # Query
 {query}
 
-# Answers
-{answers}
+# Responses
+{responses}
 
 # Output Requirement
 ```json
@@ -81,7 +81,7 @@ FOCUS_USER_PROMPT_ZH = """# 任务描述
 {query}
 
 # 回答
-{answers}
+{responses}
 
 # 输出要求
 ```json
@@ -141,7 +141,7 @@ class FocusGrader(LLMGrader):
     async def aevaluate(
         self,
         query: str,
-        answers: List[str],
+        responses: List[str],
         **kwargs: Any,
     ) -> Any:
         """Evaluate the focus quality of the response based on the query.
@@ -152,22 +152,22 @@ class FocusGrader(LLMGrader):
 
         Args:
             query (str): The query to evaluate.
-            answers (List[str]): The list of answers to evaluate and rank.
+            responses (List[str]): The list of responses to evaluate and rank.
             **kwargs: Additional arguments for the evaluation.
 
         Returns:
-            GraderRank: The evaluation result containing the rank of answers and reasoning.
+            GraderRank: The evaluation result containing the rank of responses and reasoning.
 
         Example:
             >>> grader = FocusGrader()
             >>> result = await grader.aevaluate(
             ...     query="Explain the process of photosynthesis",
-            ...     answers=[
+            ...     responses=[
             ...         "Photosynthesis is the process by which plants convert light "
             ...            "energy into chemical energy...",
             ...         "Plants are green and need water to survive..."
             ...     ]
             ... )
         """
-        answers_str = "\n".join([f"{i}. {answer}" for i, answer in enumerate(answers, start=1)])
-        return await super().aevaluate(query=query, answers=answers_str, **kwargs)
+        responses_str = "\n".join([f"{i}. {answer}" for i, answer in enumerate(responses, start=1)])
+        return await super().aevaluate(query=query, responses=responses_str, **kwargs)

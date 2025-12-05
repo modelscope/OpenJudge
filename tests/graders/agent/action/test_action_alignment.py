@@ -85,7 +85,7 @@ async def test_action_alignment_with_history():
     result = await grader.aevaluate(
         plan="I will close the drawer after searching.",
         action="open drawer 2",  # Wrong action
-        history_steps=history,
+        history=history,
         task_context="Task: Search for items",
     )
 

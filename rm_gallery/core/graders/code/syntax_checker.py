@@ -30,15 +30,15 @@ class SyntaxCheckGrader(BaseGrader):
             description="Check code syntax using Abstract Syntax Tree to validate Python code blocks.",
         )
 
-    async def aevaluate(self, answer: str) -> GraderScore:
-        """Check code syntax in the provided answer.
+    async def aevaluate(self, response: str) -> GraderScore:
+        """Check code syntax in the provided response.
 
         Extracts Python code blocks from markdown-style code fences and validates
         their syntax using Python's AST parser. Returns a score based on the ratio
         of syntactically correct code blocks to total code blocks found.
 
         Args:
-            answer (str): The answer containing code blocks to check for syntax errors.
+            response (str): The response containing code blocks to check for syntax errors.
                         Code blocks should be enclosed in markdown-style fences (```python).
 
         Returns:
@@ -54,21 +54,21 @@ class SyntaxCheckGrader(BaseGrader):
 
         Example:
             >>> grader = SyntaxCheckGrader()
-            >>> answer = "Here's a function:\\n```python\\ndef hello():\\n    print('Hello')\\n```"
-            >>> result = await grader.aevaluate(answer=answer)
+            >>> response = "Here's a function:\\n```python\\ndef hello():\\n    print('Hello')\\n```"
+            >>> result = await grader.aevaluate(response=response)
             >>> print(result.score, result.reason)
             1.0 Syntax check: 1/1 blocks valid, 0 errors
 
             >>> # Example with syntax error
-            >>> answer = "Here's a function with error:\\n```python\\ndef hello():\\n    print('Hello')\\n```"
-            >>> result = await grader.aevaluate(answer=answer)
+            >>> response = "Here's a function with error:\\n```python\\ndef hello():\\n    print('Hello')\\n```"
+            >>> result = await grader.aevaluate(response=response)
             >>> print(result.score, result.reason)
             -0.5 Syntax check: 0/1 blocks valid, 1 errors
         """
 
         # Extract code blocks
         code_pattern = r"```(?:python)?\n(.*?)\n```"
-        code_blocks = re.findall(code_pattern, answer, re.DOTALL)
+        code_blocks = re.findall(code_pattern, response, re.DOTALL)
 
         if not code_blocks:
             # No code blocks, return neutral score

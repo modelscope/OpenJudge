@@ -743,7 +743,7 @@ class QuerySpecificRubricGenerator:
                 }
 
             # Use ChatTemplate with structured output
-            response = await self.model.achat(
+            chat_response = await self.model.achat(
                 messages=self.generation_template.format(
                     **params,
                 ),
@@ -751,16 +751,18 @@ class QuerySpecificRubricGenerator:
             )
 
             # Get structured data from metadata
-            if not response.metadata:
+            if not chat_response.metadata:
                 raise ValueError("No metadata in response")
 
-            if "rubrics" not in response.metadata:
-                logger.error(f"Missing 'rubrics' key in metadata. Available keys: {list(response.metadata.keys())}")
+            if "rubrics" not in chat_response.metadata:
+                logger.error(
+                    f"Missing 'rubrics' key in metadata. Available keys: {list(chat_response.metadata.keys())}",
+                )
                 raise KeyError(
-                    f"'rubrics' key not found in response.metadata. Available keys: {list(response.metadata.keys())}",
+                    f"'rubrics' key not found in response.metadata. Available keys: {list(chat_response.metadata.keys())}",
                 )
 
-            rubrics = response.metadata["rubrics"]
+            rubrics = chat_response.metadata["rubrics"]
 
             if not rubrics or len(rubrics) == 0:
                 raise ValueError("No rubrics generated")
@@ -826,22 +828,24 @@ class QuerySpecificRubricGenerator:
                 "generate_number": self.generate_number,
             }
 
-            response = await self.model.achat(
+            chat_response = await self.model.achat(
                 messages=self.revision_template.format(**params),
                 structured_model=RubricGenerationOutput,
             )
 
             # Get structured data from metadata
-            if not response.metadata:
+            if not chat_response.metadata:
                 raise ValueError("No metadata in response")
 
-            if "rubrics" not in response.metadata:
-                logger.error(f"Missing 'rubrics' key in metadata. Available keys: {list(response.metadata.keys())}")
+            if "rubrics" not in chat_response.metadata:
+                logger.error(
+                    f"Missing 'rubrics' key in metadata. Available keys: {list(chat_response.metadata.keys())}",
+                )
                 raise KeyError(
-                    f"'rubrics' key not found in response.metadata. Available keys: {list(response.metadata.keys())}",
+                    f"'rubrics' key not found in response.metadata. Available keys: {list(chat_response.metadata.keys())}",
                 )
 
-            revised_rubrics = response.metadata["rubrics"]
+            revised_rubrics = chat_response.metadata["rubrics"]
 
             if not revised_rubrics or len(revised_rubrics) == 0:
                 raise ValueError("No revised rubrics generated")

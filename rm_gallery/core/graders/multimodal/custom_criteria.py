@@ -96,7 +96,7 @@ class CustomCriteriaGrader(BaseGrader):
         and optional scoring rubrics. Ideal for domain-specific or task-specific evaluation.
 
     What it evaluates:
-        - Any combination of multimodal inputs (images, text, context, tools)
+        - Any combination of multimodal inputs (images, text, context, tool_calls)
         - Custom criteria defined by you (quality, accuracy, creativity, etc.)
         - Chain-of-Thought evaluation with step-by-step reasoning
         - Automatic evaluation step generation from criteria description
@@ -118,9 +118,9 @@ class CustomCriteriaGrader(BaseGrader):
     Args:
         model: BaseChatModel instance or dict config for vision-language model
         evaluation_name: Name for this evaluation (e.g., "Image Caption Quality")
-        evaluation_params: List of parameter strings to evaluate, e.g., ["input", "actual_output"]
-                          Valid values: "input", "actual_output", "expected_output", "context",
-                          "retrieval_context", "tools", "expected_tools"
+        evaluation_params: List of parameter strings to evaluate, e.g., ["query", "response"]
+                          Valid values: "query", "response", "ground_truth", "context",
+                          "retrieval_context", "tool_calls", "ground_truth_tool_calls"
         criteria: Evaluation criteria description (required if evaluation_steps not provided)
         evaluation_steps: Explicit evaluation steps (optional, auto-generated if not provided)
         rubric: Optional list of Rubric objects defining score ranges
@@ -146,14 +146,14 @@ class CustomCriteriaGrader(BaseGrader):
         >>> grader = CustomCriteriaGrader(
         ...     model=vlm,
         ...     evaluation_name="Image Caption Quality",
-        ...     evaluation_params=["input", "actual_output"],
+        ...     evaluation_params=["query", "response"],
         ...     criteria="Evaluate caption accuracy, detail level, and relevance to image"
         ... )
         >>>
         >>> # Evaluate
         >>> result = await grader.aevaluate(
-        ...     input=[MLLMImage(url="https://example.com/cat.jpg"), "Describe this image"],
-        ...     actual_output=["A fluffy orange cat sitting on a blue mat"]
+        ...     query=[MLLMImage(url="https://example.com/cat.jpg"), "Describe this image"],
+        ...     response=["A fluffy orange cat sitting on a blue mat"]
         ... )
         >>> print(result.score)  # 0.9
         >>> print(result.reason)  # "Caption is accurate and detailed..."
@@ -178,7 +178,7 @@ class CustomCriteriaGrader(BaseGrader):
         Args:
             model: BaseChatModel instance or dict config for OpenAIChatModel
             evaluation_name: Name for this evaluation (e.g., "Image Caption Quality")
-            evaluation_params: List of parameter strings to evaluate (e.g., ["input", "actual_output"])
+            evaluation_params: List of parameter strings to evaluate (e.g., ["query", "response"])
             criteria: Evaluation criteria description (required if evaluation_steps not provided)
             evaluation_steps: Explicit evaluation steps (optional, auto-generated from criteria if not provided)
             rubric: Optional list of Rubric objects defining score ranges and expected outcomes
@@ -235,18 +235,18 @@ class CustomCriteriaGrader(BaseGrader):
         )
 
         try:
-            response = await self.model.achat(
+            chat_response = await self.model.achat(
                 messages=[{"role": "user", "content": prompt}],
                 structured_model=EvaluationSteps,
             )
 
             # Extract structured output
-            if response.metadata:
-                result = EvaluationSteps(**response.metadata)
+            if chat_response.metadata:
+                result = EvaluationSteps(**chat_response.metadata)
             else:
                 # Fallback: parse from text content
                 text_content = "".join(
-                    [block.text for block in response.content if hasattr(block, "text")],
+                    [block.text for block in chat_response.content if hasattr(block, "text")],
                 )
                 import json
 
@@ -430,7 +430,7 @@ JSON:
             else:
                 content = prompt_text
 
-            response = await self.model.achat(
+            chat_response = await self.model.achat(
                 messages=[{"role": "user", "content": content}],
             )
 
@@ -438,7 +438,7 @@ JSON:
             import json
 
             text_content = "".join(
-                [block.text for block in response.content if hasattr(block, "text")],
+                [block.text for block in chat_response.content if hasattr(block, "text")],
             )
 
             # Parse JSON response
@@ -498,44 +498,44 @@ JSON:
     async def aevaluate(
         self,
         *,
-        input: Optional[List[Union[str, MLLMImage]]] = None,
-        actual_output: Optional[List[Union[str, MLLMImage]]] = None,
-        expected_output: Optional[List[Union[str, MLLMImage]]] = None,
+        query: Optional[List[Union[str, MLLMImage]]] = None,
+        response: Optional[List[Union[str, MLLMImage]]] = None,
+        ground_truth: Optional[List[Union[str, MLLMImage]]] = None,
         context: Optional[List[Union[str, MLLMImage]]] = None,
         retrieval_context: Optional[List[Union[str, MLLMImage]]] = None,
-        tools: Optional[List[Union[str, MLLMImage]]] = None,
-        expected_tools: Optional[List[Union[str, MLLMImage]]] = None,
+        tool_calls: Optional[List[Union[str, MLLMImage]]] = None,
+        ground_truth_tool_calls: Optional[List[Union[str, MLLMImage]]] = None,
     ) -> GraderScore:
         """
         Evaluate using custom criteria framework
 
         Args:
-            input: Input to the system (prompt, question, images, etc.)
-            actual_output: Actual output from the system
-            expected_output: Expected/reference output
+            query: Input to the system (prompt, question, images, etc.)
+            response: Actual output from the system
+            ground_truth: Expected/reference output
             context: General context information
             retrieval_context: Context retrieved from a knowledge base
-            tools: Tools used by the system
-            expected_tools: Expected/reference tools that should be used
+            tool_calls: Tools used by the system
+            ground_truth_tool_calls: Expected/reference tool_calls that should be used
 
         Returns:
             GraderScore: Score with normalized evaluation value [0, 1]
 
         Example:
             >>> result = await grader.aevaluate(
-            ...     input=[MLLMImage(url="..."), "Describe this"],
-            ...     actual_output=["A cat sitting"]
+            ...     query=[MLLMImage(url="..."), "Describe this"],
+            ...     response=["A cat sitting"]
             ... )
         """
         # Build params_dict from provided arguments
         params_dict = {
-            "input": input,
-            "actual_output": actual_output,
-            "expected_output": expected_output,
+            "query": query,
+            "response": response,
+            "ground_truth": ground_truth,
             "context": context,
             "retrieval_context": retrieval_context,
-            "tools": tools,
-            "expected_tools": expected_tools,
+            "tool_calls": tool_calls,
+            "ground_truth_tool_calls": ground_truth_tool_calls,
         }
 
         # Remove None values

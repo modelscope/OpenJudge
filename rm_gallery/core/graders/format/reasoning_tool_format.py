@@ -26,7 +26,7 @@ class ReasoningToolCallFormatGrader(BaseGrader):
         )
 
     # pylint: disable=too-many-statements
-    async def aevaluate(self, answer: str, **kwargs: Any) -> GraderScore:
+    async def aevaluate(self, response: str, **kwargs: Any) -> GraderScore:
         """
         Check tool call format and calculate reward score.
 
@@ -39,7 +39,7 @@ class ReasoningToolCallFormatGrader(BaseGrader):
         is valid JSON with required 'name' and 'arguments' fields.
 
         Args:
-            answer: The response text to evaluate for proper formatting.
+            response: The response text to evaluate for proper formatting.
             **kwargs: Additional keyword arguments (not used in this implementation).
 
         Returns:
@@ -72,9 +72,9 @@ class ReasoningToolCallFormatGrader(BaseGrader):
         answer_pattern = r"<answer>(.*?)</answer>"
         tool_call_pattern = r"<tool_call>(.*?)</tool_call>"
 
-        think_matches = re.search(think_pattern, answer, re.DOTALL)
-        answer_matches = re.search(answer_pattern, answer, re.DOTALL)
-        tool_call_matches = re.findall(tool_call_pattern, answer, re.DOTALL)
+        think_matches = re.search(think_pattern, response, re.DOTALL)
+        answer_matches = re.search(answer_pattern, response, re.DOTALL)
+        tool_call_matches = re.findall(tool_call_pattern, response, re.DOTALL)
 
         has_think_tag = think_matches is not None
         has_answer_tag = answer_matches is not None
@@ -90,16 +90,16 @@ class ReasoningToolCallFormatGrader(BaseGrader):
                 # Check overall format
                 format_pattern = r"^\s*<think>.*?</think>\s*<answer>.*?</answer>\s*$"
                 valid_format = bool(
-                    re.match(format_pattern, answer, re.DOTALL),
+                    re.match(format_pattern, response, re.DOTALL),
                 )
 
                 # Check tag occurrence count
                 if valid_format:
                     valid_format = (
-                        answer.count("<think>") == 1
-                        and answer.count("</think>") == 1
-                        and answer.count("<answer>") == 1
-                        and answer.count("</answer>") == 1
+                        response.count("<think>") == 1
+                        and response.count("</think>") == 1
+                        and response.count("<answer>") == 1
+                        and response.count("</answer>") == 1
                     )
 
                 if valid_format:
@@ -116,16 +116,16 @@ class ReasoningToolCallFormatGrader(BaseGrader):
                 # Check overall format
                 format_pattern = r"^\s*<think>.*?</think>\s*(?:<tool_call>.*?</tool_call>\s*)+$"
                 valid_format = bool(
-                    re.match(format_pattern, answer, re.DOTALL),
+                    re.match(format_pattern, response, re.DOTALL),
                 )
 
                 # Check <think> tag occurrence count
                 if valid_format:
-                    valid_format = answer.count("<think>") == 1 and answer.count("</think>") == 1
+                    valid_format = response.count("<think>") == 1 and response.count("</think>") == 1
 
                 # Check if <tool_call> and </tool_call> tags appear in pairs
                 if valid_format:
-                    if answer.count("<tool_call>") != answer.count(
+                    if response.count("<tool_call>") != response.count(
                         "</tool_call>",
                     ):
                         valid_format = False
@@ -134,10 +134,10 @@ class ReasoningToolCallFormatGrader(BaseGrader):
                 if valid_format:
                     if re.search(
                         r"</tool_call>\s*</tool_call>",
-                        answer,
+                        response,
                     ) or re.search(
                         r"<tool_call>\s*<tool_call>",
-                        answer,
+                        response,
                     ):
                         valid_format = False
 

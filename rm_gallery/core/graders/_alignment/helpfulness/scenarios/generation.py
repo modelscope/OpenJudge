@@ -22,7 +22,7 @@ GENERATION_SYSTEM_PROMPT_ZH = "你是一个擅长奖励评估的助手。请根�
 # Generation Rank User Prompt
 GENERATION_USER_PROMPT_EN = """# Task Description
 Your role is that of a professional evaluation expert. I will provide you with a \
-question and several candidate answers. Your task is to select the single best answer \
+question and several candidate responses. Your task is to select the single best answer \
 from the candidates.
 I will also provide you with a set of rubrics, listed under the heading #Rubrics. These rubrics are ordered from highest to lowest importance.These rubrics can serve as supplementary knowledge for your judgment. If you find any of the rubrics helpful for the current problem, feel free to use them as supplements.
 
@@ -43,8 +43,8 @@ Structural Coherence and Logical Flow:
 # Query
 {query}
 
-# Answers
-{answers}
+# Responses
+{responses}
 
 # Output Requirement
 ```json
@@ -74,7 +74,7 @@ GENERATION_USER_PROMPT_ZH = """# 任务描述
 {query}
 
 # 回答
-{answers}
+{responses}
 
 # 输出要求
 ```json
@@ -148,7 +148,7 @@ class GenerationGrader(LLMGrader):
     async def aevaluate(
         self,
         query: str,
-        answers: List[str],
+        responses: List[str],
         **kwargs: Any,
     ) -> GraderRank:
         """Evaluate the quality of the response content based on the query.
@@ -159,7 +159,7 @@ class GenerationGrader(LLMGrader):
 
         Args:
             query (str): The content generation instruction or query.
-            answers (List[str]): The response content(s) to evaluate and rank.
+            responses (List[str]): The response content(s) to evaluate and rank.
             **kwargs: Additional arguments for the evaluation.
 
         Returns:
@@ -177,7 +177,7 @@ class GenerationGrader(LLMGrader):
             >>> grader = GenerationGrader(model=model)
             >>> result = asyncio.run(grader.aevaluate(
             ...     query="Write a short story about a robot learning to paint",
-            ...     answers=[
+            ...     responses=[
             ...         "Once upon a time, there was a robot named ART-1 who discovered...",
             ...         "In a future world, robots had many talents, including painting..."
             ...     ]
@@ -185,5 +185,5 @@ class GenerationGrader(LLMGrader):
             >>> print(result.rank, result.reason)
             [1, 2] The first story is more creative and follows the prompt better.
         """
-        answers_str = "\n".join([f"{i}. {answer}" for i, answer in enumerate(answers, start=1)])
-        return await super().aevaluate(query=query, answers=answers_str, **kwargs)
+        responses_str = "\n".join([f"{i}. {answer}" for i, answer in enumerate(responses, start=1)])
+        return await super().aevaluate(query=query, responses=responses_str, **kwargs)

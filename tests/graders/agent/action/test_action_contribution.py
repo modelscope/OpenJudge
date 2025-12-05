@@ -14,7 +14,7 @@ from rm_gallery.core.graders.agent.action.action_contribution import ActionContr
 
 def test_action_contribution_grader_creation():
     """Test creating a ActionContributionGrader instance"""
-    model = OpenAIChatModel(model="qwen-plus", stream=False)
+    model = OpenAIChatModel(model="qwen-plus", api_key="your-key", stream=False)
     grader = ActionContributionGrader(model=model)
 
     assert grader is not None
@@ -24,7 +24,7 @@ def test_action_contribution_grader_creation():
 
 def test_action_contribution_grader_creation_chinese():
     """Test creating a Chinese ActionContributionGrader instance"""
-    model = OpenAIChatModel(model="qwen-plus", stream=False)
+    model = OpenAIChatModel(model="qwen-plus", api_key="your-key", stream=False)
     grader = ActionContributionGrader(model=model, language=LanguageEnum.ZH)
 
     assert grader is not None
@@ -35,14 +35,14 @@ def test_action_contribution_grader_creation_chinese():
 @pytest.mark.asyncio
 async def test_action_contribution_evaluation():
     """Test evaluating action contribution"""
-    model = OpenAIChatModel(model="qwen3-32b", stream=False)
+    model = OpenAIChatModel(model="qwen-plus", api_key="your-key", stream=False)
     grader = ActionContributionGrader(model=model)
 
     result = await grader.aevaluate(
-        user_query="What is the weather in Beijing?",
+        query="What is the weather in Beijing?",
         tool_calls="search(query='Beijing weather')",
         tool_responses="Temperature: 25°C, Sunny",
-        final_answer="The weather in Beijing is sunny with a temperature of 25°C.",
+        response="The weather in Beijing is sunny with a temperature of 25°C.",
     )
 
     assert result is not None
@@ -59,15 +59,14 @@ async def test_action_contribution_with_context():
     grader = ActionContributionGrader(model=model)
 
     result = await grader.aevaluate(
-        user_query="Find the best restaurant in Shanghai",
+        query="Find the best restaurant in Shanghai",
         context_before="User is looking for dining options",
         tool_calls="search_restaurants(city='Shanghai', rating='high')",
         tool_responses="Found 5 top-rated restaurants",
         context_after="Analyzing restaurant options",
-        final_answer="I recommend Restaurant A with 5-star rating.",
+        response="I recommend Restaurant A with 5-star rating.",
     )
 
     assert result is not None
     assert hasattr(result, "score")
     assert 0.0 <= result.score <= 1.0
-

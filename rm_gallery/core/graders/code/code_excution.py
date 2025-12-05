@@ -80,7 +80,7 @@ class CodeExecutionGrader(BaseGrader):
         # If no code block markers, assume the entire content is code
         return content
 
-    async def aevaluate(self, answer: str) -> GraderScore:
+    async def aevaluate(self, response: str) -> GraderScore:
         """Evaluate code by executing it against test cases.
 
         Tests the functional correctness of generated code by executing it
@@ -88,7 +88,7 @@ class CodeExecutionGrader(BaseGrader):
         the expected outputs for given inputs, verifying its correctness.
 
         Args:
-            answer (str): The code to evaluate, potentially containing
+            response (str): The code to evaluate, potentially containing
                          markdown-style code blocks.
 
         Returns:
@@ -96,15 +96,15 @@ class CodeExecutionGrader(BaseGrader):
                 - score (float): Execution score (0.0-1.0) based on test case results
                 - reason (str): Explanation of the execution results
                 - metadata (Dict[str, Any]): Additional information including:
-                    * extracted_code: The code extracted from the answer
+                    * extracted_code: The code extracted from the response
                     * execution_results: Detailed results of code execution
                     * passed_tests: Number of passed test cases
                     * total_tests: Total number of test cases
 
         Example:
             >>> grader = CodeExecutionGrader()
-            >>> code_answer = "def add(a, b):\\n    return a + b"
-            >>> result = await grader.aevaluate(code_answer)
+            >>> code_response = "def add(a, b):\\n    return a + b"
+            >>> result = await grader.aevaluate(code_response)
             >>> print(result.score, result.reason)
             1.0 Code executed successfully and passed all tests
 
@@ -115,7 +115,7 @@ class CodeExecutionGrader(BaseGrader):
             0.0 Code execution failed or did not pass tests
         """
         # Extract code from response
-        content = answer
+        content = response
         extracted_code = self._extract_code(content)
 
         # Default values
@@ -130,13 +130,6 @@ class CodeExecutionGrader(BaseGrader):
         else:
             # Get test cases from sample metadata or label
             test_cases = None
-            # if sample.metadata and "inputs_outputs" in sample.metadata:
-            #     test_cases = sample.metadata["inputs_outputs"]
-            # elif (
-            #     sample.output[0].answer.label
-            #     and "inputs_outputs" in sample.output[0].answer.label
-            # ):
-            #     test_cases = sample.output[0].answer.label["inputs_outputs"]
 
             if not test_cases:
                 reason = "No test cases available for evaluation"

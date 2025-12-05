@@ -47,7 +47,7 @@ async def test_reflection_outcome_understanding_poor():
     result = await grader.aevaluate(
         observation="The drawer is still closed. Action failed.",
         reflection="I successfully opened the drawer.",
-        task_context="Task: Open the drawer",
+        context="Task: Open the drawer",
     )
 
     assert result is not None
@@ -66,7 +66,7 @@ async def test_reflection_outcome_understanding_good():
     result = await grader.aevaluate(
         observation="The drawer is now open.",
         reflection="I successfully opened the drawer.",
-        task_context="Task: Open the drawer",
+        context="Task: Open the drawer",
     )
 
     assert result is not None
@@ -87,7 +87,7 @@ async def test_reflection_outcome_understanding_with_history():
     result = await grader.aevaluate(
         observation="Drawer is still locked.",
         reflection="The drawer is now open.",  # Poor understanding
-        history_steps=history,
+        history=history,
     )
 
     assert result is not None

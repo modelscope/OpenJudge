@@ -166,7 +166,7 @@ class ImageCoherenceGrader(LLMGrader):
         >>> grader = ImageCoherenceGrader(model=model)
         >>>
         >>> result = await grader.aevaluate(
-        ...     actual_output=[
+        ...     response=[
         ...         "Q3 sales increased 25%.",
         ...         MLLMImage(url="https://example.com/sales_chart.jpg"),
         ...         "Growth driven by new products."
@@ -230,12 +230,12 @@ class ImageCoherenceGrader(LLMGrader):
                 content.append({"type": "image_url", "image_url": {"url": data_url}})
 
             # Call model without structured output
-            response = await self.model.achat(
+            chat_response = await self.model.achat(
                 messages=[{"role": "user", "content": content}],
                 structured_model=GraderScoreCallback,
             )
-            score = response.metadata["score"]
-            reason = response.metadata["reason"]
+            score = chat_response.metadata["score"]
+            reason = chat_response.metadata["reason"]
             return score, reason
 
         except Exception as e:
@@ -244,25 +244,25 @@ class ImageCoherenceGrader(LLMGrader):
 
     async def _acompute(
         self,
-        actual_output: List[Union[str, MLLMImage]],
+        response: List[Union[str, MLLMImage]],
         **_kwargs: Any,
     ) -> Tuple[float, dict]:
         """
         Compute image coherence score (asynchronous)
 
         Args:
-            actual_output: List containing text and images
+            response: List containing text and images
 
         Returns:
             tuple[float, dict]: (normalized_score [0,1], details)
         """
 
         # Find all images
-        image_indices = get_image_indices(actual_output)
+        image_indices = get_image_indices(response)
 
         if not image_indices:
             return 0.0, {
-                "error": "No images found in actual_output",
+                "error": "No images found in response",
                 "num_images": 0,
             }
 
@@ -271,10 +271,10 @@ class ImageCoherenceGrader(LLMGrader):
         for image_index in image_indices:
             context_above, context_below = get_image_context(
                 image_index,
-                actual_output,
+                response,
                 self.max_context_size,
             )
-            image = actual_output[image_index]
+            image = response[image_index]
             tasks.append(
                 self._aevaluate_single_image(image, context_above, context_below),
             )
@@ -304,14 +304,14 @@ class ImageCoherenceGrader(LLMGrader):
 
     async def aevaluate(
         self,
-        actual_output: List[Union[str, MLLMImage]],
+        response: List[Union[str, MLLMImage]],
         **kwargs: Any,
     ) -> GraderScore:
         """
         Evaluate image coherence
 
         Args:
-            actual_output: List containing text and images (mixed)
+            response: List containing text and images (mixed)
             **kwargs: Additional arguments (ignored)
 
         Returns:
@@ -319,14 +319,14 @@ class ImageCoherenceGrader(LLMGrader):
 
         Example:
             >>> result = await grader.aevaluate(
-            ...     actual_output=[
+            ...     response=[
             ...         "Sales data for Q3:",
             ...         MLLMImage(url="chart.jpg"),
             ...         "Shows 20% growth"
             ...     ]
             ... )
         """
-        score, details = await self._acompute(actual_output, **kwargs)
+        score, details = await self._acompute(response, **kwargs)
 
         if "error" in details:
             return GraderScore(

@@ -52,18 +52,19 @@ async def test_tool_call_sequence_match_grader_exact_match():
                     "function": {
                         "name": "search",
                         "arguments": '{"query": "test"}',
-                    }
-                }
+                    },
+                },
             ],
-        }
+        },
     ]
 
     ground_truth_tool_calls = [
-        {"step": 0, "tool": [{"name": "search", "parameters": {"query": "test"}}]}
+        {"step": 0, "tool": [{"name": "search", "parameters": {"query": "test"}}]},
     ]
 
     result = await grader.aevaluate(
-        messages=messages, ground_truth_tool_calls=ground_truth_tool_calls
+        messages=messages,
+        ground_truth_tool_calls=ground_truth_tool_calls,
     )
 
     assert result is not None
@@ -84,18 +85,19 @@ async def test_tool_call_sequence_match_grader_mismatch():
                     "function": {
                         "name": "search",
                         "arguments": '{"query": "test"}',
-                    }
-                }
+                    },
+                },
             ],
-        }
+        },
     ]
 
     ground_truth_tool_calls = [
-        {"step": 0, "tool": [{"name": "calculate", "parameters": {"value": 42}}]}
+        {"step": 0, "tool": [{"name": "calculate", "parameters": {"value": 42}}]},
     ]
 
     result = await grader.aevaluate(
-        messages=messages, ground_truth_tool_calls=ground_truth_tool_calls
+        messages=messages,
+        ground_truth_tool_calls=ground_truth_tool_calls,
     )
 
     assert result is not None
@@ -117,18 +119,19 @@ async def test_tool_call_sequence_match_grader_loose_mode_matching():
                     "function": {
                         "name": "search",
                         "arguments": '{"query": "different"}',
-                    }
-                }
+                    },
+                },
             ],
-        }
+        },
     ]
 
     ground_truth_tool_calls = [
-        {"step": 0, "tool": [{"name": "search", "parameters": {"query": "test"}}]}
+        {"step": 0, "tool": [{"name": "search", "parameters": {"query": "test"}}]},
     ]
 
     result = await grader.aevaluate(
-        messages=messages, ground_truth_tool_calls=ground_truth_tool_calls
+        messages=messages,
+        ground_truth_tool_calls=ground_truth_tool_calls,
     )
 
     assert result is not None
@@ -149,8 +152,8 @@ def test_tool_call_sequence_match_grader_extract_predicted_tool_sequence():
                     "function": {
                         "name": "search",
                         "arguments": '{"query": "test"}',
-                    }
-                }
+                    },
+                },
             ],
         },
         {
@@ -160,8 +163,8 @@ def test_tool_call_sequence_match_grader_extract_predicted_tool_sequence():
                     "function": {
                         "name": "analyze",
                         "arguments": '{"data": "result"}',
-                    }
-                }
+                    },
+                },
             ],
         },
     ]
@@ -173,4 +176,3 @@ def test_tool_call_sequence_match_grader_extract_predicted_tool_sequence():
     assert 1 in sequence
     assert sequence[0][0]["name"] == "search"
     assert sequence[1][0]["name"] == "analyze"
-

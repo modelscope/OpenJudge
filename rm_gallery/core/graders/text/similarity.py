@@ -105,7 +105,7 @@ class SimilarityGrader(BaseGrader):
         >>>
         >>> # Use BLEU algorithm
         >>> result = await grader.aevaluate(
-        ...     reference="the cat is on the mat",
+        ...     ground_truth="the cat is on the mat",
         ...     candidate="the cat is on the mat",
         ...     algorithm="bleu",
         ...     max_ngram_order=4
@@ -113,14 +113,14 @@ class SimilarityGrader(BaseGrader):
         >>>
         >>> # Use ROUGE algorithm
         >>> result = await grader.aevaluate(
-        ...     reference="the cat is on the mat",
+        ...     ground_truth="the cat is on the mat",
         ...     candidate="the cat is on the mat",
         ...     algorithm="rouge1"
         ... )
         >>>
         >>> # Use F1 Score algorithm with override
         >>> result = await grader.aevaluate(
-        ...     reference="hello world",
+        ...     ground_truth="hello world",
         ...     candidate="hello world",
         ...     algorithm="f1_score",
         ...     normalize=False  # override init setting
@@ -132,6 +132,8 @@ class SimilarityGrader(BaseGrader):
         normalize: bool = True,
         case_sensitive: bool = False,
         use_stemmer: bool = True,
+        algorithm: str = "bleu",
+        **kwargs: Any,
     ):
         """
         Initialize similarity grader
@@ -142,6 +144,7 @@ class SimilarityGrader(BaseGrader):
             normalize: Default normalization behavior for applicable algorithms
             case_sensitive: Default case sensitivity for applicable algorithms
             use_stemmer: Default stemmer usage for ROUGE algorithms
+            algorithm: Algorithm to use (bleu, rouge, f1_score, etc.)
         """
         super().__init__(
             name="similarity",
@@ -151,21 +154,27 @@ class SimilarityGrader(BaseGrader):
         self.normalize = normalize
         self.case_sensitive = case_sensitive
         self.use_stemmer = use_stemmer
+        self.algorithm = algorithm
+
+        if self.algorithm not in COMPUTE_FUNCTIONS:
+            raise ValueError(
+                f"Unknown algorithm '{self.algorithm}'. "
+                f"Supported algorithms: {', '.join(sorted(COMPUTE_FUNCTIONS.keys()))}",
+            )
+        self.kwargs = kwargs
 
     async def aevaluate(
         self,
-        reference: str,
+        ground_truth: str,
         response: str,
-        algorithm: str = "bleu",
         **kwargs: Any,
     ) -> GraderScore:
         """
         Evaluate text similarity using specified algorithm
 
         Args:
-            reference: Reference text
+            ground_truth: Reference text
             response: Response text to evaluate
-            algorithm: Algorithm to use (bleu, rouge, f1_score, etc.)
             **kwargs: Algorithm-specific parameters that override init defaults
                      (e.g., normalize, case_sensitive, use_stemmer, max_ngram_order, etc.)
 
@@ -175,17 +184,12 @@ class SimilarityGrader(BaseGrader):
         Raises:
             ValueError: If algorithm is not supported
         """
-        if algorithm not in COMPUTE_FUNCTIONS:
-            raise ValueError(
-                f"Unknown algorithm '{algorithm}'. "
-                f"Supported algorithms: {', '.join(sorted(COMPUTE_FUNCTIONS.keys()))}",
-            )
 
         # Get compute function
-        compute_fn = COMPUTE_FUNCTIONS[algorithm]
+        compute_fn = COMPUTE_FUNCTIONS[self.algorithm]
 
         # Build params: default algorithm params -> init config -> kwargs override
-        params = {**DEFAULT_PARAMS.get(algorithm, {})}
+        params = {**DEFAULT_PARAMS.get(self.algorithm, {})}
 
         # Apply init-level configuration if applicable to the algorithm
         if "normalize" in params and "normalize" not in kwargs:
@@ -197,13 +201,14 @@ class SimilarityGrader(BaseGrader):
 
         # Override with kwargs
         params.update(kwargs)
+        params.update(self.kwargs)
 
         # Special handling for METEOR NLTK data
-        if algorithm == "meteor":
+        if self.algorithm == "meteor":
             self._ensure_nltk_data()
 
         # Call the compute function
-        score, details = compute_fn(reference, response, **params)
+        score, details = compute_fn(ground_truth, response, **params)
 
         # Handle errors
         if "error" in details:
@@ -216,13 +221,13 @@ class SimilarityGrader(BaseGrader):
             )
 
         # Format reason based on algorithm
-        reason = self._format_reason(algorithm, score, details)
+        reason = self._format_reason(self.algorithm, score, details)
 
         return GraderScore(
             name=self.name,
             score=score,
             reason=reason,
-            metadata={**details, "algorithm": algorithm},
+            metadata={**details, "algorithm": self.algorithm},
         )
 
     def _ensure_nltk_data(self) -> None:

@@ -45,7 +45,7 @@ async def test_reflection_accuracy_poor():
     result = await grader.aevaluate(
         observation="You see a closed cabinet.",
         reflection="I observed a red vase on top of the cabinet with three flowers.",
-        task_context="Task: Inventory room objects",
+        context="Task: Inventory room objects",
     )
 
     assert result is not None
@@ -63,7 +63,7 @@ async def test_reflection_accuracy_good():
     result = await grader.aevaluate(
         observation="You see a closed cabinet and a table.",
         reflection="I observed a closed cabinet and a table in the room.",
-        task_context="Task: Inventory room",
+        context="Task: Inventory room",
     )
 
     assert result is not None
@@ -84,7 +84,7 @@ async def test_reflection_accuracy_with_history():
     result = await grader.aevaluate(
         observation="You see an empty room.",
         reflection="I see a golden statue in the corner.",  # Inaccurate - hallucinated
-        history_steps=history,
+        history=history,
     )
 
     assert result is not None

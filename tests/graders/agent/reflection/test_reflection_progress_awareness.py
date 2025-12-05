@@ -45,7 +45,7 @@ async def test_reflection_progress_awareness_poor():
     result = await grader.aevaluate(
         observation="Cabinet 1 is still empty. No items found.",
         reflection="Excellent progress! I'm making great headway toward finding the apples!",
-        task_context="Task: Find apples in cabinets",
+        context="Task: Find apples in cabinets",
     )
 
     assert result is not None
@@ -63,7 +63,7 @@ async def test_reflection_progress_awareness_good():
     result = await grader.aevaluate(
         observation="Found 3 apples in cabinet 2.",
         reflection="Good progress! Found apples as required.",
-        task_context="Task: Find apples",
+        context="Task: Find apples",
     )
 
     assert result is not None
@@ -86,8 +86,8 @@ async def test_reflection_progress_awareness_with_history():
     result = await grader.aevaluate(
         observation="Cabinet 1 is empty.",
         reflection="Making excellent progress!",  # Poor awareness - overestimating
-        history_steps=history,
-        task_context="Task: Find items",
+        history=history,
+        context="Task: Find items",
     )
 
     assert result is not None

@@ -28,5 +28,54 @@
             "tool_definitions": [{"type": "function", "function": {"name": "search-knowledgebase-kb6361d84c23db4455ae1b2c662897f2d2", "description": "根据上下文从知识库中搜索和用户查询相关的内容。\n知识库名称: 极氪汽车用户手册\n知识库描述: 极氪汽车\n", "parameters": {"properties": {"query": {"default": "", "description": "根据上下文添加必要的背景信息，改写一个新的独立问题，使问题更完整，注意指代消解、完善主语等", "title": "Query", "type": "string"}}, "type": "object"}}}]
         },
         "max_expect_score": 2
+    },
+    {
+        "index": 3,
+        "grader": "CorrectnessGrader",
+        "parameters": {
+            "query": "2024年的美国总统是谁",
+            "response": "Donald Trump",
+            "reference": "Joseph Robinette Biden Jr. is an American politician who was the 46th president of the United States from 2021 to 2025."
+        },
+        "max_expect_score": 2
+    },
+    {
+        "index": 4,
+        "grader": "CorrectnessGrader",
+        "parameters": {
+            "query": "2024年的美国总统是谁",
+            "response": "Joseph Biden",
+            "reference": "Joseph Robinette Biden Jr. is an American politician who was the 46th president of the United States from 2021 to 2025."
+        },
+        "min_expect_score": 4
+    },
+    {
+        "index": 5,
+        "grader": "HallucinationGrader",
+        "parameters": {
+            "query": "2024年的美国总统是谁",
+            "response": "拜登",
+            "context":"小约瑟夫·罗比内特·拜登（英语：Joseph Robinette Biden Jr.；1942年11月20日—），通称乔·拜登（Joe Biden），美国民主党籍政治人物，出生于宾夕法尼亚州，毕业于特拉华大学、雪城大学，修有文学学士、法学博士学位。曾先后担任特拉华州联邦参议员（1973－2009）、第47任美国副总统（2009－2017）、第46任美国总统（2021－2025）。"
+        },
+        "min_expect_score": 4
+    },
+    {
+        "index": 6,
+        "grader": "HelpfulnessGrader",
+        "parameters": {
+            "query": "东方不败是谁",
+            "response":"东方不败是金庸武侠小说《笑傲江湖》中的主要反派角色，日月神教的教主。他原本是日月神教的风雷堂副香主，因受任我行赏识逐步升至光明左使，后趁任我行练功走火入魔之际发动叛乱，篡位成为教主。东方不败自宫修炼《葵花宝典》后，武功臻至化境，号称“当世无敌”，但性情也因此大变，宠幸杨莲亭并放任其专权。最终，他在黑木崖之战中为救杨莲亭分心，被任我行、令狐冲等人击败身亡。东方不败的形象因自宫而显著变化，剃须施粉、身着女装，影视改编中常由女演员反串演绎。"
+        },
+        "min_expect_score": 4
+    },
+    {
+        "index": 7,
+        "grader": "HelpfulnessGrader",
+        "parameters": {
+            "query": "描述华山的险峻威严",
+            "response":"华岳独秀，挺拔云霄； \n峭壁削天，巉岩峻俏。 \n苍松翠竹，斗壁争娇； \n猿啼鹰飞，霜剑光照。 \n\n危峰如剪，嵯峨剑指； \n径细坡陡，无路藤绕。 \n风腥雾织，云出岫交； \n仙境幽深，天梯难绕。 \n\n岩稜交错，龙脉翻涌； \n险途更引，凌霄曲折。 \n寂寞松梢，鹰击长空； \n华山之巅，雄姿英发。",
+            "context": ""
+        },
+        "max_expect_score": 3
     }
 ]

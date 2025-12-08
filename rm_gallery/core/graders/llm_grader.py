@@ -15,6 +15,7 @@ Classes:
 """
 
 import os
+import textwrap
 from typing import Any, Callable, Type
 
 from pydantic import BaseModel
@@ -28,6 +29,7 @@ from rm_gallery.core.graders.base_grader import (
 from rm_gallery.core.graders.schema import GraderRankCallback, GraderScoreCallback
 from rm_gallery.core.models.base_chat_model import BaseChatModel
 from rm_gallery.core.models.openai_chat_model import OpenAIChatModel
+from rm_gallery.core.models.schema.message import ChatMessage
 from rm_gallery.core.models.schema.prompt_template import LanguageEnum, PromptTemplate
 
 
@@ -57,7 +59,7 @@ class LLMGrader(BaseGrader):
         mode: GraderMode = GraderMode.POINTWISE,
         language: LanguageEnum | str | None = None,
         description: str = "",
-        template: dict | PromptTemplate | None = None,
+        template: str | dict | PromptTemplate | None = None,
         structured_model: Type[BaseModel] | None = None,
         callback: Callable | None = None,
         rubrics: str = "",
@@ -111,12 +113,29 @@ class LLMGrader(BaseGrader):
         else:
             self.language = language
 
-        if isinstance(template, PromptTemplate):
+        if isinstance(template, str):
+            self.template = PromptTemplate(
+                messages={
+                    LanguageEnum.EN: [
+                        ChatMessage(
+                            role="system",
+                            content=textwrap.dedent(template),
+                        ),
+                    ],
+                    LanguageEnum.ZH: [
+                        ChatMessage(
+                            role="system",
+                            content=textwrap.dedent(template),
+                        ),
+                    ],
+                },
+            )
+        elif isinstance(template, PromptTemplate):
             self.template = template
         elif isinstance(template, dict):
             self.template = PromptTemplate(**template)
         else:
-            raise ValueError("Template must be a dict or PromptTemplate object")
+            raise ValueError("Template must be a str, dict or PromptTemplate object")
 
         # Initialize model
         if isinstance(model, dict):

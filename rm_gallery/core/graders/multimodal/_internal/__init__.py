@@ -31,10 +31,7 @@ from rm_gallery.core.graders.multimodal._internal.helpers import (
 )
 
 # Schema definitions
-from rm_gallery.core.graders.multimodal._internal.schema import (
-    EvaluationSteps,
-    Rubric,
-)
+from rm_gallery.core.graders.multimodal._internal.schema import EvaluationSteps, Rubric
 
 __all__ = [
     # Schema

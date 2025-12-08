@@ -8,6 +8,7 @@ class which checks for the presence of thinking and answer tags in the response 
 
 import re
 from typing import Any
+
 from rm_gallery.core.graders.base_grader import BaseGrader
 from rm_gallery.core.graders.schema import GraderMode, GraderScore
 

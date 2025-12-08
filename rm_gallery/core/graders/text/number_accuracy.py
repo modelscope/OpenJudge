@@ -11,6 +11,7 @@ them with a configurable tolerance to determine accuracy scores.
 
 import re
 from typing import Any, List
+
 from rm_gallery.core.graders.base_grader import BaseGrader
 from rm_gallery.core.graders.schema import GraderMode, GraderScore
 

@@ -7,7 +7,7 @@ from rm_gallery.core.graders.llm_grader import LLMGrader
 from rm_gallery.core.graders.schema import GraderMode
 from rm_gallery.core.models.base_chat_model import BaseChatModel
 from rm_gallery.core.models.schema.message import ChatMessage
-from rm_gallery.core.models.schema.prompt_template import PromptTemplate, LanguageEnum
+from rm_gallery.core.models.schema.prompt_template import LanguageEnum, PromptTemplate
 
 # Summarization Listwise System Prompt
 SUMMARIZATION_SYSTEM_PROMPT_EN = (

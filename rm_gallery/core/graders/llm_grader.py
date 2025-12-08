@@ -119,12 +119,21 @@ class LLMGrader(BaseGrader):
                     LanguageEnum.EN: [
                         ChatMessage(
                             role="system",
+                            content="You are a professional evaluation assistant. "
+                            "Please evaluate according to the user's requirements.",
+                        ),
+                        ChatMessage(
+                            role="user",
                             content=textwrap.dedent(template),
                         ),
                     ],
                     LanguageEnum.ZH: [
                         ChatMessage(
                             role="system",
+                            content="你是个专业的评估助手，请你根据用户要求进行评估。",
+                        ),
+                        ChatMessage(
+                            role="user",
                             content=textwrap.dedent(template),
                         ),
                     ],

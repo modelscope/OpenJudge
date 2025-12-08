@@ -6,9 +6,12 @@ Tests for the FinancialResolutionGrader class functionality.
 """
 
 import pytest
+
+from rm_gallery.core.graders.agent.deep_research.report_resolution import (
+    ReportResolutionGrader,
+)
 from rm_gallery.core.models.openai_chat_model import OpenAIChatModel
 from rm_gallery.core.models.schema.prompt_template import LanguageEnum
-from rm_gallery.core.graders.agent.deep_research.report_resolution import ReportResolutionGrader
 
 
 def test_report_resolution_grader_creation():

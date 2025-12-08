@@ -7,7 +7,9 @@ Tests for the ToolCallSequenceMatchGrader class functionality.
 
 import pytest
 
-from rm_gallery.core.graders.agent.tool.tool_call_sequence_match import ToolCallSequenceMatchGrader
+from rm_gallery.core.graders.agent.tool.tool_call_sequence_match import (
+    ToolCallSequenceMatchGrader,
+)
 
 
 def test_tool_call_sequence_match_grader_creation():

@@ -8,11 +8,10 @@ Tests for the GradingRunner class functionality.
 import pytest
 from jsonschema import validate
 
-
-from rm_gallery.core.models.openai_chat_model import OpenAIChatModel
-from rm_gallery.core.runner.grading_runner import GradingRunner
 from rm_gallery.core.graders.base_grader import BaseGrader
 from rm_gallery.core.graders.schema import GraderScore
+from rm_gallery.core.models.openai_chat_model import OpenAIChatModel
+from rm_gallery.core.runner.grading_runner import GradingRunner
 
 
 class MockGrader(BaseGrader):

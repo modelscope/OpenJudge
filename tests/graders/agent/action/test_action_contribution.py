@@ -7,9 +7,11 @@ Tests for the StepContributionGrader class functionality.
 
 import pytest
 
+from rm_gallery.core.graders.agent.action.action_contribution import (
+    ActionContributionGrader,
+)
 from rm_gallery.core.models.openai_chat_model import OpenAIChatModel
 from rm_gallery.core.models.schema.prompt_template import LanguageEnum
-from rm_gallery.core.graders.agent.action.action_contribution import ActionContributionGrader
 
 
 def test_action_contribution_grader_creation():

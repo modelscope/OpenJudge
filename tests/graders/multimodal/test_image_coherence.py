@@ -9,9 +9,7 @@ import base64
 import os
 
 from rm_gallery.core.graders.multimodal._internal import MLLMImage
-from rm_gallery.core.graders.multimodal.image_coherence import (
-    ImageCoherenceGrader,
-)
+from rm_gallery.core.graders.multimodal.image_coherence import ImageCoherenceGrader
 from rm_gallery.core.models.openai_chat_model import OpenAIChatModel
 
 

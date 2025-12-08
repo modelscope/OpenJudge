@@ -4,12 +4,13 @@
 Unit tests for data mapping utilities.
 """
 
+from typing import Any, Dict, List, Union
+
 import pytest
-from typing import Dict, Any, List, Union
 
 from rm_gallery.core.utils.mapping import (
-    get_value_by_path,
     get_value_by_mapping,
+    get_value_by_path,
     parse_data_with_mapper,
 )
 

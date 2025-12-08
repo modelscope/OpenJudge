@@ -5,6 +5,7 @@ Check tool call format including think, answer and tool_call tags with JSON vali
 import json
 import re
 from typing import Any
+
 from rm_gallery.core.graders.base_grader import BaseGrader
 from rm_gallery.core.graders.schema import GraderMode, GraderScore
 

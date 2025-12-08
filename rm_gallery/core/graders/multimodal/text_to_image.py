@@ -14,10 +14,7 @@ from typing import Any, List, Tuple, Union
 from loguru import logger
 
 from rm_gallery.core.graders.base_grader import BaseGrader, GraderMode, GraderScore
-from rm_gallery.core.graders.multimodal._internal import (
-    MLLMImage,
-    format_image_content,
-)
+from rm_gallery.core.graders.multimodal._internal import MLLMImage, format_image_content
 from rm_gallery.core.graders.schema import GraderScoreCallback
 from rm_gallery.core.models.base_chat_model import BaseChatModel
 from rm_gallery.core.models.openai_chat_model import OpenAIChatModel

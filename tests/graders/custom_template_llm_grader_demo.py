@@ -5,8 +5,8 @@ User need to provide a grader template to instruct LLM how to do grading.
 Reture format MUST be json, with score and reason as key.
 """
 
-import os
 import asyncio
+import os
 
 from rm_gallery.core.graders.llm_grader import LLMGrader
 

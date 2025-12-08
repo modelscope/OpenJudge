@@ -7,12 +7,11 @@ on datasets and collect their results. Runners are responsible for managing the
 execution flow of evaluations, including concurrency control and result organization.
 """
 
-from abc import ABC, abstractmethod
 import asyncio
+from abc import ABC, abstractmethod
 from typing import Any, Dict, List
 
 from rm_gallery.core.graders.schema import GraderResult
-
 
 RunnerResult = Dict[str, List[GraderResult]]
 

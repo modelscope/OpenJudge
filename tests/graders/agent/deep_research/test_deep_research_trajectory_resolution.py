@@ -7,9 +7,11 @@ Tests for the TrajectoryResolutionGrader class functionality.
 
 import pytest
 
+from rm_gallery.core.graders.agent.deep_research.trajectory_resolution import (
+    TrajectoryResolutionGrader,
+)
 from rm_gallery.core.models.openai_chat_model import OpenAIChatModel
 from rm_gallery.core.models.schema.prompt_template import LanguageEnum
-from rm_gallery.core.graders.agent.deep_research.trajectory_resolution import TrajectoryResolutionGrader
 
 
 def test_trajectory_resolution_grader_creation():

@@ -1,5 +1,5 @@
-from abc import ABC
 import asyncio
+from abc import ABC
 from typing import Callable, List
 
 from rm_gallery.core.graders.base_grader import BaseGrader

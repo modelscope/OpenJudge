@@ -7,6 +7,7 @@ Tests for the ComplianceGrader class functionality.
 from unittest.mock import AsyncMock
 
 import pytest
+
 from rm_gallery.core.graders.common.compliance import ComplianceGrader
 from rm_gallery.core.models.openai_chat_model import OpenAIChatModel
 

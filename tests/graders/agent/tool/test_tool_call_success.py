@@ -5,8 +5,9 @@ Test Tool Call Success Grader
 Tests for the ToolCallSuccessGrader class functionality.
 """
 
-import pytest
 import asyncio
+
+import pytest
 
 from rm_gallery.core.graders.agent import ToolCallSuccessGrader
 from rm_gallery.core.models.openai_chat_model import OpenAIChatModel

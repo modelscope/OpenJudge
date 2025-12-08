@@ -27,7 +27,9 @@ from typing import List, Union
 from loguru import logger
 
 from rm_gallery.core.generator.iterative_rubric.categorizer import LLMRubricCategorizer
-from rm_gallery.core.generator.iterative_rubric.mcr_selector import SuperFastAdaptiveMCR2
+from rm_gallery.core.generator.iterative_rubric.mcr_selector import (
+    SuperFastAdaptiveMCR2,
+)
 from rm_gallery.core.generator.iterative_rubric.query_rubric_generator import (
     QuerySpecificRubricGenerator,
 )
@@ -37,8 +39,8 @@ from rm_gallery.core.generator.llm_grader_generator import (
 )
 from rm_gallery.core.graders.llm_grader import LLMGrader
 from rm_gallery.core.graders.schema import GraderMode
-from rm_gallery.core.models.schema.prompt_template import LanguageEnum
 from rm_gallery.core.models.openai_chat_model import OpenAIChatModel
+from rm_gallery.core.models.schema.prompt_template import LanguageEnum
 
 
 @dataclass

@@ -17,7 +17,6 @@ from rm_gallery.core.models.base_chat_model import BaseChatModel
 from rm_gallery.core.models.schema.message import ChatMessage
 from rm_gallery.core.models.schema.prompt_template import LanguageEnum, PromptTemplate
 
-
 # English Prompt
 COMPLIANCE_PROMPT_EN = """
 You are a professional data annotator responsible for evaluating whether the model response follows the given instructions. Your task is to score according to the following criteria:

@@ -6,11 +6,12 @@ in observation observations.
 """
 import math
 from typing import Any, Dict, List
-from rm_gallery.core.graders.base_grader import BaseGrader, GraderMode, GraderScore
+
 from rm_gallery.core.graders.agent.utils import (
-    extract_action_observation_pairs,
     calculate_text_similarity,
+    extract_action_observation_pairs,
 )
+from rm_gallery.core.graders.base_grader import BaseGrader, GraderMode, GraderScore
 
 
 class ObservationInformationGainGrader(BaseGrader):

@@ -11,6 +11,7 @@ from typing import List
 
 from loguru import logger
 from pydantic import Field
+
 from rm_gallery.core.analyzer.base_analyzer import AnalysisResult, BaseAnalyzer
 from rm_gallery.core.graders.schema import GraderResult
 

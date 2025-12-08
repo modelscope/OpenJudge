@@ -4,12 +4,12 @@ character portrayal and contextual awareness.
 """
 from typing import Any, List
 
-from rm_gallery.core.graders.llm_grader import LLMGrader
 from rm_gallery.core.graders.base_grader import GraderMode
+from rm_gallery.core.graders.llm_grader import LLMGrader
 from rm_gallery.core.graders.schema import GraderRank
 from rm_gallery.core.models.base_chat_model import BaseChatModel
 from rm_gallery.core.models.schema.message import ChatMessage
-from rm_gallery.core.models.schema.prompt_template import PromptTemplate, LanguageEnum
+from rm_gallery.core.models.schema.prompt_template import LanguageEnum, PromptTemplate
 
 # Role Playing Listwise System Prompt
 ROLE_PLAYING_SYSTEM_PROMPT_EN = (

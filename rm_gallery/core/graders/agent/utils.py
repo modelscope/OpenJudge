@@ -5,6 +5,7 @@ This module provides utility functions for analyzing agent action behaviors,
 including action-observation pair extraction and similarity calculations.
 """
 from typing import Any, Dict, List, Tuple
+
 from loguru import logger
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity

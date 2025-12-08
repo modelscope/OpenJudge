@@ -8,11 +8,12 @@ that measure accuracy by comparing predictions with expected outcomes.
 
 from typing import Dict, List
 
+from tutorials.grader_validation.base import GraderValidator
+
 from rm_gallery.core.analyzer.base_analyzer import AnalysisResult
 from rm_gallery.core.analyzer.validation.accuracy_analyzer import AccuracyAnalyzer
 from rm_gallery.core.graders.base_grader import BaseGrader
 from rm_gallery.core.runner.grading_runner import GradingRunner
-from tutorials.grader_validation.base import GraderValidator
 
 
 class AccuracyGraderValidator(GraderValidator):

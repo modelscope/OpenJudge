@@ -7,7 +7,9 @@ ground truth references, supporting both strict and loose matching modes.
 import json
 from collections import Counter
 from typing import Any, Dict, List, Set, Tuple
+
 from loguru import logger
+
 from rm_gallery.core.graders.base_grader import BaseGrader, GraderMode, GraderScore
 
 

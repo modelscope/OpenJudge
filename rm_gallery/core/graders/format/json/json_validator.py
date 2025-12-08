@@ -8,6 +8,7 @@ and returns a positive score if parsing succeeds.
 
 import json
 from typing import Any
+
 from rm_gallery.core.graders.base_grader import BaseGrader
 from rm_gallery.core.graders.schema import GraderMode, GraderScore
 

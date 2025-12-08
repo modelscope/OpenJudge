@@ -55,9 +55,7 @@ def test_imports():
     # Test ImageEditingGrader
     print("\n4. Testing ImageEditingGrader...")
     try:
-        from rm_gallery.core.graders.multimodal.image_editing import (
-            ImageEditingGrader,
-        )
+        from rm_gallery.core.graders.multimodal.image_editing import ImageEditingGrader
 
         print("   ✓ ImageEditingGrader imported successfully")
     except Exception as e:
@@ -67,9 +65,7 @@ def test_imports():
     # Test TextToImageGrader
     print("\n5. Testing TextToImageGrader...")
     try:
-        from rm_gallery.core.graders.multimodal.text_to_image import (
-            TextToImageGrader,
-        )
+        from rm_gallery.core.graders.multimodal.text_to_image import TextToImageGrader
 
         print("   ✓ TextToImageGrader imported successfully")
     except Exception as e:
@@ -112,24 +108,16 @@ def test_grader_signatures():
     import inspect
 
     # Import all graders
-    from rm_gallery.core.graders.multimodal.image_coherence import (
-        ImageCoherenceGrader,
-    )
-    from rm_gallery.core.graders.multimodal.image_editing import (
-        ImageEditingGrader,
-    )
+    from rm_gallery.core.graders.multimodal.image_coherence import ImageCoherenceGrader
+    from rm_gallery.core.graders.multimodal.image_editing import ImageEditingGrader
     from rm_gallery.core.graders.multimodal.image_helpfulness import (
         ImageHelpfulnessGrader,
     )
-    from rm_gallery.core.graders.multimodal.image_reference import (
-        ImageReferenceGrader,
-    )
+    from rm_gallery.core.graders.multimodal.image_reference import ImageReferenceGrader
     from rm_gallery.core.graders.multimodal.multimodal_geval import (
         MultimodalGEvalGrader,
     )
-    from rm_gallery.core.graders.multimodal.text_to_image import (
-        TextToImageGrader,
-    )
+    from rm_gallery.core.graders.multimodal.text_to_image import TextToImageGrader
 
     graders = [
         ("ImageCoherenceGrader", ImageCoherenceGrader),

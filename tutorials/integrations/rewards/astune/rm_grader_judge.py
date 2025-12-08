@@ -43,14 +43,15 @@ import asyncio
 from typing import Any, Dict, List, Union
 
 from loguru import logger
+
 from rm_gallery.core.graders.base_grader import BaseGrader
 from rm_gallery.core.graders.schema import GraderError, GraderMode
-from rm_gallery.core.utils.mapping import parse_data_with_mapper
 
 # pylint: disable=ungrouped-imports, wrong-import-order
 # from astuner.schema.task import Task, WorkflowOutput
 # from astuner.task_judge.judge_base import JudgeBase
 from rm_gallery.core.utils.instance import init_instance_by_config
+from rm_gallery.core.utils.mapping import parse_data_with_mapper
 
 Task = dict
 WorkflowOutput = dict

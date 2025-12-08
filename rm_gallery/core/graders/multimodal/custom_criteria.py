@@ -22,10 +22,7 @@ from rm_gallery.core.graders.multimodal._internal.helpers import (
     MLLMImage,
     format_image_content,
 )
-from rm_gallery.core.graders.multimodal._internal.schema import (
-    EvaluationSteps,
-    Rubric,
-)
+from rm_gallery.core.graders.multimodal._internal.schema import EvaluationSteps, Rubric
 from rm_gallery.core.models.base_chat_model import BaseChatModel
 from rm_gallery.core.models.openai_chat_model import OpenAIChatModel
 from rm_gallery.core.models.schema.message import ChatMessage

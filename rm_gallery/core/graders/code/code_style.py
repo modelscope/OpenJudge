@@ -11,6 +11,7 @@ conventions (snake_case for functions and variables).
 """
 
 import re
+
 from rm_gallery.core.graders.base_grader import BaseGrader
 from rm_gallery.core.graders.schema import GraderMode, GraderScore
 

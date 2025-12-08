@@ -7,7 +7,9 @@ Tests for the SearchInformationGainGrader class functionality.
 
 import pytest
 
-from rm_gallery.core.graders.agent.observation.observation_information_gain import ObservationInformationGainGrader
+from rm_gallery.core.graders.agent.observation.observation_information_gain import (
+    ObservationInformationGainGrader,
+)
 
 
 def test_observation_information_gain_grader_creation():

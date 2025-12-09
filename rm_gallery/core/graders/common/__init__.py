@@ -16,12 +16,12 @@ from rm_gallery.core.graders.common.harmfulness import HarmfulnessGrader
 from rm_gallery.core.graders.common.instruction_following import (
     InstructionFollowingGrader,
 )
-from rm_gallery.core.graders.common.relevance import RelevanceEvaluator
+from rm_gallery.core.graders.common.relevance import RelevanceGrader
 
 __all__ = [
     "CorrectnessGrader",
     "HallucinationGrader",
     "HarmfulnessGrader",
     "InstructionFollowingGrader",
-    "RelevanceEvaluator",
+    "RelevanceGrader",
 ]

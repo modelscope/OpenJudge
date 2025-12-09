@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Compliance Grader
+Instruction Following Grader
 
-Evaluates whether model response correctly follow the given instructions, including
+Evaluates whether model response correctly follows the given instructions, including
 content requirements, format constraints, style guidelines, and other specified criteria.
 """
 
@@ -18,7 +18,7 @@ from rm_gallery.core.models.schema.message import ChatMessage
 from rm_gallery.core.models.schema.prompt_template import LanguageEnum, PromptTemplate
 
 # English Prompt
-COMPLIANCE_PROMPT_EN = """
+INSTRUCTION_FOLLOWING_PROMPT_EN = """
 You are a professional data annotator responsible for evaluating whether the model response follows the given instructions. Your task is to score according to the following criteria:
 
 <Scoring Criteria>
@@ -82,7 +82,7 @@ JSON:
 """
 
 # Chinese Prompt
-COMPLIANCE_PROMPT_ZH = """
+INSTRUCTION_FOLLOWING_PROMPT_ZH = """
 你是一名专业的数据标注员，负责评估模型输出是否遵循给定的指令。你的任务是根据以下标准进行评分：
 
 <评分标准>
@@ -147,27 +147,27 @@ JSON:
 
 
 # Build default template from prompts
-DEFAULT_COMPLIANCE_TEMPLATE = PromptTemplate(
+DEFAULT_INSTRUCTION_FOLLOWING_TEMPLATE = PromptTemplate(
     messages={
         LanguageEnum.EN: [
             ChatMessage(
                 role="user",
-                content=textwrap.dedent(COMPLIANCE_PROMPT_EN),
+                content=textwrap.dedent(INSTRUCTION_FOLLOWING_PROMPT_EN),
             ),
         ],
         LanguageEnum.ZH: [
             ChatMessage(
                 role="user",
-                content=textwrap.dedent(COMPLIANCE_PROMPT_ZH),
+                content=textwrap.dedent(INSTRUCTION_FOLLOWING_PROMPT_ZH),
             ),
         ],
     },
 )
 
 
-class ComplianceGrader(LLMGrader):
+class InstructionFollowingGrader(LLMGrader):
     """
-    Compliance Grader
+    Instruction Following Grader
 
     Purpose:
         Evaluates how precisely model outputs follow given instructions across content,
@@ -181,6 +181,18 @@ class ComplianceGrader(LLMGrader):
         - Completeness: Fulfills all instruction requirements
         - Precision: Avoids adding unrequested information
         - Structural Accuracy: Maintains requested organization
+
+    Distinction from RelevanceEvaluator:
+        - InstructionFollowingGrader: Evaluates **adherence to instructions** - Did the model
+          do what it was asked to do? Focuses on following specific requirements, formats,
+          and constraints.
+        - RelevanceEvaluator: Evaluates **relevance to the query** - Did the model address
+          the user's question? Focuses on whether the response is on-topic and appropriately
+          addresses the user's needs.
+        
+        Example: If asked "Write 3 bullet points about AI", a response with 5 well-written
+        paragraphs would score low on instruction following (wrong format, wrong count) but
+        could score high on relevance (addresses the AI topic).
 
     When to use:
         - Structured output generation (JSON, XML, specific formats)
@@ -199,7 +211,7 @@ class ComplianceGrader(LLMGrader):
     Args:
         model: BaseChatModel instance or dict config for OpenAIChatModel
         threshold: Minimum score [0, 1] to pass (default: 0.7)
-        template: Custom evaluation template (default: DEFAULT_COMPLIANCE_TEMPLATE)
+        template: Custom evaluation template (default: DEFAULT_INSTRUCTION_FOLLOWING_TEMPLATE)
         language: Prompt language - EN or ZH (default: LanguageEnum.EN)
 
     Returns:
@@ -210,11 +222,11 @@ class ComplianceGrader(LLMGrader):
 
     Example:
         >>> from rm_gallery.core.model.openai_llm import OpenAIChatModel
-        >>> from rm_gallery.core.llm_judge import ComplianceGrader
+        >>> from rm_gallery.core.llm_judge import InstructionFollowingGrader
         >>>
         >>> # Initialize grader
         >>> model = OpenAIChatModel(api_key="sk-...", model="qwen3-max")
-        >>> grader = ComplianceGrader(model=model, threshold=0.7)
+        >>> grader = InstructionFollowingGrader(model=model, threshold=0.7)
         >>>
         >>> # Good adherence
         >>> result = await grader.aevaluate(
@@ -237,20 +249,20 @@ class ComplianceGrader(LLMGrader):
         self,
         model: BaseChatModel | dict,
         threshold: float = 0.7,
-        template: Optional[PromptTemplate] = DEFAULT_COMPLIANCE_TEMPLATE,
+        template: Optional[PromptTemplate] = DEFAULT_INSTRUCTION_FOLLOWING_TEMPLATE,
         language: LanguageEnum = LanguageEnum.EN,
     ):
         """
-        Initialize ComplianceGrader
+        Initialize InstructionFollowingGrader
 
         Args:
             model: BaseChatModel instance or dict config for OpenAIChatModel
             threshold: Success threshold [0, 1] (default: 0.7)
-            template: PromptTemplate for evaluation prompts (default: DEFAULT_COMPLIANCE_TEMPLATE)
+            template: PromptTemplate for evaluation prompts (default: DEFAULT_INSTRUCTION_FOLLOWING_TEMPLATE)
             language: Language for prompts (default: LanguageEnum.EN)
         """
         super().__init__(
-            name="compliance",
+            name="instruction_following",
             mode=GraderMode.POINTWISE,
             description="Evaluate whether response follows the given instructions",
             model=model,
@@ -266,7 +278,7 @@ class ComplianceGrader(LLMGrader):
         query: str = "",
     ) -> GraderScore:
         """
-        Evaluate compliance in response
+        Evaluate instruction following in response
 
         Args:
             instruction: The instruction or prompt given to the model
@@ -274,7 +286,7 @@ class ComplianceGrader(LLMGrader):
             query: Original user query or question. Defaults to empty string.
 
         Returns:
-            GraderScore: Score with compliance value [1, 5]
+            GraderScore: Score with instruction following value [1, 5]
                         where 5 means perfect adherence, 1 means complete failure
 
         Example:
@@ -300,7 +312,7 @@ class ComplianceGrader(LLMGrader):
             reason = result.reason
 
         except Exception as e:
-            logger.error(f"Error evaluating compliance: {e}")
+            logger.error(f"Error evaluating instruction following: {e}")
             score = 0.0
             reason = f"Evaluation error: {str(e)}"
 
@@ -308,9 +320,6 @@ class ComplianceGrader(LLMGrader):
         metadata = {
             "threshold": self.threshold,
         }
-
-        # Generate final reason
-        reason = f"Compliance score: {score}\n{reason}"
 
         return GraderScore(
             name=self.name,
@@ -320,4 +329,5 @@ class ComplianceGrader(LLMGrader):
         )
 
 
-__all__ = ["ComplianceGrader", "DEFAULT_COMPLIANCE_TEMPLATE"]
+__all__ = ["InstructionFollowingGrader", "DEFAULT_INSTRUCTION_FOLLOWING_TEMPLATE"]
+

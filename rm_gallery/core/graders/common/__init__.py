@@ -5,21 +5,23 @@ Common Graders
 This module contains commonly used graders that can be applied across different scenarios:
 - Hallucination detection
 - Harmfulness evaluation
-- Helpfulness assessment
-- Compliance with instructions and references
+- Relevance assessment
+- Instruction following evaluation
 - Correctness verification
 """
 
-from rm_gallery.core.graders.common.compliance import ComplianceGrader
 from rm_gallery.core.graders.common.correctness import CorrectnessGrader
 from rm_gallery.core.graders.common.hallucination import HallucinationGrader
 from rm_gallery.core.graders.common.harmfulness import HarmfulnessGrader
-from rm_gallery.core.graders.common.helpfulness import HelpfulnessGrader
+from rm_gallery.core.graders.common.instruction_following import (
+    InstructionFollowingGrader,
+)
+from rm_gallery.core.graders.common.relevance import RelevanceEvaluator
 
 __all__ = [
-    "ComplianceGrader",
     "CorrectnessGrader",
     "HallucinationGrader",
     "HarmfulnessGrader",
-    "HelpfulnessGrader",
+    "InstructionFollowingGrader",
+    "RelevanceEvaluator",
 ]

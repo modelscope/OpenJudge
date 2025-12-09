@@ -346,9 +346,6 @@ class HallucinationGrader(LLMGrader):
             "threshold": self.threshold,
         }
 
-        # Generate final reason
-        reason = f"Hallucination evaluation score: {score}\n{reason}"
-
         return GraderScore(
             name=self.name,
             score=score,

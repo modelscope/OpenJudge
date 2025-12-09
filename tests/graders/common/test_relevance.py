@@ -1,20 +1,20 @@
 # -*- coding: utf-8 -*-
 """
-Tests for RelevanceEvaluator
+Tests for RelevanceGrader
 """
 
 from unittest.mock import AsyncMock
 
 import pytest
 
-from rm_gallery.core.graders.common.relevance import RelevanceEvaluator
+from rm_gallery.core.graders.common.relevance import RelevanceGrader
 from rm_gallery.core.models.openai_chat_model import OpenAIChatModel
 from rm_gallery.core.models.schema.prompt_template import LanguageEnum
 
 
 @pytest.mark.asyncio
 async def test_relevance_evaluator_basic():
-    """Test RelevanceEvaluator with basic query and response"""
+    """Test RelevanceGrader with basic query and response"""
     # Initialize evaluator with mock model
     model = OpenAIChatModel(
         model="qwen-max",
@@ -30,7 +30,7 @@ async def test_relevance_evaluator_basic():
     }
     model.achat = AsyncMock(return_value=mock_response)
 
-    evaluator = RelevanceEvaluator(
+    evaluator = RelevanceGrader(
         model=model,
         threshold=0.7,
         language=LanguageEnum.EN,
@@ -52,7 +52,7 @@ async def test_relevance_evaluator_basic():
 
 @pytest.mark.asyncio
 async def test_relevance_evaluator_with_context():
-    """Test RelevanceEvaluator with context"""
+    """Test RelevanceGrader with context"""
     # Initialize evaluator with mock model
     model = OpenAIChatModel(
         model="qwen-max",
@@ -68,7 +68,7 @@ async def test_relevance_evaluator_with_context():
     }
     model.achat = AsyncMock(return_value=mock_response)
 
-    evaluator = RelevanceEvaluator(
+    evaluator = RelevanceGrader(
         model=model,
         threshold=0.7,
         language=LanguageEnum.EN,
@@ -90,7 +90,7 @@ async def test_relevance_evaluator_with_context():
 
 @pytest.mark.asyncio
 async def test_relevance_evaluator_chinese():
-    """Test RelevanceEvaluator with Chinese language"""
+    """Test RelevanceGrader with Chinese language"""
     # Initialize evaluator with Chinese language
     model = OpenAIChatModel(
         model="qwen-max",
@@ -106,7 +106,7 @@ async def test_relevance_evaluator_chinese():
     }
     model.achat = AsyncMock(return_value=mock_response)
 
-    evaluator = RelevanceEvaluator(
+    evaluator = RelevanceGrader(
         model=model,
         threshold=0.7,
         language=LanguageEnum.ZH,
@@ -127,7 +127,7 @@ async def test_relevance_evaluator_chinese():
 
 @pytest.mark.asyncio
 async def test_relevance_evaluator_with_ground_truth():
-    """Test RelevanceEvaluator with ground truth for comparison"""
+    """Test RelevanceGrader with ground truth for comparison"""
     # Initialize evaluator
     model = OpenAIChatModel(
         model="qwen-max",
@@ -143,7 +143,7 @@ async def test_relevance_evaluator_with_ground_truth():
     }
     model.achat = AsyncMock(return_value=mock_response)
 
-    evaluator = RelevanceEvaluator(
+    evaluator = RelevanceGrader(
         model=model,
         threshold=0.7,
         language=LanguageEnum.EN,

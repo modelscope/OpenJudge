@@ -182,11 +182,11 @@ class InstructionFollowingGrader(LLMGrader):
         - Precision: Avoids adding unrequested information
         - Structural Accuracy: Maintains requested organization
 
-    Distinction from RelevanceEvaluator:
+    Distinction from RelevanceGrader:
         - InstructionFollowingGrader: Evaluates **adherence to instructions** - Did the model
           do what it was asked to do? Focuses on following specific requirements, formats,
           and constraints.
-        - RelevanceEvaluator: Evaluates **relevance to the query** - Did the model address
+        - RelevanceGrader: Evaluates **relevance to the query** - Did the model address
           the user's question? Focuses on whether the response is on-topic and appropriately
           addresses the user's needs.
 

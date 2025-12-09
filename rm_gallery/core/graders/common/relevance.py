@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Relevance Evaluator
+Relevance Grader
 
 Evaluates how relevant a response is to the user's query in the conversation history.
 """
@@ -166,9 +166,9 @@ DEFAULT_RELEVANCE_TEMPLATE = PromptTemplate(
 )
 
 
-class RelevanceEvaluator(LLMGrader):
+class RelevanceGrader(LLMGrader):
     """
-    Relevance Evaluator
+    Relevance Grader
 
     Purpose:
         Evaluates how relevant and appropriate a response is to the user's query within
@@ -210,28 +210,28 @@ class RelevanceEvaluator(LLMGrader):
 
     Example:
         >>> from rm_gallery.core.model.openai_llm import OpenAIChatModel
-        >>> from rm_gallery.core.graders.common.relevance import RelevanceEvaluator
+        >>> from rm_gallery.core.graders.common.relevance import RelevanceGrader
         >>>
-        >>> # Initialize evaluator
+        >>> # Initialize grader
         >>> model = OpenAIChatModel(api_key="sk-...", model="qwen3-max")
-        >>> evaluator = RelevanceEvaluator(model=model, threshold=0.7)
+        >>> grader = RelevanceGrader(model=model, threshold=0.7)
         >>>
         >>> # Relevant response
-        >>> result = await evaluator.aevaluate(
+        >>> result = await grader.aevaluate(
         ...     query="What are Python decorators?",
         ...     response="Decorators are functions that modify other functions. They use @syntax..."
         ... )
         >>> print(result.score)  # 5 - directly answers the question with details
         >>>
         >>> # Irrelevant response
-        >>> result = await evaluator.aevaluate(
+        >>> result = await grader.aevaluate(
         ...     query="What are Python decorators?",
         ...     response="I like programming in various languages.",
         ... )
         >>> print(result.score)  # 1 - completely off-topic
         >>>
         >>> # With context
-        >>> result = await evaluator.aevaluate(
+        >>> result = await grader.aevaluate(
         ...     query="What's the weather like then?",
         ...     response="July is summer in Europe with warm weather...",
         ...     context="Previous conversation about planning a July vacation to Europe"
@@ -247,7 +247,7 @@ class RelevanceEvaluator(LLMGrader):
         language: LanguageEnum = LanguageEnum.EN,
     ):
         """
-        Initialize RelevanceEvaluator
+        Initialize RelevanceGrader
 
         Args:
             model: BaseChatModel instance or dict config for OpenAIChatModel
@@ -286,7 +286,7 @@ class RelevanceEvaluator(LLMGrader):
                         where 5 means highly relevant, 1 means irrelevant
 
         Example:
-            >>> result = await evaluator.aevaluate(
+            >>> result = await grader.aevaluate(
             ...     query="What is machine learning?",
             ...     response="Machine learning is a subset of AI that enables systems to learn from data...",
             ...     context="User is a beginner asking for a simple explanation",
@@ -348,4 +348,4 @@ class RelevanceEvaluator(LLMGrader):
         )
 
 
-__all__ = ["RelevanceEvaluator", "DEFAULT_RELEVANCE_TEMPLATE"]
+__all__ = ["RelevanceGrader", "DEFAULT_RELEVANCE_TEMPLATE"]

@@ -102,13 +102,13 @@ DEFAULT_TOOL_CALL_ACCURACY_TEMPLATE = PromptTemplate(
     messages={
         LanguageEnum.EN: [
             ChatMessage(
-                role="system",
+                role="user",
                 content=textwrap.dedent(TOOL_CALL_ACCURACY_PROMPT_EN),
             ),
         ],
         LanguageEnum.ZH: [
             ChatMessage(
-                role="system",
+                role="user",
                 content=textwrap.dedent(TOOL_CALL_ACCURACY_PROMPT_ZH),
             ),
         ],
@@ -324,9 +324,9 @@ class ToolCallAccuracyGrader(LLMGrader):
         try:
             # Call parent evaluate method with the structured data
             result = await super().aevaluate(
-                query=json.dumps(query, indent=2),
-                tool_calls=json.dumps(tool_calls, indent=2),
-                tool_definitions=json.dumps(tool_definitions, indent=2),
+                query=json.dumps(query, indent=2, ensure_ascii=False),
+                tool_calls=json.dumps(tool_calls, indent=2, ensure_ascii=False),
+                tool_definitions=json.dumps(tool_definitions, indent=2, ensure_ascii=False),
             )
             score = max(1.0, min(5.0, result.score))
             reason = result.reason

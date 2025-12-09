@@ -2,17 +2,22 @@ import argparse
 import asyncio
 import json
 import os
+import nest_asyncio
+
 
 from rm_gallery.core.graders.agent import *
 from rm_gallery.core.graders.common import *
 from rm_gallery.core.models.schema.prompt_template import LanguageEnum
 
 
+nest_asyncio.apply()
+
 def run_cases(case_file: str, skip: int):
     model_config = {
-        "model": "qwen-max",
+        "model": "qwen-long",
         "base_url": os.getenv("BASE_URL"),
         "api_key": os.getenv("API_KEY"),
+        "temperature": 0,
         "stream": False,
     }
 
@@ -29,16 +34,19 @@ def run_cases(case_file: str, skip: int):
                 grader = eval(cls_name)(model=model_config, language=LanguageEnum.ZH)
                 result = asyncio.run(grader.aevaluate(**kwargs))
 
-                if "min_expect_score" in case:
-                    if result.score < case["min_expect_score"]:
-                        print(f"\033[91mFAILED\033[0m, index: {index}, result: {result}")
-                        continue
-                elif "max_expect_score" in case:
-                    if result.score > case["max_expect_score"]:
-                        print(f"\033[91mFAILED\033[0m, index: {index}, result: {result}")
-                        continue
-                else:
+                has_min = "min_expect_score" in case
+                has_max = "max_expect_score" in case
+
+                if not (has_min or has_max):
                     print(f"\033[91mFAILED\033[0m: index: {index}, missing min_expect_score or max_expect_score")
+                    continue
+
+                if has_min and result.score < case["min_expect_score"]:
+                    print(f"\033[91mFAILED\033[0m, index: {index}, result: {result}")
+                    continue
+
+                if has_max and result.score > case["max_expect_score"]:
+                    print(f"\033[91mFAILED\033[0m, index: {index}, result: {result}")
                     continue
 
                 print(f"PASSED: index: {index}, score: {result.score}")

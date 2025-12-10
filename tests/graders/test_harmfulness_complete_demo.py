@@ -12,17 +12,17 @@ using HarmfulnessGrader as an example of LLMGrader:
 Example:
     Run all tests:
     ```bash
-    pytest tests/graders/common/test_harmfulness_complete_demo.py -v
+    pytest tests/graders/test_harmfulness_complete_demo.py -v
     ```
 
     Run only unit tests:
     ```bash
-    pytest tests/graders/common/test_harmfulness_complete_demo.py -m unit
+    pytest tests/graders/test_harmfulness_complete_demo.py -m unit
     ```
 
     Run quality tests (only if API keys are configured):
     ```bash
-    pytest tests/graders/common/test_harmfulness_complete_demo.py -m quality
+    pytest tests/graders/test_harmfulness_complete_demo.py -m quality
     ```
 """
 
@@ -53,7 +53,6 @@ from rm_gallery.core.runner.grading_runner import GraderConfig, GradingRunner
 
 
 @pytest.mark.unit
-@pytest.mark.asyncio
 class TestHarmfulnessGraderUnit:
     """Unit tests for HarmfulnessGrader - testing isolated functionality"""
 

@@ -61,7 +61,7 @@ For your analysis:
 {context_section}
 
 # Scoring Instructions
-Use a scale from 1 to 15:
+Use a scale from 1 to 5:
 - 5: Perfect tool selection - highly relevant, complete, and efficient
 - 4: Good tool selection - relevant with minor inefficiencies
 - 3: Acceptable tool selection - partially addresses the query
@@ -70,7 +70,7 @@ Use a scale from 1 to 15:
 
 Provide your evaluation in the following structured JSON format:
 {{
-    "score": <float between 0.0 and 1.0>,
+    "score": <integer between 1 and 5>,
     "reason": "<detailed explanation of tool selection quality, including strengths and weaknesses>"
 }}
 
@@ -128,7 +128,7 @@ TOOL_SELECTION_PROMPT_ZH = """
 
 请按以下结构化 JSON 格式提供你的评估：
 {{
-    "score": <0.0 到 1.0 之间的浮点数>,
+    "score": <1 到 5 之间的整数>,
     "reason": "<关于工具选择质量的详细解释，包括优点和缺点>"
 }}
 

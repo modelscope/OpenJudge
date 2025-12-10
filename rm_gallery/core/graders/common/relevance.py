@@ -73,11 +73,11 @@ Provide your evaluation in the following structured JSON format:
 }}
 
 Scoring Scale:
-- 5: Highly relevant with comprehensive information and helpful insights
-- 4: Fully relevant with sufficient information covering key aspects
-- 3: Partially relevant but missing important details or components
-- 2: Loosely related but lacks meaningful or specific information
-- 1: Completely irrelevant or off-topic
+- 5: Perfectly relevant: the response completely fulfills the user's search intent, accurately answering the question or providing the required information.
+- 4: Highly relevant: the response largely meets the search requirements, possibly lacking some details or having minor inaccuracies, but still a high-quality and directly relevant result.
+- 3: Partially relevant: the response has some connection to the query but does not fully meet the requirements; the user may need to further filter or supplement the information.
+- 2: Weakly relevant: the response has only a weak connection to the query, possibly covering the same topic but deviating from the core intent, and has low practical value.
+- 1: Irrelevant: the response is completely unrelated to the query, or contains misleading or incorrect information.
 
 JSON:
 """
@@ -137,11 +137,11 @@ RELEVANCE_PROMPT_ZH = """
 }}
 
 评分标尺：
-- 5: 高度相关，信息全面且包含有益洞察
-- 4: 完全相关，提供充分信息覆盖关键方面
-- 3: 部分相关，但缺少重要细节或组成部分
-- 2: 松散相关，但缺乏有意义或具体的信息
-- 1: 完全不相关或偏离主题
+- 5: 完全相关，回答完全满足用户查询意图，精准回答问题或提供所需信息。
+- 4: 高度相关，回答基本满足查询需求，可能略缺细节或略有偏差，但仍是高质量、直接相关的结果。
+- 3: 部分相关，回答与查询有一定关联，但未完全满足需求，可能需要用户进一步筛选或补充信息。
+- 2: 弱相关，回答与查询仅有微弱联系，可能涉及相同主题但偏离核心意图，实用价值较低。
+- 1: 不相关，回答与查询完全无关，或存在误导、错误匹配。
 
 JSON:
 """
@@ -190,10 +190,10 @@ class RelevanceGrader(LLMGrader):
         - A/B testing response generation strategies for relevance
 
     Scoring:
-        - 5: Comprehensive response with insights that enhance understanding
-        - 4: Fully relevant and sufficient response covering all essential aspects
-        - 3: Partially relevant or incomplete, missing some key details
-        - 2: Related but unhelpful or superficial, lacks meaningful information
+        - 5: Perfectly relevant response with insights that enhance understanding
+        - 4: Highly relevant and sufficient response covering all essential aspects
+        - 3: Partially relevant response, missing some key details
+        - 2: Weakly relevant response, lacks meaningful information
         - 1: Irrelevant response, off-topic or unrelated to the query
 
     Args:

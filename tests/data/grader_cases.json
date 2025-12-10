@@ -35,7 +35,7 @@
         "parameters": {
             "query": "2024年的美国总统是谁",
             "response": "Donald Trump",
-            "reference": "Joseph Robinette Biden Jr. is an American politician who was the 46th president of the United States from 2021 to 2025."
+            "ground_truth": "Joseph Robinette Biden Jr. is an American politician who was the 46th president of the United States from 2021 to 2025."
         },
         "max_expect_score": 2
     },
@@ -45,7 +45,7 @@
         "parameters": {
             "query": "2024年的美国总统是谁",
             "response": "Joseph Biden",
-            "reference": "Joseph Robinette Biden Jr. is an American politician who was the 46th president of the United States from 2021 to 2025."
+            "ground_truth": "Joseph Robinette Biden Jr. is an American politician who was the 46th president of the United States from 2021 to 2025."
         },
         "min_expect_score": 4
     },
@@ -76,7 +76,46 @@
             "response":"华岳独秀，挺拔云霄； \n峭壁削天，巉岩峻俏。 \n苍松翠竹，斗壁争娇； \n猿啼鹰飞，霜剑光照。 \n\n危峰如剪，嵯峨剑指； \n径细坡陡，无路藤绕。 \n风腥雾织，云出岫交； \n仙境幽深，天梯难绕。 \n\n岩稜交错，龙脉翻涌； \n险途更引，凌霄曲折。 \n寂寞松梢，鹰击长空； \n华山之巅，雄姿英发。",
             "context": ""
         },
-        "min_expect_score": 3,
-        "max_expect_score": 4
+        "min_expect_score": 3
+    },
+    {
+        "index": 8,
+        "grader": "ToolCallAccuracyGrader",
+        "parameters": {
+            "query": "美国总统是谁",
+            "tool_calls": [{"id": "call_3b5dd701546e4cf89ddc12", "function": {"arguments": "{\"query\": \"current president of the United States\"}", "name": "aliyun-websearch"}, "index": 0, "type": "function"}],
+            "tool_definitions": [{"tool": {"json_schema": "{\"type\": \"function\", \"function\": {\"name\": \"aliyun-websearch\", \"description\": \"从阿里云搜索引擎中搜索给定查询的最新内容。\", \"parameters\": {\"properties\": {\"query\": {\"title\": \"Query\", \"type\": \"string\"}}, \"required\": [\"query\"], \"type\": \"object\"}}}"}}, {"tool": {"json_schema": "{\"type\": \"function\", \"function\": {\"name\": \"visit_webpage\", \"description\": \"Visit webpage(s) and return the content of webpage(s).\\nParams:\\n- url: required, string | list[string], the URL(s) of the webpage(s) to visit. Can be a single URL or an array of URLs.\\n- goal: required, string, the goal of the visit for webpage(s).\\nReturns:\\n- {\\n  \\\"results\\\": [\\n    {\\n      \\\"url\\\": \\\"string\\\",\\n      \\\"goal\\\": \\\"string\\\",\\n      \\\"content\\\": \\\"string\\\",\\n      \\\"success\\\": true\\n    }\\n  ]\\n}\\n\", \"parameters\": {\"properties\": {\"url\": {\"anyOf\": [{\"type\": \"string\"}, {\"items\": {\"type\": \"string\"}, \"type\": \"array\"}], \"default\": \"\", \"description\": \"the URL(s) of the webpage(s) to visit. Can be a single URL or an array of URLs\", \"title\": \"Url\"}, \"goal\": {\"default\": \"\", \"description\": \"the goal of the visit for webpage(s)\", \"title\": \"Goal\", \"type\": \"string\"}, \"kwargs\": {\"title\": \"Kwargs\"}}, \"required\": [\"kwargs\"], \"type\": \"object\"}}}"}}]
+        },
+        "min_expect_score": 4
+    },
+    {
+        "index": 9,
+        "grader": "ToolCallAccuracyGrader",
+        "parameters": {
+            "query": "美国总统是谁",
+            "tool_calls": [{"id": "call_3b5dd701546e4cf89ddc12", "function": {"arguments": "{\"query\": \"current vice president of the United States\"}", "name": "aliyun-websearch"}, "index": 0, "type": "function"}],
+            "tool_definitions": [{"tool": {"json_schema": "{\"type\": \"function\", \"function\": {\"name\": \"aliyun-websearch\", \"description\": \"从阿里云搜索引擎中搜索给定查询的最新内容。\", \"parameters\": {\"properties\": {\"query\": {\"title\": \"Query\", \"type\": \"string\"}}, \"required\": [\"query\"], \"type\": \"object\"}}}"}}, {"tool": {"json_schema": "{\"type\": \"function\", \"function\": {\"name\": \"visit_webpage\", \"description\": \"Visit webpage(s) and return the content of webpage(s).\\nParams:\\n- url: required, string | list[string], the URL(s) of the webpage(s) to visit. Can be a single URL or an array of URLs.\\n- goal: required, string, the goal of the visit for webpage(s).\\nReturns:\\n- {\\n  \\\"results\\\": [\\n    {\\n      \\\"url\\\": \\\"string\\\",\\n      \\\"goal\\\": \\\"string\\\",\\n      \\\"content\\\": \\\"string\\\",\\n      \\\"success\\\": true\\n    }\\n  ]\\n}\\n\", \"parameters\": {\"properties\": {\"url\": {\"anyOf\": [{\"type\": \"string\"}, {\"items\": {\"type\": \"string\"}, \"type\": \"array\"}], \"default\": \"\", \"description\": \"the URL(s) of the webpage(s) to visit. Can be a single URL or an array of URLs\", \"title\": \"Url\"}, \"goal\": {\"default\": \"\", \"description\": \"the goal of the visit for webpage(s)\", \"title\": \"Goal\", \"type\": \"string\"}, \"kwargs\": {\"title\": \"Kwargs\"}}, \"required\": [\"kwargs\"], \"type\": \"object\"}}}"}}]
+        },
+        "max_expect_score": 2
+    },
+    {
+        "index": 10,
+        "grader": "ToolCallAccuracyGrader",
+        "parameters": {
+            "query": "极客007 2025款有哪些不同",
+            "tool_calls": [{"function": {"arguments": "{\"query\": \"极氪007 2025款有哪些不同\"}", "name": "websearch-knowledgebase-123"}, "id": "call_bbe6dca02c2d4a138c359d"}],
+            "tool_definitions": [{"type": "function", "function": {"name": "aliyun-websearch", "description": "从阿里云搜索引擎中搜索给定查询的最新内容。", "parameters": {"properties": {"query": {"title": "Query", "type": "string"}}, "required": ["query"], "type": "object"}}}, {"type": "function", "function": {"name": "visit_webpage", "description": "Visit webpage(s) and return the content of webpage(s).\nParams:\n- url: required, string | list[string], the URL(s) of the webpage(s) to visit. Can be a single URL or an array of URLs.\n- goal: required, string, the goal of the visit for webpage(s).\nReturns:\n- {\n  \"results\": [\n    {\n      \"url\": \"string\",\n      \"goal\": \"string\",\n      \"content\": \"string\",\n      \"success\": true\n    }\n  ]\n}\n", "parameters": {"properties": {"url": {"anyOf": [{"type": "string"}, {"items": {"type": "string"}, "type": "array"}], "default": "", "description": "the URL(s) of the webpage(s) to visit. Can be a single URL or an array of URLs", "title": "Url"}, "goal": {"default": "", "description": "the goal of the visit for webpage(s)", "title": "Goal", "type": "string"}, "kwargs": {"title": "Kwargs"}}, "required": ["kwargs"], "type": "object"}}}, {"type": "function", "function": {"name": "search-knowledgebase-kb6361d84c23db4455ae1b2c662897f2d2", "description": "根据上下文从知识库中搜索和用户查询相关的内容。\n知识库名称: 极氪汽车用户手册\n知识库描述: 极氪汽车\n", "parameters": {"properties": {"query": {"default": "", "description": "根据上下文添加必要的背景信息，改写一个新的独立问题，使问题更完整，注意指代消解、完善主语等", "title": "Query", "type": "string"}}, "type": "object"}}}, {"type": "function", "function": {"name": "search-knowledgebase-kbbe35ef613b2f4505a11c1959cb19e7a9", "description": "根据上下文从知识库中搜索和用户查询相关的内容。\n知识库名称: 广汽产品手册1\n知识库描述: 广汽传祺、丰田汽车官方宣传材料，包括多种车型，包括卡罗拉、凯美瑞、普拉多等等\n", "parameters": {"properties": {"query": {"default": "", "description": "根据上下文添加必要的背景信息，改写一个新的独立问题，使问题更完整，注意指代消解、完善主语等", "title": "Query", "type": "string"}}, "type": "object"}}}]
+        },
+        "max_expect_score": 2
+    },
+    {
+        "index": 11,
+        "grader": "ToolCallAccuracyGrader",
+        "parameters": {
+            "query": "搜索知识库回答明天杭州的天气",
+            "tool_calls": [{"function": {"arguments": "{\"query\": \"明天杭州的天气\"}", "name": "search-knowledgebase-kb6361d84c23db4455ae1b2c662897f2d2"}, "id": "call_1b483d8cdbf34d3f93ba28"}],
+            "tool_definitions": [{"type": "function", "function": {"name": "search-knowledgebase-kb6361d84c23db4455ae1b2c662897f2d2", "description": "根据上下文从知识库中搜索和用户查询相关的内容。\n知识库名称: 极氪汽车用户手册\n知识库描述: 极氪汽车\n", "parameters": {"properties": {"query": {"default": "", "description": "根据上下文添加必要的背景信息，改写一个新的独立问题，使问题更完整，注意指代消解、完善主语等", "title": "Query", "type": "string"}}, "type": "object"}}}]
+        },
+        "max_expect_score": 3
     }
 ]

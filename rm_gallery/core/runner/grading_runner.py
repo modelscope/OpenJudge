@@ -16,6 +16,7 @@ from dataclasses import dataclass
 from typing import Any, Callable, Dict, List, Tuple
 
 from loguru import logger
+from tqdm.asyncio import tqdm_asyncio
 
 from rm_gallery.core.graders.base_grader import BaseGrader
 from rm_gallery.core.graders.schema import GraderError, GraderResult
@@ -147,6 +148,7 @@ class GradingRunner(BaseRunner):
         grader_configs: Dict[str, GraderConfig | BaseGrader | Tuple[BaseGrader, Dict[str, str] | Callable | None]],
         max_concurrency: int = 32,
         aggregators: BaseAggregator | Callable | List[BaseAggregator | Callable] | None = None,
+        show_progress: bool = True,
     ) -> None:
         """Initialize the grading runner.
 
@@ -158,6 +160,7 @@ class GradingRunner(BaseRunner):
                 Controls how many evaluations can run simultaneously to manage resource usage.
             aggregators: Optional aggregator or list of aggregators to combine results
                 from multiple graders.
+            show_progress: Whether to display a progress bar during execution. Defaults to True.
 
         Example:
             >>> # Initialize with multiple graders
@@ -169,6 +172,7 @@ class GradingRunner(BaseRunner):
         """
         self.grader_configs = {name: GraderConfig.create(config) for name, config in grader_configs.items()}
         self.max_concurrency = max_concurrency
+        self.show_progress = show_progress
         concurrency_manager = ConcurrencyManager()
         concurrency_manager.set_max_concurrency(max_concurrency)
 
@@ -338,7 +342,14 @@ class GradingRunner(BaseRunner):
                 )  # Record grader name and sample index
 
         # Execute all evaluator-sample coroutines concurrently
-        all_results = await asyncio.gather(*all_coroutines)
+        if self.show_progress:
+            all_results = await tqdm_asyncio.gather(
+                *all_coroutines,
+                desc="Grading",
+                total=len(all_coroutines),
+            )
+        else:
+            all_results = await asyncio.gather(*all_coroutines)
 
         # Initialize lists for all graders
         for name in self.grader_configs.keys():

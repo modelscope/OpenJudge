@@ -15,49 +15,62 @@ theme:
     - content.code.annotate
 nav:
   - Home: index.md
-  - Quickstart: quickstart.md
-  - Tutorials:
-      - Overview: tutorial/README.md
-      - End-to-End Guide: tutorial/end-to-end.md
 
-  - Reference:
-      - RM Library: library/rm_library.md
-      - Rubric Library: library/rubric_library.md
+  - Get Started:
+      - Introduction: get-started/introduction.md
+      - Quick Start: get-started/quickstart.md
+      - Evaluate an AI Agent: get-started/evaluate-agent.md
+      - Build Reward for Training: get-started/build-reward.md
+      - Core Concepts: get-started/core-concepts.md
 
-  - Building RM:
-      - Overview: tutorial/building_rm/overview.md
-      - Using Built-in RMs: tutorial/building_rm/ready2use_rewards.md
-      - Building Custom RMs: tutorial/building_rm/custom_reward.md
-      - Rubric as Rewards: tutorial/building_rm/autorubric.md
+  - Built-in Graders:
+      - Overview: graders/overview.md
+      - General Graders: graders/general.md
+      - Agent Graders: graders/agent.md
+      - Multimodal Graders: graders/multimodal.md
+      - Code & Math Graders: graders/code-math.md
+      - Text Graders: graders/text.md
+      - Format Graders: graders/format.md
 
-  - Evaluating RM:
-      - Overview: tutorial/evaluation/overview.md
-      - RMB: tutorial/evaluation/rmb.md
-      - RM-Bench: tutorial/evaluation/rmbench.md
-      - JudgeBench: tutorial/evaluation/judgebench.md
-      - RewardBench2: tutorial/evaluation/rewardbench2.md
-      - Conflict Detector: tutorial/evaluation/conflict_detector.md
+  - Building Graders:
+      - Overview: building-graders/overview.md
+      - Create Custom Graders: building-graders/custom-graders.md
+      - Generate Graders from Data: building-graders/generate-graders.md
+      - Train a Grader:
+          - Overview: building-graders/training/overview.md
+          - Bradley-Terry Training: building-graders/training/bradley-terry.md
+          - Generative (Pointwise): building-graders/training/generative-pointwise.md
+          - Generative (Pairwise): building-graders/training/generative-pairwise.md
+          - SFT for Reward Models: building-graders/training/sft.md
 
-  - Using RM:
-      - RM Server: tutorial/rm_serving/rm_server.md
-      # - Boosting Strategy: using_rm/boosting_strategy.md
-      - Data Refinement: tutorial/rm_application/data_refinement.md
-      - Post Training with RM: tutorial/rm_application/post_training.md
-      - Best of N: tutorial/rm_application/best_of_n.md
+  - Running Graders:
+      - Run Grading Tasks: running-graders/run-tasks.md
+      - Generate Evaluation Reports: running-graders/evaluation-reports.md
 
-  - Training RM:
-      - Overview: tutorial/training_rm/overview.md
-      - Training Bradley-Terry RM: tutorial/training_rm/bradley_terry_rm.md
-      - Training RM with SFT: tutorial/training_rm/sft_rm.md
-      - Training RM with RL: tutorial/training_rm/training_rm.md
+  - Validating Graders:
+      - Validation Workflow: validating-graders/workflow.md
+      - Run Benchmark Tests: validating-graders/benchmarks.md
+      - Validation Metrics: validating-graders/metrics.md
+      - Generate Validation Reports: validating-graders/validation-reports.md
 
-  - Data:
-      - Overview: tutorial/data/pipeline.md
-      - Annotate Data: tutorial/data/annotation.md
-      - Load Data: tutorial/data/load.md
-      - Process Data: tutorial/data/process.md
-  - FAQ: faq.md
-  - Contribution: contribution.md
+  - Applications:
+      - Refine Data Quality: applications/data-refinement.md
+      - Apply Graders in Post-Training: applications/post-training.md
+      - Select and Rank Models: applications/select-rank.md
+
+  - Integrations:
+      - Evaluation Integrations:
+          - Integrate with AgentScope: integrations/evaluation/agentscope.md
+      - RL Reward Integrations:
+          - Integrate with VERL: integrations/rewards/verl.md
+          - Integrate with AS.Tuner: integrations/rewards/astuner.md
+
+  - Community:
+      - Contribute to RM Gallery: community/contributing.md
+      - Documentation Style Guide: community/style-guide.md
+      - Animations Demo: community/animations-demo.md
+      - FAQ: community/faq.md
+      - Changelog: community/changelog.md
 plugins:
   - search:
       lang:
@@ -83,6 +96,8 @@ markdown_extensions:
   - footnotes
   - tables
   - extra
+  - attr_list
+  - md_in_html
   - pymdownx.blocks.details
   - pymdownx.tabbed:
       alternate_style: true
@@ -100,14 +115,24 @@ markdown_extensions:
 
 extra_css:
   - https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap
+  - stylesheets/tabbed-code.css
   - stylesheets/readability-enhancements.css
   - stylesheets/code-enhancements.css
+  - stylesheets/syntax-highlight.css
   - stylesheets/table-enhancements.css
   - stylesheets/jupyter-simple.css
   - stylesheets/nav-scroll-fix.css
+  - stylesheets/workflow.css
+  - stylesheets/animations.css
+  - stylesheets/mermaid.css
+  - stylesheets/mkdocstrings.css
+  - stylesheets/responsive.css
 
 extra_javascript:
+  - javascripts/tabbed-code.js
   - javascripts/code-copy.js
   - javascripts/search-fix.js
   - javascripts/code-zoom.js
   - javascripts/nav-scroll-fix.js
+  - javascripts/animations.js
+  - javascripts/responsive.js

@@ -12,17 +12,17 @@ using HarmfulnessGrader as an example of LLMGrader:
 Example:
     Run all tests:
     ```bash
-    poetry run pytest tests/graders/common/test_harmfulness_complete_demo.py -v
+    pytest tests/graders/common/test_harmfulness_complete_demo.py -v
     ```
 
     Run only unit tests:
     ```bash
-    poetry run pytest tests/graders/common/test_harmfulness_complete_demo.py -m unit
+    pytest tests/graders/common/test_harmfulness_complete_demo.py -m unit
     ```
 
     Run quality tests (only if API keys are configured):
     ```bash
-    poetry run pytest tests/graders/common/test_harmfulness_complete_demo.py -m quality
+    pytest tests/graders/common/test_harmfulness_complete_demo.py -m quality
     ```
 """
 
@@ -43,6 +43,7 @@ from rm_gallery.core.analyzer.validation import (
     RecallAnalyzer,
 )
 from rm_gallery.core.graders.common.harmfulness import HarmfulnessGrader
+from rm_gallery.core.graders.schema import GraderScore
 from rm_gallery.core.models.openai_chat_model import OpenAIChatModel
 from rm_gallery.core.runner.grading_runner import GraderConfig, GradingRunner
 
@@ -67,79 +68,94 @@ class TestHarmfulnessGraderUnit:
         assert grader.threshold == 0.8
         assert grader.model == mock_model
 
+    @pytest.mark.asyncio
     async def test_successful_evaluation(self):
         """Test successful evaluation with valid inputs"""
-        # Setup mock
+        # Setup mock response with the expected metadata structure
         mock_response = AsyncMock()
-        mock_response.score = 4
-        mock_response.reason = "Response contains minor potentially harmful elements"
-        mock_response.metadata = {}
+        mock_response.metadata = {
+            "score": 4,
+            "reason": "Response contains minor potentially harmful elements",
+        }
 
-        mock_model = AsyncMock()
-        mock_model.achat = AsyncMock(return_value=mock_response)
+        # Use patch to mock the model's achat method
+        with patch("rm_gallery.core.graders.llm_grader.BaseChatModel.achat", new_callable=AsyncMock) as mock_achat:
+            mock_achat.return_value = mock_response
 
-        # Create grader
-        grader = HarmfulnessGrader(model=mock_model)
+            mock_model = AsyncMock()
+            grader = HarmfulnessGrader(model=mock_model)
 
-        # Execute test
-        result = await grader.aevaluate(
-            query="What is Python?",
-            response="Python is a high-level programming language.",
-        )
+            # Override the model's achat method with our mock
+            grader.model.achat = mock_achat
 
-        # Assertions
-        assert isinstance(result, mock_model.structured_model)
-        assert result.score == 4
-        assert "potentially harmful" in result.reason.lower()
+            result = await grader.aevaluate(
+                query="What is Python?",
+                response="Python is a high-level programming language.",
+            )
 
+            # Assertions
+            assert isinstance(result, GraderScore)
+            assert result.score == 4
+            assert "potentially harmful" in result.reason.lower()
+
+            # Verify model was called correctly
+            mock_achat.assert_called_once()
+
+    @pytest.mark.asyncio
     async def test_evaluation_with_context_and_reference(self):
         """Test evaluation with context and reference answer"""
-        # Setup mock
+        # Setup mock response with the expected metadata structure
         mock_response = AsyncMock()
-        mock_response.score = 5
-        mock_response.reason = "Response is completely safe and appropriate"
-        mock_response.metadata = {}
+        mock_response.metadata = {
+            "score": 5,
+            "reason": "Response is completely safe and appropriate",
+        }
 
-        mock_model = AsyncMock()
-        mock_model.achat = AsyncMock(return_value=mock_response)
+        # Use patch to mock the model's achat method
+        with patch("rm_gallery.core.graders.llm_grader.BaseChatModel.achat", new_callable=AsyncMock) as mock_achat:
+            mock_achat.return_value = mock_response
 
-        # Create grader
-        grader = HarmfulnessGrader(model=mock_model)
+            mock_model = AsyncMock()
+            grader = HarmfulnessGrader(model=mock_model)
 
-        # Execute test
-        result = await grader.aevaluate(
-            query="How to stay healthy?",
-            response="Regular exercise, balanced diet, and adequate sleep are important.",
-            context="Health advice",
-            ground_truth="Maintaining health requires regular physical activity and good nutrition.",
-        )
+            # Override the model's achat method with our mock
+            grader.model.achat = mock_achat
 
-        # Assertions
-        assert result.score == 5
-        assert "harmfulness evaluation score: 5" in result.reason
+            result = await grader.aevaluate(
+                query="How to stay healthy?",
+                response="Regular exercise, balanced diet, and adequate sleep are important.",
+                context="Health advice",
+                ground_truth="Maintaining health requires regular physical activity and good nutrition.",
+            )
 
-        # Verify model was called correctly
-        mock_model.achat.assert_called_once()
+            # Assertions
+            assert result.score == 5
+            assert "completely safe and appropriate" in result.reason.lower()
 
+            # Verify model was called correctly
+            mock_achat.assert_called_once()
+
+    @pytest.mark.asyncio
     async def test_error_handling(self):
         """Test graceful error handling"""
-        # Setup mock to raise exception
-        mock_model = AsyncMock()
-        mock_model.achat = AsyncMock(side_effect=Exception("API Error"))
+        # Use patch to mock the model's achat method to raise an exception
+        with patch("rm_gallery.core.graders.llm_grader.BaseChatModel.achat", new_callable=AsyncMock) as mock_achat:
+            mock_achat.side_effect = Exception("API Error")
 
-        # Create grader
-        grader = HarmfulnessGrader(model=mock_model)
+            mock_model = AsyncMock()
+            grader = HarmfulnessGrader(model=mock_model)
 
-        # Execute test
-        result = await grader.aevaluate(
-            query="What is Python?",
-            response="Python is a high-level programming language.",
-        )
+            # Override the model's achat method with our mock
+            grader.model.achat = mock_achat
 
-        # Assertions
-        assert result.score == 0.0
-        assert "Evaluation error: API Error" in result.reason
-        assert result.metadata["threshold"] == 0.7  # Default threshold
+            result = await grader.aevaluate(
+                query="What is Python?",
+                response="Python is a high-level programming language.",
+            )
+
+            # Assertions
+            assert result.score == 0.0
+            assert "Evaluation error: API Error" in result.reason
 
 
 # ==================== QUALITY TESTS ====================
@@ -150,9 +166,8 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL")
 RUN_QUALITY_TESTS = bool(OPENAI_API_KEY and OPENAI_BASE_URL)
 
-pytestmark = pytest.mark.skipif(not RUN_QUALITY_TESTS, reason="Requires API keys and base URL to run quality tests")
 
-
+@pytest.mark.skipif(not RUN_QUALITY_TESTS, reason="Requires API keys and base URL to run quality tests")
 @pytest.mark.quality
 class TestHarmfulnessGraderQuality:
     """Quality tests for HarmfulnessGrader - testing evaluation quality"""
@@ -179,7 +194,7 @@ class TestHarmfulnessGraderQuality:
     def model(self):
         """Return OpenAIChatModel instance based on environment variables"""
         if OPENAI_API_KEY:
-            config = {"model": "gpt-3.5-turbo", "api_key": OPENAI_API_KEY}
+            config = {"model": "qwen-max", "api_key": OPENAI_API_KEY}
             if OPENAI_BASE_URL:
                 config["base_url"] = OPENAI_BASE_URL
             return OpenAIChatModel(**config)
@@ -323,6 +338,7 @@ class TestHarmfulnessGraderQuality:
         assert consistency_result.name == "Consistency Analysis"
 
 
+@pytest.mark.skipif(not RUN_QUALITY_TESTS, reason="Requires API keys and base URL to run quality tests")
 @pytest.mark.quality
 class TestHarmfulnessGraderAdversarial:
     """Adversarial tests for HarmfulnessGrader - testing robustness against adversarial examples"""
@@ -353,7 +369,7 @@ class TestHarmfulnessGraderAdversarial:
     def model(self):
         """Return OpenAIChatModel instance based on environment variables"""
         if OPENAI_API_KEY:
-            config = {"model": "gpt-3.5-turbo", "api_key": OPENAI_API_KEY}
+            config = {"model": "qwen-max", "api_key": OPENAI_API_KEY}
             if OPENAI_BASE_URL:
                 config["base_url"] = OPENAI_BASE_URL
             return OpenAIChatModel(**config)

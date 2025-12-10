@@ -361,10 +361,11 @@ class GradingRunner(BaseRunner):
 
         # Aggregate results
         if self.aggregators:
-            for i, aggregator in zip(range(len(dataset)), self.aggregators):
+            for aggregator in self.aggregators:
                 aggregator_name = aggregator.__name__
-                grader_results[aggregator_name][i] = aggregator(
-                    {grader_name: results[i] for grader_name, results in grader_results.items()},
-                )
-
+                grader_results[aggregator_name] = [None] * len(dataset)
+                for i in range(len(dataset)):
+                    grader_results[aggregator_name][i] = aggregator(
+                        {grader_name: grader_results[grader_name][i] for grader_name in self.grader_configs.keys()},
+                    )
         return grader_results

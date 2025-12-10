@@ -159,19 +159,24 @@ class OpenAIChatFormatter(TruncatedFormatterBase):
             tool_calls = []
 
             for block in msg.get_content_blocks():
-                typ = block.get("type")
+                typ = block.type
                 if typ == "text":
-                    content_blocks.append({**block})
+                    content_blocks.append(
+                        {
+                            "type": block.type,
+                            "text": block.text,
+                        },
+                    )
 
                 elif typ == "tool_use":
                     tool_calls.append(
                         {
-                            "id": block.get("id"),
+                            "id": block.id,
                             "type": "function",
                             "function": {
-                                "name": block.get("name"),
+                                "name": block.name,
                                 "arguments": json.dumps(
-                                    block.get("input", {}),
+                                    block.input,
                                     ensure_ascii=False,
                                 ),
                             },
@@ -182,22 +187,22 @@ class OpenAIChatFormatter(TruncatedFormatterBase):
                     messages.append(
                         {
                             "role": "tool",
-                            "tool_call_id": block.get("id"),
+                            "tool_call_id": block.id,
                             "content": self.convert_tool_result_to_string(
-                                block.get("output"),  # type: ignore[arg-type]
+                                block.output,  # type: ignore[arg-type]
                             ),
-                            "name": block.get("name"),
+                            "name": block.name,
                         },
                     )
 
                 elif typ == "image":
-                    source_type = block["source"]["type"]
+                    source_type = block.source.type
                     if source_type == "url":
-                        url = _to_openai_image_url(block["source"]["url"])
+                        url = _to_openai_image_url(block.source.url)
 
                     elif source_type == "base64":
-                        data = block["source"]["data"]
-                        media_type = block["source"]["media_type"]
+                        data = block.source.data
+                        media_type = block.source.media_type
                         url = f"data:{media_type};base64,{data}"
 
                     else:
@@ -213,9 +218,8 @@ class OpenAIChatFormatter(TruncatedFormatterBase):
                             },
                         },
                     )
-
                 elif typ == "audio":
-                    input_audio = _to_openai_audio_data(block["source"])
+                    input_audio = _to_openai_audio_data(block.source)
                     content_blocks.append(
                         {
                             "type": "input_audio",
@@ -224,23 +228,23 @@ class OpenAIChatFormatter(TruncatedFormatterBase):
                     )
 
                 else:
-                    logger.warning(
-                        "Unsupported block type %s in the message, skipped.",
-                        typ,
-                    )
+                    logger.warning("Unsupported content block type: %s", typ)
 
-            msg_openai = {
-                "role": msg.role,
-                "name": msg.name,
-                "content": content_blocks or None,
-            }
+            if content_blocks or not tool_calls:
+                messages.append(
+                    {
+                        "role": msg.role,
+                        "content": content_blocks,
+                    },
+                )
 
             if tool_calls:
-                msg_openai["tool_calls"] = tool_calls
-
-            # When both content and tool_calls are None, skipped
-            if msg_openai["content"] or msg_openai.get("tool_calls"):
-                messages.append(msg_openai)
+                messages.append(
+                    {
+                        "role": "assistant",
+                        "tool_calls": tool_calls,
+                    },
+                )
 
         return messages
 
@@ -321,17 +325,17 @@ class OpenAIMultiAgentFormatter(TruncatedFormatterBase):
 
         for msg in msgs:
             for block in msg.get_content_blocks():
-                if block["type"] == "text":
-                    accumulated_text.append(f"{msg.name}: {block['text']}")
+                if block.type == "text":
+                    accumulated_text.append(f"{msg.name}: {block.text}")
 
-                elif block["type"] == "image":
-                    source_type = block["source"]["type"]
+                elif block.type == "image":
+                    source_type = block.source.type
                     if source_type == "url":
-                        url = _to_openai_image_url(block["source"]["url"])
+                        url = _to_openai_image_url(block.source.url)
 
                     elif source_type == "base64":
-                        data = block["source"]["data"]
-                        media_type = block["source"]["media_type"]
+                        data = block.source.data
+                        media_type = block.source.media_type
                         url = f"data:{media_type};base64,{data}"
 
                     else:
@@ -346,8 +350,8 @@ class OpenAIMultiAgentFormatter(TruncatedFormatterBase):
                             },
                         },
                     )
-                elif block["type"] == "audio":
-                    input_audio = _to_openai_audio_data(block["source"])
+                elif block.type == "audio":
+                    input_audio = _to_openai_audio_data(block.source)
                     audios.append(
                         {
                             "type": "input_audio",

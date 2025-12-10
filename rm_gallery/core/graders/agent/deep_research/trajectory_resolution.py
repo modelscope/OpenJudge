@@ -279,7 +279,7 @@ class TrajectoryResolutionGrader(LLMGrader):
 
     Example:
         >>> from rm_gallery.core.models.openai_chat_model import OpenAIChatModel
-        >>> api = OpenAIChatModel(api_key="...", model="gpt-4o")
+        >>> api = OpenAIChatModel(api_key="...", model="qwen-max")
         >>> grader = TrajectoryResolutionGrader(model=api, resolution_threshold=0.85)
         >>> result = await grader.aevaluate(
         ...     messages=[
@@ -315,7 +315,7 @@ class TrajectoryResolutionGrader(LLMGrader):
 
         Example:
             >>> from rm_gallery.core.models.openai_chat_model import OpenAIChatModel
-            >>> api = OpenAIChatModel(api_key="...", model="gpt-4o")
+            >>> api = OpenAIChatModel(api_key="...", model="qwen-max")
             >>> grader = TrajectoryResolutionGrader(model=api, resolution_threshold=0.85)
         """
         super().__init__(

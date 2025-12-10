@@ -133,13 +133,13 @@ DEFAULT_TOOL_CALL_SUCCESS_TEMPLATE = PromptTemplate(
     messages={
         LanguageEnum.EN: [
             ChatMessage(
-                role="system",
+                role="user",
                 content=textwrap.dedent(TOOL_CALL_SUCCESS_PROMPT_EN),
             ),
         ],
         LanguageEnum.ZH: [
             ChatMessage(
-                role="system",
+                role="user",
                 content=textwrap.dedent(TOOL_CALL_SUCCESS_PROMPT_ZH),
             ),
         ],

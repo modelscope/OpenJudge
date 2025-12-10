@@ -146,19 +146,19 @@ class DashScopeChatFormatter(TruncatedFormatterBase):
             content_blocks = []
             tool_calls = []
             for block in msg.get_content_blocks():
-                typ = block.get("type")
+                typ = block.type
 
                 if typ == "text":
                     content_blocks.append(
                         {
-                            "text": block.get("text"),
+                            "text": block.text,
                         },
                     )
 
                 elif typ in ["image", "audio"]:
-                    source = block["source"]
-                    if source["type"] == "url":
-                        url = source["url"]
+                    source = block.source
+                    if source.type == "url":
+                        url = source.url
                         if _is_accessible_local_file(url):
                             content_blocks.append(
                                 {typ: "file://" + os.path.abspath(url)},
@@ -167,9 +167,9 @@ class DashScopeChatFormatter(TruncatedFormatterBase):
                             # treat as web url
                             content_blocks.append({typ: url})
 
-                    elif source["type"] == "base64":
-                        media_type = source["media_type"]
-                        base64_data = source["data"]
+                    elif source.type == "base64":
+                        media_type = source.media_type
+                        base64_data = source.data
                         content_blocks.append(
                             {typ: f"data:{media_type};base64,{base64_data}"},
                         )
@@ -182,12 +182,12 @@ class DashScopeChatFormatter(TruncatedFormatterBase):
                 elif typ == "tool_use":
                     tool_calls.append(
                         {
-                            "id": block.get("id"),
+                            "id": block.id,
                             "type": "function",
                             "function": {
-                                "name": block.get("name"),
+                                "name": block.name,
                                 "arguments": json.dumps(
-                                    block.get("input", {}),
+                                    block.input,
                                     ensure_ascii=False,
                                 ),
                             },
@@ -198,11 +198,11 @@ class DashScopeChatFormatter(TruncatedFormatterBase):
                     formatted_msgs.append(
                         {
                             "role": "tool",
-                            "tool_call_id": block.get("id"),
+                            "tool_call_id": block.id,
                             "content": self.convert_tool_result_to_string(
-                                block.get("output"),  # type: ignore[arg-type]
+                                block.output,  # type: ignore[arg-type]
                             ),
-                            "name": block.get("name"),
+                            "name": block.name,
                         },
                     )
 
@@ -344,10 +344,10 @@ class DashScopeMultiAgentFormatter(TruncatedFormatterBase):
         accumulated_text = []
         for msg in msgs:
             for block in msg.get_content_blocks():
-                if block["type"] == "text":
-                    accumulated_text.append(f"{msg.name}: {block['text']}")
+                if block.type == "text":
+                    accumulated_text.append(f"{msg.name}: {block.text}")
 
-                elif block["type"] in ["image", "audio"]:
+                elif block.type in ["image", "audio"]:
                     # Handle the accumulated text as a single block
                     if accumulated_text:
                         conversation_blocks.append(
@@ -355,30 +355,30 @@ class DashScopeMultiAgentFormatter(TruncatedFormatterBase):
                         )
                         accumulated_text.clear()
 
-                    if block["source"]["type"] == "url":
-                        url = block["source"]["url"]
+                    if block.source.type == "url":
+                        url = block.source.url
                         if _is_accessible_local_file(url):
                             conversation_blocks.append(
                                 {
-                                    block["type"]: "file://" + os.path.abspath(url),
+                                    block.type: "file://" + os.path.abspath(url),
                                 },
                             )
                         else:
-                            conversation_blocks.append({block["type"]: url})
+                            conversation_blocks.append({block.type: url})
 
-                    elif block["source"]["type"] == "base64":
-                        media_type = block["source"]["media_type"]
-                        base64_data = block["source"]["data"]
+                    elif block.source.type == "base64":
+                        media_type = block.source.media_type
+                        base64_data = block.source.data
                         conversation_blocks.append(
                             {
-                                block["type"]: f"data:{media_type};base64,{base64_data}",
+                                block.type: f"data:{media_type};base64,{base64_data}",
                             },
                         )
 
                     else:
                         logger.warning(
                             "Unsupported block type %s in the message, skipped.",
-                            block["type"],
+                            block.type,
                         )
 
         if accumulated_text:

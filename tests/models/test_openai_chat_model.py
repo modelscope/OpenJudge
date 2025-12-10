@@ -25,6 +25,7 @@ class PersonModelForTesting(BaseModel):
     age: int
 
 
+@pytest.mark.unit
 class TestOpenAIChatModel:
     """Test cases for OpenAIChatModel class."""
 

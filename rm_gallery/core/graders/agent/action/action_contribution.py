@@ -155,7 +155,7 @@ class ActionContributionGrader(LLMGrader):
         language: Language for evaluation prompts
     Example:
         >>> from rm_gallery.core.model.openai_llm import OpenAIChatModel
-        >>> api = OpenAIChatModel(api_key="...", model="gpt-4o")
+        >>> api = OpenAIChatModel(api_key="...", model="qwen-max")
         >>> grader = ActionContributionGrader(model=api)
         >>> result = await grader.aevaluate(
         ...     query="帮我找投资建议",

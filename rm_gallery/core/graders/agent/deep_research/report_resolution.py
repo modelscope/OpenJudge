@@ -343,7 +343,7 @@ class ReportResolutionGrader(LLMGrader):
 
     Example:
         >>> from rm_gallery.core.models.openai_chat_model import OpenAIChatModel
-        >>> api = OpenAIChatModel(api_key="...", model="gpt-4o")
+        >>> api = OpenAIChatModel(api_key="...", model="qwen-max")
         >>> grader = ReportResolutionGrader(model=api)
         >>> result = await grader.aevaluate(
         ...     query="What are the latest developments in quantum computing?",

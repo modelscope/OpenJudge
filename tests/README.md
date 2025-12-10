@@ -1,16 +1,18 @@
-# Grader 测试策略
+# 项目测试策略
 
-本文档概述了 RM-Gallery 框架中 Grader 的测试策略，涵盖了测试类型、测试方法和质量保证要求。
+本文档概述了 RM-Gallery 框架的测试策略，涵盖了测试类型、测试方法和质量保证要求。
 
 ## 1. 概述
 
-为了确保 RM-Gallery 中的 Graders 能够稳定可靠地运行，我们需要建立一套完整的测试体系。根据最新讨论，Graders只需要提供单元测试和质量测试两种类型的测试。
+为了确保 RM-Gallery 项目能够稳定可靠地运行，我们需要建立一套完整的测试体系。项目测试分为单元测试和质量测试两种类型：
+- 所有项目关键组件都需要完成单元测试
+- 所有LLMGrader需要完成单元测试和质量测试
 
 ## 2. 测试类型
 
 ### 2.1 单元测试 (Unit Testing)
 
-单元测试是最基础的测试类型，针对 Grader 的单个功能进行验证。
+单元测试是最基础的测试类型，针对项目中各个组件的单个功能进行验证。
 
 ##### 测试原则
 - **隔离性**: 每个测试应独立运行，不依赖其他测试
@@ -26,92 +28,99 @@ import pytest
 
 # 模拟 LLM 调用的示例
 @pytest.mark.unit
-@pytest.mark.asyncio
-async def test_llm_based_grader_offline():
-    # 设置模拟
-    mock_response = AsyncMock()
-    mock_response.score = 5
-    mock_response.reason = "Perfect"
-    mock_response.metadata = {}
-
-    mock_model = AsyncMock()
-    mock_model.achat = AsyncMock(return_value=mock_response)
-
-    # 使用模拟初始化 grader
-    grader = MyLLMGrader(model=mock_model)
-
-    # 执行测试
-    result = await grader.aevaluate(query="test", response="test response")
-
-    # 断言
-    assert result.score == 5
-    assert result.reason == "Perfect"
-```
-
-##### 标准测试结构
-每个 Grader 都应按以下方式组织测试：
-
-```python
-# tests/graders/[category]/test_[grader_name].py
-import pytest
-from unittest.mock import AsyncMock
-
-from rm_gallery.core.graders.[category].[grader_module] import [GraderClass]
-
-@pytest.mark.unit
-@pytest.mark.asyncio
-class Test[GraderClass]:
-    """Test suite for [GraderClass]"""
-
-    def test_initialization(self):
-        """测试成功初始化"""
-        mock_model = AsyncMock()
-        grader = [GraderClass](model=mock_model, **kwargs)
-        assert grader.name == "[expected_name]"
-        assert grader.mode == [expected_mode]
-
+class TestLLMGraderOffline:
     @pytest.mark.asyncio
-    async def test_successful_evaluation(self):
-        """测试使用有效输入的成功评估"""
-        # 设置模拟
+    async def test_llm_based_grader_offline(self):
+        # 设置模拟，注意LLMGrader期望从metadata中获取结果
         mock_response = AsyncMock()
-        mock_response.score = 5
-        mock_response.reason = "Good response"
-        mock_response.metadata = {}
+        mock_response.metadata = {
+            "score": 5,
+            "reason": "Perfect"
+        }
 
         mock_model = AsyncMock()
         mock_model.achat = AsyncMock(return_value=mock_response)
 
-        grader = [GraderClass](model=mock_model)
-        result = await grader.aevaluate(**valid_inputs)
+        # 使用模拟初始化 grader
+        grader = MyLLMGrader(model=mock_model)
+
+        # 执行测试
+        result = await grader.aevaluate(query="test", response="test response")
+
+        # 断言
+        assert result.score == 5
+        assert result.reason == "Perfect"
+
+        # 验证模型调用
+        mock_model.achat.assert_called_once()
+```
+
+##### 标准测试结构
+每个组件都应按以下方式组织测试：
+
+``python
+# tests/[component_type]/[category]/test_[component_name].py
+import pytest
+from unittest.mock import AsyncMock, patch
+
+from rm_gallery.core.[component_type].[category].[component_module] import [ComponentClass]
+
+@pytest.mark.unit
+class Test[ComponentClass]:
+    """Test suite for [ComponentClass]"""
+
+    def test_initialization(self):
+        """测试成功初始化"""
+        mock_dependency = AsyncMock()
+        component = [ComponentClass](dependency=mock_dependency, **kwargs)
+        assert component.name == "[expected_name]"
+        assert component.mode == [expected_mode]
+        # 注意：只有异步方法才需要@pytest.mark.asyncio装饰器
+
+    @pytest.mark.asyncio
+    async def test_successful_operation(self):
+        """测试使用有效输入的成功操作"""
+        # 设置模拟，注意LLMGrader期望的返回格式
+        mock_response = AsyncMock()
+        mock_response.metadata = {
+            "score": 5,
+            "reason": "Good response"
+        }
+
+        mock_dependency = AsyncMock()
+        mock_dependency.method = AsyncMock(return_value=mock_response)
+
+        component = [ComponentClass](dependency=mock_dependency)
+        result = await component.operation(**valid_inputs)
         assert isinstance(result, [ExpectedResultType])
         assert 0 <= result.score <= 5  # 或适当范围
 
     @pytest.mark.asyncio
     async def test_edge_cases(self):
         """测试边缘情况，如空输入、极值"""
-        mock_model = AsyncMock()
-        grader = [GraderClass](model=mock_model)
-        result = await grader.aevaluate(**edge_case_inputs)
+        mock_dependency = AsyncMock()
+        component = [ComponentClass](dependency=mock_dependency)
+        result = await component.operation(**edge_case_inputs)
         # 适当的断言
 
     @pytest.mark.asyncio
     async def test_error_handling(self):
         """测试优雅的错误处理"""
         # 设置模拟以引发异常
-        mock_model = AsyncMock()
-        mock_model.achat = AsyncMock(side_effect=Exception("API Error"))
+        mock_dependency = AsyncMock()
+        mock_dependency.method = AsyncMock(side_effect=Exception("API Error"))
 
-        grader = [GraderClass](model=mock_model)
-        result = await grader.aevaluate(**invalid_inputs)
+        component = [ComponentClass](dependency=mock_dependency)
+        result = await component.operation(**invalid_inputs)
         # 应返回有意义的错误结果，而不是抛出异常
         assert result.score == 0  # 或其他适当的错误值
+        assert "API Error" in result.reason
 ```
 
 
 ### 2.2 质量测试 (Quality Testing)
 
-质量测试用于确保 Grader 的评估质量符合使用要求。这类测试关注的是 Grader 是否能够正确地区分高质量和低质量的响应。质量测试必须配置 API_KEY，基于真实数据进行在线验证评估质量。通过与 [GradingRunner](file:///mnt3/huangsen.huang/codes/RM-Gallery/rm_gallery/core/runner/grading_runner.py#L31-L175) 结合使用，可以显著提高测试执行效率。
+质量测试用于确保 LLMGrader 的评估质量符合使用要求。这类测试关注的是 LLMGrader 是否能够正确地区分高质量和低质量的响应。质量测试必须配置 API_KEY，基于真实数据进行在线验证评估质量。通过与 [GradingRunner](file:///mnt3/huangsen.huang/codes/RM-Gallery/rm_gallery/core/runner/grading_runner.py#L31-L175) 结合使用，可以显著提高测试执行效率。
 
 #### 环境变量检测
 
@@ -134,7 +143,7 @@ pytestmark = pytest.mark.skipif(not RUN_QUALITY_TESTS, reason="Requires API keys
 
 #### 基于黄金标准数据集的质量测试
 
-```python
+``python
 # tests/quality/test_grader_quality.py
 import os
 import pytest
@@ -144,10 +153,7 @@ import numpy as np
 from rm_gallery.core.runner.grading_runner import GradingRunner, GraderConfig
 from rm_gallery.core.analyzer.validation import (
     AccuracyAnalyzer,
-    F1ScoreAnalyzer,
-    PrecisionAnalyzer,
-    RecallAnalyzer,
-    CorrelationAnalyzer
+    ConsistencyAnalyzer
 )
 from rm_gallery.core.graders.common.helpfulness import HelpfulnessGrader
 from rm_gallery.core.models.openai_chat_model import OpenAIChatModel
@@ -160,8 +166,7 @@ OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL")
 RUN_QUALITY_TESTS = bool(OPENAI_API_KEY and OPENAI_BASE_URL)
 
 # 如果没有配置 API 密钥和基础URL，则跳过所有质量测试
-pytestmark = pytest.mark.skipif(not RUN_QUALITY_TESTS, reason="Requires API keys and base URL to run quality tests")
-
+@pytest.mark.skipif(not RUN_QUALITY_TESTS, reason="Requires API keys and base URL to run quality tests")
 @pytest.mark.quality
 class TestGraderQuality:
     """测试 Grader 的评估质量"""
@@ -198,7 +203,7 @@ class TestGraderQuality:
     def model(self):
         """根据环境变量返回OpenAIChatModel实例"""
         if OPENAI_API_KEY:
-            config = {"model": "gpt-3.5-turbo", "api_key": OPENAI_API_KEY}
+            config = {"model": "qwen-max", "api_key": OPENAI_API_KEY}
             if OPENAI_BASE_URL:
                 config["base_url"] = OPENAI_BASE_URL
             return OpenAIChatModel(**config)
@@ -240,57 +245,23 @@ class TestGraderQuality:
             label_path="human_score"
         )
 
-        # 使用 PrecisionAnalyzer 计算精确率指标
-        precision_analyzer = PrecisionAnalyzer()
-        precision_result = precision_analyzer.analyze(
-            dataset=test_data,
-            grader_results=results["helpfulness"],
-            label_path="human_score"
-        )
-
-        # 使用 RecallAnalyzer 计算召回率指标
-        recall_analyzer = RecallAnalyzer()
-        recall_result = recall_analyzer.analyze(
-            dataset=test_data,
-            grader_results=results["helpfulness"],
-            label_path="human_score"
-        )
-
-        # 使用 F1ScoreAnalyzer 计算F1分数指标
-        f1_analyzer = F1ScoreAnalyzer()
-        f1_result = f1_analyzer.analyze(
-            dataset=test_data,
-            grader_results=results["helpfulness"],
-            label_path="human_score"
-        )
-
-        # 使用 CorrelationAnalyzer 计算相关性指标
-        correlation_analyzer = CorrelationAnalyzer()
-        correlation_result = correlation_analyzer.analyze(
-            dataset=test_data,
-            grader_results=results["helpfulness"],
-            label_path="human_score"
+        # 使用 ConsistencyAnalyzer 计算一致性指标
+        consistency_analyzer = ConsistencyAnalyzer()
+        consistency_result = consistency_analyzer.analyze(
+            first_run_results=results["helpfulness"],
+            second_run_results=results["helpfulness"]
         )
 
         # 断言质量指标达到预期阈值
         assert accuracy_result.accuracy >= 0.7, f"准确率低于阈值: {accuracy_result.accuracy}"
-        assert precision_result.precision >= 0.7, f"精确率低于阈值: {precision_result.precision}"
-        assert recall_result.recall >= 0.7, f"召回率低于阈值: {recall_result.recall}"
-        assert f1_result.f1_score >= 0.7, f"F1分数低于阈值: {f1_result.f1_score}"
-        assert correlation_result.correlation >= 0.7, f"相关性低于阈值: {correlation_result.correlation}"
+        assert consistency_result.consistency >= 0.9, f"评估一致性不足: {consistency_result.consistency}"
 
         # 验证分析结果包含必要的元数据
         assert "explanation" in accuracy_result.metadata
-        assert "explanation" in precision_result.metadata
-        assert "explanation" in recall_result.metadata
-        assert "explanation" in f1_result.metadata
-        assert "explanation" in correlation_result.metadata
+        assert "explanation" in consistency_result.metadata
 
         assert accuracy_result.name == "Accuracy Analysis"
-        assert precision_result.name == "Precision Analysis"
-        assert recall_result.name == "Recall Analysis"
-        assert f1_result.name == "F1 Score Analysis"
-        assert correlation_result.name == "Correlation Analysis"
+        assert consistency_result.name == "Consistency Analysis"
 
     @pytest.mark.asyncio
     async def test_consistency_with_runner(self, dataset, model):
@@ -343,7 +314,7 @@ class TestGraderQuality:
 
 #### 基于对抗样本的质量测试
 
-```python
+``python
 # tests/quality/test_adversarial_examples.py
 import os
 import pytest
@@ -365,8 +336,7 @@ OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL")
 RUN_QUALITY_TESTS = bool(OPENAI_API_KEY and OPENAI_BASE_URL)
 
 # 如果没有配置 API 密钥和基础URL，则跳过所有质量测试
-pytestmark = pytest.mark.skipif(not RUN_QUALITY_TESTS, reason="Requires API keys and base URL to run quality tests")
-
+@pytest.mark.skipif(not RUN_QUALITY_TESTS, reason="Requires API keys and base URL to run quality tests")
 @pytest.mark.quality
 class TestAdversarialExamples:
     """测试 Grader 对对抗样本的鲁棒性"""
@@ -410,7 +380,7 @@ class TestAdversarialExamples:
     def model(self):
         """根据环境变量返回OpenAIChatModel实例"""
         if OPENAI_API_KEY:
-            config = {"model": "gpt-3.5-turbo", "api_key": OPENAI_API_KEY}
+            config = {"model": "qwen-max", "api_key": OPENAI_API_KEY}
             if OPENAI_BASE_URL:
                 config["base_url"] = OPENAI_BASE_URL
             return OpenAIChatModel(**config)
@@ -484,31 +454,31 @@ class TestAdversarialExamples:
 
 ### 3.1 本地开发环境
 
-```bash
-# 运行所有 grader 测试
-poetry run pytest tests/graders/ -v
+```
+# 运行所有测试
+pytest tests/ -v
 
 # 运行特定类别
-poetry run pytest tests/graders/text/ -v
+pytest tests/graders/text/ -v
 
 # 运行带覆盖率
-poetry run pytest tests/graders/ --cov=rm_gallery.core.graders --cov-report=html
+pytest tests/ --cov=rm_gallery --cov-report=html
 
 # 运行性能测试
-poetry run pytest tests/performance/ --benchmark-only
+pytest tests/performance/ --benchmark-only
 
 # 运行质量测试（仅模拟测试）
-poetry run pytest tests/quality/ -v -m quality
+pytest tests/ -v -m quality
 
 # 运行所有质量测试（包括真实模型测试，如果配置了API密钥）
-poetry run pytest tests/quality/ -v -m quality --run-live
+pytest tests/ -v -m quality --run-live
 
 # 运行特定类型的测试（使用标记）
-poetry run pytest tests/graders/ -m unit       # 运行单元测试
-poetry run pytest tests/graders/ -m integration # 运行集成测试
-poetry run pytest tests/graders/ -m regression  # 运行回归测试
-poetry run pytest tests/graders/ -m performance # 运行性能测试
-poetry run pytest tests/graders/ -m quality # 运行质量测试
+pytest tests/ -m unit       # 运行单元测试
+pytest tests/ -m integration # 运行集成测试
+pytest tests/ -m regression  # 运行回归测试
+pytest tests/ -m performance # 运行性能测试
+pytest tests/ -m quality     # 运行质量测试
 ```
 
 ### 3.2 持续集成 (CI/CD)
@@ -518,8 +488,8 @@ poetry run pytest tests/graders/ -m quality # 运行质量测试
 #### GitHub Actions 工作流
 
 ```
-# .github/workflows/grader-tests.yml
-name: Grader Tests
+# .github/workflows/project-tests.yml
+name: Project Tests
 
 on:
   push:
@@ -550,15 +520,15 @@ jobs:
 
     - name: Run unit tests
       run: |
-        poetry run pytest tests/graders/ -v --cov=rm_gallery.core.graders -m unit
+        pytest tests/ -v --cov=rm_gallery -m unit
 
     - name: Run integration tests
       run: |
-        poetry run pytest tests/integration/ -v -m integration
+        pytest tests/integration/ -v -m integration
 
     - name: Run quality tests (simulation only)
       run: |
-        poetry run pytest tests/quality/ -v -m quality
+        pytest tests/ -v -m quality
 
     - name: Upload coverage reports
       uses: codecov/codecov-action@v3
@@ -574,27 +544,26 @@ jobs:
 
 ### 4.2 测试用例要求
 
-每个 Grader 必须有涵盖以下内容的测试用例：
+每个组件必须有涵盖以下内容的测试用例：
 
 1. **正常操作**：产生预期输出的典型输入
 2. **边界条件**：边缘情况，如空字符串、最大长度输入
 3. **错误条件**：无效输入、缺少参数
 4. **配置变化**：不同的初始化参数
-5. **序列化**：to_dict/from_config 往返
 
 ## 5. 测试维护
 
-### 5.1 添加新 Grader 时
+### 5.1 添加新组件时
 
-1. 在 `tests/graders/[category]/` 中创建相应的测试文件
+1. 在 `tests/[component_type]/[category]/` 中创建相应的测试文件
 2. 实现标准测试套件（初始化、评估、边缘情况、错误处理）
 3. 确保达到最低覆盖率阈值
-4. 为质量测试准备黄金标准数据集
+4. 对于LLMGrader，还需要准备黄金标准数据集用于质量测试
 5. 更新文档
 
-### 5.2 修改现有 Grader 时
+### 5.2 修改现有组件时
 
 1. 更新现有测试以匹配新行为
 2. 验证向后兼容性或相应更新测试
-3. 如果行为有显著改变，更新质量测试
+3. 如果行为有显著改变，对于LLMGrader需要更新质量测试
 4. 重新运行完整测试套件以确保没有回归

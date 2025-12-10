@@ -81,7 +81,7 @@ class WeightedSumAggregator(BaseAggregator):
                 }
             elif isinstance(result, GraderRank):
                 component_scores[grader_name] = {
-                    "rank": result.ranking,
+                    "rank": result.rank,  # Fix: use 'rank' instead of 'ranking'
                     "reason": result.reason,
                 }
 

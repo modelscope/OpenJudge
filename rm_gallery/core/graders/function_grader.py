@@ -153,7 +153,8 @@ class FunctionGrader(BaseGrader):
             result = await self.func(**kwargs)
         else:
             loop = asyncio.get_event_loop()
-            result = await loop.run_in_executor(None, self.func, **kwargs)
+            # Fix: Pass kwargs as a single dictionary argument to the function
+            result = await loop.run_in_executor(None, lambda: self.func(**kwargs))
 
         # Check return type based on grader mode
         if self.mode == GraderMode.POINTWISE:

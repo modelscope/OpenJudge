@@ -191,11 +191,11 @@ class ChatMessage(BaseModel):
 
         gathered_text = None
         for block in self.content:
-            if block.get("type") == "text":
+            if block.type == "text":
                 if gathered_text is None:
-                    gathered_text = str(block.get("text"))
+                    gathered_text = str(block.text)
                 else:
-                    gathered_text += block.get("text")
+                    gathered_text += block.text
         return gathered_text
 
     @overload
@@ -295,7 +295,7 @@ class ChatMessage(BaseModel):
             blocks = self.content or []
 
         if block_type is not None:
-            blocks = [_ for _ in blocks if _["type"] == block_type]
+            blocks = [_ for _ in blocks if _.type == block_type]
 
         return blocks
 

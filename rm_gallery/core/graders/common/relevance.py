@@ -63,9 +63,11 @@ A score of 1 means the response is completely irrelevant to the query.
 {response}
 </response>
 
-{reference_section}
+{reference}
 
 # Output Instructions
+**Note**: If a reference response is provided, you may use it as a baseline for comparison to better assess the quality and relevance of the evaluated response.
+
 Provide your evaluation in the following structured JSON format:
 {{
     "score": <integer between 1 and 5, where 5 means highly relevant and 1 means completely irrelevant>,
@@ -127,9 +129,11 @@ RELEVANCE_PROMPT_ZH = """
 {response}
 </response>
 
-{reference_section}
+{reference}
 
 # 输出指令
+**注意**：如果提供了参考回答，你可以将其作为基准进行比较，以更好地评估被评价回答的质量和相关性。
+
 请按以下结构化 JSON 格式提供你的评估：
 {{
     "score": <1到5之间的整数，其中5表示高度相关，1表示完全不相关>,
@@ -198,7 +202,8 @@ class RelevanceGrader(LLMGrader):
 
     Args:
         model: BaseChatModel instance or dict config for OpenAIChatModel
-        threshold: Minimum score [0, 1] to pass (default: 0.7)
+        threshold: Minimum relevance score threshold for passing evaluation (default: 0.7).
+                   Note: Score range is [1, 5]; threshold typically normalized to [0, 1]
         template: Custom evaluation template (default: DEFAULT_RELEVANCE_TEMPLATE)
         language: Prompt language - EN or ZH (default: LanguageEnum.EN)
 
@@ -209,11 +214,11 @@ class RelevanceGrader(LLMGrader):
             - metadata: Threshold and evaluation details
 
     Example:
-        >>> from rm_gallery.core.model.openai_llm import OpenAIChatModel
+        >>> from rm_gallery.core.models.openai_chat_model import OpenAIChatModel
         >>> from rm_gallery.core.graders.common.relevance import RelevanceGrader
         >>>
         >>> # Initialize grader
-        >>> model = OpenAIChatModel(api_key="sk-...", model="qwen3-max")
+        >>> model = OpenAIChatModel(api_key="sk-...", model="gpt-4")
         >>> grader = RelevanceGrader(model=model, threshold=0.7)
         >>>
         >>> # Relevant response
@@ -251,7 +256,8 @@ class RelevanceGrader(LLMGrader):
 
         Args:
             model: BaseChatModel instance or dict config for OpenAIChatModel
-            threshold: Success threshold [0, 1] (default: 0.7)
+            threshold: Relevance threshold for passing evaluation (default: 0.7).
+                      Note: Score range is [1, 5]; threshold is stored for reference
             template: PromptTemplate for evaluation prompts (default: DEFAULT_RELEVANCE_TEMPLATE)
             language: Language for prompts (default: LanguageEnum.EN)
         """
@@ -263,6 +269,8 @@ class RelevanceGrader(LLMGrader):
             template=template,
             language=language,
         )
+        # Note: threshold is stored for metadata but not actively used in evaluation
+        # Score normalization (1-5 to 0-1) can be done by caller if needed
         self.threshold = threshold
 
     async def aevaluate(
@@ -270,7 +278,7 @@ class RelevanceGrader(LLMGrader):
         query: str,
         response: str,
         context: str = "",
-        reference_response: str = "",
+        reference: str = "",
     ) -> GraderScore:
         """
         Evaluate relevance of response to query
@@ -279,7 +287,7 @@ class RelevanceGrader(LLMGrader):
             query: Input query or conversation history
             response: Model response to evaluate
             context: Additional context or background information. Defaults to empty string.
-            reference_response: Reference response for comparison. Defaults to empty string.
+            reference: Reference response for comparison. Defaults to empty string.
 
         Returns:
             GraderScore: Score with relevance value [1, 5]
@@ -292,7 +300,7 @@ class RelevanceGrader(LLMGrader):
             ...     context="User is a beginner asking for a simple explanation",
             ... )
         """
-        # Prepare context section
+        # Prepare context section for prompt
         context_section = ""
         if context:
             if self.language == LanguageEnum.ZH:
@@ -306,18 +314,18 @@ class RelevanceGrader(LLMGrader):
 {context}
 </context>"""
 
-        # Prepare reference response section based on language
-        reference_section = ""
-        if reference_response:
+        # Format reference for prompt (if provided)
+        # Note: reference is used as a comparison baseline
+        if reference:
             if self.language == LanguageEnum.ZH:
-                reference_section = f"""如有需要，你也可以使用以下参考回答进行比较：
+                reference = f"""参考回答（用于比较）：
 <reference>
-{reference_response}
+{reference}
 </reference>"""
             else:
-                reference_section = f"""If available, you may also use the following reference response for comparison:
+                reference = f"""Reference response (for comparison):
 <reference>
-{reference_response}
+{reference}
 </reference>"""
 
         try:
@@ -325,14 +333,14 @@ class RelevanceGrader(LLMGrader):
                 query=query,
                 response=response,
                 context_section=context_section,
-                reference_section=reference_section,
+                reference=reference,
             )
             score = result.score
             reason = result.reason
 
         except Exception as e:
             logger.error(f"Error evaluating relevance: {e}")
-            score = 0.0
+            score = 1  # Default to lowest score on error (valid range: 1-5)
             reason = f"Evaluation error: {str(e)}"
 
         # Prepare metadata

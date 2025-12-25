@@ -1,284 +1,287 @@
-# RM-Gallery v2 框架
+<div align="center">
 
-## 概述
+<img src="./docs/images/logo.png" alt="Open-Judge Logo" width="500">
 
-v2框架是一个为AI模型评估而设计的下一代评估系统，具有灵活性和可扩展性。它提供了一种模块化的方法来定义、执行和分析各种评估任务。
+<br/>
 
-## 核心组件
+<h3>
+  <em>Holistic Evaluation, Quality Rewards: Driving Application Excellence</em>
+</h3>
 
-### 1. 模板定义 ([template.py](file:///mnt3/huangsen.huang/codes/RM-Gallery/rm_gallery/v2/model/template.py))
+<p>
+  🌟 <em>If you find OpenJudge helpful, please give us a <b>Star</b>!</em> 🌟 
+</p>
 
-定义对话和模板结构的核心数据模型：
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue?logo=python&logoColor=white)](https://pypi.org/project/open_judge/)
+[![PyPI](https://img.shields.io/badge/pypi-v0.2.0-blue?logo=pypi)](https://pypi.org/project/py-openjudge/)
+[![License](https://img.shields.io/badge/license-Apache%202.0-green?logo=apache)](./LICENSE)
+[![Documentation](https://img.shields.io/badge/docs-online-blue?logo=readthedocs&logoColor=white)](https://modelscope.github.io/OpenJudge/)
 
-- `ChatMessage`：表示带有角色、内容和可选推理内容的单条消息
-- `ChatTemplate`：定义带有占位符的消息模板，可以在运行时动态填充
-- 支持多语言模板定义
+[📖 Documentation](https://modelscope.github.io/OpenJudge/) | [🤝 Contributing](./docs/community/contributing.md) | [🇨🇳 中文](./README_zh.md)
 
-### 2. 评估器 ([grader.py](file:///mnt3/huangsen.huang/codes/RM-Gallery/rm_gallery/v2/grader.py))
+</div>
 
-支持多种评估类型的灵活评估系统：
+---
 
-- `Grader`：所有评估函数的基类，支持Pointwise和Listwise评估模式
-- `LLMGrader`：使用聊天模板的基于LLM的评估函数
-- `FunctionReward`：基于自定义函数的评估实现
-- `FactualGrader`：内置的事实准确性检查评估示例
+## 📑 Table of Contents
 
-### 3. 策略 ([strategy/](file:///mnt3/huangsen.huang/codes/RM-Gallery/rm_gallery/v2/strategy/))
+- [Key Features](#-key-features)
+- [News](#news)
+- [Installation](#-installation)
+- [Quickstart](#-quickstart)
+- [Integrations](#-integrations)
+- [Contributing](#-contributing)
+- [Citation](#-citation)
 
-用于优化评估器性能的组件：
+OpenJudge is a unified framework designed to drive application excellence through **Holistic Evaluation** and **Quality Rewards**.
 
-- `GraderOptimizer`：评估器优化器的基类
-- `RepeatOptimizer`：通过重复执行并平均结果来优化评估器输出
+> 💡 Evaluation and reward signals are the cornerstones of application excellence. **Holistic evaluation** enables the systematic analysis of shortcomings to drive rapid iteration, while **high-quality** rewards provide the essential foundation for advanced optimization and fine-tuning.
 
-### 4. 实验框架 ([experiment.py](file:///mnt3/huangsen.huang/codes/RM-Gallery/rm_gallery/v2/experiment.py))
+OpenJudge unifies these signals into a single, standardized **Grader** interface, offering pre-built graders, flexible customization, and seamless framework integration.
 
-用于进行评估实验的系统：
+---
 
-- `EvaluationExperiment`：编排数据集和评估器的评估过程
-- 支持同步和异步评估
-- 内置日志记录和结果跟踪
+## ✨ Key Features
 
-### 5. 数据集管理 ([dataset.py](file:///mnt3/huangsen.huang/codes/RM-Gallery/rm_gallery/v2/dataset.py))
+### 📦 Systematic & Quality-Assured Grader Library
 
-处理具有模式验证的评估数据集：
+Access **50+ production-ready graders** featuring a comprehensive taxonomy, rigorously validated for reliable performance.
 
-- `EvaluationDataset`：管理评估样本集合
-- 使用JSON Schema进行数据完整性验证
-- 支持数据映射和转换
+<table>
+<tr>
+<td width="33%" valign="top">
 
-### 6. 评估器注册表 ([registry.py](file:///mnt3/huangsen.huang/codes/RM-Gallery/rm_gallery/v2/registry.py))
+#### 🎯 General
 
-统一管理评估器的注册和获取：
+**Focus:** Semantic quality, functional correctness, structural compliance
 
-- 支持命名空间分组管理
-- 支持装饰器和直接注册两种方式
-- 提供评估器的查询、列举和删除功能
+**Key Graders:**
+- `Relevance` - Semantic relevance scoring
+- `Similarity` - Text similarity measurement  
+- `Syntax Check` - Code syntax validation
+- `JSON Match` - Structure compliance
 
-## 功能特点
+</td>
+<td width="33%" valign="top">
 
-### 灵活的模板系统
-定义可重用的对话模板，其中包含可在运行时填充的占位符变量。支持多语言模板和自动参数提取。
+#### 🤖 Agent
 
-### 多种评估类型
-支持各种评估函数，包括LLM-as-a-judge、基于评分标准的评估和自定义程序化评估。
+**Focus:** Agent lifecycle, tool calling, memory, plan feasibility
 
-### 评估器优化
-提供优化器组件，可以提高评估器的稳定性和准确性，例如通过重复执行并平均结果。
+**Key Graders:**
+- `Tool Selection` - Tool choice accuracy
+- `Memory` - Context preservation
+- `Plan` - Strategy feasibility
+- `Trajectory` - Path optimization
 
-### 异步处理
-内置异步评估支持，以在处理LLM时最大化吞吐量。所有评估操作都支持异步执行。
+</td>
+<td width="33%" valign="top">
 
-### 模式验证
-使用JSON Schema自动验证输入数据以确保数据质量，防止无效数据进入评估流程。
+#### 🖼️ Multimodal
 
-### 模块化设计
-可组合的组件，可以针对不同的评估场景进行混合和匹配。各组件之间松耦合，易于扩展。
+**Focus:** Image-text coherence, visual generation quality
 
-### 评估模式支持
-支持Pointwise和Listwise两种评估模式：
-- **Pointwise模式**：对每个样本进行独立评分，适用于直接质量评估场景
-- **Listwise模式**：将所有样本一次性送入评估模型进行整体排名或评分，适用于全局排序任务
+**Key Graders:**
+- `Image Coherence` - Visual-text alignment
+- `Text-to-Image` - Generation quality
 
-## 使用示例
+</td>
+</tr>
+</table>
 
-### 基本使用
+<details>
+<summary><b>🔍 Learn More About Graders</b></summary>
 
-```
-from rm_gallery.core.grader import FactualGrader
-from rm_gallery.core.dataset import DataSample
+- 🌐 **Multi-Scenario Coverage:** Extensive support for diverse domains including Agent, text, code, math, and multimodal tasks. → [Explore Supported Scenarios](./docs/built_in_graders/overview.md)
+- 🔄 **Holistic Agent Evaluation:** Beyond final outcomes, we assess the entire lifecycle—including trajectories, Memory, Reflection, and Tool Use. → [Agent Lifecycle Evaluation](./docs/built_in_graders/agent_graders.md)
+- ✅ **Quality Assurance:** Every grader comes with benchmark datasets and pytest integration for validation. → [View Benchmark Datasets](https://huggingface.co/datasets/agentscope-ai/OpenJudge)
 
-# 创建一个简单的事实评估器
-grader = FactualGrader()
+</details>
 
-# 准备数据
-data_sample = DataSample(
-    data={"query": "法国的首都是什么？"},
-    samples=[{"answer": "巴黎"}, {"answer": "伦敦"}]
-)
+### 🛠️ Flexible Grader Building Methods
 
-# 执行评估
-results = await grader(data_sample)
-```
+Choose the build method that fits your requirements:
 
-### 使用策略
+| Method | Description | Guide |
+|:-------|:------------|:-----:|
+| 🎨 **Customization** | Extend or modify pre-defined graders for your specific needs | [📘 Guide](./docs/building_graders/create_custom_graders.md) |
+| 📊 **Data-Driven Rubrics** | Auto-generate evaluation criteria from your examples | [📘 Guide](./docs/building_graders/generate_graders_from_data.md) |
+| 🧠 **Trainable Models** | Train dedicated Judge models with SFT, Bradley-Terry, RL | 🚀 Coming Soon |
 
-```
-from rm_gallery.core.grader import FactualGrader
-from rm_gallery.core.strategy.repeat import RepeatOptimizer
-from rm_gallery.core.dataset import DataSample
+### 🔌 Easy Integration
 
-# 创建一个评估器
-grader = FactualGrader()
+Seamlessly connect with mainstream observability platforms and training frameworks. → See [Integrations](#-integrations)
 
-# 使用优化器包装评估器，重复执行5次并平均结果
-optimized_grader = RepeatOptimizer(grader, num_repeats=5)
 
-# 准备数据
-data_sample = DataSample(
-    data={"query": "法国的首都是什么？"},
-    samples=[{"answer": "巴黎"}, {"answer": "伦敦"}]
-)
+## News
 
-# 执行优化后的评估
-results = await optimized_grader(data_sample)
-```
+- **2025-12-26** - Released OpenJudge v0.2.0 on [PyPI](https://pypi.org/project/py-openjudge/) - **Major Update!** This release expands our core capabilities by adding robust support for diverse evaluation scenarios on top of reward construction. By unifying reward and evaluation signals, OpenJudge v0.2.0 provides a more holistic approach to optimizing application performance and excellence.
 
-### 运行完整实验
+- **2025-10-20** - [Auto-Rubric: Learning to Extract Generalizable Criteria for Reward Modeling](https://arxiv.org/abs/2510.17314) - We released a new paper on learning generalizable reward criteria for robust modeling.
+- **2025-10-17** - [Taming the Judge: Deconflicting AI Feedback for Stable Reinforcement Learning](https://arxiv.org/abs/2510.15514) - We introduced techniques to align judge feedback and improve RL stability.
+- **2025-07-09** - Released OpenJudge v0.1.0 on [PyPI](https://pypi.org/project/rm-gallery/)
 
-```
-from rm_gallery.core.dataset import EvaluationDataset
-from rm_gallery.core.experiment import EvaluationExperiment
-from rm_gallery.core.grader import FactualGrader
+---
 
-# 创建数据集
-dataset = EvaluationDataset(
-    data_sample_schema={
-        "type": "object",
-        "properties": {
-            "query": {"type": "string"},
-            "answer": {"type": "string"}
-        },
-        "required": ["query", "answer"]
-    },
-    data_samples=[
-        {
-            "data": {"query": "法国的首都是什么？"},
-            "samples": [{"answer": "巴黎"}, {"answer": "马赛"}]
-        },
-        {
-            "data": {"query": "德国的首都是什么？"},
-            "samples": [{"answer": "柏林"}, {"answer": "慕尼黑"}]
-        }
-    ]
-)
+## 📥 Installation
 
-# 创建实验
-experiment = EvaluationExperiment(graders=[FactualGrader()])
-
-# 运行实验
-result = await experiment(dataset)
+```bash
+pip install py-openjudge
 ```
 
-### 自定义评估函数
+> 💡 More installation methods can be found in the [Quickstart Guide](./docs/get_started/quickstart.md).
 
-```
-from rm_gallery.core.grader import FunctionGrader, GraderScore
-from rm_gallery.core.registry import GraderRegistry
+---
 
-# 定义自定义评估函数
-async def custom_grader_function(**kwargs) -> GraderScore:
-    # 自定义逻辑
-    score = len(kwargs.get("answer", "")) / 100  # 示例逻辑
-    return GraderScore(score=score, reason="基于答案长度的评分")
+## 🚀 Quickstart
 
-# 创建基于函数的评估器
-custom_grader = FunctionGrader(
-    name="length_based_grader",
-    func=custom_grader_function,
-    evaluation_mode="pointwise"
-)
+```python
+import asyncio
+from openjudge.models import OpenAIChatModel
+from openjudge.graders.common.relevance import RelevanceGrader
 
-# 注册评估函数
-GraderRegistry.register("length_grader", custom_grader, namespace="custom")
+async def main():
+    # 1️⃣ Create model client
+    model = OpenAIChatModel(model="qwen3-32b")
 
-# 获取并使用评估函数
-grader = GraderRegistry.get("custom.length_grader")
-```
+    # 2️⃣ Initialize grader
+    grader = RelevanceGrader(model=model)
 
-### 使用LLM评估函数
-
-```
-from rm_gallery.core.grader import LLMGrader
-from rm_gallery.core.model.template import ChatTemplate
-from rm_gallery.core.model.message import ChatMessage
-
-# 定义评估模板
-chat_template = ChatTemplate(
-    messages=[
-        ChatMessage(
-            role="system",
-            content="你是一个 helpful assistant，负责评估回答的质量。"
-        ),
-        ChatMessage(
-            role="user",
-            content="问题: {query}\n回答: {answer}\n请评估这个回答的质量，给出0-1之间的分数。"
-        )
-    ],
-    model={
-        "model_name": "gpt-3.5-turbo",
-        "api_key": "your-api-key"
+    # 3️⃣ Prepare data
+    data = {
+        "query": "What is machine learning?",
+        "response": "Machine learning is a subset of AI that enables computers to learn from data.",
     }
-)
 
-# 创建LLM评估函数
-llm_grader = LLMGrader(
-    name="gpt_grader",
-    chat=chat_template,
-    evaluation_mode="pointwise"
-)
+    # 4️⃣ Evaluate
+    result = await grader.aevaluate(**data)
+
+    print(f"Score: {result.score}")   # Score: 5
+    print(f"Reason: {result.reason}")
+
+if __name__ == "__main__":
+    asyncio.run(main())
 ```
 
-## 快速开始
+> 📚 Complete Quickstart can be found in the [documentation](./docs/get_started/quickstart.md).
 
-1. 在环境中配置您的LLM API凭证（通过环境变量或在[template.py](file:///mnt3/huangsen.huang/codes/RM-Gallery/rm_gallery/v2/model/template.py)中直接配置）
-2. 使用适当的模式定义您的评估数据集
-3. 使用内置类创建评估函数或使用自定义逻辑扩展
-4. 运行实验以评估模型性能
+---
 
-## API参考
+## 🔗 Integrations
 
-### Grader（评估器基类）
+We are committed to supporting the most critical stages of the AI lifecycle:
 
-所有评估器的基类，定义了评估的基本接口和模式。
+| Category | Status | Platforms |
+|:---------|:------:|:----------|
+| 🔭 **Observability** | 🟡 In Progress | LangSmith, LangFuse, Arize Phoenix |
+| 🏋️ **Training** | 🔵 Planned | RLHF, Agent Training, SFT |
 
-#### 属性
-- `name` (str): 评估函数的名称
-- `evaluation_mode` (GraderMode): 评估模式（POINTWISE 或 LISTWISE）
+> 💬 Have a framework you'd like us to prioritize? [Open an Issue](https://github.com/modelscope/OpenJudge/issues)!
 
-#### 方法
-- `evaluate(**kwargs)`: 执行评估的核心方法，需要子类实现
-- `__call__(data_sample)`: 调用评估器，处理数据样本
 
-### GraderOptimizer（评估器优化器基类）
 
-评估器优化器的基类，用于优化评估器的输出。
+---
 
-#### 属性
-- `grader` (Grader | Callable): 被优化的评估器
+## 🤝 Contributing
 
-#### 方法
-- `__call__(data_sample)`: 执行优化逻辑
+We love your input! We want to make contributing to OpenJudge as easy and transparent as possible.
 
-### ChatTemplate（聊天模板）
+<table>
+<tr>
+<td align="center" width="25%">
 
-定义与LLM交互的模板。
+**🎨 Add Graders**
 
-#### 属性
-- `messages` (List[ChatMessage]): 聊天消息列表
-- `required` (List[str]): 必需的参数列表
-- `model` (Dict): 模型配置参数
+Share domain-specific evaluation logic
 
-#### 方法
-- `format(**kwargs)`: 格式化模板消息
-- `__call__(model_output, **kwargs)`: 执行与LLM的交互
+</td>
+<td align="center" width="25%">
 
-### GraderRegistry（评估器注册表）
+**🐛 Report Bugs**
 
-管理所有评估函数的注册和获取。
+Help us fix issues
 
-#### 方法
-- `register(name, grader, namespace)`: 注册评估函数
-- `get(name)`: 获取评估函数
-- `remove(name)`: 删除评估函数
-- `list_graders(namespace)`: 列出评估函数
-- `list_namespaces()`: 列出所有命名空间
+</td>
+<td align="center" width="25%">
 
-## 未来开发
+**📝 Improve Docs**
 
-v2框架正在积极开发中，计划扩展：
-- 更多内置评估类型
-- 更多优化器实现
-- 增强的分析和报告功能
-- 与更多LLM提供商集成
-- 高级实验跟踪功能
-- 更完善的文档和示例
+Better explanations welcome
+
+</td>
+<td align="center" width="25%">
+
+**💡 Propose Features**
+
+New ideas? Let's discuss!
+
+</td>
+</tr>
+</table>
+
+### Quick Start
+
+<table>
+<tr>
+<td align="center">
+
+**1️⃣ Fork**
+
+Clone & branch
+
+</td>
+<td align="center">
+
+**2️⃣ Install**
+
+```bash
+pip install -e ".[dev]"
+```
+
+</td>
+<td align="center">
+
+**3️⃣ Test**
+
+```bash
+pytest tests/
+```
+
+</td>
+<td align="center">
+
+**4️⃣ Submit**
+
+Open a PR!
+
+</td>
+</tr>
+</table>
+
+> 📖 See full [Contributing Guidelines](./docs/community/contributing.md) for coding standards and PR process.
+
+---
+
+## 📄 Citation
+
+If you use OpenJudge in your research, please cite:
+
+```bibtex
+@software{openjudge2025,
+  title  = {OpenJudge: A Unified Framework for Holistic Evaluation and Quality Rewards},
+  author = {The OpenJudge Team},
+  url    = {https://github.com/modelscope/OpenJudge},
+  month  = {07},
+  year   = {2025}
+}
+```
+
+---
+
+<div align="center">
+
+**Made with ❤️ by the OpenJudge Team**
+
+[⭐ Star Us](https://github.com/modelscope/OpenJudge) · [🐛 Report Bug](https://github.com/modelscope/OpenJudge/issues) · [💡 Request Feature](https://github.com/modelscope/OpenJudge/issues)
+
+</div>

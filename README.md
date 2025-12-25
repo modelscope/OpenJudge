@@ -9,7 +9,7 @@
 </h3>
 
 <p>
-  🌟 <em>If you find OpenJudge helpful, please give us a <b>Star</b>!</em> 🌟 
+  <img src="https://unpkg.com/lucide-static@latest/icons/star.svg" width="16" height="16" /> <em>If you find OpenJudge helpful, please give us a <b>Star</b>!</em> <img src="https://unpkg.com/lucide-static@latest/icons/star.svg" width="16" height="16" />
 </p>
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue?logo=python&logoColor=white)](https://pypi.org/project/open_judge/)
@@ -17,13 +17,13 @@
 [![License](https://img.shields.io/badge/license-Apache%202.0-green?logo=apache)](./LICENSE)
 [![Documentation](https://img.shields.io/badge/docs-online-blue?logo=readthedocs&logoColor=white)](https://modelscope.github.io/OpenJudge/)
 
-[📖 Documentation](https://modelscope.github.io/OpenJudge/) | [🤝 Contributing](./docs/community/contributing.md) | [🇨🇳 中文](./README_zh.md)
+[<img src="https://unpkg.com/lucide-static@latest/icons/book-open.svg" width="14" height="14" /> Documentation](https://modelscope.github.io/OpenJudge/) | [<img src="https://unpkg.com/lucide-static@latest/icons/handshake.svg" width="14" height="14" /> Contributing](./docs/community/contributing.md) | [🇨🇳 中文](./README_zh.md)
 
 </div>
 
 ---
 
-## 📑 Table of Contents
+## <img src="https://unpkg.com/lucide-static@latest/icons/list.svg" width="20" height="20" /> Table of Contents
 
 - [Key Features](#-key-features)
 - [News](#news)
@@ -35,15 +35,15 @@
 
 OpenJudge is a unified framework designed to drive application excellence through **Holistic Evaluation** and **Quality Rewards**.
 
-> 💡 Evaluation and reward signals are the cornerstones of application excellence. **Holistic evaluation** enables the systematic analysis of shortcomings to drive rapid iteration, while **high-quality** rewards provide the essential foundation for advanced optimization and fine-tuning.
+> <img src="https://unpkg.com/lucide-static@latest/icons/lightbulb.svg" width="16" height="16" /> Evaluation and reward signals are the cornerstones of application excellence. **Holistic evaluation** enables the systematic analysis of shortcomings to drive rapid iteration, while **high-quality** rewards provide the essential foundation for advanced optimization and fine-tuning.
 
 OpenJudge unifies these signals into a single, standardized **Grader** interface, offering pre-built graders, flexible customization, and seamless framework integration.
 
 ---
 
-## ✨ Key Features
+## <img src="https://unpkg.com/lucide-static@latest/icons/sparkles.svg" width="20" height="20" /> Key Features
 
-### 📦 Systematic & Quality-Assured Grader Library
+### <img src="https://unpkg.com/lucide-static@latest/icons/package.svg" width="18" height="18" /> Systematic & Quality-Assured Grader Library
 
 Access **50+ production-ready graders** featuring a comprehensive taxonomy, rigorously validated for reliable performance.
 
@@ -51,7 +51,7 @@ Access **50+ production-ready graders** featuring a comprehensive taxonomy, rigo
 <tr>
 <td width="33%" valign="top">
 
-#### 🎯 General
+#### <img src="https://unpkg.com/lucide-static@latest/icons/target.svg" width="16" height="16" /> General
 
 **Focus:** Semantic quality, functional correctness, structural compliance
 
@@ -64,7 +64,7 @@ Access **50+ production-ready graders** featuring a comprehensive taxonomy, rigo
 </td>
 <td width="33%" valign="top">
 
-#### 🤖 Agent
+#### <img src="https://unpkg.com/lucide-static@latest/icons/bot.svg" width="16" height="16" /> Agent
 
 **Focus:** Agent lifecycle, tool calling, memory, plan feasibility
 
@@ -77,7 +77,7 @@ Access **50+ production-ready graders** featuring a comprehensive taxonomy, rigo
 </td>
 <td width="33%" valign="top">
 
-#### 🖼️ Multimodal
+#### <img src="https://unpkg.com/lucide-static@latest/icons/image.svg" width="16" height="16" /> Multimodal
 
 **Focus:** Image-text coherence, visual generation quality
 
@@ -89,26 +89,23 @@ Access **50+ production-ready graders** featuring a comprehensive taxonomy, rigo
 </tr>
 </table>
 
-<details>
-<summary><b>🔍 Learn More About Graders</b></summary>
+**<img src="https://unpkg.com/lucide-static@latest/icons/search.svg" width="16" height="16" /> Learn More About Graders**
 
-- 🌐 **Multi-Scenario Coverage:** Extensive support for diverse domains including Agent, text, code, math, and multimodal tasks. → [Explore Supported Scenarios](./docs/built_in_graders/overview.md)
-- 🔄 **Holistic Agent Evaluation:** Beyond final outcomes, we assess the entire lifecycle—including trajectories, Memory, Reflection, and Tool Use. → [Agent Lifecycle Evaluation](./docs/built_in_graders/agent_graders.md)
-- ✅ **Quality Assurance:** Every grader comes with benchmark datasets and pytest integration for validation. → [View Benchmark Datasets](https://huggingface.co/datasets/agentscope-ai/OpenJudge)
+- <img src="https://unpkg.com/lucide-static@latest/icons/globe.svg" width="14" height="14" /> **Multi-Scenario Coverage:** Extensive support for diverse domains including Agent, text, code, math, and multimodal tasks. → [Explore Supported Scenarios](./docs/built_in_graders/overview.md)
+- <img src="https://unpkg.com/lucide-static@latest/icons/refresh-cw.svg" width="14" height="14" /> **Holistic Agent Evaluation:** Beyond final outcomes, we assess the entire lifecycle—including trajectories, Memory, Reflection, and Tool Use. → [Agent Lifecycle Evaluation](./docs/built_in_graders/agent_graders.md)
+- <img src="https://unpkg.com/lucide-static@latest/icons/check-circle.svg" width="14" height="14" /> **Quality Assurance:** Every grader comes with benchmark datasets and pytest integration for validation. → [View Benchmark Datasets](https://huggingface.co/datasets/agentscope-ai/OpenJudge)
 
-</details>
-
-### 🛠️ Flexible Grader Building Methods
+### <img src="https://unpkg.com/lucide-static@latest/icons/wrench.svg" width="18" height="18" /> Flexible Grader Building Methods
 
 Choose the build method that fits your requirements:
 
 | Method | Description | Guide |
 |:-------|:------------|:-----:|
-| 🎨 **Customization** | Extend or modify pre-defined graders for your specific needs | [📘 Guide](./docs/building_graders/create_custom_graders.md) |
-| 📊 **Data-Driven Rubrics** | Auto-generate evaluation criteria from your examples | [📘 Guide](./docs/building_graders/generate_graders_from_data.md) |
-| 🧠 **Trainable Models** | Train dedicated Judge models with SFT, Bradley-Terry, RL | 🚀 Coming Soon |
+| <img src="https://unpkg.com/lucide-static@latest/icons/palette.svg" width="14" height="14" /> **Customization** | Extend or modify pre-defined graders for your specific needs | [<img src="https://unpkg.com/lucide-static@latest/icons/book.svg" width="12" height="12" /> Guide](./docs/building_graders/create_custom_graders.md) |
+| <img src="https://unpkg.com/lucide-static@latest/icons/bar-chart-3.svg" width="14" height="14" /> **Data-Driven Rubrics** | Auto-generate evaluation criteria from your examples | [<img src="https://unpkg.com/lucide-static@latest/icons/book.svg" width="12" height="12" /> Guide](./docs/building_graders/generate_graders_from_data.md) |
+| <img src="https://unpkg.com/lucide-static@latest/icons/brain.svg" width="14" height="14" /> **Trainable Models** | Train dedicated Judge models with SFT, Bradley-Terry, RL | <img src="https://unpkg.com/lucide-static@latest/icons/rocket.svg" width="12" height="12" /> Coming Soon |
 
-### 🔌 Easy Integration
+### <img src="https://unpkg.com/lucide-static@latest/icons/plug.svg" width="18" height="18" /> Easy Integration
 
 Seamlessly connect with mainstream observability platforms and training frameworks. → See [Integrations](#-integrations)
 
@@ -123,7 +120,7 @@ Seamlessly connect with mainstream observability platforms and training framewor
 
 ---
 
-## 📥 Installation
+## <img src="https://unpkg.com/lucide-static@latest/icons/download.svg" width="20" height="20" /> Installation
 
 ```bash
 pip install py-openjudge

@@ -12,11 +12,12 @@
   🌟 <em>If you find OpenJudge helpful, please give us a <b>Star</b>!</em> 🌟 
 </p>
 
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue?)](https://pypi.org/project/open_judge/)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue?logo=python&logoColor=white)](https://pypi.org/project/open_judge/)
 [![PyPI](https://img.shields.io/badge/pypi-v0.2.0-blue?logo=pypi)](https://pypi.org/project/py-openjudge/)
+[![License](https://img.shields.io/badge/license-Apache%202.0-green?logo=apache)](./LICENSE)
 [![Documentation](https://img.shields.io/badge/docs-online-blue?logo=readthedocs&logoColor=white)](https://modelscope.github.io/OpenJudge/)
 
-[📖 Documentation](https://modelscope.github.io/OpenJudge/) | [🤝 Contributing](./docs/community/contributing.md) | [中文](./README_zh.md)
+[📖 Documentation](https://modelscope.github.io/OpenJudge/) | [🤝 Contributing](./docs/community/contributing.md) | [🇨🇳 中文](./README_zh.md)
 
 </div>
 
@@ -95,14 +96,10 @@ Access **50+ production-ready graders** featuring a comprehensive taxonomy, rigo
 - ✅ **Quality Assurance:** Every grader comes with benchmark datasets and pytest integration for validation. → [View Benchmark Datasets](https://huggingface.co/datasets/agentscope-ai/OpenJudge)
 
 ### 🛠️ Flexible Grader Building Methods
-
 Choose the build method that fits your requirements:
-
-| Method | Description | Guide |
-|:-------|:------------|:-----:|
-| 🎨 **Customization** | Extend or modify pre-defined graders for your specific needs | [📘 Guide](./docs/building_graders/create_custom_graders.md) |
-| 📊 **Data-Driven Rubrics** | Auto-generate evaluation criteria from your examples | [📘 Guide](./docs/building_graders/generate_graders_from_data.md) |
-| 🧠 **Trainable Models** | Train dedicated Judge models with SFT, Bradley-Terry, RL | 🚀 Coming Soon |
+* **Customization:** Easily extend or modify pre-defined graders to fit your specific needs.  👉 [Custom Grader Development Guide](./docs/building_graders/create_custom_graders.md)
+* **Data-Driven Rubrics:** Have a few examples but no clear rules? Use our tools to automatically generate white-box evaluation criteria (Rubrics) based on your data.👉 [Automatic Rubric Generation Tutorial](./docs/building_graders/generate_graders_from_data.md)
+* **Trainable Judge Models ( Coming Soon🚀):** For high-scale and specialized scenarios, we are developing the capability to train dedicated Judge models. Support for SFT, Bradley-Terry models, and Reinforcement Learning workflows is on the way to help you build high-performance, domain-specific graders.
 
 ### 🔌 Easy Integration
 
@@ -182,77 +179,28 @@ We are committed to supporting the most critical stages of the AI lifecycle:
 
 We love your input! We want to make contributing to OpenJudge as easy and transparent as possible.
 
-<table>
-<tr>
-<td align="center" width="25%">
+---
 
-**🎨 Add Graders**
 
-Share domain-specific evaluation logic
+> **🎨 Adding New Graders** — Have domain-specific evaluation logic? Share it with the community!  
+> **🐛 Reporting Bugs** — Found a glitch? Help us fix it by [opening an issue](https://github.com/modelscope/OpenJudge/issues)  
+> **📝 Improving Docs** — Clearer explanations or better examples are always welcome  
+> **💡 Proposing Features** — Have ideas for new integrations? Let's discuss!
 
-</td>
-<td align="center" width="25%">
-
-**🐛 Report Bugs**
-
-Help us fix issues
-
-</td>
-<td align="center" width="25%">
-
-**📝 Improve Docs**
-
-Better explanations welcome
-
-</td>
-<td align="center" width="25%">
-
-**💡 Propose Features**
-
-New ideas? Let's discuss!
-
-</td>
-</tr>
-</table>
-
-### Quick Start
-
-<table>
-<tr>
-<td align="center">
-
-**1️⃣ Fork**
-
-Clone & branch
-
-</td>
-<td align="center">
-
-**2️⃣ Install**
+**🚀 Getting Started**
 
 ```bash
+# 1. Fork & Clone
+git clone https://github.com/modelscope/OpenJudge.git
+
+# 2. Install dev dependencies
 pip install -e ".[dev]"
-```
 
-</td>
-<td align="center">
-
-**3️⃣ Test**
-
-```bash
+# 3. Run tests
 pytest tests/
+
+# 4. Submit your PR!
 ```
-
-</td>
-<td align="center">
-
-**4️⃣ Submit**
-
-Open a PR!
-
-</td>
-</tr>
-</table>
 
 > 📖 See full [Contributing Guidelines](./docs/community/contributing.md) for coding standards and PR process.
 

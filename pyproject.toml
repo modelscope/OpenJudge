@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [project]
 name = "rm-gallery"
-version = "0.1.4"
+version = "0.1.7"
 description = ""
 authors = [
   {name = "Haoran Chen", email = "chenhaoran.chr@alibaba-inc.com"},

@@ -1,0 +1,11 @@
+# MkDocs and theme
+mkdocs>=1.5.0
+mkdocs-shadcn>=0.2.0
+
+# Plugins
+mkdocstrings>=0.24.0
+mkdocstrings-python>=1.8.0
+
+# Markdown extensions (pymdownx is included in pymdown-extensions)
+pymdown-extensions>=10.0
+

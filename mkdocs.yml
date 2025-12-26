@@ -39,7 +39,7 @@ nav:
 
   - Running Graders:
       - Run Grading Tasks: running_graders/run_tasks.md
-      - Grader Analysis: running_graders/grader_analysis.md
+      - Grader Results Analysis: running_graders/grader_analysis.md
 
   - Validating Graders:
       - Overview: validating_graders/overview.md

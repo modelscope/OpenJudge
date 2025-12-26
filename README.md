@@ -65,7 +65,7 @@ Access **50+ production-ready graders** featuring a comprehensive taxonomy, rigo
 
 #### 🤖 Agent
 
-**Focus:** Agent lifecycle, tool calling, memory, plan feasibility
+**Focus:** Agent lifecycle, tool calling, memory, plan feasibility, trajectory quality
 
 **Key Graders:**
 - `Tool Selection` - Tool choice accuracy
@@ -78,11 +78,12 @@ Access **50+ production-ready graders** featuring a comprehensive taxonomy, rigo
 
 #### 🖼️ Multimodal
 
-**Focus:** Image-text coherence, visual generation quality
+**Focus:** Image-text coherence, visual generation quality, image helpfulness
 
 **Key Graders:**
 - `Image Coherence` - Visual-text alignment
 - `Text-to-Image` - Generation quality
+- `Image Helpfulness` - Image contribution
 
 </td>
 </tr>
@@ -97,7 +98,7 @@ Access **50+ production-ready graders** featuring a comprehensive taxonomy, rigo
 Choose the build method that fits your requirements:
 * **Customization:** Easily extend or modify pre-defined graders to fit your specific needs.  👉 [Custom Grader Development Guide](./docs/building_graders/create_custom_graders.md)
 * **Data-Driven Rubrics:** Have a few examples but no clear rules? Use our tools to automatically generate white-box evaluation criteria (Rubrics) based on your data.👉 [Automatic Rubric Generation Tutorial](./docs/building_graders/generate_graders_from_data.md)
-* **Trainable Judge Models ( Coming Soon🚀):** For high-scale and specialized scenarios, we are developing the capability to train dedicated Judge models. Support for SFT, Bradley-Terry models, and Reinforcement Learning workflows is on the way to help you build high-performance, domain-specific graders.
+* **Training Judge Models ( Coming Soon🚀):** For high-scale and specialized scenarios, we are developing the capability to train dedicated Judge models. Support for SFT, Bradley-Terry models, and Reinforcement Learning workflows is on the way to help you build high-performance, domain-specific graders.
 
 
 ### 🔌 Easy Integration (🚧 Coming Soon)
@@ -107,7 +108,7 @@ We're actively building seamless connectors for mainstream observability platfor
 ----
 ## News
 
-- **2025-12-26** - Released OpenJudge v0.2.0 on [PyPI](https://pypi.org/project/py-openjudge/) - **Major Update!** This release expands our core capabilities by adding robust support for diverse evaluation scenarios on top of reward construction. By unifying reward and evaluation signals, OpenJudge v0.2.0 provides a more holistic approach to optimizing application performance and excellence.
+- **2025-12-26** - Released OpenJudge v0.2.0 on [PyPI](https://pypi.org/project/py-openjudge/) - **Major Update!** This release expands our core capabilities by adding robust support for diverse evaluation scenarios on top of reward construction. By unifying reward and evaluation signals, OpenJudge v0.2.0 provides a more holistic approach to optimizing application performance and excellence. → [For v0.1.x Users](#-for-v01x-users)
 
 - **2025-10-20** - [Auto-Rubric: Learning to Extract Generalizable Criteria for Reward Modeling](https://arxiv.org/abs/2510.17314) - We released a new paper on learning generalizable reward criteria for robust modeling.
 - **2025-10-17** - [Taming the Judge: Deconflicting AI Feedback for Stable Reinforcement Learning](https://arxiv.org/abs/2510.15514) - We introduced techniques to align judge feedback and improve RL stability.
@@ -161,12 +162,12 @@ if __name__ == "__main__":
 
 ## 🔗 Integrations
 
-We are committed to supporting the most critical stages of the AI lifecycle:
+Seamlessly connect OpenJudge with mainstream observability and training platforms, with more integrations on the way:
 
 | Category | Status | Platforms |
 |:---------|:------:|:----------|
-| 🔭 **Observability** | 🟡 In Progress | LangSmith, LangFuse, Arize Phoenix |
-| 🏋️ **Training** | 🔵 Planned | RLHF, Agent Training, SFT |
+| **Observability** | 🟡 In Progress | [LangSmith](https://smith.langchain.com/), [LangFuse](https://langfuse.com/), [Arize Phoenix](https://github.com/Arize-ai/phoenix) |
+| **Training** | 🔵 Planned | [verl](https://github.com/volcengine/verl), [Trinity-RFT](https://github.com/modelscope/Trinity-RFT) |
 
 > 💬 Have a framework you'd like us to prioritize? [Open an Issue](https://github.com/modelscope/OpenJudge/issues)!
 
@@ -184,6 +185,12 @@ We love your input! We want to make contributing to OpenJudge as easy and transp
 > **💡 Proposing Features** — Have ideas for new integrations? Let's discuss!
 
 📖 See full [Contributing Guidelines](./docs/community/contributing.md) for coding standards and PR process.
+
+---
+
+## 📦 For v0.1.x Users
+
+> Package renamed from `rm-gallery` → `py-openjudge`. Legacy version still available via `pip install rm-gallery`. Source code preserved in [`v0.1.6` branch](https://github.com/modelscope/OpenJudge/tree/v0.1.6).
 
 ---
 

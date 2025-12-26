@@ -21,7 +21,7 @@ OpenJudge unifies evaluation metrics and reward signals into a single, standardi
 + **Flexible Grader Building**: Choose the build method that fits your requirements:
     - **Customization:** Easily extend or modify pre-defined graders to fit your specific needs. <a href="building_graders/create_custom_graders/" class="feature-link">Custom Grader Development Guide <span class="link-arrow">→</span></a>
     - **Data-Driven Rubrics:** Have a few examples but no clear rules? Use our tools to automatically generate white-box evaluation criteria (Rubrics) based on your data. <a href="building_graders/generate_graders_from_data/" class="feature-link">Automatic Rubric Generation Tutorial <span class="link-arrow">→</span></a>
-    - **Trainable Judge Models:** For high-scale and specialized scenarios, we are developing the capability to train dedicated Judge models. Support for SFT, Bradley-Terry models, and Reinforcement Learning workflows is on the way to help you build high-performance, domain-specific graders. <span class="badge-wip">🚧 Coming Soon</span>
+    - **Training Judge Models:** For high-scale and specialized scenarios, we are developing the capability to train dedicated Judge models. Support for SFT, Bradley-Terry models, and Reinforcement Learning workflows is on the way to help you build high-performance, domain-specific graders. <span class="badge-wip">🚧 Coming Soon</span>
 
 + **Easy Integration**: We're actively building seamless connectors for mainstream observability platforms and training frameworks. Stay tuned!<span class="badge-wip">🚧 Coming Soon</span>
 

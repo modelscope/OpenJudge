@@ -1,9 +1,10 @@
 [project]
 name = "py-openjudge"
 dynamic = ["version"]
-description = "OpenJudge: A Next-Generation Evaluation System for AI Model Assessment"
+description = "OpenJudge: A Unified Framework for Holistic Evaluation and Quality Reward"
 readme = "README.md"
 authors = [
+  { name = "Qiao Cai", email = "qiao.cai@alibaba-inc.com" },
   { name = "Haoran Chen", email = "congling.chr@alibaba-inc.com" },
   { name = "Yuhao Cui", email = "cyh262498@alibaba-inc.com" },
   { name = "Jiaji Deng", email = "dengjiaji.djj@alibaba-inc.com" },
@@ -11,14 +12,16 @@ authors = [
   { name = "Qingxu Fu", email = "fuqingxu.fqx@alibaba-inc.com" },
   { name = "Yuan Gao", email = "yunze.gy@alibaba-inc.com" },
   { name = "Sen Huang", email = "huangsen.huang@alibaba-inc.com" },
+  { name = "Weidan Kong", email = "weidan.kong@alibaba-inc.com" },
   { name = "Li Yu", email = "jinli.yl@alibaba-inc.com" },
   { name = "Boyin Liu", email = "liuboyin.lby@alibaba-inc.com" },
   { name = "Zhaoyang Liu", email = "jingmu.lzy@alibaba-inc.com" },
   { name = "Yunzhou Shi", email = "yunzhou.syz@alibaba-inc.com" },
   { name = "Lipeng Xie", email = "xielipeng.xlp@alibaba-inc.com" },
   { name = "Yunpeng Zhai", email = "zhaiyunpeng.zyp@alibaba-inc.com" },
+  { name = "Wei Zhang", email = "w.zhang@alibaba-inc.com" },
   { name = "Zhuo Zhang", email = "zz297429@alibaba-inc.com" },
-  { name = "Anni Zou", email = "zouanni.zan@alibaba-inc.com" }
+  { name = "Anni Zou", email = "zouanni.zan@alibaba-inc.com" },
 ]
 license = "Apache-2.0"
 keywords = ["deep-learning", "evaluation", "ai-model", "llm"]
@@ -33,7 +36,7 @@ classifiers = [
     "Intended Audience :: Science/Research",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
-requires-python = ">=3.10,<3.13"
+requires-python = ">=3.10"
 dependencies = [
     "pandas>=2.2.3,<3.0.0",
     "loguru>=0.7.3,<0.8.0",

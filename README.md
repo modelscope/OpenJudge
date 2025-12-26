@@ -16,7 +16,7 @@
 [![PyPI](https://img.shields.io/badge/pypi-v0.2.0-blue?logo=pypi)](https://pypi.org/project/py-openjudge/)
 [![Documentation](https://img.shields.io/badge/docs-online-blue?logo=readthedocs&logoColor=white)](https://modelscope.github.io/OpenJudge/)
 
-[📖 Documentation](https://modelscope.github.io/OpenJudge/) | [🤝 Contributing](./docs/community/contributing.md) | [中文](./README_zh.md)
+[📖 Documentation](https://modelscope.github.io/OpenJudge/) | [🤝 Contributing](https://modelscope.github.io/OpenJudge/community/contributing/) | [中文](./README_zh.md)
 
 </div>
 
@@ -89,15 +89,15 @@ Access **50+ production-ready graders** featuring a comprehensive taxonomy, rigo
 </tr>
 </table>
 
-- 🌐 **Multi-Scenario Coverage:** Extensive support for diverse domains including Agent, text, code, math, and multimodal tasks. 👉  [Explore Supported Scenarios](./docs/built_in_graders/overview.md)
-- 🔄 **Holistic Agent Evaluation:** Beyond final outcomes, we assess the entire lifecycle—including trajectories, Memory, Reflection, and Tool Use. 👉  [Agent Lifecycle Evaluation](./docs/built_in_graders/agent_graders.md)
+- 🌐 **Multi-Scenario Coverage:** Extensive support for diverse domains including Agent, text, code, math, and multimodal tasks. 👉  [Explore Supported Scenarios](https://modelscope.github.io/OpenJudge/built_in_graders/overview/)
+- 🔄 **Holistic Agent Evaluation:** Beyond final outcomes, we assess the entire lifecycle—including trajectories, Memory, Reflection, and Tool Use. 👉  [Agent Lifecycle Evaluation](https://modelscope.github.io/OpenJudge/built_in_graders/agent_graders/)
 - ✅ **Quality Assurance:** Every grader comes with benchmark datasets and pytest integration for validation. 👉  [View Benchmark Datasets](https://huggingface.co/datasets/agentscope-ai/OpenJudge)
 
 
 ### 🛠️ Flexible Grader Building Methods
 Choose the build method that fits your requirements:
-* **Customization:** Easily extend or modify pre-defined graders to fit your specific needs.  👉 [Custom Grader Development Guide](./docs/building_graders/create_custom_graders.md)
-* **Data-Driven Rubrics:** Have a few examples but no clear rules? Use our tools to automatically generate white-box evaluation criteria (Rubrics) based on your data.👉 [Automatic Rubric Generation Tutorial](./docs/building_graders/generate_graders_from_data.md)
+* **Customization:** Easily extend or modify pre-defined graders to fit your specific needs.  👉 [Custom Grader Development Guide](https://modelscope.github.io/OpenJudge/building_graders/create_custom_graders/)
+* **Data-Driven Rubrics:** Have a few examples but no clear rules? Use our tools to automatically generate white-box evaluation criteria (Rubrics) based on your data.👉 [Automatic Rubric Generation Tutorial](https://modelscope.github.io/OpenJudge/building_graders/generate_graders_from_data/)
 * **Training Judge Models ( Coming Soon🚀):** For high-scale and specialized scenarios, we are developing the capability to train dedicated Judge models. Support for SFT, Bradley-Terry models, and Reinforcement Learning workflows is on the way to help you build high-performance, domain-specific graders.
 
 
@@ -122,7 +122,7 @@ We're actively building seamless connectors for mainstream observability platfor
 pip install py-openjudge
 ```
 
-> 💡 More installation methods can be found in the [Quickstart Guide](./docs/get_started/quickstart.md).
+> 💡 More installation methods can be found in the [Quickstart Guide](https://modelscope.github.io/OpenJudge/get_started/quickstart/#installation).
 
 ---
 
@@ -156,7 +156,7 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-> 📚 Complete Quickstart can be found in the [Quickstart Guide](./docs/get_started/quickstart.md).
+> 📚 Complete Quickstart can be found in the [Quickstart Guide](https://modelscope.github.io/OpenJudge/get_started/quickstart/).
 
 ---
 
@@ -184,7 +184,7 @@ We love your input! We want to make contributing to OpenJudge as easy and transp
 > **📝 Improving Docs** — Clearer explanations or better examples are always welcome  
 > **💡 Proposing Features** — Have ideas for new integrations? Let's discuss!
 
-📖 See full [Contributing Guidelines](./docs/community/contributing.md) for coding standards and PR process.
+📖 See full [Contributing Guidelines](https://modelscope.github.io/OpenJudge/community/contributing/) for coding standards and PR process.
 
 ---
 
@@ -204,7 +204,7 @@ pip install rm-gallery
 
 We preserved the source code of **v0.1.7 (the latest v0.1.x release)** in the [`v0.1.7-legacy` branch](https://github.com/modelscope/OpenJudge/tree/v0.1.7-legacy).
 
-- **Migrate to v0.2.0 (recommended)**: follow the **[Installation](#-installation)** section above, then walk through **[Quickstart](#-quickstart)** (or the full [Quickstart Guide](./docs/get_started/quickstart.md)) to update your imports / usage.
+- **Migrate to v0.2.0 (recommended)**: follow the **[Installation](#-installation)** section above, then walk through **[Quickstart](#-quickstart)** (or the full [Quickstart Guide](https://modelscope.github.io/OpenJudge/get_started/quickstart/)) to update your imports / usage.
 
 If you run into migration issues, please [open an issue](https://github.com/modelscope/OpenJudge/issues) with your minimal repro and current version.
 

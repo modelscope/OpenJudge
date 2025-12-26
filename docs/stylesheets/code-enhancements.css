@@ -69,7 +69,10 @@ article pre,
 .md-typeset pre {
   margin: 1.5em 0;
   padding: 0;
+  /* Fallback for browsers without OKLCH support */
+  background: #ffffff;
   background: var(--background, #ffffff);
+  border: 1px solid #e5e7eb;
   border: 1px solid var(--border, #e5e7eb);
   border-radius: var(--radius-lg, 0.5rem);
   overflow: visible;
@@ -108,8 +111,12 @@ article .highlight .filename,
   font-family: 'JetBrains Mono', ui-monospace, monospace;
   font-size: 0.75rem;
   font-weight: 500;
+  color: #6b7280;
   color: var(--muted-foreground, #6b7280);
+  /* Fallback for browsers without OKLCH support */
+  background: #ffffff;
   background: var(--background, #ffffff);
+  border-bottom: 1px solid #e5e7eb;
   border-bottom: 1px solid var(--border, #e5e7eb);
   user-select: none;
 }
@@ -124,8 +131,12 @@ article pre[data-title]::before,
   font-family: 'JetBrains Mono', ui-monospace, monospace;
   font-size: 0.75rem;
   font-weight: 500;
+  color: #6b7280;
   color: var(--muted-foreground, #6b7280);
+  /* Fallback for browsers without OKLCH support */
+  background: #ffffff;
   background: var(--background, #ffffff);
+  border-bottom: 1px solid #e5e7eb;
   border-bottom: 1px solid var(--border, #e5e7eb);
   user-select: none;
 }
@@ -140,7 +151,10 @@ article .highlight,
   margin: 1.5em 0;
   border-radius: var(--radius-lg, 0.5rem);
   overflow: visible;
+  /* Fallback for browsers without OKLCH support */
+  border: 1px solid #e5e7eb;
   border: 1px solid var(--border, #e5e7eb);
+  background: #ffffff;
   background: var(--background, #ffffff);
 }
 
@@ -211,8 +225,12 @@ button.copy-code-button,
   padding: 0.375rem 0.5rem;
   font-size: 0.75rem;
   font-weight: 500;
+  color: #6b7280;
   color: var(--muted-foreground, #6b7280);
+  /* Fallback for browsers without OKLCH support */
+  background: #ffffff;
   background: var(--background, #fff);
+  border: 1px solid #e5e7eb;
   border: 1px solid var(--border, #e5e7eb);
   border-radius: 0.375rem;
   cursor: pointer;
@@ -338,14 +356,11 @@ article pre code::-webkit-scrollbar-corner,
 .dark .md-typeset pre,
 .dark article .highlight,
 .dark .prose .highlight,
-.dark .md-typeset .highlight,
-.dark article pre,
-.dark .prose pre,
-.dark .md-typeset pre,
-.dark article .highlight,
-.dark .prose .highlight,
 .dark .md-typeset .highlight {
+  /* Fallback for browsers without OKLCH support */
+  background: #0a0a0a;
   background: var(--background, #0a0a0a);
+  border-color: #374151;
   border-color: var(--border, #374151);
 }
 
@@ -354,12 +369,13 @@ article pre code::-webkit-scrollbar-corner,
 /* Dark mode title bar */
 .dark article .highlight .filename,
 .dark .prose .highlight .filename,
-.dark .md-typeset .highlight .filename,
-.dark article .highlight .filename,
-.dark .prose .highlight .filename,
 .dark .md-typeset .highlight .filename {
+  /* Fallback for browsers without OKLCH support */
+  background: #0a0a0a;
   background: var(--background, #0a0a0a);
+  border-bottom-color: #374151;
   border-bottom-color: var(--border, #374151);
+  color: #9ca3af;
   color: var(--muted-foreground, #9ca3af);
 }
 
@@ -391,25 +407,24 @@ article pre code::-webkit-scrollbar-corner,
 .dark article .highlight .copy-button,
 .dark article pre .copy-button,
 .dark button.copy-code-button,
-.dark .code-copy-btn,
-.dark article .highlight .copy-button,
-.dark article pre .copy-button,
-.dark button.copy-code-button,
 .dark .code-copy-btn {
+  /* Fallback for browsers without OKLCH support */
+  background: #1f2937;
   background: var(--background, #1f2937);
+  border-color: #374151;
   border-color: var(--border, #374151);
+  color: #9ca3af;
   color: var(--muted-foreground, #9ca3af);
 }
 
 .dark article .highlight .copy-button:hover,
 .dark article pre .copy-button:hover,
 .dark button.copy-code-button:hover,
-.dark .code-copy-btn:hover,
-.dark article .highlight .copy-button:hover,
-.dark article pre .copy-button:hover,
-.dark button.copy-code-button:hover,
 .dark .code-copy-btn:hover {
+  /* Fallback for browsers without OKLCH support */
+  background: #374151;
   background: var(--muted, #374151);
+  color: #e5e7eb;
   color: var(--foreground, #e5e7eb);
 }
 

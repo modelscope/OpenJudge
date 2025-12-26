@@ -1,10 +1,10 @@
-site_name: RM-Gallery
-site_url: https://modelscope.github.io/RM-Gallery/
+site_name: OpenJudge
+site_url: https://modelscope.github.io/OpenJudge/
 site_description: "A One-Stop Reward Model Platform for training, building, and applying reward models. Supports 35+ pre-built models, RLHF training, LLM evaluation, and AI alignment."
-site_author: "The RM-Gallery Team"
-repo_url: https://github.com/modelscope/RM-Gallery
-repo_name: modelscope/RM-Gallery
-copyright: "Copyright &copy; 2025 RM-Gallery Team"
+site_author: "The OpenJudge Team"
+repo_url: https://github.com/modelscope/OpenJudge
+repo_name: modelscope/OpenJudge
+copyright: "Copyright &copy; 2025 OpenJudge Team"
 theme:
   name: shadcn
   show_stargazers: true
@@ -14,51 +14,46 @@ theme:
     - content.code.copy
     - content.code.annotate
 nav:
-  - Home: index.md
-  - Quickstart: quickstart.md
-  - Tutorials:
-      - Overview: tutorial/README.md
-      - End-to-End Guide: tutorial/end-to-end.md
+  - Overview: index.md
 
-  - Reference:
-      - RM Library: library/rm_library.md
-      - Rubric Library: library/rubric_library.md
+  - Get Started:
+      - Quick Start: get_started/quickstart.md
+      - Evaluate an AI Agent: get_started/evaluate_ai_agents.md
+      - Build Reward for Training: get_started/build_reward.md
+      - Core Concepts: get_started/core_concepts.md
 
-  - Building RM:
-      - Overview: tutorial/building_rm/overview.md
-      - Using Built-in RMs: tutorial/building_rm/ready2use_rewards.md
-      - Building Custom RMs: tutorial/building_rm/custom_reward.md
-      - Rubric as Rewards: tutorial/building_rm/autorubric.md
+  - Built-in Graders:
+      - Overview: built_in_graders/overview.md
+      - General Graders: built_in_graders/general.md
+      - Agent Graders: built_in_graders/agent_graders.md
+      - Multimodal Graders: built_in_graders/multimodal.md
+      - Code & Math Graders: built_in_graders/code_math.md
+      - Text Graders: built_in_graders/text.md
+      - Format Graders: built_in_graders/format.md
 
-  - Training RM:
-      - Overview: tutorial/training_rm/overview.md
-      - Training Bradley-Terry RM: tutorial/training_rm/bradley_terry_rm.md
-      - Training RM with SFT: tutorial/training_rm/sft_rm.md
-      - Training RM with RL: tutorial/training_rm/training_rm.md
+  - Building Graders:
+      - Overview: building_graders/overview.md
+      - Create Custom Graders: building_graders/create_custom_graders.md
+      - Generate Graders from Data: building_graders/generate_graders_from_data.md
+      # - Train Reward Models: building_graders/training/overview.md  # Coming soon
 
-  - Using RM:
-      - RM Server: tutorial/rm_serving/rm_server.md
-      # - Boosting Strategy: using_rm/boosting_strategy.md
-      - Data Refinement: tutorial/rm_application/data_refinement.md
-      - Post Training with RM: tutorial/rm_application/post_training.md
-      - Best of N: tutorial/rm_application/best_of_n.md
+  - Running Graders:
+      - Run Grading Tasks: running_graders/run_tasks.md
+      - Grader Results Analysis: running_graders/grader_analysis.md
+
+  - Validating Graders:
+      - Overview: validating_graders/overview.md
+      - Validate on RewardBench2: validating_graders/rewardbench2.md
+
+  - Applications:
+      - Refine Data Quality: applications/data_refinement.md
+      - Pairwise Model Evaluation: applications/select_rank.md
 
 
-  - Evaluating RM:
-      - Overview: tutorial/evaluation/overview.md
-      - RMB: tutorial/evaluation/rmb.md
-      - RM-Bench: tutorial/evaluation/rmbench.md
-      - JudgeBench: tutorial/evaluation/judgebench.md
-      - RewardBench2: tutorial/evaluation/rewardbench2.md
-      - Conflict Detector: tutorial/evaluation/conflict_detector.md
-
-  - Data:
-      - Overview: tutorial/data/pipeline.md
-      - Annotate Data: tutorial/data/annotation.md
-      - Load Data: tutorial/data/load.md
-      - Process Data: tutorial/data/process.md
-  - FAQ: faq.md
-  - Contribution: contribution.md
+  - Community:
+      - Contribute to OpenJudge: community/contributing.md
+      # - Documentation Style Guide: community/style-guide.md
+      # - Animations Demo: community/animations-demo.md
 plugins:
   - search:
       lang:
@@ -84,7 +79,9 @@ markdown_extensions:
   - footnotes
   - tables
   - extra
-  - pymdownx.blocks.details
+  - attr_list
+  - md_in_html
+  - pymdownx.details
   - pymdownx.tabbed:
       alternate_style: true
   - pymdownx.progressbar
@@ -101,15 +98,25 @@ markdown_extensions:
 
 extra_css:
   - https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap
+  - stylesheets/feature-cards.css
+  - stylesheets/tabbed-code.css
   - stylesheets/readability-enhancements.css
   - stylesheets/code-enhancements.css
+  - stylesheets/syntax-highlight.css
   - stylesheets/table-enhancements.css
   - stylesheets/jupyter-simple.css
   - stylesheets/nav-scroll-fix.css
-  - stylesheets/tabs-enhancements.css
+  - stylesheets/workflow.css
+  - stylesheets/animations.css
+  - stylesheets/mermaid.css
+  - stylesheets/mkdocstrings.css
+  - stylesheets/responsive.css
 
 extra_javascript:
+  - javascripts/tabbed-code.js
   - javascripts/code-copy.js
   - javascripts/search-fix.js
   - javascripts/code-zoom.js
   - javascripts/nav-scroll-fix.js
+  - javascripts/animations.js
+  - javascripts/responsive.js

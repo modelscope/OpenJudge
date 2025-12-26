@@ -1,173 +1,321 @@
-/* Enhanced Table Styles for mkdocs-shadcn */
+/*
+ * Table Enhancements for OpenJudge Documentation
+ * Phase 1: 表格样式增强
+ *
+ * Features:
+ * - 表头样式优化
+ * - 单元格垂直居中
+ * - 斑马条纹
+ * - 悬停高亮
+ * - 响应式滚动
+ * - 暗色模式支持
+ */
 
-/* Table container */
+/* ========================================
+   Base Table Styles
+   ======================================== */
+
+article table,
+.prose table,
 .md-typeset table:not([class]) {
-  display: block;
-  overflow-x: auto;
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
   margin: 1.5em 0;
-  border-collapse: collapse;
-  width: 100%;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
-}
-
-/* Table wrapper for responsive */
-.md-typeset__table {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* Table itself */
-table {
-  display: table;
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.9em;
-  background: white;
-  border-radius: 8px;
+  font-size: 0.9375rem;
+  line-height: 1.6;
   overflow: hidden;
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: var(--radius-lg, 0.5rem);
 }
 
-/* Table header */
-thead {
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+/* ========================================
+   Table Header
+   ======================================== */
+
+article table thead,
+.prose table thead,
+.md-typeset table:not([class]) thead {
+  background: var(--muted, #f9fafb);
 }
 
-thead th {
-  padding: 1em 1.2em;
-  text-align: left;
+article table th,
+.prose table th,
+.md-typeset table:not([class]) th {
+  padding: 0.75rem 1rem;
   font-weight: 600;
-  color: #1f2937;
-  border-bottom: 2px solid #dee2e6;
-  white-space: normal;
-  word-wrap: break-word;
-  min-width: 100px;
+  font-size: 0.875rem;
+  text-align: left;
+  color: var(--foreground, #111827);
+  border-bottom: 1px solid var(--border, #e5e7eb);
+  white-space: nowrap;
 }
 
-/* Table body */
-tbody tr {
-  border-bottom: 1px solid #e9ecef;
-  transition: background-color 0.2s ease;
+/* First header cell - round top-left corner */
+article table th:first-child,
+.prose table th:first-child,
+.md-typeset table:not([class]) th:first-child {
+  border-top-left-radius: calc(var(--radius-lg, 0.5rem) - 1px);
 }
 
-tbody tr:hover {
-  background-color: #f8f9fa;
+/* Last header cell - round top-right corner */
+article table th:last-child,
+.prose table th:last-child,
+.md-typeset table:not([class]) th:last-child {
+  border-top-right-radius: calc(var(--radius-lg, 0.5rem) - 1px);
 }
 
-tbody tr:last-child {
+/* ========================================
+   Table Body & Cells
+   ======================================== */
+
+article table td,
+.prose table td,
+.md-typeset table:not([class]) td {
+  padding: 0.75rem 1rem;
+  vertical-align: middle;
+  color: var(--foreground, #374151);
+  border-bottom: 1px solid var(--border, #e5e7eb);
+  line-height: 1.5;
+}
+
+/* Remove border from last row */
+article table tbody tr:last-child td,
+.prose table tbody tr:last-child td,
+.md-typeset table:not([class]) tbody tr:last-child td {
   border-bottom: none;
 }
 
-tbody td {
-  padding: 0.9em 1.2em;
-  color: #495057;
-  white-space: normal;
-  word-wrap: break-word;
-  word-break: break-word;
-  vertical-align: top;
-  line-height: 1.6;
+/* ========================================
+   Zebra Stripes (Alternating Row Colors)
+   ======================================== */
+
+article table tbody tr:nth-child(even),
+.prose table tbody tr:nth-child(even),
+.md-typeset table:not([class]) tbody tr:nth-child(even) {
+  background: rgba(0, 0, 0, 0.02);
 }
 
-/* Allow text wrapping in cells */
-td, th {
-  white-space: normal !important;
-  word-wrap: break-word !important;
-  word-break: break-word !important;
-  overflow-wrap: break-word !important;
-  hyphens: auto;
+/* ========================================
+   Row Hover Effect
+   ======================================== */
+
+article table tbody tr,
+.prose table tbody tr,
+.md-typeset table:not([class]) tbody tr {
+  transition: background-color 0.15s ease;
 }
 
-/* Code in tables */
-table code {
-  white-space: pre-wrap;
-  word-break: break-all;
+article table tbody tr:hover,
+.prose table tbody tr:hover,
+.md-typeset table:not([class]) tbody tr:hover {
+  background: rgba(0, 0, 0, 0.04);
 }
 
-/* Links in tables */
-table a {
-  color: #3b82f6;
+/* ========================================
+   Code in Table Cells
+   ======================================== */
+
+article table code,
+.prose table code,
+.md-typeset table:not([class]) code {
+  font-size: 0.8125rem;
+  padding: 0.125rem 0.375rem;
+  background: var(--muted, #f3f4f6);
+  border-radius: 0.25rem;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+/* ========================================
+   Links in Table Cells
+   ======================================== */
+
+article table a,
+.prose table a,
+.md-typeset table:not([class]) a {
+  color: var(--primary, #3b82f6);
   text-decoration: none;
-  transition: color 0.2s ease;
+  font-weight: 500;
 }
 
-table a:hover {
-  color: #2563eb;
+article table a:hover,
+.prose table a:hover,
+.md-typeset table:not([class]) a:hover {
   text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
-/* Striped rows (optional) */
-tbody tr:nth-child(even) {
-  background-color: #f8f9fa;
+/* ========================================
+   Dark Mode
+   ======================================== */
+
+.dark article table,
+.dark .prose table,
+.dark .md-typeset table:not([class]),
+.dark article table,
+.dark .prose table,
+.dark .md-typeset table:not([class]) {
+  border-color: var(--border, #374151);
 }
 
-tbody tr:nth-child(even):hover {
-  background-color: #e9ecef;
+.dark article table thead,
+.dark .prose table thead,
+.dark .md-typeset table:not([class]) thead,
+.dark article table thead,
+.dark .prose table thead,
+.dark .md-typeset table:not([class]) thead {
+  background: var(--muted, #1f2937);
 }
 
-/* Responsive table on mobile */
-@media (max-width: 768px) {
-  table {
-    font-size: 0.85em;
-  }
+.dark article table th,
+.dark .prose table th,
+.dark .md-typeset table:not([class]) th,
+.dark article table th,
+.dark .prose table th,
+.dark .md-typeset table:not([class]) th {
+  color: var(--foreground, #f9fafb);
+  border-bottom-color: var(--border, #374151);
+}
 
-  thead th,
-  tbody td {
-    padding: 0.7em 0.8em;
-    min-width: 80px;
-  }
+.dark article table td,
+.dark .prose table td,
+.dark .md-typeset table:not([class]) td,
+.dark article table td,
+.dark .prose table td,
+.dark .md-typeset table:not([class]) td {
+  color: var(--foreground, #e5e7eb);
+  border-bottom-color: var(--border, #374151);
+}
 
-  /* Allow horizontal scroll on small screens */
-  .md-typeset__scrollwrap {
+/* Dark mode zebra stripes */
+.dark article table tbody tr:nth-child(even),
+.dark .prose table tbody tr:nth-child(even),
+.dark .md-typeset table:not([class]) tbody tr:nth-child(even),
+.dark article table tbody tr:nth-child(even),
+.dark .prose table tbody tr:nth-child(even),
+.dark .md-typeset table:not([class]) tbody tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* Dark mode hover */
+.dark article table tbody tr:hover,
+.dark .prose table tbody tr:hover,
+.dark .md-typeset table:not([class]) tbody tr:hover,
+.dark article table tbody tr:hover,
+.dark .prose table tbody tr:hover,
+.dark .md-typeset table:not([class]) tbody tr:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Dark mode code in tables */
+.dark article table code,
+.dark .prose table code,
+.dark .md-typeset table:not([class]) code,
+.dark article table code,
+.dark .prose table code,
+.dark .md-typeset table:not([class]) code {
+  background: var(--muted, #374151);
+}
+
+/* ========================================
+   Responsive Table (Horizontal Scroll)
+   ======================================== */
+
+.table-responsive,
+.md-typeset .table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 1.5em 0;
+}
+
+.table-responsive table,
+.md-typeset .table-responsive table {
+  margin: 0;
+  min-width: 600px;
+}
+
+/* Scroll shadow indicators */
+.table-responsive {
+  position: relative;
+}
+
+.table-responsive::before,
+.table-responsive::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 20px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 1;
+}
+
+.table-responsive::before {
+  left: 0;
+  background: linear-gradient(to right, var(--background, #fff), transparent);
+}
+
+.table-responsive::after {
+  right: 0;
+  background: linear-gradient(to left, var(--background, #fff), transparent);
+}
+
+.table-responsive.scroll-left::before,
+.table-responsive.scroll-right::after {
+  opacity: 1;
+}
+
+/* ========================================
+   Compact Table Variant
+   ======================================== */
+
+article table.compact th,
+article table.compact td,
+.prose table.compact th,
+.prose table.compact td {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8125rem;
+}
+
+/* ========================================
+   Wide Table Variant
+   ======================================== */
+
+article table.wide,
+.prose table.wide {
+  min-width: 100%;
+}
+
+/* ========================================
+   Mobile Responsive
+   ======================================== */
+
+@media (max-width: 640px) {
+  article table,
+  .prose table,
+  .md-typeset table:not([class]) {
+    font-size: 0.875rem;
+    display: block;
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  article table th,
+  article table td,
+  .prose table th,
+  .prose table td,
+  .md-typeset table:not([class]) th,
+  .md-typeset table:not([class]) td {
+    padding: 0.625rem 0.75rem;
+    white-space: nowrap;
+  }
+
+  article table th,
+  .prose table th,
+  .md-typeset table:not([class]) th {
+    font-size: 0.8125rem;
   }
 }
-
-/* Table with borders */
-.md-typeset table:not([class]) th,
-.md-typeset table:not([class]) td {
-  border: 1px solid #dee2e6;
-}
-
-/* Compact table variant */
-table.compact td,
-table.compact th {
-  padding: 0.5em 0.8em;
-}
-
-/* Centered content in specific columns */
-table td:first-child,
-table th:first-child {
-  font-weight: 500;
-}
-
-/* Status badges in tables */
-table .badge {
-  display: inline-block;
-  padding: 0.25em 0.6em;
-  font-size: 0.85em;
-  font-weight: 500;
-  line-height: 1;
-  color: white;
-  text-align: center;
-  white-space: nowrap;
-  vertical-align: baseline;
-  border-radius: 4px;
-}
-
-table .badge.success {
-  background-color: #28a745;
-}
-
-table .badge.warning {
-  background-color: #ffc107;
-  color: #212529;
-}
-
-table .badge.error {
-  background-color: #dc3545;
-}
-
-table .badge.info {
-  background-color: #17a2b8;
-}
-

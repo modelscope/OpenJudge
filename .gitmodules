@@ -1,3 +1,0 @@
-[submodule "external/verl"]
-	path = external/verl
-	url = https://github.com/volcengine/verl.git

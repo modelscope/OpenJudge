@@ -1,0 +1,84 @@
+import argparse
+import asyncio
+import json
+import os
+
+import nest_asyncio
+
+from openjudge.graders.agent import *
+from openjudge.graders.common import *
+from openjudge.graders.llm_grader import LLMGrader
+from openjudge.models.schema.prompt_template import LanguageEnum
+
+nest_asyncio.apply()
+
+
+def run_cases(case_file: str, skip: int, id: int):
+    model_config = {
+        "model": "qwen-long",
+        "base_url": os.getenv("BASE_URL"),
+        "api_key": os.getenv("API_KEY"),
+        "temperature": 0,
+        "stream": False,
+    }
+
+    with open(case_file) as f:
+        content = f.read()
+        cases = json.loads(content)
+        if id > 0:
+            cases = [cases[id]]
+        if skip:
+            cases = cases[skip:]
+
+        for case in cases:
+            cls_name = case.get("grader")
+            kwargs = case.get("parameters")
+            index = case["index"]
+
+            try:
+                cls_type = eval(cls_name)
+                if isinstance(cls_type, type) and issubclass(cls_type, LLMGrader):
+                    grader = cls_type(model=model_config, language=LanguageEnum.ZH)
+                else:
+                    grader = cls_type()
+                result = asyncio.run(grader.aevaluate(**kwargs))
+
+                has_min = "min_expect_score" in case
+                has_max = "max_expect_score" in case
+
+                if not (has_min or has_max):
+                    print(f"\033[91mFAILED\033[0m: index: {index}, missing min_expect_score or max_expect_score")
+                    continue
+
+                if has_min and result.score < case["min_expect_score"]:
+                    print(f"\033[91mFAILED\033[0m, index: {index}, result: {result}")
+                    continue
+
+                if has_max and result.score > case["max_expect_score"]:
+                    print(f"\033[91mFAILED\033[0m, index: {index}, result: {result}")
+                    continue
+
+                print(f"PASSED: index: {index}, result: {result}")
+
+            except Exception as e:
+                print(f"failed case index: {index}")
+                print(e)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Run grader test cases.")
+    parser.add_argument(
+        "--skip",
+        type=int,
+        default=0,
+        help="Number of test cases to skip from the beginning (default: 0)",
+    )
+    parser.add_argument(
+        "--id",
+        type=int,
+        default=-1,
+        help="Which case to run, defaults to -1, meaning run all.",
+    )
+    args = parser.parse_args()
+
+    run_cases(case_file="grader_cases.json", skip=args.skip, id=args.id)

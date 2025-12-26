@@ -1,0 +1,6 @@
+# -*- coding: utf-8 -*-
+"""
+Metrics Testing Module
+
+Test suite for text similarity and string check metrics.
+"""

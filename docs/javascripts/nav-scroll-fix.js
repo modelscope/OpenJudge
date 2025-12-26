@@ -1,150 +1,141 @@
 /**
- * Navigation Scroll Position Fix
- * Preserves sidebar scroll position when clicking navigation items
+ * Navigation Scroll Position Preservation
+ *
+ * This script preserves the sidebar scroll position when navigating between pages.
+ * Without this, clicking a link in the scrolled sidebar would reset it to the top.
  */
 
 (function() {
-    'use strict';
+  'use strict';
 
-    const STORAGE_KEY = 'nav-scroll-position';
-    const NAV_SELECTORS = [
-        '.md-sidebar--primary .md-sidebar__scrollwrap',
-        '.md-nav--primary',
-        'nav[data-md-component="sidebar"]',
-        '.md-sidebar.md-sidebar--primary',
-        '[data-sidebar="content"]',
-        '[data-slot="sidebar-content"]',
-        '[data-slot="sidebar-wrapper"] [data-slot="sidebar"] [data-slot="sidebar-content"]'
-    ];
+  const STORAGE_KEY = 'open_judge-sidebar-scroll';
+  const SIDEBAR_SELECTORS = [
+    '[data-slot="sidebar-content"]',  // Current theme's sidebar container
+    '[data-sidebar="content"]',       // Alternative selector
+    '.md-sidebar--primary',           // MkDocs Material theme
+    'nav.sidebar',
+    '.md-sidebar',
+    '.nav-sidebar',
+    'aside.sidebar'
+  ];
 
-    function getNavElement() {
-        for (const selector of NAV_SELECTORS) {
-            const elem = document.querySelector(selector);
-            if (elem) {
-                return elem;
-            }
+  /**
+   * Get the primary sidebar element
+   */
+  function getSidebar() {
+    for (const selector of SIDEBAR_SELECTORS) {
+      const sidebar = document.querySelector(selector);
+      if (sidebar) {
+        return sidebar;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Restore scroll position instantly without smooth scrolling flicker.
+   */
+  function setScrollTopInstant(sidebar, position) {
+    if (!sidebar) return;
+    const originalBehavior = sidebar.style.scrollBehavior;
+    sidebar.style.scrollBehavior = 'auto';
+    sidebar.scrollTop = position;
+    // Restore original behavior on next frame to keep smooth scrolling elsewhere.
+    requestAnimationFrame(() => {
+      if (originalBehavior) {
+        sidebar.style.scrollBehavior = originalBehavior;
+      } else {
+        sidebar.style.removeProperty('scroll-behavior');
+      }
+    });
+  }
+
+  /**
+   * Save sidebar scroll position to sessionStorage
+   */
+  function saveSidebarScroll() {
+    const sidebar = getSidebar();
+    if (sidebar) {
+      try {
+        const scrollData = {
+          position: sidebar.scrollTop,
+          timestamp: Date.now()
+        };
+        sessionStorage.setItem(STORAGE_KEY, JSON.stringify(scrollData));
+      } catch (e) {
+        console.warn('Failed to save sidebar scroll position:', e);
+      }
+    }
+  }
+
+  /**
+   * Restore sidebar scroll position from sessionStorage
+   */
+  function restoreSidebarScroll() {
+    const sidebar = getSidebar();
+    if (!sidebar) return;
+
+    try {
+      const stored = sessionStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const scrollData = JSON.parse(stored);
+
+        // Only restore if saved within the last 5 minutes
+        const age = Date.now() - scrollData.timestamp;
+        if (age < 5 * 60 * 1000) {
+          // Use requestAnimationFrame to ensure DOM is ready
+          requestAnimationFrame(() => {
+            setScrollTopInstant(sidebar, scrollData.position);
+          });
+        } else {
+          // Clear old data
+          sessionStorage.removeItem(STORAGE_KEY);
         }
-        return null;
+      }
+    } catch (e) {
+      console.warn('Failed to restore sidebar scroll position:', e);
     }
+  }
 
-    function saveScrollPosition() {
-        const navElement = getNavElement();
-        if (navElement) {
-            const scrollPosition = navElement.scrollTop;
-            sessionStorage.setItem(STORAGE_KEY, scrollPosition.toString());
-        }
-    }
-
-    function restoreScrollPosition(immediate = false) {
-        const navElement = getNavElement();
-        const savedPosition = sessionStorage.getItem(STORAGE_KEY);
-
-        if (navElement && savedPosition) {
-            const scrollPos = parseInt(savedPosition, 10);
-
-            if (immediate) {
-                // Restore immediately without delay to prevent flashing
-                navElement.scrollTop = scrollPos;
-            } else {
-                // Use requestAnimationFrame for smooth restoration
-                requestAnimationFrame(() => {
-                    navElement.scrollTop = scrollPos;
-                });
-            }
-        }
-    }
-
-    let lastActiveLink = null;
-    let lastNavigationTime = 0;
-
-    function onNavClick(event) {
-        const target = event.currentTarget;
-        lastActiveLink = target;
-        const now = Date.now();
-        lastNavigationTime = now;
-        saveScrollPosition();
-    }
-
-    function getNavLinks() {
-        return document.querySelectorAll('.md-nav__link, [data-sidebar="menu-button"], [data-slot="sidebar-menu-button"] a, [data-slot="sidebar-menu-button"], [data-sidebar="menu-button"]');
-    }
-
-    function attachScrollSaver() {
-        const navLinks = getNavLinks();
-
-        navLinks.forEach(link => {
-            link.removeEventListener('click', onNavClick);
-            link.addEventListener('click', onNavClick);
-        });
-    }
-
-    // Initialize on page load
-    function init(immediate = false) {
-        // Restore scroll position
-        restoreScrollPosition(immediate);
-
-        // Attach scroll savers to navigation links
-        attachScrollSaver();
-
-        // Also save on page unload
-        window.removeEventListener('beforeunload', saveScrollPosition);
-        window.addEventListener('beforeunload', saveScrollPosition);
-
-        // Handle dynamic content loading (for MkDocs instant loading)
-        const observer = new MutationObserver((mutations) => {
-            mutations.forEach((mutation) => {
-                if (mutation.addedNodes.length) {
-                    attachScrollSaver();
-                }
-            });
-        });
-
-        // Observe the navigation for changes
-        const nav = document.querySelector('.md-sidebar--primary');
-        const navWrapper = document.querySelector('[data-slot="sidebar-wrapper"]');
-        if (navWrapper) {
-            observer.observe(navWrapper, {
-                childList: true,
-                subtree: true
-            });
-        }
-    }
-
-    // Restore scroll position immediately on script load to prevent flashing
-    // This runs before the page is fully rendered
-    (function earlyRestore() {
-        const navElement = getNavElement();
-        const savedPosition = sessionStorage.getItem(STORAGE_KEY);
-        if (navElement && savedPosition) {
-            navElement.scrollTop = parseInt(savedPosition, 10);
-        }
-    })();
-
-    // Run when DOM is ready
+  /**
+   * Initialize scroll position preservation
+   */
+  function init() {
+    // Restore scroll position on page load
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => init(true));
+      document.addEventListener('DOMContentLoaded', restoreSidebarScroll);
     } else {
-        init(true);
+      restoreSidebarScroll();
     }
 
-    // Handle instant loading in MkDocs Material theme
-    document.addEventListener('DOMContentSwitch', () => {
-        // Restore immediately to prevent flash
-        restoreScrollPosition(true);
-        // Then initialize event handlers
-        setTimeout(() => {
-            attachScrollSaver();
-        }, 50);
+    // Save scroll position before navigation
+    window.addEventListener('beforeunload', saveSidebarScroll);
+
+    // Save scroll position when clicking sidebar links
+    document.addEventListener('click', function(e) {
+      const link = e.target.closest('a');
+      if (!link) return;
+
+      // Check if the link is inside the sidebar
+      const sidebar = getSidebar();
+      if (sidebar && sidebar.contains(link)) {
+        // Save current scroll position
+        saveSidebarScroll();
+      }
     });
 
-    document.addEventListener('navigation', () => {
-        // Restore immediately on navigation
-        restoreScrollPosition(true);
-        // Then reinitialize
-        setTimeout(() => {
-            attachScrollSaver();
-        }, 50);
-    });
+    // Periodically save scroll position while user scrolls
+    const sidebar = getSidebar();
+    if (sidebar) {
+      let scrollTimeout;
+      sidebar.addEventListener('scroll', function() {
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(saveSidebarScroll, 150);
+      });
+    }
+  }
+
+  // Initialize when script loads
+  init();
 
 })();
-

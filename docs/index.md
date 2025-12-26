@@ -1,235 +1,272 @@
----
-title: RM-Gallery - A One-Stop Reward Model Platform
-summary: Train, build, and apply reward models with ease. Comprehensive platform for LLM evaluation, RLHF training, and AI alignment.
-description: RM-Gallery is a comprehensive platform for training, building, and applying reward models. Supports 35+ pre-built models, custom RM development, RLHF training, and production deployment.
-keywords: [reward model, RM-Gallery, RLHF, LLM evaluation, AI alignment, model training, machine learning, deep learning, NLP]
-tags: [reward-model, ai-alignment, rlhf, llm, evaluation]
-order: 1
-show_datetime: true
----
+# OpenJudge
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+## Why OpenJudge?
+OpenJudge is a unified framework designed to drive **LLM and Agent application excellence** through **Holistic Evaluation** and **Quality Rewards**.
 
-<div style="text-align: center; margin: 3rem 0 2rem 0;">
-  <div style="display: inline-block; position: relative;">
-    <img src="./images/logo.svg" alt="RM-Gallery Logo" style="display: block; width: 520px; max-width: 80vw; z-index: 1; position: relative;">
-    <div style="position: absolute; top: -10px; left: -10px; right: -10px; bottom: -10px; background: radial-gradient(ellipse at center, rgba(59, 130, 246, 0.12) 0%, transparent 70%); border-radius: 20px; z-index: 0;"></div>
-  </div>
+<div class="callout-tip" markdown>
+<img src="https://unpkg.com/lucide-static@latest/icons/lightbulb.svg" class="callout-icon"> Evaluation and reward signals are the cornerstones of application excellence. **Holistic evaluation** enables the systematic analysis of shortcomings to drive rapid iteration, while **high-quality** rewards provide the essential foundation for advanced optimization and fine-tuning.
 </div>
 
-<div style="display: flex; justify-content: center; align-items: center; gap: 0.5rem; margin: 1.5rem 0; flex-wrap: wrap;">
-  <a href="https://pypi.org/project/rm-gallery/" style="text-decoration: none;">
-    <img src="https://img.shields.io/badge/python-3.10+-blue" alt="Python Version">
-  </a>
-  <a href="https://pypi.org/project/rm-gallery/" style="text-decoration: none;">
-    <img src="https://img.shields.io/badge/pypi-v0.1.4-blue?logo=pypi" alt="PyPI Version">
-  </a>
-  <a href="https://github.com/modelscope/RM-Gallery/blob/main/LICENSE" style="text-decoration: none;">
-    <img src="https://img.shields.io/badge/license-Apache--2.0-black" alt="License">
-  </a>
-  <a href="https://github.com/modelscope/RM-Gallery" style="text-decoration: none;">
-    <img src="https://img.shields.io/github/stars/modelscope/RM-Gallery?style=social" alt="GitHub Stars">
-  </a>
+OpenJudge unifies evaluation metrics and reward signals into a single, standardized **Grader** interface, offering pre-built graders, flexible customization, and seamless framework integration.
+
+### Key Features
+
+<div class="key-features" markdown>
+
++ **Systematic & Quality-Assured Grader Library**: Access 50+ production-ready graders featuring a comprehensive taxonomy, rigorously validated for reliable performance.
+    - **Multi-Scenario Coverage:** Extensive support for diverse domains including Agent, text, code, math, and multimodal tasks via specialized graders. <a href="built_in_graders/overview/" class="feature-link">Explore Supported Scenarios<span class="link-arrow">→</span></a>
+    - **Holistic Agent Evaluation:** Beyond final outcomes, we assess the entire lifecycle—including trajectories and specific components (Memory, Reflection, Tool Use). <a href="built_in_graders/agent_graders/" class="feature-link">Agent Lifecycle Evaluation <span class="link-arrow">→</span></a>
+    - **Quality Assurance:** Built for reliability. Every grader comes with benchmark datasets and pytest integration for immediate quality validation. <a href="https://huggingface.co/datasets/agentscope-ai/OpenJudge" class="feature-link" target="_blank"> View Benchmark Datasets<span class="link-arrow">→</span></a>
+
++ **Flexible Grader Building**: Choose the build method that fits your requirements:
+    - **Customization:** Easily extend or modify pre-defined graders to fit your specific needs. <a href="building_graders/create_custom_graders/" class="feature-link">Custom Grader Development Guide <span class="link-arrow">→</span></a>
+    - **Data-Driven Rubrics:** Have a few examples but no clear rules? Use our tools to automatically generate white-box evaluation criteria (Rubrics) based on your data. <a href="building_graders/generate_graders_from_data/" class="feature-link">Automatic Rubric Generation Tutorial <span class="link-arrow">→</span></a>
+    - **Training Judge Models:** For high-scale and specialized scenarios, we are developing the capability to train dedicated Judge models. Support for SFT, Bradley-Terry models, and Reinforcement Learning workflows is on the way to help you build high-performance, domain-specific graders. <span class="badge-wip">🚧 Coming Soon</span>
+
++ **Easy Integration**: We're actively building seamless connectors for mainstream observability platforms and training frameworks. Stay tuned!<span class="badge-wip">🚧 Coming Soon</span>
+
 </div>
 
-<p align="center">
-  <strong>RM-Gallery: A One-Stop Reward Model Platform</strong><br>
-  <em>Train, Build, and Apply Reward Models with Ease.</em>
-</p>
 
----
 
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin: 2rem 0;">
-  <div style="padding: 1.5rem; border-radius: 12px; background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(99, 102, 241, 0.05) 100%); border: 1px solid rgba(59, 130, 246, 0.2);">
-    <div style="font-size: 2rem; margin-bottom: 0.5rem;">🚀</div>
-    <h3 style="margin: 0 0 0.5rem 0;">Quick Start</h3>
-    <p style="margin: 0 0 1rem 0; color: #666;">Get started in 5 minutes</p>
-    <a href="quickstart/" style="text-decoration: none; color: #3b82f6; font-weight: 600;">Start Now →</a>
-  </div>
+## Quick Tutorials
 
-  <div style="padding: 1.5rem; border-radius: 12px; background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(168, 85, 247, 0.05) 100%); border: 1px solid rgba(139, 92, 246, 0.2);">
-    <div style="font-size: 2rem; margin-bottom: 0.5rem;">📚</div>
-    <h3 style="margin: 0 0 0.5rem 0;">Tutorials</h3>
-    <p style="margin: 0 0 1rem 0; color: #666;">Step-by-step guides</p>
-    <a href="tutorial/" style="text-decoration: none; color: #8b5cf6; font-weight: 600;">Learn More →</a>
-  </div>
+<div class="card-grid">
 
-  <div style="padding: 1.5rem; border-radius: 12px; background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.05) 100%); border: 1px solid rgba(16, 185, 129, 0.2);">
-    <div style="font-size: 2rem; margin-bottom: 0.5rem;">📚</div>
-    <h3 style="margin: 0 0 0.5rem 0;">RM Library</h3>
-    <p style="margin: 0 0 1rem 0; color: #666;">35+ pre-built models</p>
-    <a href="library/rm_library/" style="text-decoration: none; color: #10b981; font-weight: 600;">Explore Models →</a>
-  </div>
+  <a href="get_started/evaluate_ai_agents/" class="feature-card">
+    <div class="card-header card-header-lg">
+      <img src="https://unpkg.com/lucide-static@latest/icons/bot.svg" class="card-icon card-icon-agent">
+      <h3>Evaluate An AI Agent</h3>
+    </div>
+    <p class="card-desc card-desc-lg">
+      <b>Comprehensive evaluation for AI Agents:</b> Learn to evaluate the full lifecycle—including final response, trajectory, tool usage, plan, memory, reflection, observation—using OpenJudge Graders.
+    </p>
+  </a>
 
-  <div style="padding: 1.5rem; border-radius: 12px; background: linear-gradient(135deg, rgba(236, 72, 153, 0.1) 0%, rgba(219, 39, 119, 0.05) 100%); border: 1px solid rgba(236, 72, 153, 0.2);">
-    <div style="font-size: 2rem; margin-bottom: 0.5rem;">❓</div>
-    <h3 style="margin: 0 0 0.5rem 0;">FAQ</h3>
-    <p style="margin: 0 0 1rem 0; color: #666;">Common questions</p>
-    <a href="faq/" style="text-decoration: none; color: #ec4899; font-weight: 600;">Get Answers →</a>
-  </div>
+  <a href="get_started/build_reward/" class="feature-card">
+    <div class="card-header card-header-lg">
+      <img src="https://unpkg.com/lucide-static@latest/icons/brain-circuit.svg" class="card-icon card-icon-tool">
+      <h3>Build Rewards for Training</h3>
+    </div>
+    <p class="card-desc card-desc-lg">
+      <b>Construct High-Quality Reward Signals:</b> Create robust reward functions for model and agent alignment by aggregating diverse graders with custom weighting and high-concurrency support.
+    </p>
+  </a>
+
 </div>
 
----
 
-## 📢 News
-- **[2025-07-09]** We release RM Gallery v0.1.0 now, which is also available in [PyPI](https://pypi.org/simple/rm-gallery/)!
+## More Tutorials
 
----
+### Built-in Graders
 
-## 🌟 Why RM-Gallery?
+<div class="card-grid">
 
-RM-Gallery is a one-stop platform for training, building and applying reward models. It provides a comprehensive solution for implementing reward models at both task-level and atomic-level, with high-throughput and fault-tolerant capabilities.
+  <a href="built_in_graders/agent_graders/" class="feature-card">
+    <div class="card-header">
+      <img src="https://unpkg.com/lucide-static@latest/icons/bot.svg" class="card-icon card-icon-agent">
+      <h3>Agent</h3>
+    </div>
+    <p class="card-desc">
+      Agent graders for evaluating various aspects of AI agent behavior. These graders assess action selection, tool usage, memory management, planning, reflection, and overall trajectory quality.
+    </p>
+  </a>
 
-<p align="center">
- <img src="./images/framework.png" alt="Framework" width="75%">
- <br/>
- <em>RM-Gallery Framework </em>
-</p>
+  <a href="built_in_graders/general/" class="feature-card">
+    <div class="card-header">
+      <img src="https://unpkg.com/lucide-static@latest/icons/globe.svg" class="card-icon card-icon-general">
+      <h3>General Tasks</h3>
+    </div>
+    <p class="card-desc">
+      Assess fundamental capabilities such as instruction following, text quality, safety guardrails, and format.
+    </p>
+  </a>
 
-### 🏋️‍♂️ Training RM
-- **Integrated RM Training Pipeline**: Provides an RL-based framework for training reasoning reward models, compatible with popular frameworks (e.g., verl), and offers examples for integrating RM-Gallery into the framework.
-<p align="center">
-  <img src="./images/building_rm/helpsteer2_pairwise_training_RM-Bench_eval_accuracy.png" alt="Training RM Accuracy Curve" width="60%">
-  <br/>
-  <em>RM Training Pipeline improves accuracy on RM Bench</em>
-</p>
-This image demonstrates the effectiveness of the RM Training Pipeline. On RM Bench, after more than 80 training steps, the accuracy improved from around 55.8% with the baseline model (Qwen2.5-14B) to approximately 62.5%.
+  <a href="built_in_graders/multimodal/" class="feature-card">
+    <div class="card-header">
+      <img src="https://unpkg.com/lucide-static@latest/icons/image.svg" class="card-icon card-icon-multimodal">
+      <h3>Multimodal</h3>
+    </div>
+    <p class="card-desc">
+      Vision-language graders for evaluating AI responses involving images. These graders assess image-text coherence, image helpfulness, and text-to-image generation quality.
+    </p>
+  </a>
 
-### 🏗️ Building RM
-- **Unified Reward Model Architecture**: Flexible implementation of reward models through standardized interfaces, supporting various architectures (model-based/free), reward formats (scalar/critique), and scoring patterns (pointwise/listwise/pairwise)
+  <a href="built_in_graders/code_math/" class="feature-card">
+    <div class="card-header">
+      <img src="https://unpkg.com/lucide-static@latest/icons/calculator.svg" class="card-icon card-icon-math">
+      <h3>Math & Code</h3>
+    </div>
+    <p class="card-desc">
+      Specialized graders for evaluating code generation and mathematical problem-solving capabilities. These graders assess syntax correctness, execution results, code style, and mathematical expression accuracy.
+    </p>
+  </a>
 
-- **Comprehensive RM Gallery**: Provides a rich collection of ready-to-use Reward Model instances for diverse tasks (e.g., math, coding, preference alignment) with both task-level(RMComposition) and component-level(RewardModel). Users can directly apply RMComposition/RewardModel for specific tasks or assemble custom RMComposition via component-level RewardModel.
+  <a href="built_in_graders/text/" class="feature-card">
+    <div class="card-header">
+      <img src="https://unpkg.com/lucide-static@latest/icons/text.svg" class="card-icon card-icon-text">
+      <h3>Text</h3>
+    </div>
+    <p class="card-desc">
+      Algorithm-based graders for text similarity and matching. Fast, deterministic, and zero-cost evaluation using BLEU, ROUGE, F1, regex, and 15+ similarity algorithms.
+    </p>
+  </a>
 
-- **Rubric-Critic-Score Paradigm**: Adopts the Rubric+Critic+Score-based reasoning Reward Model  paradigm, offering best practices to help users generate rubrics with limited preference data.
+  <a href="built_in_graders/format/" class="feature-card">
+    <div class="card-header">
+      <img src="https://unpkg.com/lucide-static@latest/icons/braces.svg" class="card-icon card-icon-format">
+      <h3>Format</h3>
+    </div>
+    <p class="card-desc">
+      Format validation graders for structured outputs. Validate JSON syntax, check length constraints, detect repetition, and verify reasoning tags for chain-of-thought.
+    </p>
+  </a>
 
-<div style="display: flex; flex-wrap: wrap;">
-  <img src="./images/building_rm/rewardbench2_exp_result.png" style="width: 48%; min-width: 200px; margin: 1%;">
-  <img src="./images/building_rm/rmb_pairwise_exp_result.png" style="width: 48%; min-width: 200px; margin: 1%;">
 </div>
-The two images above show that after applying the Rubric+Critic+Score paradigm and adding 1–3 rubrics to the base model (Qwen3-32B), there were significant improvements on both RewardBench2 and RMB-pairwise.
-
-### 🛠️ Applying RM
-
-- **Multiple Usage Scenarios**: Covers multiple Reward Model (RM) usage scenarios with detailed best practices, including Training with Rewards (e.g., post-training), Inference with Rewards (e.g., Best-of-N，data-correction)
-
-- **High-Performance RM Serving**: Leverages the New API platform to deliver high-throughput, fault-tolerant reward model serving, enhancing feedback efficiency.
 
 
+### Build Graders
 
-## 📥 Installation
+<div class="card-grid">
 
-> RM Gallery requires **Python >= 3.10 and < 3.13**
+  <a href="building_graders/create_custom_graders/" class="feature-card-sm">
+    <div class="card-header">
+      <img src="https://unpkg.com/lucide-static@latest/icons/wrench.svg" class="card-icon card-icon-tool">
+      <h3>Customization</h3>
+    </div>
+    <p class="card-desc">
+      <b>Clear requirements, but no existing grader?</b> If you have explicit rules or logic, use our Python interfaces or Prompt templates to quickly define your own grader.
+    </p>
+  </a>
 
-=== "From PyPI"
+  <a href="building_graders/generate_graders_from_data/" class="feature-card-sm">
+    <div class="card-header">
+      <img src="https://unpkg.com/lucide-static@latest/icons/database.svg" class="card-icon card-icon-data">
+      <h3>Data-Driven Rubrics</h3>
+    </div>
+    <p class="card-desc">
+      <b>Ambiguous requirements, but have few examples?</b> Use the GraderGenerator to automatically summarize evaluation Rubrics from your annotated data, and generate a llm-based grader.
+    </p>
+  </a>
 
-    ```bash
-    pip install rm-gallery
-    ```
+  <div class="feature-card-wip">
+    <div class="card-header">
+      <img src="https://unpkg.com/lucide-static@latest/icons/scale.svg" class="card-icon card-icon-integration">
+      <h3>Trainable Judge Model</h3>
+    </div>
+    <span class="badge-wip">🚧 Work in Progress</span>
+    <p class="card-desc">
+      <b>Massive data and need peak performance?</b> Use our training pipeline to train a dedicated Judge Model. This is ideal for complex scenarios where prompt-based grading falls short.
+    </p>
+  </div>
 
-=== "From Source"
+</div>
 
-    ```bash
-    # Pull the source code from GitHub
-    git clone https://github.com/modelscope/RM-Gallery.git
-    cd RM-Gallery
+### Integrations
 
-    # Install the package
-    pip install .
-    ```
+<div class="card-grid">
 
-## 🚀 Quick Start
+  <div class="feature-card-wip">
+    <div class="card-header">
+      <img src="https://unpkg.com/lucide-static@latest/icons/bar-chart-3.svg" class="card-icon card-icon-integration">
+      <h3>Evaluation Frameworks</h3>
+      <span class="badge-wip">🚧 Work in Progress</span>
+    </div>
+    <p class="card-desc">
+      Seamlessly connect with mainstream platforms like <strong>LangSmith</strong> and <strong>LangFuse</strong>. Streamline your evaluation pipelines and monitor agent performance with flexible APIs.
+    </p>
+  </div>
 
-Get started with RM-Gallery in just a few lines of code:
+  <div class="feature-card-wip">
+    <div class="card-header">
+      <img src="https://unpkg.com/lucide-static@latest/icons/dumbbell.svg" class="card-icon card-icon-tool">
+      <h3>Training Frameworks</h3>
+      <span class="badge-wip">🚧 Work in Progress</span>
+    </div>
+    <p class="card-desc">
+      Directly integrate into training loops such as <strong>VERL</strong>. Use Graders as high-quality reward functions for RLHF/RLAIF to align models effectively.
+    </p>
+  </div>
 
-```python
-from rm_gallery.core.reward.registry import RewardRegistry
-
-# Use a built-in reward model
-rm = RewardRegistry.get("harmlessness")
-
-# Evaluate your data
-result = rm.evaluate(sample)
-```
-
-Ready to dive deeper? Check out our [**Quickstart Guide**](quickstart.md) for a complete walkthrough, or explore our [**Tutorials**](tutorial/README.md) for specific use cases.
-
----
-
-## 🎯 Core Capabilities
-
-### 🏋️‍♂️ Training RM
-
-Train custom reward models with our integrated pipeline, supporting both pointwise and pairwise paradigms. Compatible with popular frameworks like VERL for reinforcement learning.
-
-**Key Features:**
-- Pointwise & pairwise training modes
-- Distributed training support (Ray)
-- Integration with RLHF pipelines
-
-[**→ Training RM Tutorial**](tutorial/training_rm/overview.md)
-
----
-
-### 🏗️ Building RM
-
-Build reward models tailored to your needs with our flexible architecture.
-
-**35+ Pre-built Models** covering:
-- 🧮 **Math**: Mathematical correctness verification
-- 💻 **Code**: Code quality and execution assessment
-- 🎯 **Alignment**: Helpfulness, harmlessness, honesty
-- 📊 **General**: Accuracy, F1, ROUGE metrics
-- ✍️ **Style**: Format, length, privacy compliance
-
-**Or Build Your Own:**
-- Use our Rubric-Critic-Score paradigm
-- Customize LLM templates
-- Implement rule-based logic
-
-[**→ View RM Library**](library/rm_library.md) | [**→ Building Guide**](tutorial/building_rm/overview.md)
-
----
-
-### 🛠️ Applying RM
-
-Put your reward models to work in production scenarios:
-
-- **Best-of-N**: Select top responses from multiple candidates
-- **Post-Training**: Integrate with RLHF for model optimization
-- **Data Refinement**: Iteratively improve outputs with RM feedback
-- **RM Server**: Deploy high-throughput, fault-tolerant RM services
-
-[**→ Application Tutorials**](tutorial/rm_application/post_training.md)
+</div>
 
 
+### Applications
+
+<div class="card-grid">
+
+  <a href="applications/data_refinement/" class="feature-card">
+    <div class="card-header">
+      <img src="https://unpkg.com/lucide-static@latest/icons/gem.svg" class="card-icon card-icon-data">
+      <h3>Data Refinement</h3>
+    </div>
+    <p class="card-desc">
+      Automate the curation of high-quality datasets. Use Graders to filter, rank, and synthesize training data for Supervised Fine-Tuning (SFT).
+    </p>
+  </a>
+
+  <a href="applications/select_rank/" class="feature-card">
+    <div class="card-header">
+      <img src="https://unpkg.com/lucide-static@latest/icons/scale.svg" class="card-icon card-icon-general">
+      <h3>Pairwise Evaluation</h3>
+    </div>
+    <p class="card-desc">
+      Compare and rank multiple model outputs using LLM-based pairwise comparisons. Compute win rates, generate win matrices, and identify the best-performing models.
+    </p>
+  </a>
+
+</div>
 
 
-## 🤝 Contribute
+### Running Graders
 
-Contributions are always encouraged!
+<div class="card-grid">
 
-We highly recommend install pre-commit hooks in this repo before committing pull requests.
-These hooks are small house-keeping scripts executed every time you make a git commit,
-which will take care of the formatting and linting automatically.
-```shell
-pip install -e .
-pre-commit install
-```
+  <a href="running_graders/run_tasks/" class="feature-card">
+    <div class="card-header">
+      <img src="https://unpkg.com/lucide-static@latest/icons/play.svg" class="card-icon card-icon-tool">
+      <h3>Run Grading Tasks</h3>
+    </div>
+    <p class="card-desc">
+      Orchestrate evaluations at scale with GradingRunner. Configure data mapping, control concurrency, and aggregate results from multiple graders into unified scores.
+    </p>
+  </a>
 
-Please refer to our [Contribution Guide](contribution.md) for more details.
+  <a href="running_graders/grader_analysis/" class="feature-card">
+    <div class="card-header">
+      <img src="https://unpkg.com/lucide-static@latest/icons/bar-chart-2.svg" class="card-icon card-icon-data">
+      <h3>Analyze Grader Results</h3>
+    </div>
+    <p class="card-desc">
+      Transform raw scores into actionable insights. Examine score distributions, measure consistency, and compare performance against ground truth labels.
+    </p>
+  </a>
 
-## 📝 Citation
+</div>
 
-Reference to cite if you use RM-Gallery in a paper:
 
-```
-@software{
-title = {RM-Gallery: A One-Stop Reward Model Platform},
-author = {The RM-Gallery Team},
-url = {https://github.com/modelscope/RM-Gallery},
-month = {07},
-year = {2025}
-}
-```
+### Validating Graders
+
+<div class="card-grid">
+
+  <a href="validating_graders/overview/" class="feature-card">
+    <div class="card-header">
+      <img src="https://unpkg.com/lucide-static@latest/icons/shield-check.svg" class="card-icon card-icon-general">
+      <h3>Validation Overview</h3>
+    </div>
+    <p class="card-desc">
+      Ensure your graders make accurate judgments. Learn validation workflows, best practices, and metrics for measuring grader quality.
+    </p>
+  </a>
+
+  <a href="validating_graders/rewardbench2/" class="feature-card">
+    <div class="card-header">
+      <img src="https://unpkg.com/lucide-static@latest/icons/trophy.svg" class="card-icon card-icon-agent">
+      <h3>RewardBench2</h3>
+    </div>
+    <p class="card-desc">
+      Validate against the RewardBench2 benchmark for multi-domain response quality evaluation with standardized ground truth.
+    </p>
+  </a>
+
+</div>

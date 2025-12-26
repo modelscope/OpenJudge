@@ -13,9 +13,12 @@ article .tabbed-set.tabbed-alternate {
   flex-flow: column nowrap !important;
   display: flex !important;
   margin: 1.5em 0 !important;
+  /* Fallback for browsers without OKLCH support */
+  border: 1px solid #e5e7eb !important;
   border: 1px solid var(--border, #e5e7eb) !important;
   border-radius: 0.5rem !important;
   overflow: hidden !important;
+  background: #ffffff !important;
   background: var(--background, #ffffff) !important;
   box-shadow: none !important;
 }
@@ -47,6 +50,8 @@ article .tabbed-set.tabbed-alternate > .tabbed-labels {
   display: flex !important;
   flex-direction: row !important;
   background: transparent !important;
+  /* Fallback for browsers without OKLCH support */
+  border-bottom: 1px solid #e5e7eb !important;
   border-bottom: 1px solid var(--border, #e5e7eb) !important;
   border-top-left-radius: 0 !important;
   border-top-right-radius: 0 !important;
@@ -71,6 +76,8 @@ article .tabbed-set.tabbed-alternate > .tabbed-labels > label {
   font-size: 0.875rem !important;
   font-weight: 500 !important;
   line-height: 1.25rem !important;
+  /* Fallback for browsers without OKLCH support */
+  color: #6b7280 !important;
   color: var(--muted-foreground, #6b7280) !important;
   cursor: pointer !important;
   border: none !important;
@@ -247,8 +254,12 @@ article .tabbed-set.tabbed-alternate .tabbed-labels .copy-button {
   padding: 0.375rem 0.5rem !important;
   font-size: 0.75rem !important;
   font-weight: 500 !important;
+  /* Fallback for browsers without OKLCH support */
+  color: #6b7280 !important;
   color: var(--muted-foreground, #6b7280) !important;
+  background: #ffffff !important;
   background: var(--background, #ffffff) !important;
+  border: 1px solid #e5e7eb !important;
   border: 1px solid var(--border, #e5e7eb) !important;
   border-radius: 0.375rem !important;
   cursor: pointer !important;
@@ -287,9 +298,11 @@ article .tabbed-set.tabbed-alternate .copy-button.copied {
    Dark Mode Support
    ======================================== */
 
-.dark article .tabbed-set.tabbed-alternate,
 .dark article .tabbed-set.tabbed-alternate {
+  /* Fallback for browsers without OKLCH support */
+  background: #0a0a0a !important;
   background: var(--background, #0a0a0a) !important;
+  border: 1px solid #374151 !important;
   border: 1px solid var(--border, #374151) !important;
 }
 
@@ -302,6 +315,8 @@ article .tabbed-set.tabbed-alternate .copy-button.copied {
 
 .dark article .tabbed-set.tabbed-alternate > .tabbed-labels {
   background: transparent !important;
+  /* Fallback for browsers without OKLCH support */
+  border-bottom-color: #374151 !important;
   border-bottom-color: var(--border, #374151) !important;
 }
 
@@ -342,13 +357,20 @@ article .tabbed-set.tabbed-alternate .copy-button.copied {
 }
 
 .dark article .tabbed-set.tabbed-alternate .tabbed-labels .copy-button {
+  /* Fallback for browsers without OKLCH support */
+  background: #1f2937 !important;
   background: var(--background, #1f2937) !important;
+  border-color: #374151 !important;
   border-color: var(--border, #374151) !important;
+  color: #9ca3af !important;
   color: var(--muted-foreground, #9ca3af) !important;
 }
 
 .dark article .tabbed-set.tabbed-alternate .copy-button:hover {
+  /* Fallback for browsers without OKLCH support */
+  background: #374151 !important;
   background: var(--muted, #374151) !important;
+  color: #e5e7eb !important;
   color: var(--foreground, #e5e7eb) !important;
 }
 

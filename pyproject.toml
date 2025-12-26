@@ -55,6 +55,7 @@ dependencies = [
     "sacrebleu>=2.0.0",
     "rouge-score>=0.1.2",
     "python-Levenshtein>=0.20.0",
+    "scikit-learn>=1.0.0",
 ]
 
 [project.optional-dependencies]

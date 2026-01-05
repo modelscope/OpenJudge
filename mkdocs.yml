@@ -48,7 +48,8 @@ nav:
   - Applications:
       - Refine Data Quality: applications/data_refinement.md
       - Pairwise Model Evaluation: applications/select_rank.md
-
+  - Integrations:
+      - Langfuse: integrations/langfuse.md
 
   - Community:
       - Contribute to OpenJudge: community/contributing.md

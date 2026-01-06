@@ -22,12 +22,13 @@ Zero-shot evaluation automates the entire evaluation pipeline:
 3. **Generate Rubrics** — Create evaluation criteria tailored to the task
 4. **Pairwise Comparison** — Compare all response pairs using a judge model
 5. **Rank Models** — Calculate win rates and produce final rankings
+6. **Generate Report** — Create a detailed report explaining rankings with examples (optional)
 
 !!! tip "No Test Data Required"
     Unlike traditional evaluation, zero-shot evaluation generates its own test queries from the task description, eliminating the need for pre-existing test datasets.
 
 
-## Five-Step Pipeline
+## Pipeline Overview
 
 | Step | Component | Description |
 |------|-----------|-------------|
@@ -35,7 +36,8 @@ Zero-shot evaluation automates the entire evaluation pipeline:
 | 2 | `ResponseCollector` | Collect responses from all target endpoints |
 | 3 | `TaskBasedRubricGenerator` | Generate evaluation criteria for the task |
 | 4 | `GradingRunner` | Run pairwise comparisons with judge model |
-| 5 | `ZeroShotPipeline` | Analyze results and produce rankings |
+| 5 | `PairwiseAnalyzer` | Analyze results and produce rankings |
+| 6 | `ReportGenerator` | Generate detailed Markdown report (optional) |
 
 
 ## Quick Start
@@ -154,6 +156,12 @@ evaluation:
 # Output settings
 output:
   output_dir: "./evaluation_results"
+
+# Report settings (optional)
+report:
+  enabled: true       # Generate detailed report
+  language: "zh"      # "zh" for Chinese, "en" for English
+  include_examples: 3 # Examples per section
 ```
 
 !!! note "Environment Variables"
@@ -320,6 +328,76 @@ query_generation:
     - **constraints**: Add time, scope, or condition constraints
     - **reasoning**: Require multi-step reasoning or comparison
     - **edge_cases**: Include edge cases and unusual conditions
+
+
+## Evaluation Report
+
+When enabled, the pipeline generates a comprehensive Markdown report explaining the evaluation results with concrete examples. The report is generated in parallel using the judge model.
+
+### Enabling Report Generation
+
+```yaml
+report:
+  enabled: true        # Enable report generation
+  language: "zh"       # Report language: "zh" (Chinese) or "en" (English)
+  include_examples: 3  # Number of examples per section (1-10)
+```
+
+### Report Sections
+
+The generated report includes four sections, each generated in parallel:
+
+| Section | Description |
+|---------|-------------|
+| **Executive Summary** | Overview of evaluation purpose, methodology, and key findings |
+| **Ranking Explanation** | Detailed analysis of why models are ranked in this order |
+| **Model Analysis** | Per-model strengths, weaknesses, and improvement suggestions |
+| **Representative Cases** | Concrete comparison examples with evaluation reasons |
+
+### Report Options
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `enabled` | `false` | Enable/disable report generation |
+| `language` | `"zh"` | Report language: `"zh"` (Chinese) or `"en"` (English) |
+| `include_examples` | `3` | Number of examples per section (1-10) |
+
+!!! example "Sample Report Structure"
+    ```markdown
+    # 评估报告
+
+    ## 执行摘要
+    本评估旨在衡量主流大语言模型在翻译任务的性能...
+
+    ## 排名解释
+    qwen-plus 以 67.9% 的综合胜率位居榜首，主要原因是...
+
+    ## 模型分析
+    ### qwen-plus
+    **总体评估**: 表现最佳，胜率最高...
+    **关键优势**: 术语准确性高、语言风格规范...
+    **改进建议**: 进一步优化句式多样性...
+
+    ## 典型案例
+    ### Case 1
+    **Query:** 请将以下内容翻译成英文...
+    **Winner:** qwen-plus
+    **Evaluation Reason:** Response A uses more natural phrasing...
+    ```
+
+### Output Files
+
+When report generation is enabled, the following files are saved:
+
+```
+evaluation_results/
+├── evaluation_report.md      # Generated Markdown report
+├── comparison_details.json   # All pairwise comparison details
+├── evaluation_results.json   # Final rankings and statistics
+├── queries.json              # Generated test queries
+├── responses.json            # Model responses
+└── rubrics.json              # Evaluation criteria
+```
 
 
 ## Checkpoint & Resume

@@ -4,8 +4,6 @@
 import asyncio
 from typing import List
 
-from loguru import logger
-
 from cookbooks.zero_shot_evaluation.schema import (
     ComparisonDetail,
     OpenAIEndpoint,

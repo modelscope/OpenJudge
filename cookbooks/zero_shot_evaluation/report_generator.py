@@ -68,9 +68,7 @@ class ReportGenerator:
         original_details = [d for d in details if d.order == "original"]
 
         # Format rankings
-        rankings_text = "\n".join(
-            f"{i+1}. {name}: {rate:.1%}" for i, (name, rate) in enumerate(result.rankings)
-        )
+        rankings_text = "\n".join(f"{i+1}. {name}: {rate:.1%}" for i, (name, rate) in enumerate(result.rankings))
 
         # Format rubrics
         rubrics_text = "\n".join(f"- {r}" for r in rubrics)
@@ -105,9 +103,7 @@ class ReportGenerator:
 
     async def _call_llm(self, prompt: str) -> str:
         """Call LLM with given prompt."""
-        lang_instruction = (
-            "Output in Chinese (中文)." if self.language == "zh" else "Output in English."
-        )
+        lang_instruction = "Output in Chinese (中文)." if self.language == "zh" else "Output in English."
         messages = [
             {"role": "system", "content": f"You are an expert AI evaluation analyst. {lang_instruction}"},
             {"role": "user", "content": prompt},
@@ -147,13 +143,15 @@ Requirements:
 
         # Best model wins: either (model_a=best and winner=model_a) or (model_b=best and winner=model_b)
         winning_examples = [
-            d for d in ctx["all_details"]
+            d
+            for d in ctx["all_details"]
             if (d.model_a == best and d.winner == "model_a") or (d.model_b == best and d.winner == "model_b")
         ][:2]
 
         # Best model loses: either (model_a=best and winner=model_b) or (model_b=best and winner=model_a)
         losing_examples = [
-            d for d in ctx["all_details"]
+            d
+            for d in ctx["all_details"]
             if (d.model_a == best and d.winner == "model_b") or (d.model_b == best and d.winner == "model_a")
         ][:1]
 
@@ -271,4 +269,3 @@ For each model, provide:
             for model_b, rate in opponents.items():
                 lines.append(f"  {model_a} vs {model_b}: {rate:.1%}")
         return "\n".join(lines)
-

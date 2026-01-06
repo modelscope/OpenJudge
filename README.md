@@ -30,6 +30,7 @@
 - [Quickstart](#-quickstart)
 - [Integrations](#-integrations)
 - [Contributing](#-contributing)
+- [Community](#-community)
 - [Citation](#-citation)
 
 OpenJudge is a unified framework designed to drive **LLM and Agent application excellence** through **Holistic Evaluation** and **Quality Rewards**.
@@ -188,9 +189,17 @@ We love your input! We want to make contributing to OpenJudge as easy and transp
 
 ---
 
+## 💬 Community
 
+Join our DingTalk group to connect with the community:
 
-### Migration Guide (v0.1.x → v0.2.0)
+<div align="center">
+<img src="./docs/images/dingtalk_qr_code.png" alt="DingTalk QR Code" width="200">
+</div>
+
+---
+
+## Migration Guide (v0.1.x → v0.2.0)
 > OpenJudge was previously distributed as the legacy package `rm-gallery` (v0.1.x). Starting from v0.2.0, it is published as `py-openjudge` and the Python import namespace is `openjudge`.
 
 **OpenJudge v0.2.0 is NOT backward compatible with v0.1.x.**

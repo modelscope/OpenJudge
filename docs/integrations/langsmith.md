@@ -11,7 +11,7 @@ LangSmith is an LLM application development and monitoring platform provided by 
 First, install the required dependencies:
 
 ```bash
-pip install langsmith open_judge python-dotenv
+pip install langsmith py-openjudge python-dotenv
 ```
 
 ### Environment Configuration

@@ -385,6 +385,11 @@ The generated report includes four sections, each generated in parallel:
     **Evaluation Reason:** Response A uses more natural phrasing...
     ```
 
+!!! tip "完整示例报告"
+    查看一个真实的评估报告示例：[肿瘤学医学翻译评估报告](examples/oncology_translation_report.md)
+    
+    该示例展示了使用 Zero-Shot Evaluation 评估三个模型（qwen-plus、qwen3-32b、qwen-turbo）在医学肿瘤学领域中英翻译任务上的完整报告。
+
 ### Output Files
 
 When report generation is enabled, the following files are saved:

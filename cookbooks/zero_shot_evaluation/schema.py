@@ -9,7 +9,7 @@ This module provides:
 import os
 import re
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Literal, Optional, Union
 
 import yaml
 from loguru import logger
@@ -96,7 +96,7 @@ class ReportConfig(BaseModel):
     """Report generation configuration."""
 
     enabled: bool = Field(default=False, description="Whether to generate report")
-    language: str = Field(default="zh", description="Report language: zh | en")
+    language: Literal["zh", "en"] = Field(default="zh", description="Report language: zh | en")
     include_examples: int = Field(default=3, ge=1, le=10, description="Examples per section")
 
 

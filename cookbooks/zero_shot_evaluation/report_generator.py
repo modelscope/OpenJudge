@@ -12,6 +12,11 @@ from cookbooks.zero_shot_evaluation.schema import (
 from cookbooks.zero_shot_evaluation.zero_shot_pipeline import EvaluationResult
 from openjudge.models.openai_chat_model import OpenAIChatModel
 
+# Constants for report generation
+_NUM_WINNING_EXAMPLES_FOR_RANKING = 2
+_NUM_LOSING_EXAMPLES_FOR_RANKING = 1
+_NUM_SAMPLE_REASONS_PER_MODEL = 3
+
 
 class ReportGenerator:
     """Generate evaluation report with parallel LLM calls."""
@@ -146,14 +151,14 @@ Requirements:
             d
             for d in ctx["all_details"]
             if (d.model_a == best and d.winner == "model_a") or (d.model_b == best and d.winner == "model_b")
-        ][:2]
+        ][:_NUM_WINNING_EXAMPLES_FOR_RANKING]
 
         # Best model loses: either (model_a=best and winner=model_b) or (model_b=best and winner=model_a)
         losing_examples = [
             d
             for d in ctx["all_details"]
             if (d.model_a == best and d.winner == "model_b") or (d.model_b == best and d.winner == "model_a")
-        ][:1]
+        ][:_NUM_LOSING_EXAMPLES_FOR_RANKING]
 
         examples_text = ""
         for i, ex in enumerate(winning_examples + losing_examples, 1):
@@ -206,12 +211,13 @@ Requirements:
         stats_text = ""
         for name in ctx["model_names"]:
             stats = model_stats[name]
-            sample_reasons = stats["reasons"][:3]
+            sample_reasons = stats["reasons"][:_NUM_SAMPLE_REASONS_PER_MODEL]
+            reasons_text = "\n".join("  * " + r for r in sample_reasons)
             stats_text += f"""
 Model: {name}
 - Wins: {stats['wins']}, Losses: {stats['losses']}
 - Sample evaluation reasons:
-{chr(10).join('  * ' + r for r in sample_reasons)}
+{reasons_text}
 """
 
         prompt = f"""Analyze each model's performance in this evaluation.
@@ -237,7 +243,7 @@ For each model, provide:
 
     async def _gen_examples(self, ctx: dict) -> str:
         """Generate showcase examples."""
-        examples = ctx["examples"][:5]
+        examples = ctx["examples"][: self.include_examples]
         if not examples:
             return ""
 

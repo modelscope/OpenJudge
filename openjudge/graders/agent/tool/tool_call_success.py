@@ -211,8 +211,8 @@ class ToolCallSuccessGrader(LLMGrader):
         ...     tool_calls=tool_calls,
         ...     tool_responses=tool_responses
         ... ))
-        >>> print(result.score) # expected 1.0
-
+        >>> print(result.score)
+        1.0
     """
 
     def __init__(

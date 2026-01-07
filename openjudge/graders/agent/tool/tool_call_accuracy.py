@@ -188,7 +188,8 @@ class ToolCallAccuracyGrader(LLMGrader):
         ...     tool_definitions=tool_definitions,
         ...     tool_calls=tool_calls
         ... ))
-        >>> print(result.score) # expected 5.0
+        >>> print(result.score)
+        5.0
     """
 
     def __init__(

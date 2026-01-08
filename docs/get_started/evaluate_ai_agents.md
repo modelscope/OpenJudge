@@ -22,7 +22,7 @@ AI agents operate autonomously through complex reasoning loops, making multiple 
 |-------------|------------------|-------------|
 | **Final Response** | Overall task success and answer quality | Production monitoring, A/B testing |
 | **Single Step** | Individual action quality (tool calls, planning) | Debugging failures, prompt engineering |
-| **Trajectory** | Multi-step reasoning paths and efficiency | Cost optimization, training reward models |
+| **Trajectory** | Multi-step reasoning paths and efficiency | Cost optimization, training judge models |
 
 !!! tip "Evaluation Strategy"
     Start with **Final Response** evaluation to establish baseline success rates. When failures occur, use **Single Step** evaluation to pinpoint root causes. Use **Trajectory** evaluation to detect systemic issues like loops or inefficiencies.

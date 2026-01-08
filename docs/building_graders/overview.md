@@ -1,6 +1,6 @@
 # Building Custom Graders
 
-Extend OpenJudge beyond built-in evaluators by creating custom graders or training reward models. Build domain-specific evaluation logic that seamlessly integrates with OpenJudge's evaluation pipeline.
+Extend OpenJudge beyond built-in evaluators by creating custom graders or training judge models. Build domain-specific evaluation logic that seamlessly integrates with OpenJudge's evaluation pipeline.
 
 
 ## Why Build Custom Graders?
@@ -17,7 +17,7 @@ OpenJudge supports three paths for creating custom graders, each optimized for d
 |----------|---------------|---------------|----------|--------------|
 | **Create Custom Graders** | Minutes | None | Quick prototyping, domain-specific logic | Pay-per-query (API) or free (code-based) |
 | **Generate from Data** | 1-4 hours | 50-500 examples | Iterative refinement, transparent rubrics | Medium setup + pay-per-query |
-| **Train Reward Models** | 1-3 days | 1K-100K pairs | High-volume production (>1M queries/month) | High upfront, 10x lower per-query |
+| **Train Judge Models** | 1-3 days | 1K-100K pairs | High-volume production (>1M queries/month) | High upfront, 10x lower per-query |
 
 Use this decision tree to choose the right approach based on your data availability and requirements:
 
@@ -57,7 +57,7 @@ Use this decision tree to choose the right approach based on your data availabil
 
 **Choose based on your situation:**
 
-- **Have labeled data + need automation?** → Train a reward model
+- **Have labeled data + need automation?** → Train a judge model
 - **Have data + need fast iteration?** → Generate rubrics from data
 - **No data + need immediate results?** → Create custom graders
 
@@ -75,11 +75,11 @@ Automatically generate evaluation rubrics and create graders. Two approaches ava
 **Learn more:** [Generate Rubrics as Graders →](generate_rubrics_as_graders.md)
 
 
-### Approach 3: Train Reward Models
+### Approach 3: Train Judge Models
 
 Train neural networks on preference data to learn evaluation criteria automatically. Supports Bradley-Terry (preference pairs), Generative Pointwise (absolute scores), and Generative Pairwise (comparison decisions). Requires 1K-100K examples and 1-3 days but delivers highly consistent evaluation at 10x lower per-query cost—ideal for high-volume scenarios exceeding 1M queries per month.
 
-**Learn more:** [Train Reward Models →](training_reward_models.md)
+**Learn more:** [Train Judge Models →](training_judge_models.md)
 
 
 
@@ -87,7 +87,7 @@ Train neural networks on preference data to learn evaluation criteria automatica
 
 - [Create Custom Graders](create_custom_graders.md) — Build graders using LLM or code-based logic
 - [Generate Rubrics as Graders](generate_rubrics_as_graders.md) — Automatically generate graders from task description or labeled data
-- [Train Reward Models](training_reward_models.md) — Train SFT, Bradley-Terry, or GRPO judge models
+- [Train Judge Models](training_judge_models.md) — Train SFT, Bradley-Terry, or GRPO judge models
 - [Built-in Graders](../built_in_graders/overview.md) — Explore pre-built graders to customize
 - [Run Grading Tasks](../running_graders/run_tasks.md) — Deploy graders at scale with batch workflows
 

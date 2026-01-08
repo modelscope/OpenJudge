@@ -177,7 +177,7 @@ Learn evaluation rubrics from labeled preference data. Based on [Auto-Rubric: Le
 1. **Infer query-specific rubrics** — For each labeled example, the system proposes criteria that explain why one response is better than another
 2. **Generalize to core set** — Similar rubrics are merged and organized into a compact, non-redundant "Theme-Tips" structure
 
-**Data efficiency:** Using just 70 preference pairs, this method enables smaller models to match or outperform fully-trained reward models.
+**Data efficiency:** Using just 70 preference pairs, this method enables smaller models to match or outperform fully-trained judge models.
 
 <figure markdown="span">
   ![Auto-Rubric Pipeline Overview](../images/auto_rubric_overview.png){ width="100%" }

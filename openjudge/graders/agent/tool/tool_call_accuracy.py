@@ -21,7 +21,8 @@ from openjudge.models.schema.prompt_template import LanguageEnum, PromptTemplate
 # pylint: disable=line-too-long
 
 # English Prompt
-TOOL_CALL_ACCURACY_PROMPT_EN = """# Instruction
+TOOL_CALL_ACCURACY_PROMPT_EN = textwrap.dedent(
+    """# Instruction
 ## Goal
 Your are an expert in evaluating the accuracy of a tool call considering relevance and \
 potential usefulness including syntactic and semantic correctness of a proposed tool call \
@@ -60,9 +61,11 @@ Your output should be a JSON object with the following format:
 }}
 ```
 """
+).strip()
 
 # Chinese Prompt
-TOOL_CALL_ACCURACY_PROMPT_ZH = """# 指令
+TOOL_CALL_ACCURACY_PROMPT_ZH = textwrap.dedent(
+    """# 指令
 ## 目标
 你是评估工具调用准确性的专家，需要考虑相关性和潜在有用性，包括基于提供的定义和数据，对智能系统提出的工具调用的语法和语义正确性进行评估。你的目标是使用提供的信息回答以下问题。
 
@@ -96,6 +99,7 @@ TOOL_CALL_ACCURACY_PROMPT_ZH = """# 指令
 }}
 ```
 """
+).strip()
 
 # Build default template from prompts
 DEFAULT_TOOL_CALL_ACCURACY_TEMPLATE = PromptTemplate(
@@ -103,13 +107,13 @@ DEFAULT_TOOL_CALL_ACCURACY_TEMPLATE = PromptTemplate(
         LanguageEnum.EN: [
             ChatMessage(
                 role="user",
-                content=textwrap.dedent(TOOL_CALL_ACCURACY_PROMPT_EN),
+                content=TOOL_CALL_ACCURACY_PROMPT_EN,
             ),
         ],
         LanguageEnum.ZH: [
             ChatMessage(
                 role="user",
-                content=textwrap.dedent(TOOL_CALL_ACCURACY_PROMPT_ZH),
+                content=TOOL_CALL_ACCURACY_PROMPT_ZH,
             ),
         ],
     },
@@ -163,9 +167,12 @@ class ToolCallAccuracyGrader(LLMGrader):
         ... )
         >>>
         >>> conversation = [
-        ...     {"role": "user", "content": "What's the weather like in New York?"}
+        ...     {
+        ...         "role": "user",
+        ...         "content": "What's the weather like in New York?"
+        ...     }
         ... ]
-        >>> tool_definitions = [
+        ... tool_definitions = [
         ...     {
         ...         "name": "get_weather",
         ...         "description": "Get weather information for a location",
@@ -174,7 +181,7 @@ class ToolCallAccuracyGrader(LLMGrader):
         ...         }
         ...     }
         ... ]
-        >>> tool_calls = [
+        ... tool_calls = [
         ...     {
         ...         "name": "get_weather",
         ...         "arguments": {"location": "New York"}

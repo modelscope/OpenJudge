@@ -35,7 +35,7 @@ nav:
       - Overview: building_graders/overview.md
       - Create Custom Graders: building_graders/create_custom_graders.md
       - Generate Rubrics as Graders: building_graders/generate_rubrics_as_graders.md
-      - Train Reward Models: building_graders/training_reward_models.md
+      - Train Judge Models: building_graders/training_judge_models.md
 
   - Running Graders:
       - Run Grading Tasks: running_graders/run_tasks.md

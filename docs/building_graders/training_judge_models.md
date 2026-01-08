@@ -1,4 +1,4 @@
-# Train Reward Models
+# Train Judge Models
 
 Train judge models using three approaches: **SFT** for foundation learning, **Bradley-Terry** for scalar preference scoring, and **GRPO** for generative evaluation with reasoning.
 
@@ -10,7 +10,7 @@ OpenJudge provides training pipelines for building custom judge models. Each met
 | Method | Output Type | Training Data | Interpretable | Best For |
 |--------|-------------|---------------|---------------|----------|
 | **SFT** | Generative (text) | Demonstrations | ✅ Yes | Model initialization, response generation |
-| **Bradley-Terry** | Scalar score | Preference pairs | ❌ No | RLHF reward modeling, ranking |
+| **Bradley-Terry** | Scalar score | Preference pairs | ❌ No | RLHF judge modeling, ranking |
 | **GRPO** | Generative (text) | Labeled responses | ✅ Yes | Interpretable evaluation with reasoning |
 
 **Common Requirements:**

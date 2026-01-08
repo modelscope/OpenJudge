@@ -176,10 +176,9 @@ class ReflectionAccuracyGrader(LLMGrader):
             mode=GraderMode.POINTWISE,
             description="Evaluate reflection accuracy",
             model=model,
-            template=template,
+            template=template or DEFAULT_REFLECTION_ACCURACY_TEMPLATE,
             language=language,
         )
-        self.template = template if template is not None else DEFAULT_REFLECTION_ACCURACY_TEMPLATE
 
     def _format_history(self, history: Optional[list] = None) -> str:
         """Format history steps for evaluation.

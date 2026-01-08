@@ -30,6 +30,7 @@
 - [快速开始](#-快速开始)
 - [集成](#-集成)
 - [贡献](#-贡献)
+- [社区](#-社区)
 - [引用](#-引用)
 
 OpenJudge 是一个统一框架，旨在通过**全面评估**和**质量奖励**来提升 **LLM 和 Agent 应用效果**。
@@ -188,7 +189,17 @@ if __name__ == "__main__":
 
 ---
 
-### 迁移指南（v0.1.x → v0.2.0）
+## 💬 社区
+
+欢迎加入 OpenJudge 钉钉交流群，与我们一起讨论：
+
+<div align="center">
+<img src="./docs/images/dingtalk_qr_code.png" alt="钉钉群二维码" width="200">
+</div>
+
+---
+
+## 迁移指南（v0.1.x → v0.2.0）
 > OpenJudge 之前以旧包名 `rm-gallery`（v0.1.x）发布。从 v0.2.0 开始，它以 `py-openjudge` 发布，Python 导入命名空间为 `openjudge`。
 
 **OpenJudge v0.2.0 与 v0.1.x 不向后兼容。**

@@ -300,10 +300,9 @@ class ReflectionOutcomeUnderstandingGrader(LLMGrader):
             mode=GraderMode.POINTWISE,
             description="Evaluate reflection outcome understanding",
             model=model,
-            template=template,
+            template=template or DEFAULT_REFLECTION_OUTCOME_UNDERSTANDING_TEMPLATE,
             language=language,
         )
-        self.template = template if template is not None else DEFAULT_REFLECTION_OUTCOME_UNDERSTANDING_TEMPLATE
 
     def _format_history(self, history: Optional[list] = None) -> str:
         """Format history steps for evaluation.

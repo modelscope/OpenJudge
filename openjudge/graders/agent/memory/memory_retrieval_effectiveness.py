@@ -179,10 +179,9 @@ class MemoryRetrievalEffectivenessGrader(LLMGrader):
             mode=GraderMode.POINTWISE,
             description="Evaluate memory retrieval effectiveness",
             model=model,
-            template=template,
+            template=template or DEFAULT_MEMORY_RETRIEVAL_EFFECTIVENESS_TEMPLATE,
             language=language,
         )
-        self.template = template if template is not None else DEFAULT_MEMORY_RETRIEVAL_EFFECTIVENESS_TEMPLATE
 
     def _format_history(self, history: Optional[list] = None) -> str:
         """Format history steps for evaluation.

@@ -34,7 +34,7 @@ nav:
   - Building Graders:
       - Overview: building_graders/overview.md
       - Create Custom Graders: building_graders/create_custom_graders.md
-      - Generate Graders from Data: building_graders/generate_graders_from_data.md
+      - Generate Rubrics as Graders: building_graders/generate_rubrics_as_graders.md
       # - Train Reward Models: building_graders/training/overview.md  # Coming soon
 
   - Running Graders:

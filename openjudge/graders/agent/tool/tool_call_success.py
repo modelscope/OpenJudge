@@ -21,7 +21,8 @@ from openjudge.models.schema.prompt_template import LanguageEnum, PromptTemplate
 # pylint: disable=line-too-long
 
 # English Prompt
-TOOL_CALL_SUCCESS_PROMPT_EN = """You are an expert evaluator with strong software \
+TOOL_CALL_SUCCESS_PROMPT_EN = textwrap.dedent(
+    """You are an expert evaluator with strong software \
 development background. You are required to extract the tool result for every tool call \
 then decide for each tool result whether it indicates that the tool call succeeded or failed.
 
@@ -79,9 +80,11 @@ Generate a JSON object with the following structure:
 }}
 ```
 """
+).strip()
 
 # Chinese Prompt
-TOOL_CALL_SUCCESS_PROMPT_ZH = """你是一位具有强大软件开发背景的专家评估员。你需要为每个工具调用提取工具结果，然后判断每个工具结果是否表明工具调用成功或失败。
+TOOL_CALL_SUCCESS_PROMPT_ZH = textwrap.dedent(
+    """你是一位具有强大软件开发背景的专家评估员。你需要为每个工具调用提取工具结果，然后判断每个工具结果是否表明工具调用成功或失败。
 
 角色
 ====
@@ -130,6 +133,7 @@ TOOL_CALL_SUCCESS_PROMPT_ZH = """你是一位具有强大软件开发背景的�
 }}
 ```
 """
+).strip()
 
 # Build default template from prompts
 DEFAULT_TOOL_CALL_SUCCESS_TEMPLATE = PromptTemplate(
@@ -137,13 +141,13 @@ DEFAULT_TOOL_CALL_SUCCESS_TEMPLATE = PromptTemplate(
         LanguageEnum.EN: [
             ChatMessage(
                 role="user",
-                content=textwrap.dedent(TOOL_CALL_SUCCESS_PROMPT_EN),
+                content=TOOL_CALL_SUCCESS_PROMPT_EN,
             ),
         ],
         LanguageEnum.ZH: [
             ChatMessage(
                 role="user",
-                content=textwrap.dedent(TOOL_CALL_SUCCESS_PROMPT_ZH),
+                content=TOOL_CALL_SUCCESS_PROMPT_ZH,
             ),
         ],
     },

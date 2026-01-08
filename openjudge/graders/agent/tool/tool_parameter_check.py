@@ -20,7 +20,8 @@ from openjudge.models.schema.prompt_template import LanguageEnum, PromptTemplate
 # pylint: disable=line-too-long
 
 # English Prompt
-TOOL_PARAMETER_CHECK_PROMPT_EN = """
+TOOL_PARAMETER_CHECK_PROMPT_EN = textwrap.dedent(
+    """
 You are an expert in analyzing tool calls. Your task is to evaluate whether the generated tool call extracts completely correct parameters from the user query.
 
 <Evaluation Type: Tool Parameter Extraction Correctness>
@@ -70,9 +71,11 @@ Provide your evaluation in the following structured JSON format:
 
 JSON:
 """
+).strip()
 
 # Chinese Prompt
-TOOL_PARAMETER_CHECK_PROMPT_ZH = """
+TOOL_PARAMETER_CHECK_PROMPT_ZH = textwrap.dedent(
+    """
 你是一名分析工具调用的专家。你的任务是评估生成的工具调用是否从用户查询中提取了完全正确的参数。
 
 <评估类型：工具参数提取正确性>
@@ -122,6 +125,7 @@ TOOL_PARAMETER_CHECK_PROMPT_ZH = """
 
 JSON:
 """
+).strip()
 
 # Build default template from prompts
 DEFAULT_TOOL_PARAMETER_CHECK_TEMPLATE = PromptTemplate(
@@ -129,13 +133,13 @@ DEFAULT_TOOL_PARAMETER_CHECK_TEMPLATE = PromptTemplate(
         LanguageEnum.EN: [
             ChatMessage(
                 role="user",
-                content=textwrap.dedent(TOOL_PARAMETER_CHECK_PROMPT_EN),
+                content=TOOL_PARAMETER_CHECK_PROMPT_EN,
             ),
         ],
         LanguageEnum.ZH: [
             ChatMessage(
                 role="user",
-                content=textwrap.dedent(TOOL_PARAMETER_CHECK_PROMPT_ZH),
+                content=TOOL_PARAMETER_CHECK_PROMPT_ZH,
             ),
         ],
     },
@@ -156,6 +160,7 @@ class ToolParameterCheckGrader(LLMGrader):
         language: Language for evaluation prompts (default: LanguageEnum.EN)
 
     Example:
+        >>> import asyncio
         >>> from openjudge.model.openai_llm import OpenAIChatModel
         >>> from openjudge.schema.template import LanguageEnum
         >>>
@@ -170,11 +175,11 @@ class ToolParameterCheckGrader(LLMGrader):
         ...     language=LanguageEnum.EN
         ... )
         >>>
-        >>> result = await grader.aevaluate(
+        >>> result = asyncio.run(grader.aevaluate(
         ...     query="Search for Python files in the src directory",
         ...     tool_definition="search_files(pattern: str, directory: str)",
         ...     tool_calls='search_files(pattern="*.py", directory="src")'
-        ... )
+        ... ))
         >>> print(f"Score: {result.score}")  # 1.0 (correct parameters)
     """
 

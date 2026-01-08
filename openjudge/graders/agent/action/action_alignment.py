@@ -6,10 +6,11 @@ Evaluates whether the agent executes an action that aligns with its stated plan 
 """
 
 import textwrap
-from typing import Optional
+from typing import Any, Dict, List, Optional
 
 from loguru import logger
 
+from openjudge.graders.agent.utils import format_history
 from openjudge.graders.base_grader import GraderMode, GraderScore
 from openjudge.graders.llm_grader import LLMGrader
 from openjudge.models.base_chat_model import BaseChatModel
@@ -19,7 +20,8 @@ from openjudge.models.schema.prompt_template import LanguageEnum, PromptTemplate
 # pylint: disable=line-too-long
 
 # English Prompt
-ACTION_ALIGNMENT_PROMPT_EN = """
+ACTION_ALIGNMENT_PROMPT_EN = textwrap.dedent(
+    """
 You are an expert in analyzing agent behavior. Your task is to evaluate whether the agent executes an action that aligns with its stated plan or reasoning.
 
 <Evaluation Type: Action Alignment>
@@ -63,9 +65,11 @@ Provide your evaluation in the following structured JSON format:
 
 JSON:
 """
+).strip()
 
 # Chinese Prompt
-ACTION_ALIGNMENT_PROMPT_ZH = """
+ACTION_ALIGNMENT_PROMPT_ZH = textwrap.dedent(
+    """
 你是一名分析智能体行为的专家。你的任务是评估智能体是否执行了与其声明的计划或推理一致的动作。
 
 <评估类型：动作对齐>
@@ -109,6 +113,7 @@ ACTION_ALIGNMENT_PROMPT_ZH = """
 
 JSON:
 """
+).strip()
 
 # Build default template from prompts
 DEFAULT_ACTION_ALIGNMENT_TEMPLATE = PromptTemplate(
@@ -116,13 +121,13 @@ DEFAULT_ACTION_ALIGNMENT_TEMPLATE = PromptTemplate(
         LanguageEnum.EN: [
             ChatMessage(
                 role="user",
-                content=textwrap.dedent(ACTION_ALIGNMENT_PROMPT_EN),
+                content=ACTION_ALIGNMENT_PROMPT_EN,
             ),
         ],
         LanguageEnum.ZH: [
             ChatMessage(
                 role="user",
-                content=textwrap.dedent(ACTION_ALIGNMENT_PROMPT_ZH),
+                content=ACTION_ALIGNMENT_PROMPT_ZH,
             ),
         ],
     },
@@ -144,25 +149,24 @@ class ActionAlignmentGrader(LLMGrader):
         language: Language for evaluation prompts (default: LanguageEnum.EN)
 
     Example:
+        >>> import asyncio
         >>> from openjudge.model.openai_llm import OpenAIChatModel
-        >>> from openjudge.schema.template import LanguageEnum
+        >>> from openjudge.models.schema.prompt_template import LanguageEnum
         >>>
         >>> api = OpenAIChatModel(
-        ...     api_key="your-key",  # pragma: allowlist secret
+        ...     api_key="your-key",
         ...     model="qwen3-max",
         ...     generate_kwargs={"temperature": 0.1}
         ... )
-        >>>
         >>> grader = ActionAlignmentGrader(
         ...     model=api,
         ...     language=LanguageEnum.EN
         ... )
-        >>>
-        >>> result = await grader.aevaluate(
+        >>> result = asyncio.run(grader.aevaluate(
         ...     plan="I will open drawer 1 to find the key.",
         ...     action="open drawer 1"
         ... )
-        >>> print(f"Score: {result.score}")  # 1.0 (good alignment)
+        >>> print(f"Score: {result.score}")  # Expected: 1.0
     """
 
     def __init__(
@@ -189,34 +193,11 @@ class ActionAlignmentGrader(LLMGrader):
             language=language,
         )
 
-    def _format_history(self, history: Optional[list] = None) -> str:
-        """Format history steps for evaluation.
-
-        Args:
-            history: Optional list of previous step dictionaries
-
-        Returns:
-            Formatted history string, or empty string if no history
-        """
-        if not history:
-            return ""
-
-        lines = ["<History Steps>"]
-        for i, hist_step in enumerate(history):
-            lines.append(f"Step {i + 1}:")
-            for key, value in hist_step.items():
-                if value:
-                    lines.append(f"{key.capitalize()}: {value}")
-            lines.append("")
-        lines.append("</History Steps>")
-
-        return "\n".join(lines)
-
     async def aevaluate(
         self,
         plan: str,
         action: str,
-        history: Optional[list] = None,
+        history: Optional[List[Dict[str, Any]]] = None,
         context: Optional[str] = None,
     ) -> GraderScore:
         """
@@ -239,12 +220,10 @@ class ActionAlignmentGrader(LLMGrader):
             ... )
         """
         # Format context section
-        context_str = ""
-        if context:
-            context_str = f"<context>\n{context}\n</context>"
+        context_str = f"<context>\n{context}\n</context>" if context else ""
 
         # Format history
-        history_str = self._format_history(history)
+        history_str = format_history(history)
 
         try:
             result = await super().aevaluate(

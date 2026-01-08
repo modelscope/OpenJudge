@@ -1,10 +1,15 @@
-# Generate Graders from Data
+# Generate Rubrics as Graders
 
-Automatically create evaluation graders from labeled data instead of manually designing criteria. The system learns evaluation rubrics by analyzing what makes responses good or bad in your dataset.
+Automatically create evaluation graders instead of manually designing criteria. OpenJudge provides two approaches:
+
+| Approach | Module | Data Required | Best For |
+|----------|--------|---------------|----------|
+| **Simple Rubric** | `simple_rubric` | Task description only | Quick prototyping, when you have no labeled data |
+| **Iterative Rubric** | `iterative_rubric` | Labeled preference data | Production quality, when you have training examples |
 
 !!! tip "Key Benefits"
     - **Save time** — Eliminate manual rubric design
-    - **Data-driven** — Learn criteria from actual examples
+    - **Intelligent** — Learn criteria from labeled data (Iterative) or task description (Simple)
     - **Consistent** — Produce reproducible evaluation standards
     - **Scalable** — Quickly prototype graders for new domains
 
@@ -29,12 +34,143 @@ Theme: Completeness
 - With rubrics, evaluations become reproducible and explainable
 - The challenge: manually writing good rubrics is time-consuming and requires domain expertise
 
-**The solution:** Auto-Rubric automatically extracts these criteria from your labeled data.
+**The solution:** Automatically extract these criteria from your task description (Simple Rubric) or labeled data (Iterative Rubric).
 
 
-## How It Works
+## When to Use Each Approach
 
-Auto-Rubric extracts evaluation rubrics from preference data without training. Based on [Auto-Rubric: Learning to Extract Generalizable Criteria for Reward Modeling](https://arxiv.org/abs/2510.17314).
+### Simple Rubric (Zero-Shot)
+
+Use when you have a clear task description but **no labeled data**.
+
+!!! tip "Use Simple Rubric When"
+    - You need to quickly prototype a grader
+    - You have no labeled preference or scored data
+    - Your task is well-defined and you can describe it clearly
+    - You want to get started immediately without data collection
+
+!!! warning "Limitations"
+    - Quality depends on task description clarity
+    - May not capture domain-specific nuances
+    - Less accurate than data-driven approaches
+
+### Iterative Rubric (Data-Driven)
+
+Use when you have **labeled preference data** and want production-quality graders.
+
+!!! tip "Use Iterative Rubric When"
+    - You have labeled evaluation data (preference pairs or scored responses)
+    - Manual rubric design is too time-consuming or subjective
+    - Your evaluation criteria are implicit and hard to articulate
+    - You need high accuracy for production use
+
+!!! warning "Don't Use When"
+    - You have no labeled data (use Simple Rubric instead)
+    - Your criteria are already well-defined and documented
+    - Simple Code-Based evaluation is sufficient
+
+## Simple Rubric: Zero-Shot Generation
+
+Generate evaluation rubrics from task descriptions without any labeled data. The system uses an LLM to create relevant evaluation criteria based on your task context.
+
+### How It Works
+
+1. **Provide task description** — Describe what your system does
+2. **Add context** — Optionally provide usage scenario and sample queries
+3. **Generate rubrics** — LLM creates evaluation criteria automatically
+4. **Create grader** — Rubrics are injected into an LLMGrader
+
+### Quick Example
+
+```python
+import asyncio
+from openjudge.generator.simple_rubric import (
+    SimpleRubricsGenerator,
+    SimpleRubricsGeneratorConfig
+)
+from openjudge.models import OpenAIChatModel
+from openjudge.graders.schema import GraderMode
+
+async def main():
+    config = SimpleRubricsGeneratorConfig(
+        grader_name="translation_quality_grader",
+        model=OpenAIChatModel(model="qwen3-32b"),
+        grader_mode=GraderMode.POINTWISE,
+        task_description="English to Chinese translation assistant for technical documents. Generate rubrics in English.",
+        scenario="Users need accurate, fluent translations of technical content. Please respond in English.",
+        min_score=0,
+        max_score=5,
+    )
+
+    generator = SimpleRubricsGenerator(config)
+    grader = await generator.generate(
+        dataset=[],
+        sample_queries=[
+            "Translate: 'Machine learning is a subset of AI.'",
+            "Translate: 'The API endpoint returned an error.'",
+        ]
+    )
+
+    return grader
+
+grader = asyncio.run(main())
+```
+
+### Inspect Generated Rubrics
+
+```python
+print(grader.kwargs.get("rubrics"))
+```
+
+**Output (Example):**
+
+```
+1. Accuracy: Whether the translation correctly conveys the technical meaning of the original English text
+2. Fluency: Whether the translated Chinese is grammatically correct and natural-sounding
+3. Technical Appropriateness: Whether the terminology used in the translation is appropriate for a technical context
+4. Consistency: Whether similar terms or phrases are consistently translated throughout the response
+```
+
+### Evaluate Responses
+
+```python
+result = await grader.aevaluate(
+    query="Translate: 'The database query returned an error.'",
+    response="数据库查询返回了一个错误。"
+)
+print(result)
+```
+
+**Output:**
+
+```python
+GraderScore(
+    name='translation_quality_grader',
+    reason="The translation is accurate and correctly conveys the technical meaning of the original English text. The Chinese sentence is grammatically correct and natural-sounding, making it fluent. The terminology used ('数据库查询' for 'database query', '返回了一个错误' for 'returned an error') is appropriate for a technical context. Additionally, the terms are consistently translated throughout the response.",
+    score=5.0
+)
+```
+
+### Simple Rubric Configuration
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `grader_name` | `str` | required | Name for the generated grader |
+| `model` | `BaseChatModel` | required | LLM for generation and evaluation |
+| `grader_mode` | `GraderMode` | `POINTWISE` | `POINTWISE` or `LISTWISE` |
+| `task_description` | `str` | `""` | Description of the task |
+| `scenario` | `str` | `None` | Optional usage context |
+| `language` | `LanguageEnum` | `EN` | Language for prompts (`EN` or `ZH`) |
+| `min_score` | `int` | `0` | Minimum score (pointwise only) |
+| `max_score` | `int` | `1` | Maximum score (pointwise only) |
+| `default_rubrics` | `List[str]` | `[]` | Fallback rubrics if generation fails |
+| `max_retries` | `int` | `3` | Retry attempts for LLM calls |
+
+## Iterative Rubric: Data-Driven Generation
+
+Learn evaluation rubrics from labeled preference data. Based on [Auto-Rubric: Learning to Extract Generalizable Criteria for Reward Modeling](https://arxiv.org/abs/2510.17314).
+
+### How It Works
 
 **Two-stage approach:**
 
@@ -48,23 +184,7 @@ Auto-Rubric extracts evaluation rubrics from preference data without training. B
   <figcaption>Auto-Rubric Pipeline: From preference data to evaluation rubrics</figcaption>
 </figure>
 
-
-## When to Use This Approach
-
-Suppose you have a dataset of query-response pairs with quality labels (scores or rankings), and you want to create a grader that can evaluate new responses using the same criteria.
-
-!!! tip "Use Data-Driven Generation When"
-    - You have labeled evaluation data (preference pairs or scored responses)
-    - Manual rubric design is too time-consuming or subjective
-    - Your evaluation criteria are implicit and hard to articulate
-
-!!! warning "Don't Use When"
-    - You have no labeled data
-    - Your criteria are already well-defined and documented
-    - Simple Code-Based evaluation is sufficient
-
-
-## Choose Your Evaluation Mode
+### Choose Your Evaluation Mode
 
 | Mode | Config Class | Use Case | Data Format | Output |
 |------|--------------|----------|-------------|--------|
@@ -76,7 +196,7 @@ Suppose you have a dataset of query-response pairs with quality labels (scores o
     Pairwise is a special case of Listwise with exactly 2 responses. Use the same `IterativeListwiseRubricsGeneratorConfig` for both.
 
 
-## Complete Example: Build a Code Review Grader (Pointwise)
+### Complete Example: Build a Code Review Grader (Pointwise)
 
 Let's walk through a complete example: building a grader that evaluates code explanation quality.
 
@@ -218,7 +338,7 @@ GraderScore(
 )
 ```
 
-## Complete Example: Build a Code Solution Comparator (Pairwise)
+### Complete Example: Build a Code Solution Comparator (Pairwise)
 
 Let's build a grader that compares two code implementations and determines which solution is better. This is useful for code review, interview assessment, or selecting the best implementation from multiple candidates.
 
@@ -394,7 +514,7 @@ GraderRank(
 ```
 
 
-## Configuration Reference
+## Iterative Rubric Configuration Reference
 
 ### Core Parameters
 
@@ -427,9 +547,29 @@ GraderRank(
     - `LISTWISE_EVALUATION_TEMPLATE` — for ranking
 
 
+---
+
+## Choosing Between Simple and Iterative Rubric
+
+| Scenario | Recommended Approach |
+|----------|---------------------|
+| Quick prototype, no data | **Simple Rubric** |
+| Production grader with labeled data | **Iterative Rubric** |
+| Well-defined task, need fast setup | **Simple Rubric** |
+| Complex domain, implicit criteria | **Iterative Rubric** |
+| < 50 labeled examples | **Simple Rubric** (or collect more data) |
+| 50-100+ labeled examples | **Iterative Rubric** |
+
+!!! tip "Workflow Recommendation"
+    1. Start with **Simple Rubric** for quick prototyping
+    2. Collect preference data during initial deployment
+    3. Upgrade to **Iterative Rubric** when you have 50+ labeled examples
+
+---
+
 ## Tips
 
-### Data Quality
+### Data Quality (Iterative Rubric)
 
 !!! tip "Good Practices"
     - Clear preference signals (good vs. bad is obvious)
@@ -440,7 +580,20 @@ GraderRank(
     - Ambiguous cases where labels are debatable
     - Noisy or contradictory labels
 
-### Parameter Tuning
+### Task Description Quality (Simple Rubric)
+
+!!! tip "Good Practices"
+    - Be specific about what your system does
+    - Include the target audience or use case
+    - Mention key quality dimensions you care about
+    - Provide representative sample queries
+
+!!! warning "Avoid"
+    - Vague descriptions like "chatbot" or "assistant"
+    - Missing context about the domain
+    - No sample queries (the LLM needs examples)
+
+### Parameter Tuning (Iterative Rubric)
 
 | Goal | Recommended Settings |
 |------|---------------------|

@@ -98,7 +98,7 @@ OpenJudge 将评估指标和奖励信号统一为标准化的 **Grader** 接口�
 ### 🛠️ 灵活的评分器构建方法
 选择适合您需求的构建方法：
 * **自定义：** 轻松扩展或修改预定义的评分器以满足您的特定需求。👉 [自定义评分器开发指南](https://modelscope.github.io/OpenJudge/building_graders/create_custom_graders/)
-* **数据驱动的评分标准：** 有一些示例但没有明确规则？使用我们的工具根据您的数据自动生成白盒评估标准（Rubrics）。👉 [自动评分标准生成教程](https://modelscope.github.io/OpenJudge/building_graders/generate_graders_from_data/)
+* **生成评估标准：** 需要评估标准但不想手动编写？使用 **Simple Rubric**（基于任务描述）或 **Iterative Rubric**（基于标注数据）自动生成白盒评估标准。👉 [生成评估标准作为 Grader](https://modelscope.github.io/OpenJudge/building_graders/generate_rubrics_as_graders/)
 * **训练评判模型（即将推出🚀）：** 对于大规模和专业化场景，我们正在开发训练专用评判模型的能力。SFT、Bradley-Terry 模型和强化学习工作流的支持即将推出，帮助您构建高性能、领域特定的评分器。
 
 

@@ -301,7 +301,7 @@ When running graders, focus on configuring data mappers to connect your dataset 
 
 ## Next Steps
 
-- [Generate Graders from Data](generate_graders_from_data.md) — Automate grader creation from labeled examples
+- [Generate Rubrics as Graders](generate_rubrics_as_graders.md) — Automatically generate graders from task description or labeled data
 - [Run Grading Tasks](../running_graders/run_tasks.md) — Evaluate your models at scale
 - [Grader Analysis](../running_graders/grader_analysis.md) — Validate and analyze grader results
 

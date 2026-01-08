@@ -68,11 +68,11 @@ Define evaluation logic using LLM judges or code-based functions with no trainin
 **Learn more:** [Create Custom Graders →](create_custom_graders.md) | [Built-in Graders →](../built_in_graders/overview.md)
 
 
-### Approach 2: Generate Graders from Data
+### Approach 2: Generate Rubrics as Graders
 
-Automatically analyze evaluation data to create structured scoring rubrics. Provide 50-500 labeled examples, and the generator extracts patterns to build interpretable criteria. Generated graders produce explicit rubrics that explain scoring decisions, ideal for scenarios requiring transparency and rapid refinement.
+Automatically generate evaluation rubrics and create graders. Two approaches available: **Simple Rubric** generates rubrics from task descriptions (zero-shot, no data required), while **Iterative Rubric** learns from 50-500 labeled examples to extract patterns. Both produce explicit rubrics that explain scoring decisions, ideal for scenarios requiring transparency and rapid refinement.
 
-**Learn more:** [Generate Graders from Data →](generate_graders_from_data.md)
+**Learn more:** [Generate Rubrics as Graders →](generate_rubrics_as_graders.md)
 
 
 ### Approach 3: Train Reward Models
@@ -86,7 +86,7 @@ Train neural networks on preference data to learn evaluation criteria automatica
 ## Next Steps
 
 - [Create Custom Graders](create_custom_graders.md) — Build graders using LLM or code-based logic
-- [Generate Graders from Data](generate_graders_from_data.md) — Auto-generate rubrics from labeled data
+- [Generate Rubrics as Graders](generate_rubrics_as_graders.md) — Automatically generate graders from task description or labeled data
 - [Train Reward Models](training_reward_models.md) — Train SFT, Bradley-Terry, or GRPO judge models
 - [Built-in Graders](../built_in_graders/overview.md) — Explore pre-built graders to customize
 - [Run Grading Tasks](../running_graders/run_tasks.md) — Deploy graders at scale with batch workflows

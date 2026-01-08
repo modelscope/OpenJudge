@@ -98,7 +98,7 @@ Access **50+ production-ready graders** featuring a comprehensive taxonomy, rigo
 ### 🛠️ Flexible Grader Building Methods
 Choose the build method that fits your requirements:
 * **Customization:** Easily extend or modify pre-defined graders to fit your specific needs.  👉 [Custom Grader Development Guide](https://modelscope.github.io/OpenJudge/building_graders/create_custom_graders/)
-* **Data-Driven Rubrics:** Have a few examples but no clear rules? Use our tools to automatically generate white-box evaluation criteria (Rubrics) based on your data.👉 [Automatic Rubric Generation Tutorial](https://modelscope.github.io/OpenJudge/building_graders/generate_graders_from_data/)
+* **Generate Rubrics:** Need evaluation criteria but don't want to write them manually? Use **Simple Rubric** (from task description) or **Iterative Rubric** (from labeled data) to automatically generate white-box evaluation rubrics. 👉 [Generate Rubrics as Graders](https://modelscope.github.io/OpenJudge/building_graders/generate_rubrics_as_graders/)
 * **Training Judge Models ( Coming Soon🚀):** For high-scale and specialized scenarios, we are developing the capability to train dedicated Judge models. Support for SFT, Bradley-Terry models, and Reinforcement Learning workflows is on the way to help you build high-performance, domain-specific graders.
 
 

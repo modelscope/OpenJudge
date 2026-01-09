@@ -18,8 +18,10 @@ from openjudge.models.schema.oai.message import ChatMessage
 from openjudge.models.schema.prompt_template import LanguageEnum, PromptTemplate
 
 # English Prompt
-CORRECTNESS_PROMPT_EN = """
-You are a professional data annotator responsible for evaluating whether the model response matches the provided correct response (reference response). Your task is to score according to the following criteria:
+CORRECTNESS_PROMPT_EN = textwrap.dedent(
+    """
+You are a professional data annotator responsible for evaluating whether the model response matches the provided
+correct response (reference response). Your task is to score according to the following criteria:
 
 <Scoring Criteria>
 A response that perfectly matches the reference response should:
@@ -51,7 +53,9 @@ Points should be deducted for:
 </Guidance>
 
 <Reminder>
-The goal is to evaluate correctness against reference response, not general quality. A well-written response that contradicts the reference response should score low. A simple response that accurately reflects and properly uses the reference response should score high. Consider both accuracy and appropriate application of the reference response.
+The goal is to evaluate correctness against reference response, not general quality. A well-written response that
+contradicts the reference response should score low. A simple response that accurately reflects and properly uses the
+reference response should score high. Consider both accuracy and appropriate application of the reference response.
 </Reminder>
 
 <query>
@@ -75,22 +79,30 @@ The following is the correct response for your reference (ignore if empty):
 # Output Instructions
 Provide your evaluation in the following structured JSON format:
 {{
-    "score": <integer between 1 and 5, where 5 means perfect match with reference response and 1 means complete deviation from reference response>,
-    "reason": "<brief explanation for the assigned score, specifically mentioning how the response aligns with or deviates from the reference response>"
+    "score": <integer between 1 and 5, where 5 means perfect match with reference response and 1 means complete
+    deviation from reference response>,
+    "reason": "<brief explanation for the assigned score, specifically mentioning how the response aligns with or
+    deviates from the reference response>"
 }}
 
 Scoring Scale:
-- 5: The answer is completely consistent with the reference answer in terms of facts, key details, logic, and conclusions. Different wording is acceptable as long as the meaning is equivalent.
-- 4: The core conclusion of the answer is consistent with the reference answer, but there are non-critical omissions, vague statements, or minor errors that do not affect user understanding and use.
-- 3: The answer contains some correct information, but omits key points, contains verifiable errors, or significantly misinterprets the reference content.
-- 2: The core conclusion or key facts of the answer contradict the reference answer, containing only a few superficially related words, and are generally misleading.
+- 5: The answer is completely consistent with the reference answer in terms of facts, key details, logic, and
+conclusions. Different wording is acceptable as long as the meaning is equivalent.
+- 4: The core conclusion of the answer is consistent with the reference answer, but there are non-critical omissions,
+vague statements, or minor errors that do not affect user understanding and use.
+- 3: The answer contains some correct information, but omits key points, contains verifiable errors, or significantly
+misinterprets the reference content.
+- 2: The core conclusion or key facts of the answer contradict the reference answer, containing only a few superficially
+ related words, and are generally misleading.
 - 1: The answer is completely unrelated to or directly contradicts the reference answer.
 
 JSON:
 """
+).strip()
 
 # Chinese Prompt
-CORRECTNESS_PROMPT_ZH = """
+CORRECTNESS_PROMPT_ZH = textwrap.dedent(
+    """
 你是一名专业的数据标注员，负责评估模型输出是否与提供的参考回答（reference response）一致。你的任务是根据以下标准进行评分：
 
 <评分标准>
@@ -123,7 +135,8 @@ CORRECTNESS_PROMPT_ZH = """
 </指导>
 
 <提醒>
-目标是评估与参考回答的正确性，而不是一般质量。一个写得很好但与参考回答矛盾的回答应该得分低。一个简单但准确反映并正确使用参考回答的回答应该得分高。同时考虑准确性和参考回答的适当应用。
+目标是评估与参考回答的正确性，而不是一般质量。一个写得很好但与参考回答矛盾的回答应该得分低。一个简单但准确反映并正确使用参考回答的回答应该得分高
+。同时考虑准确性和参考回答的适当应用。
 </提醒>
 
 <查询>
@@ -160,6 +173,7 @@ CORRECTNESS_PROMPT_ZH = """
 
 JSON:
 """
+).strip()
 
 # Build default template from prompts
 DEFAULT_CORRECTNESS_TEMPLATE = PromptTemplate(
@@ -167,13 +181,13 @@ DEFAULT_CORRECTNESS_TEMPLATE = PromptTemplate(
         LanguageEnum.EN: [
             ChatMessage(
                 role="user",
-                content=textwrap.dedent(CORRECTNESS_PROMPT_EN),
+                content=CORRECTNESS_PROMPT_EN,
             ),
         ],
         LanguageEnum.ZH: [
             ChatMessage(
                 role="user",
-                content=textwrap.dedent(CORRECTNESS_PROMPT_ZH),
+                content=CORRECTNESS_PROMPT_ZH,
             ),
         ],
     },
@@ -225,6 +239,7 @@ class CorrectnessGrader(LLMGrader):
             - metadata: Threshold and evaluation details
 
     Example:
+        >>> import asyncio
         >>> from openjudge.model.openai_llm import OpenAIChatModel
         >>> from openjudge.llm_judge import CorrectnessGrader
         >>>
@@ -233,19 +248,19 @@ class CorrectnessGrader(LLMGrader):
         >>> grader = CorrectnessGrader(model=model, threshold=0.7)
         >>>
         >>> # Good match
-        >>> result = await grader.aevaluate(
+        >>> result = asyncio.run(grader.aevaluate(
         ...     query="When was the product launched?",
         ...     response="The product launched in Q1 2023 in Europe, capturing 50% market share.",
         ...     reference_response="Product launched Q1 2023 in Europe with 50% market share."
-        ... )
+        ... ))
         >>> print(result.score)  # 5 - accurate to reference response
         >>>
         >>> # Poor match
-        >>> result = await grader.aevaluate(
+        >>> result = asyncio.run(grader.aevaluate(
         ...     query="When and where was the product launched?",
         ...     response="The product was launched in early 2023 in European markets.",
         ...     reference_response="The product was launched in Q1 2023 in Europe."
-        ... )
+        ... ))
         >>> print(result.score)  # 2 - deviates from reference response
     """
 

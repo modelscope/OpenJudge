@@ -18,8 +18,10 @@ from openjudge.models.schema.oai.message import ChatMessage
 from openjudge.models.schema.prompt_template import LanguageEnum, PromptTemplate
 
 # English Prompt
-INSTRUCTION_FOLLOWING_PROMPT_EN = """
-You are a professional data annotator responsible for evaluating whether the model response follows the given instructions. Your task is to score according to the following criteria:
+INSTRUCTION_FOLLOWING_PROMPT_EN = textwrap.dedent(
+    """
+You are a professional data annotator responsible for evaluating whether the model response follows the given
+instructions. Your task is to score according to the following criteria:
 
 <Scoring Criteria>
 A response that perfectly follows instructions should:
@@ -49,7 +51,9 @@ Points should be deducted for:
 </Guidance>
 
 <Reminder>
-The goal is to evaluate instruction-following capability, not content quality per se. A response can be well-written but score low if it doesn't follow instructions. Conversely, a simple response that perfectly follows all instructions should score high.
+The goal is to evaluate instruction-following capability, not content quality per se. A response can be well-written but
+ score low if it doesn't follow instructions. Conversely, a simple response that perfectly follows all instructions
+ should score high.
 </Reminder>
 
 Evaluate the following:
@@ -69,8 +73,10 @@ Evaluate the following:
 # Output Instructions
 Provide your evaluation in the following structured JSON format:
 {{
-    "score": <integer between 1 and 5, where 5 means perfect instruction adherence and 1 means complete failure to follow instructions>,
-    "reason": "<brief explanation for the assigned score, specifically mentioning which instruction requirements were met or violated>"
+    "score": <integer between 1 and 5, where 5 means perfect instruction adherence and 1 means complete failure to
+    follow instructions>,
+    "reason": "<brief explanation for the assigned score, specifically mentioning which instruction requirements were
+    met or violated>"
 }}
 
 Scoring Scale:
@@ -82,9 +88,11 @@ Scoring Scale:
 
 JSON:
 """
+).strip()
 
 # Chinese Prompt
-INSTRUCTION_FOLLOWING_PROMPT_ZH = """
+INSTRUCTION_FOLLOWING_PROMPT_ZH = textwrap.dedent(
+    """
 你是一名专业的数据标注员，负责评估模型输出是否遵循给定的指令。你的任务是根据以下标准进行评分：
 
 <评分标准>
@@ -148,6 +156,7 @@ INSTRUCTION_FOLLOWING_PROMPT_ZH = """
 
 JSON:
 """
+).strip()
 
 
 # Build default template from prompts
@@ -156,13 +165,13 @@ DEFAULT_INSTRUCTION_FOLLOWING_TEMPLATE = PromptTemplate(
         LanguageEnum.EN: [
             ChatMessage(
                 role="user",
-                content=textwrap.dedent(INSTRUCTION_FOLLOWING_PROMPT_EN),
+                content=INSTRUCTION_FOLLOWING_PROMPT_EN,
             ),
         ],
         LanguageEnum.ZH: [
             ChatMessage(
                 role="user",
-                content=textwrap.dedent(INSTRUCTION_FOLLOWING_PROMPT_ZH),
+                content=INSTRUCTION_FOLLOWING_PROMPT_ZH,
             ),
         ],
     },
@@ -233,19 +242,19 @@ class InstructionFollowingGrader(LLMGrader):
         >>> grader = InstructionFollowingGrader(model=model, threshold=0.7)
         >>>
         >>> # Good adherence
-        >>> result = await grader.aevaluate(
+        >>> result = asyncio.run(grader.aevaluate(
         ...     instruction="Write exactly 3 sentences in formal academic tone.",
         ...     output="Climate change poses serious risks. Research shows rising temperatures."
         ...            "Action is urgently needed."
-        ... )
+        ... ))
         >>> print(result.score)  # 5 - follows all requirements
         >>>
         >>> # Poor adherence
-        >>> result = await grader.aevaluate(
+        >>> result = asyncio.run(grader.aevaluate(
         ...     instruction="Write a 3-sentence summary in formal tone about climate change.",
         ...     response="Climate change is a big problem. It's getting hotter. We need to act now!",
         ...     query="Summarize the climate situation."
-        ... )
+        ... ))
         >>> print(result.score)  # 2 - informal tone, poor structure
     """
 

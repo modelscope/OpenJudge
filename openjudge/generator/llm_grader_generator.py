@@ -100,6 +100,7 @@ class LLMGraderGenerator(BaseGraderGenerator):
         rubrics = await self._generate_rubrics(dataset, **kwargs)
         return LLMGrader(
             model=self.config.model,  # type: ignore
+            name=self.config.grader_name,
             mode=self.config.grader_mode,  # type: ignore
             template=self.config.custom_evaluation_prompt,  # type: ignore
             rubrics=rubrics,

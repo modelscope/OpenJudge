@@ -1,6 +1,6 @@
 # Contribute to OpenJudge
 
-Welcome! OpenJudge is an open-source reward model platform. Your contributions help make AI alignment and evaluation more accessible to the community.
+Welcome! OpenJudge is an open-source judge model platform. Your contributions help make AI alignment and evaluation more accessible to the community.
 
 !!! info "Ways to Contribute"
     We welcome contributions of all kinds:

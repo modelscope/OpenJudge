@@ -259,7 +259,7 @@ asyncio.run(main())
 
 Running this code evaluates both responses across three quality dimensions and produces a training reward for each. These rewards can then feed into RLHF or DPO algorithms to optimize your chatbot. The output shows individual dimension scores alongside the final aggregated reward, helping you understand what drives the training signal.
 
-You now have a foundation for building reward models. Start with a single grader to validate your setup, then progressively add more dimensions as needed. The key is choosing graders that align with your application's requirements and weighting them appropriately based on what matters most for your use case.
+You now have a foundation for building composite rewards. Start with a single grader to validate your setup, then progressively add more dimensions as needed. The key is choosing graders that align with your application's requirements and weighting them appropriately based on what matters most for your use case.
 
 
 ## Explore More Graders

@@ -6,7 +6,6 @@ for evaluating the quality of responses based on various criteria and returning
 either scores or rankings.
 """
 
-# import inspect
 from abc import ABC, abstractmethod
 from typing import Any, Dict
 

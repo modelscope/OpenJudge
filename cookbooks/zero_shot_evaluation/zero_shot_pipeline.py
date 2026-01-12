@@ -58,6 +58,34 @@ class EvaluationStage(str, Enum):
     RUBRICS_GENERATED = "rubrics_generated"
     EVALUATION_COMPLETE = "evaluation_complete"
 
+    @classmethod
+    def get_order(cls, stage: "EvaluationStage") -> int:
+        """Get numeric order of a stage for comparison."""
+        order = {
+            cls.NOT_STARTED: 0,
+            cls.QUERIES_GENERATED: 1,
+            cls.RESPONSES_COLLECTED: 2,
+            cls.RUBRICS_GENERATED: 3,
+            cls.EVALUATION_COMPLETE: 4,
+        }
+        return order.get(stage, -1)
+
+    def __ge__(self, other: "EvaluationStage") -> bool:
+        """Compare stages by pipeline order, not string value."""
+        return self.get_order(self) >= self.get_order(other)
+
+    def __gt__(self, other: "EvaluationStage") -> bool:
+        """Compare stages by pipeline order, not string value."""
+        return self.get_order(self) > self.get_order(other)
+
+    def __le__(self, other: "EvaluationStage") -> bool:
+        """Compare stages by pipeline order, not string value."""
+        return self.get_order(self) <= self.get_order(other)
+
+    def __lt__(self, other: "EvaluationStage") -> bool:
+        """Compare stages by pipeline order, not string value."""
+        return self.get_order(self) < self.get_order(other)
+
 
 class _CheckpointData(BaseModel):
     """Internal checkpoint data model."""
@@ -631,7 +659,7 @@ class ZeroShotPipeline:
         if queries:
             self._queries = queries
             logger.info(f"Using {len(queries)} provided queries")
-        elif checkpoint and checkpoint.stage.value >= EvaluationStage.QUERIES_GENERATED.value:
+        elif checkpoint and checkpoint.stage >= EvaluationStage.QUERIES_GENERATED:
             self._queries = self._checkpoint_mgr.load_queries()
             logger.info(f"Resumed {len(self._queries)} queries from checkpoint")
         elif not self._queries:
@@ -645,7 +673,7 @@ class ZeroShotPipeline:
             )
 
         # Step 2: Collect or load responses
-        if checkpoint and checkpoint.stage.value >= EvaluationStage.RESPONSES_COLLECTED.value:
+        if checkpoint and checkpoint.stage >= EvaluationStage.RESPONSES_COLLECTED:
             self._responses = self._checkpoint_mgr.load_responses()
             logger.info(f"Resumed {len(self._responses)} responses from checkpoint")
         elif not self._responses:
@@ -662,7 +690,7 @@ class ZeroShotPipeline:
         if rubrics:
             self._rubrics = rubrics
             logger.info(f"Using {len(rubrics)} provided rubrics")
-        elif checkpoint and checkpoint.stage.value >= EvaluationStage.RUBRICS_GENERATED.value:
+        elif checkpoint and checkpoint.stage >= EvaluationStage.RUBRICS_GENERATED:
             self._rubrics = self._checkpoint_mgr.load_rubrics()
             logger.info(f"Resumed {len(self._rubrics)} rubrics from checkpoint")
         elif not self._rubrics:

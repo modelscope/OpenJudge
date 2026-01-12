@@ -776,9 +776,6 @@ class ZeroShotPipeline:
             total_comparisons=result.total_comparisons,
         )
 
-        if chart_path:
-            logger.info(f"Win rate chart saved to {chart_path}")
-
     def _display_results(self, result: EvaluationResult) -> None:
         """Display evaluation results with formatted output."""
         endpoint_names = list(self.config.target_endpoints.keys())

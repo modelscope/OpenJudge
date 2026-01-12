@@ -6,12 +6,11 @@ generating beautiful bar charts to display model win rates.
 """
 
 from pathlib import Path
-from typing import TYPE_CHECKING, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 from loguru import logger
 
-if TYPE_CHECKING:
-    from cookbooks.zero_shot_evaluation.schema import ChartConfig
+from cookbooks.zero_shot_evaluation.schema import ChartConfig
 
 
 class WinRateChartGenerator:
@@ -43,13 +42,13 @@ class WinRateChartGenerator:
         "#CECECE",  # Very light gray
     ]
 
-    def __init__(self, config: Optional["ChartConfig"] = None):
+    def __init__(self, config: Optional[ChartConfig] = None):
         """Initialize chart generator.
 
         Args:
             config: Chart configuration. Uses defaults if not provided.
         """
-        self.config = config
+        self.config = config or ChartConfig()
 
     def _configure_cjk_font(self, plt, font_manager) -> Optional[str]:
         """Configure matplotlib to support CJK (Chinese/Japanese/Korean) characters.
@@ -133,13 +132,13 @@ class WinRateChartGenerator:
             logger.warning("matplotlib not installed. Install with: pip install matplotlib")
             return None
 
-        # Extract config values
-        figsize = self.config.figsize if self.config else (12, 7)
-        dpi = self.config.dpi if self.config else 150
-        fmt = self.config.format if self.config else "png"
-        show_values = self.config.show_values if self.config else True
-        highlight_best = self.config.highlight_best if self.config else True
-        custom_title = self.config.title if self.config else None
+        # Extract config values (defaults are centralized in ChartConfig schema)
+        figsize = self.config.figsize
+        dpi = self.config.dpi
+        fmt = self.config.format
+        show_values = self.config.show_values
+        highlight_best = self.config.highlight_best
+        custom_title = self.config.title
 
         # Prepare data (already sorted high to low)
         model_names = [r[0] for r in rankings]
@@ -161,20 +160,17 @@ class WinRateChartGenerator:
         # Determine colors for each bar
         colors = []
         edge_colors = []
-        hatches = []
 
         for i in range(n_models):
             if i == 0 and highlight_best:
-                # Best model gets accent color with hatch pattern
+                # Best model gets accent color
                 colors.append(self.ACCENT_COLOR)
                 edge_colors.append(self.ACCENT_COLOR)
-                hatches.append(self.ACCENT_HATCH)
             else:
                 # Other models get grayscale
                 color_idx = min(i - 1, len(self.BAR_COLORS) - 1) if highlight_best else min(i, len(self.BAR_COLORS) - 1)
                 colors.append(self.BAR_COLORS[color_idx])
                 edge_colors.append(self.BAR_COLORS[color_idx])
-                hatches.append("")
 
         # Draw bars
         bars = ax.bar(
@@ -212,7 +208,7 @@ class WinRateChartGenerator:
         ax.set_xticks(x_pos)
         ax.set_xticklabels(model_names, fontsize=11, fontweight="medium")
         ax.set_ylabel("Win Rate (%)", fontsize=12, fontweight="medium", labelpad=10)
-        ax.set_ylim(0, min(100, max(win_rates) * 1.15))  # Add headroom for labels
+        ax.set_ylim(0, max(10, min(100, max(win_rates) * 1.15)))  # Add headroom for labels
 
         # Remove top and right spines
         ax.spines["top"].set_visible(False)

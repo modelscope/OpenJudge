@@ -11,7 +11,7 @@ from typing import Optional
 
 from loguru import logger
 
-from openjudge.graders.base_grader import GraderMode, GraderScore
+from openjudge.graders.base_grader import GraderError, GraderMode, GraderScore
 from openjudge.graders.llm_grader import LLMGrader
 from openjudge.models.base_chat_model import BaseChatModel
 from openjudge.models.schema.oai.message import ChatMessage
@@ -314,25 +314,19 @@ class InstructionFollowingGrader(LLMGrader):
                 response=response,
                 query=query,
             )
-            score = result.score
-            reason = result.reason
+            return GraderScore(
+                name=self.name,
+                score=result.score,
+                reason=result.reason,
+                metadata={"threshold": self.threshold},
+            )
 
         except Exception as e:
             logger.error(f"Error evaluating instruction following: {e}")
-            score = 0.0
-            reason = f"Evaluation error: {str(e)}"
-
-        # Prepare metadata
-        metadata = {
-            "threshold": self.threshold,
-        }
-
-        return GraderScore(
-            name=self.name,
-            score=score,
-            reason=reason,
-            metadata=metadata,
-        )
+            return GraderError(
+                name=self.name,
+                error=f"Evaluation error: {str(e)}",
+            )
 
 
 __all__ = ["InstructionFollowingGrader", "DEFAULT_INSTRUCTION_FOLLOWING_TEMPLATE"]

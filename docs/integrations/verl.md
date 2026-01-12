@@ -18,10 +18,10 @@
 
 ## 📖 How to Read This Guide
 
-**⏱️ New Users (30 min):**  
+**⏱️ New Users (30 min):**
 Section 1 → Section 2 (run example) → Section 4 (integration steps)
 
-**🔧 Customization (1 hour):**  
+**🔧 Customization (1 hour):**
 Section 3 (architecture) → Section 5 (performance) → Section 6 (FAQ)
 
 ---
@@ -46,18 +46,18 @@ Section 3 (architecture) → Section 5 (performance) → Section 6 (FAQ)
 
 Training an RL agent for complex tasks (like financial analysis) requires sophisticated reward functions:
 
-❌ **Single-dimensional rewards** fail to capture task complexity  
-❌ **Hand-crafted rules** are hard to maintain and extend  
-❌ **LLM-as-Judge** becomes a performance bottleneck  
+❌ **Single-dimensional rewards** fail to capture task complexity
+❌ **Hand-crafted rules** are hard to maintain and extend
+❌ **LLM-as-Judge** becomes a performance bottleneck
 ❌ **Multiple evaluation dimensions** are difficult to parallelize
 
 ### The Solution
 
 **OpenJudge** + **VERL** = Modular, High-Performance Reward Computation
 
-✅ **Modular Graders**: Compose rule-based + LLM-based evaluators  
-✅ **Async Concurrency**: Evaluate multiple samples and dimensions in parallel  
-✅ **Seamless Integration**: Drop-in replacement for VERL reward functions  
+✅ **Modular Graders**: Compose rule-based + LLM-based evaluators
+✅ **Async Concurrency**: Evaluate multiple samples and dimensions in parallel
+✅ **Seamless Integration**: Drop-in replacement for VERL reward functions
 ✅ **Production-Ready**: Battle-tested in large-scale RL training
 
 ### Architecture Overview
@@ -69,7 +69,7 @@ VERL Training → RewardManager → RewardFunction → Graders
 
 **Three Layers:**
 1. **Graders** - Individual evaluators (rule-based + LLM-based)
-2. **RewardFunction** - Orchestration and aggregation logic  
+2. **RewardFunction** - Orchestration and aggregation logic
 3. **RewardManager** - VERL framework adapter
 
 See [Section 3](#3-three-layer-architecture) for detailed architecture.
@@ -113,14 +113,14 @@ from custom_scenario.reward.openjudge_reward_manager import (
 
 class SimpleRewardFunction(BaseOpenJudgeRewardFunction):
     """Simple reward function with 3 graders."""
-    
+
     def __init__(self, model_name="qwen3-max", max_concurrency=32):
         self.model = OpenAIChatModel(model=model_name, temperature=0.0)
         self.grader_configs = {
             # LLM-based: Comprehensive trajectory evaluation
             "trajectory": GraderConfig(
                 grader=TrajectoryComprehensiveGrader(
-                    model=self.model, 
+                    model=self.model,
                     language=LanguageEnum.EN
                 ),
                 mapper=lambda data: {"messages": data["messages"]},
@@ -137,7 +137,7 @@ class SimpleRewardFunction(BaseOpenJudgeRewardFunction):
             ),
         }
         self.max_concurrency = max_concurrency
-    
+
     async def compute_batch_scores(self, prompt_to_samples):
         """Compute scores using async GradingRunner."""
         # Convert to OpenJudge format
@@ -145,23 +145,23 @@ class SimpleRewardFunction(BaseOpenJudgeRewardFunction):
         for prompt, samples in prompt_to_samples.items():
             dataset = [{"messages": s.messages} for s in samples]
             datasets.append(dataset)
-        
+
         # Create runner (fresh instance to avoid event loop issues)
         runner = GradingRunner(
             grader_configs=self.grader_configs,
             max_concurrency=self.max_concurrency,
             show_progress=True,
         )
-        
+
         # Run async evaluation
         runner_results = await runner.arun_multiple_datasets(datasets)
-        
+
         # Parse results and create RewardResult objects
         results = []
         for dataset_idx, dataset_results in enumerate(runner_results):
             prompt = list(prompt_to_samples.keys())[dataset_idx]
             samples = prompt_to_samples[prompt]
-            
+
             for sample_idx, sample in enumerate(samples):
                 # Extract scores from each grader
                 scores = {}
@@ -169,17 +169,17 @@ class SimpleRewardFunction(BaseOpenJudgeRewardFunction):
                     grader_result = dataset_results[grader_name][sample_idx]
                     score = grader_result.score if hasattr(grader_result, "score") else 0.0
                     scores[f"{grader_name}_score"] = score
-                
+
                 # Simple average aggregation
                 total_score = sum(scores.values()) / len(scores)
-                
+
                 results.append(RewardResult(
                     original_index=sample.original_index,
                     group_index=sample.group_index,
                     score=total_score,
                     reward_info=scores,
                 ))
-        
+
         return results
 
 
@@ -271,16 +271,16 @@ class MyRewardFunction(BaseOpenJudgeRewardFunction):
     async def compute_batch_scores(self, prompt_to_samples):
         # 1. Convert to OpenJudge format
         datasets = [...]
-        
+
         # 2. Create runner (fresh instance per call - important!)
         runner = GradingRunner(
             grader_configs=self.grader_configs,
             max_concurrency=32,  # Controls concurrent API calls
         )
-        
+
         # 3. Run async evaluation
         results = await runner.arun_multiple_datasets(datasets)
-        
+
         # 4. Parse and aggregate
         return self._aggregate_scores(results)
 ```
@@ -304,16 +304,16 @@ class OpenJudgeRewardManager:
     def __call__(self, data: DataProto):
         # 1. Decode tokens → text
         prompts, responses = self._decode_tokens(data)
-        
+
         # 2. Create samples with metadata
         samples = self._create_samples(prompts, responses, data)
-        
+
         # 3. Group by prompt (enables listwise reward computation)
         prompt_to_samples = self._group_by_prompt(samples)
-        
+
         # 4. Call reward function (async evaluation)
         results = asyncio.run(self.compute_score(prompt_to_samples))
-        
+
         # 5. Reconstruct order and fill tensor
         return self._fill_reward_tensor(results, data)
 ```
@@ -365,7 +365,7 @@ from typing import Any, Dict, List
 
 class ResponseLengthGrader(BaseGrader):
     """Penalize responses that are too short or too long."""
-    
+
     def __init__(self, min_length=50, max_length=500):
         super().__init__(
             name="response_length",
@@ -374,13 +374,13 @@ class ResponseLengthGrader(BaseGrader):
         )
         self.min_length = min_length
         self.max_length = max_length
-    
+
     async def aevaluate(self, messages: List[Dict[str, Any]]) -> GraderScore:
         # Extract final response
         final_message = messages[-1]
         response_text = final_message.get("content", "")
         length = len(response_text)
-        
+
         # Scoring logic
         if length < self.min_length:
             score = length / self.min_length  # Penalize short responses
@@ -388,7 +388,7 @@ class ResponseLengthGrader(BaseGrader):
             score = max(0.0, 1.0 - (length - self.max_length) / self.max_length)
         else:
             score = 1.0  # Optimal length
-        
+
         return GraderScore(
             name=self.name,
             score=score,
@@ -450,7 +450,7 @@ from custom_scenario.reward.openjudge_reward_manager import (
 
 class MyRewardFunction(BaseOpenJudgeRewardFunction):
     """Custom reward function with multiple graders."""
-    
+
     def __init__(
         self,
         model_name: str = "qwen3-max",
@@ -463,10 +463,10 @@ class MyRewardFunction(BaseOpenJudgeRewardFunction):
             model=model_name,
             temperature=temperature,
         )
-        
+
         # Create grader configurations
         self.grader_configs = self.create_grader_configs(self.model)
-        
+
         # Store parameters
         self.max_concurrency = max_concurrency
         self.grader_weights = grader_weights or {
@@ -475,11 +475,11 @@ class MyRewardFunction(BaseOpenJudgeRewardFunction):
             "info_gain": 0.3,
         }
         self.grader_names = list(self.grader_configs.keys())
-    
+
     def create_grader_configs(self, model) -> Dict[str, GraderConfig]:
         """
         Define evaluation dimensions.
-        
+
         Each GraderConfig contains:
         - grader: The grader instance
         - mapper: Function to extract required fields from data
@@ -490,33 +490,33 @@ class MyRewardFunction(BaseOpenJudgeRewardFunction):
                 grader=TrajectoryComprehensiveGrader(model=model),
                 mapper=lambda data: {"messages": data["messages"]},
             ),
-            
+
             # Dimension 2: Action loop detection (rule-based)
             "action_loop": GraderConfig(
                 grader=ActionLoopDetectionGrader(similarity_threshold=1.0),
                 mapper=lambda data: {"messages": data["messages"]},
             ),
-            
+
             # Dimension 3: Information gain (rule-based)
             "info_gain": GraderConfig(
                 grader=ObservationInformationGainGrader(similarity_threshold=0.5),
                 mapper=lambda data: {"messages": data["messages"]},
             ),
-            
+
             # Add more dimensions as needed...
         }
-    
+
     async def compute_batch_scores(
         self,
         prompt_to_samples: Dict[str, List[RewardSample]]
     ) -> List[RewardResult]:
         """
         Main evaluation logic.
-        
+
         Args:
             prompt_to_samples: Dict mapping prompts to their response samples
                 Example: {"What is AI?": [sample1, sample2, sample3, sample4]}
-        
+
         Returns:
             List of RewardResult (order-independent, matched by original_index)
         """
@@ -532,7 +532,7 @@ class MyRewardFunction(BaseOpenJudgeRewardFunction):
                 }
                 dataset.append(data_item)
             datasets.append(dataset)
-        
+
         # Step 2: Create GradingRunner (fresh instance per call)
         # This avoids asyncio event loop issues
         runner = GradingRunner(
@@ -540,7 +540,7 @@ class MyRewardFunction(BaseOpenJudgeRewardFunction):
             max_concurrency=self.max_concurrency,
             show_progress=True,
         )
-        
+
         # Step 3: Run async evaluation
         # This is where the magic happens - concurrent execution!
         try:
@@ -549,12 +549,12 @@ class MyRewardFunction(BaseOpenJudgeRewardFunction):
             logger.error(f"Grading failed: {e}")
             # Return default scores on error
             return self._create_error_results(prompt_to_samples, error=str(e))
-        
+
         # Step 4: Parse and aggregate results
         results = self._parse_and_aggregate(runner_results, prompt_to_samples)
-        
+
         return results
-    
+
     def _parse_and_aggregate(
         self,
         runner_results: List[Dict[str, List]],
@@ -563,11 +563,11 @@ class MyRewardFunction(BaseOpenJudgeRewardFunction):
         """Parse runner results and aggregate scores."""
         all_results = []
         prompt_list = list(prompt_to_samples.keys())
-        
+
         for dataset_idx, dataset_results in enumerate(runner_results):
             prompt = prompt_list[dataset_idx]
             group_samples = prompt_to_samples[prompt]
-            
+
             for sample_idx, sample in enumerate(group_samples):
                 # Collect scores from all graders
                 scores = {}
@@ -575,17 +575,17 @@ class MyRewardFunction(BaseOpenJudgeRewardFunction):
                     grader_result = dataset_results[grader_name][sample_idx]
                     score = grader_result.score if hasattr(grader_result, "score") else 0.0
                     scores[f"{grader_name}_score"] = score
-                
+
                 # Aggregate using weighted average
                 total_score = sum(
                     scores[f"{name}_score"] * self.grader_weights.get(name, 1.0)
                     for name in self.grader_names
                 )
-                
+
                 # Normalize by sum of weights
                 total_weight = sum(self.grader_weights.get(name, 1.0) for name in self.grader_names)
                 final_score = total_score / total_weight if total_weight > 0 else 0.0
-                
+
                 # Create result
                 result = RewardResult(
                     original_index=sample.original_index,
@@ -601,9 +601,9 @@ class MyRewardFunction(BaseOpenJudgeRewardFunction):
                     },
                 )
                 all_results.append(result)
-        
+
         return all_results
-    
+
     def _create_error_results(self, prompt_to_samples, error):
         """Create default results on error."""
         results = []
@@ -731,10 +731,10 @@ The dynamic import logic is implemented in `verl/trainer/ppo/reward.py`:
 ```python
 def load_reward_manager(config, tokenizer, num_examine, **reward_kwargs):
     """Load reward manager from class path."""
-    
+
     # Check for custom class path in reward_kwargs
     reward_manager_class_path = reward_kwargs.pop("reward_manager_class_path", None)
-    
+
     if reward_manager_class_path:
         # Split module path and class name
         if ":" in reward_manager_class_path:
@@ -743,7 +743,7 @@ def load_reward_manager(config, tokenizer, num_examine, **reward_kwargs):
             parts = reward_manager_class_path.split(".")
             module_path = ".".join(parts[:-1])
             class_name = parts[-1]
-        
+
         # Import the module and get the class
         module = importlib.import_module(module_path)
         reward_manager_cls = getattr(module, class_name)
@@ -751,10 +751,10 @@ def load_reward_manager(config, tokenizer, num_examine, **reward_kwargs):
         # Use built-in reward manager
         reward_manager_name = config.reward_model.get("reward_manager", "naive")
         reward_manager_cls = get_reward_manager_cls(reward_manager_name)
-    
+
     # Get custom reward function
     compute_score = get_custom_reward_fn(config)
-    
+
     # Instantiate reward manager
     return reward_manager_cls(
         tokenizer=tokenizer,
@@ -787,27 +787,27 @@ from verl.trainer.ppo.ray_trainer import RayPPOTrainer
 
 class MyRayPPOTrainer(RayPPOTrainer):
     """Custom trainer with OpenJudge reward handling."""
-    
+
     def _compute_or_extract_reward(self, batch, reward_fn=None, return_dict=False):
         """
         Compute or extract rewards.
-        
+
         Handles reward_extra_info["details"] properly.
         """
         if "rm_scores" in batch.batch.keys():
             # Use cached scores
             reward_tensor = batch.batch["rm_scores"]
-            
+
             if return_dict:
                 reward_extra_keys = batch.meta_info.get("reward_extra_keys", [])
                 reward_extra_info = {
-                    key: batch.non_tensor_batch[key] 
+                    key: batch.non_tensor_batch[key]
                     for key in reward_extra_keys
                 } if reward_extra_keys else {}
                 return {"reward_tensor": reward_tensor, "reward_extra_info": reward_extra_info}
             else:
                 return reward_tensor, {}
-        
+
         # Compute rewards using reward_fn
         if return_dict:
             result = reward_fn(batch, return_dict=True)
@@ -815,25 +815,25 @@ class MyRayPPOTrainer(RayPPOTrainer):
         else:
             reward_tensor, reward_extra_infos_dict = compute_reward(batch, reward_fn)
             return reward_tensor, reward_extra_infos_dict
-    
+
     def _dump_generations(self, messages, inputs, outputs, scores, reward_extra_infos_dict, dump_path, all_details=None):
         """
         Dump training samples with details.
-        
+
         Extracts details from reward_extra_info["details"] if not provided separately.
         """
         os.makedirs(dump_path, exist_ok=True)
         filename = os.path.join(dump_path, f"{self.global_steps}.jsonl")
-        
+
         # Extract details from dict if not provided
         if all_details is None and "details" in reward_extra_infos_dict:
             all_details = reward_extra_infos_dict["details"]
             # Remove from dict to avoid duplication
             reward_extra_infos_dict = {
-                k: v for k, v in reward_extra_infos_dict.items() 
+                k: v for k, v in reward_extra_infos_dict.items()
                 if k != "details"
             }
-        
+
         # Prepare data
         n = len(inputs)
         base_data = {
@@ -843,22 +843,22 @@ class MyRayPPOTrainer(RayPPOTrainer):
             "score": scores,
             "step": [self.global_steps] * n,
         }
-        
+
         # Add reward_extra_info fields
         for k, v in reward_extra_infos_dict.items():
             if len(v) == n:
                 base_data[k] = v
-        
+
         # Add details if available
         if all_details is not None and len(all_details) == n:
             base_data["details"] = all_details
-        
+
         # Write JSONL
         lines = []
         for i in range(n):
             entry = {k: v[i] for k, v in base_data.items()}
             lines.append(json.dumps(entry, ensure_ascii=False))
-        
+
         with open(filename, "w") as f:
             f.write("\n".join(lines) + "\n")
 ```
@@ -907,16 +907,16 @@ class GradingRunner:
     def __init__(self, grader_configs, max_concurrency=32):
         self.grader_configs = grader_configs
         self.semaphore = asyncio.Semaphore(max_concurrency)
-    
+
     async def _evaluate_with_semaphore(self, grader, data_item):
         """Single evaluation with concurrency control."""
         async with self.semaphore:
             return await grader.aevaluate(**data_item)
-    
+
     async def arun_multiple_datasets(self, datasets):
         """Evaluate multiple datasets concurrently."""
         all_tasks = []
-        
+
         # Create tasks for all graders × all samples × all datasets
         for dataset in datasets:
             for data_item in dataset:
@@ -926,10 +926,10 @@ class GradingRunner:
                         grader_config.mapper(data_item)
                     )
                     all_tasks.append((grader_name, task))
-        
+
         # Execute all tasks concurrently (respecting semaphore limit)
         results = await asyncio.gather(*[task for _, task in all_tasks])
-        
+
         # Group results by dataset and grader
         return self._group_results(results, datasets)
 ```
@@ -1051,46 +1051,46 @@ self.runner = GradingRunner(...)  # In __init__
 def _reconstruct_results(self, result_items, data_length):
     """
     Convert List[RewardResult] to final output format.
-    
+
     Args:
         result_items: Order-independent results from RewardFunction
         data_length: Original batch size
-    
+
     Returns:
         (all_rewards, all_reward_infos) in original order
     """
     # Build index mapping
     result_map = {item.original_index: item for item in result_items}
-    
+
     # Validate integrity
     assert len(result_map) == data_length, "Missing results!"
     assert set(result_map.keys()) == set(range(data_length)), "Index mismatch!"
-    
+
     # Extract in original order
     all_rewards = [result_map[i].score for i in range(data_length)]
-    
+
     # Collect all reward_info fields
     all_info_keys = set()
     for item in result_items:
         all_info_keys.update(item.reward_info.keys())
-    
+
     # Fill missing keys with 0.0
     for item in result_items:
         for key in all_info_keys:
             if key not in item.reward_info:
                 item.reward_info[key] = 0.0
-    
+
     # Reconstruct reward_info dict
     all_reward_infos = {
         key: [result_map[i].reward_info[key] for i in range(data_length)]
         for key in all_info_keys
     }
-    
+
     # Add details if available
     all_details = [result_map[i].details for i in range(data_length)]
     if any(d is not None for d in all_details):
         all_reward_infos["details"] = all_details
-    
+
     return all_rewards, all_reward_infos
 ```
 
@@ -1098,59 +1098,59 @@ def _reconstruct_results(self, result_items, data_length):
 
 ### General Questions
 
-**Q: Can I use OpenJudge without LLM-as-Judge graders?**  
+**Q: Can I use OpenJudge without LLM-as-Judge graders?**
 A: Yes! Use only rule-based graders (ActionLoop, InformationGain) to avoid API costs.
 
-**Q: Does this work with non-OpenAI LLM providers?**  
+**Q: Does this work with non-OpenAI LLM providers?**
 A: Yes, OpenJudge supports any OpenAI-compatible API (Azure, vLLM, etc.)
 
 ### Performance Questions
 
-**Q: What's the recommended `max_concurrency` setting?**  
+**Q: What's the recommended `max_concurrency` setting?**
 A: Start with 32. Adjust based on your API rate limits:
 - 500 RPM → max_concurrency=32
 - 3000 RPM → max_concurrency=64
 - Self-hosted: Depends on GPU capacity
 
-**Q: How much does async concurrency speed things up?**  
+**Q: How much does async concurrency speed things up?**
 A: Typical speedup is 10-30×:
 - Sequential: 3 graders × 64 samples × 200ms = 38.4s
 - Async (32 concurrent): ~1.2s
 
-**Q: What's the overhead of prompt grouping?**  
+**Q: What's the overhead of prompt grouping?**
 A: Negligible (<1ms per batch). The benefits far outweigh the cost.
 
 ### Troubleshooting
 
-**Q: "attached to different event loop" error?**  
+**Q: "attached to different event loop" error?**
 A: Create fresh `GradingRunner` per training step (see [Section 5.1](#critical-event-loop-management))
 
-**Q: Getting zero scores?**  
+**Q: Getting zero scores?**
 A: Enable debug logging: `logger.add(sys.stderr, level="DEBUG")`
 
-**Q: Results count mismatch?**  
+**Q: Results count mismatch?**
 A: Check `GraderConfig` mapper provides all required fields
 
-**Q: Slow training?**  
+**Q: Slow training?**
 A: (1) Increase `max_concurrency`, (2) Reduce redundant graders, (3) Enable `launch_reward_fn_async=True`
 
 ### Integration Questions
 
-**Q: Can I use OpenJudge with non-VERL frameworks?**  
+**Q: Can I use OpenJudge with non-VERL frameworks?**
 A: Yes! The core `RewardFunction` only depends on OpenJudge. You just need to:
 1. Create your own manager to convert your framework's format
 2. Call `reward_fn.compute_batch_scores(prompt_to_samples)`
 
-**Q: Can I mix OpenJudge with other reward sources?**  
+**Q: Can I mix OpenJudge with other reward sources?**
 A: Yes! Combine rewards in your custom trainer:
 ```python
 def _compute_or_extract_reward(self, batch, reward_fn):
     # OpenJudge rewards
     openjudge_rewards = reward_fn(batch)
-    
+
     # Other rewards (e.g., task success)
     task_rewards = self.task_evaluator(batch)
-    
+
     # Combine
     final_rewards = 0.7 * openjudge_rewards + 0.3 * task_rewards
     return final_rewards
@@ -1164,17 +1164,17 @@ def _compute_or_extract_reward(self, batch, reward_fn):
 ```python
 class BaseOpenJudgeRewardFunction:
     """Base class for OpenJudge reward functions."""
-    
+
     async def compute_batch_scores(
         self,
         prompt_to_samples: Dict[str, List[RewardSample]]
     ) -> List[RewardResult]:
         """
         Compute scores for grouped samples.
-        
+
         Args:
             prompt_to_samples: Dict mapping prompts to samples
-        
+
         Returns:
             List of RewardResult (order-independent)
         """
@@ -1186,7 +1186,7 @@ class BaseOpenJudgeRewardFunction:
 ```python
 class OpenJudgeRewardManager:
     """VERL framework integration layer."""
-    
+
     def __init__(
         self,
         tokenizer,
@@ -1196,14 +1196,14 @@ class OpenJudgeRewardManager:
     ):
         """
         Initialize reward manager.
-        
+
         Args:
             tokenizer: VERL tokenizer
             num_examine: Number of samples to log
             compute_score: Reward function instance
         """
         ...
-    
+
     def __call__(
         self,
         data: DataProto,
@@ -1211,11 +1211,11 @@ class OpenJudgeRewardManager:
     ):
         """
         Compute rewards for DataProto batch.
-        
+
         Args:
             data: VERL DataProto
             return_dict: Return dict with extra info
-        
+
         Returns:
             reward_tensor or dict with reward_tensor and reward_extra_info
         """

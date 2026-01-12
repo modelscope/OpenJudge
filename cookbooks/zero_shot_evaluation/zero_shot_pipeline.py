@@ -731,8 +731,8 @@ class ZeroShotPipeline:
         if self.config.report.enabled:
             await self._generate_and_save_report(result)
 
-        # Step 7: Generate win rate chart if enabled
-        if self.config.report.chart.enabled:
+        # Step 7: Generate win rate chart if enabled (requires report.enabled)
+        if self.config.report.enabled and self.config.report.chart.enabled:
             self._generate_win_rate_chart(result)
 
         return result

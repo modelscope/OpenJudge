@@ -6,7 +6,7 @@ import json
 import re
 from typing import Any
 
-from openjudge.graders.base_grader import BaseGrader
+from openjudge.graders.base_grader import BaseGrader, require_string_response
 from openjudge.graders.schema import GraderMode, GraderScore
 
 
@@ -40,6 +40,7 @@ class ReasoningToolCallFormatGrader(BaseGrader):
         self._consecutive_end_tool_call_tag_pattern = re.compile(r"</tool_call>\s*</tool_call>")
 
     # pylint: disable=too-many-statements
+    @require_string_response
     async def aevaluate(self, response: str, **kwargs: Any) -> GraderScore:
         """
         Check tool call format and calculate reward score.
@@ -80,15 +81,6 @@ class ReasoningToolCallFormatGrader(BaseGrader):
             >>> print(result.score)
             1.0
         """
-        # Input validation
-        if not isinstance(response, str):
-            return GraderScore(
-                name=self.name,
-                score=0.0,
-                reason=f"Invalid input type: expected str, got {type(response).__name__}",
-                metadata={"error": "invalid_input_type"},
-            )
-
         # Extract tag contents
         think_matches = self._think_pattern.search(response)
         answer_matches = self._answer_pattern.search(response)

@@ -5,7 +5,7 @@ It contains the LengthPenaltyGrader class which applies penalties for content
 that is either too short or too long according to configured thresholds.
 """
 
-from openjudge.graders.base_grader import BaseGrader
+from openjudge.graders.base_grader import BaseGrader, require_string_response
 from openjudge.graders.schema import GraderMode, GraderScore
 
 
@@ -37,6 +37,7 @@ class LengthPenaltyGrader(BaseGrader):
         self.max_length = max_length
         self.penalty_rate = penalty_rate
 
+    @require_string_response
     async def aevaluate(self, response: str) -> GraderScore:
         """
         Calculate length-based penalty for text content.
@@ -76,15 +77,6 @@ class LengthPenaltyGrader(BaseGrader):
             >>> print(result.score < 0)
             True
         """
-        # Input validation
-        if not isinstance(response, str):
-            return GraderScore(
-                name=self.name,
-                score=0.0,
-                reason=f"Invalid input type: expected str, got {type(response).__name__}",
-                metadata={"error": "invalid_input_type"},
-            )
-
         length = len(response)
 
         penalty = 0.0

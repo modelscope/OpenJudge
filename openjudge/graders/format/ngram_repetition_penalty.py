@@ -7,7 +7,12 @@ import re
 from collections import Counter
 from typing import Any, List, Literal
 
-from openjudge.graders.base_grader import BaseGrader, GraderMode, GraderScore
+from openjudge.graders.base_grader import (
+    BaseGrader,
+    GraderMode,
+    GraderScore,
+    require_string_response,
+)
 from openjudge.utils.tokenizer import TokenizerEnum, get_tokenizer
 
 
@@ -107,6 +112,7 @@ class NgramRepetitionPenaltyGrader(BaseGrader):
                 return -(repetition_rate - self.penalty_threshold) * self.penalty_rate
             return 0.0
 
+    @require_string_response
     async def aevaluate(self, response: str, **kwargs: Any) -> GraderScore:
         """
         Calculate N-gram repetition penalty for text content.
@@ -146,15 +152,6 @@ class NgramRepetitionPenaltyGrader(BaseGrader):
             >>> print(result.score)
             0.0
         """
-        # Input validation
-        if not isinstance(response, str):
-            return GraderScore(
-                name=self.name,
-                score=0.0,
-                reason=f"Invalid input type: expected str, got {type(response).__name__}",
-                metadata={"error": "invalid_input_type"},
-            )
-
         # Select text based on analysis scope
         if self.analyze_scope == "thought":
             text_to_analyze = self._extract_thought_process(response)

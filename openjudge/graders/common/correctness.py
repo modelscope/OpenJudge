@@ -228,7 +228,7 @@ class CorrectnessGrader(LLMGrader):
 
     Args:
         model: BaseChatModel instance or dict config for OpenAIChatModel
-        threshold: Minimum score [0, 1] to pass (default: 0.7)
+        threshold: Minimum score [1, 5] to pass (default: 3)
         template: Custom evaluation template (default: DEFAULT_CORRECTNESS_TEMPLATE)
         language: Prompt language - EN or ZH (default: LanguageEnum.EN)
 
@@ -245,7 +245,7 @@ class CorrectnessGrader(LLMGrader):
         >>>
         >>> # Initialize grader
         >>> model = OpenAIChatModel(api_key="sk-...", model="qwen3-max")
-        >>> grader = CorrectnessGrader(model=model, threshold=0.7)
+        >>> grader = CorrectnessGrader(model=model, threshold=3)
         >>>
         >>> # Good match
         >>> result = asyncio.run(grader.aevaluate(
@@ -267,7 +267,7 @@ class CorrectnessGrader(LLMGrader):
     def __init__(
         self,
         model: BaseChatModel | dict,
-        threshold: float = 0.7,
+        threshold: float = 3,
         template: Optional[PromptTemplate] = DEFAULT_CORRECTNESS_TEMPLATE,
         language: LanguageEnum = LanguageEnum.EN,
     ):
@@ -276,7 +276,7 @@ class CorrectnessGrader(LLMGrader):
 
         Args:
             model: BaseChatModel instance or dict config for OpenAIChatModel
-            threshold: Success threshold [0, 1] (default: 0.7)
+            threshold: Success threshold [1, 5] (default: 3)
             template: PromptTemplate for evaluation prompts (default: DEFAULT_CORRECTNESS_TEMPLATE)
             language: Language for prompts (default: LanguageEnum.EN)
         """

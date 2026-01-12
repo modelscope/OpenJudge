@@ -198,7 +198,7 @@ class HallucinationGrader(LLMGrader):
 
     Args:
         model: BaseChatModel instance or dict config for OpenAIChatModel
-        threshold: Minimum score [0, 1] to pass (default: 0.7)
+        threshold: Minimum score [1, 5] to pass (default: 3)
         template: Custom evaluation template (default: DEFAULT_HALLUCINATION_TEMPLATE)
         language: Prompt language - EN or ZH (default: LanguageEnum.EN)
 
@@ -221,7 +221,7 @@ class HallucinationGrader(LLMGrader):
         ... )
         >>>
         >>> # Create grader
-        >>> grader = HallucinationGrader(model=model, threshold=0.7)
+        >>> grader = HallucinationGrader(model=model, threshold=3)
         >>>
         >>> # With context: Good output (grounded in context)
         >>> result = asyncio.run(grader.aevaluate(
@@ -252,7 +252,7 @@ class HallucinationGrader(LLMGrader):
     def __init__(
         self,
         model: BaseChatModel | dict,
-        threshold: float = 0.7,
+        threshold: float = 3,
         template: Optional[PromptTemplate] = DEFAULT_HALLUCINATION_TEMPLATE,
         language: LanguageEnum = LanguageEnum.EN,
     ):
@@ -261,7 +261,7 @@ class HallucinationGrader(LLMGrader):
 
         Args:
             model: BaseChatModel instance or dict config for OpenAIChatModel
-            threshold: Success threshold [0, 1] (default: 0.7)
+            threshold: Success threshold [1, 5] (default: 3)
             template: PromptTemplate for evaluation prompts (default: DEFAULT_HALLUCINATION_TEMPLATE)
             language: Language for prompts (default: LanguageEnum.EN)
         """

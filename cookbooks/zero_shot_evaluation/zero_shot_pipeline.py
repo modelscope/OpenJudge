@@ -23,6 +23,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from loguru import logger
 from pydantic import BaseModel, Field
 
+from cookbooks.zero_shot_evaluation.chart_generator import WinRateChartGenerator
 from cookbooks.zero_shot_evaluation.query_generator import QueryGenerator
 from cookbooks.zero_shot_evaluation.response_collector import ResponseCollector
 from cookbooks.zero_shot_evaluation.schema import (
@@ -702,6 +703,10 @@ class ZeroShotPipeline:
         if self.config.report.enabled:
             await self._generate_and_save_report(result)
 
+        # Step 7: Generate win rate chart if enabled
+        if self.config.report.chart.enabled:
+            self._generate_win_rate_chart(result)
+
         return result
 
     async def _generate_and_save_report(self, result: EvaluationResult) -> None:
@@ -727,6 +732,24 @@ class ZeroShotPipeline:
         with open(report_path, "w", encoding="utf-8") as f:
             f.write(report)
         logger.info(f"Report saved to {report_path}")
+
+    def _generate_win_rate_chart(self, result: EvaluationResult) -> None:
+        """Generate and save win rate comparison chart."""
+        logger.info("Step 7: Generating win rate chart...")
+
+        chart_config = self.config.report.chart
+        generator = WinRateChartGenerator(config=chart_config)
+
+        chart_path = generator.generate(
+            rankings=result.rankings,
+            output_dir=self.config.output.output_dir,
+            task_description=self.config.task.description,
+            total_queries=result.total_queries,
+            total_comparisons=result.total_comparisons,
+        )
+
+        if chart_path:
+            logger.info(f"Win rate chart saved to {chart_path}")
 
     def _display_results(self, result: EvaluationResult) -> None:
         """Display evaluation results with formatted output."""

@@ -77,6 +77,9 @@ verl = [
     "transformers>=4.52.4,<5.0.0",
     "verl"
 ]
+visualization = [
+    "matplotlib>=3.7.0,<4.0.0"
+]
 
 [project.urls]
 Homepage = "https://github.com/modelscope/OpenJudge"

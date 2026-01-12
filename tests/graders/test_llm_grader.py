@@ -67,7 +67,7 @@ class TestLLMGraderUnit:
                 model=AsyncMock(),
                 name="foo",
             )
-        assert "Template must be a str, dict or PromptTemplate object" in str(error_obj.value)
+        assert "Template must be a str, list, dict or PromptTemplate object" in str(error_obj.value)
 
     def test_initialization_with_string_template(self):
         """Test successful initialization with string template"""

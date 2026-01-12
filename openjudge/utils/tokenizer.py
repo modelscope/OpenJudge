@@ -80,7 +80,7 @@ class BaseTokenizer(BaseModel, ABC):
             str: Preprocessed text.
 
         Example:
-            >>> tokenizer = BaseTokenizer(name="test")
+            >>> tokenizer = SimpleTokenizer()
             >>> result = tokenizer.preprocess_text("  Hello World  ", to_lower=True)
             >>> print(result)
             hello world
@@ -139,8 +139,11 @@ class TiktokenTokenizer(BaseTokenizer):
             # Convert token ids back to strings for comparison
             token_strings = [encoding.decode([token]) for token in tokens]
             return token_strings
-        except Exception:
-            # Fallback to simple splitting if tiktoken fails
+        except ImportError:
+            # Fallback to simple splitting if tiktoken not installed
+            return text.split()
+        except KeyError:
+            # Fallback if encoding name is invalid
             return text.split()
 
 

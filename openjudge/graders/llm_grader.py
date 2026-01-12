@@ -133,10 +133,13 @@ class LLMGrader(BaseGrader):
             )
         elif isinstance(template, PromptTemplate):
             self.template = template
+        elif isinstance(template, list):
+            # Support list of message dicts or ChatMessage objects
+            self.template = PromptTemplate.from_prompt(template)
         elif isinstance(template, dict):
             self.template = PromptTemplate(**template)
         else:
-            raise ValueError("Template must be a str, dict or PromptTemplate object")
+            raise ValueError("Template must be a str, list, dict or PromptTemplate object")
 
         # Initialize model
         if isinstance(model, dict):

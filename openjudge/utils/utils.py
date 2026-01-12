@@ -40,7 +40,8 @@ def repair_and_load_json(
     repaired = json_str
     try:
         repaired = repair_json(json_str)
-    except Exception:
+    except (ValueError, TypeError):
+        # repair_json may fail on malformed input, keep original string
         pass
 
     try:
@@ -136,8 +137,7 @@ def create_tool_from_base_model(
     Note:
         The function automatically removes the 'title' field from
         the JSON schema to ensure compatibility with function calling
-        format. This is handled by the internal [_remove_title_field]
-        (file://.openjudge/utils/utils.py#L33-L55) function.
+        format. This is handled by the internal `_remove_title_field` function.
     """
     schema = structured_model.model_json_schema()
 
@@ -200,5 +200,6 @@ def trim_and_load_json(response: str, metric: Any = None) -> Dict[str, Any]:
     except json.JSONDecodeError as e:
         error_msg = f"Failed to parse JSON from response: {e}\nResponse: {response[:200]}"
         if metric:
-            logger.error(f"{metric.name}: {error_msg}")
+            metric_name = getattr(metric, "name", "unknown_metric")
+            logger.error(f"{metric_name}: {error_msg}")
         raise ValueError(error_msg) from e

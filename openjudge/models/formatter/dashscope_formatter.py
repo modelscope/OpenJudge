@@ -75,15 +75,15 @@ class DashScopeFormatter(BaseFormatter):
         Returns:
             Content in OpenAI format.
         """
-        # Return empty string if no content input
-        if not content:
+        # Return empty string if content is None
+        if content is None:
             return ""
 
         # If content is a string, return as is
         if isinstance(content, str):
             return content
 
-        # If content is a list, process each part
+        # If content is a list, process each part (including empty list)
         if isinstance(content, list):
             openai_content = []
             for part in content:
@@ -135,15 +135,15 @@ class DashScopeFormatter(BaseFormatter):
         Returns:
             Content in DashScope format.
         """
-        # Return empty string if no content input
-        if not content:
+        # Return empty string if content is None
+        if content is None:
             return ""
 
         # If content is a string, return as is
         if isinstance(content, str):
             return content
 
-        # If content is a list, process each part
+        # If content is a list, process each part (including empty list)
         if isinstance(content, list):
             dashscope_content = []
             for part in content:

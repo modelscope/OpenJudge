@@ -167,9 +167,8 @@ class PromptTemplate(BaseModel):
             List[ChatMessage]: The messages for the specified language.
 
         Raises:
-            AssertionError: If the specified language is not available in a
-                multilingual template.
-            ValueError: If messages format is invalid.
+            ValueError: If the specified language is not available in a
+                multilingual template, or if messages format is invalid.
 
         Examples:
             >>> template = PromptTemplate(messages=[ChatMessage(role="user", content="Hello")])
@@ -182,16 +181,17 @@ class PromptTemplate(BaseModel):
             [ChatMessage(role="user", content="Hello")]
         """
         if isinstance(self.messages, list):
-            messages = self.messages
-        elif isinstance(self.messages, dict):
+            return self.messages
+
+        if isinstance(self.messages, dict):
             if not language:
                 language = LanguageEnum.EN
-            assert language in self.messages
-            messages = self.messages.get(language, [])
-        else:
-            raise ValueError("Invalid messages")
+            if language not in self.messages:
+                available = [lang.value for lang in self.messages.keys()]
+                raise ValueError(f"Language '{language.value}' not found. Available: {available}")
+            return self.messages[language]
 
-        return messages
+        raise ValueError("Invalid messages format")
 
     @classmethod
     def from_prompt(cls, prompt: Prompt) -> "PromptTemplate":
@@ -280,7 +280,7 @@ class PromptTemplate(BaseModel):
         messages = [message.format(**kwargs).to_dict() for message in messages]
         return messages
 
-    def get_prompt(self, language: LanguageEnum = None) -> Dict[str, List[Dict[str, str]]]:
+    def get_prompt(self, language: LanguageEnum | None = None) -> Dict[str, List[Dict[str, str]]]:
         """Return the core prompts (role, content) information of the messages,
         in a {language: list[{'role': txt, 'content': txt}]} dictionary.
         """

@@ -29,7 +29,7 @@ class BaseChatModel(ABC):
         ...     async def achat(self, *args, **kwargs):
         ...         # Implementation here
         ...         pass
-        >>> model = MyChatModel(model="qwen3-max", stream=False)
+        >>> model = MyChatModel(model="qwen3-32b", stream=False)
         >>> print(model.model)
         qwen3-32b
     """
@@ -52,11 +52,12 @@ class BaseChatModel(ABC):
             stream: Whether the model output is streaming or not.
 
         Example:
-            >>> model = BaseChatModel(model="qwen3-32b", stream=True)
+            >>> class MyChatModel(BaseChatModel):
+            ...     async def achat(self, *args, **kwargs):
+            ...         pass
+            >>> model = MyChatModel(model="qwen3-32b", stream=True)
             >>> print(model.model)
             qwen3-32b
-            >>> print(model.stream)
-            True
         """
         self.model = model
         self.stream = stream
@@ -102,9 +103,11 @@ class BaseChatModel(ABC):
             ValueError: If tool_choice is invalid.
 
         Example:
-            >>> model = BaseChatModel(model="test", stream=False)
+            >>> class MyChatModel(BaseChatModel):
+            ...     async def achat(self, *args, **kwargs):
+            ...         pass
+            >>> model = MyChatModel(model="test", stream=False)
             >>> model._validate_tool_choice("auto", None)  # Valid
-            >>> # model._validate_tool_choice(123, None)  # Would raise TypeError
         """
         if not isinstance(tool_choice, str):
             raise TypeError(

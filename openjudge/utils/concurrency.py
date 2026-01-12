@@ -6,6 +6,9 @@ evaluations to prevent resource exhaustion and manage system load.
 """
 
 import asyncio
+from typing import Awaitable, TypeVar
+
+T = TypeVar("T")
 
 
 class ConcurrencyManager:
@@ -61,15 +64,15 @@ class ConcurrencyManager:
         """
         return self._max_concurrency
 
-    async def run_with_concurrency_control(self, coro):
+    async def run_with_concurrency_control(self, coro: Awaitable[T]) -> T:
         """
         Run a coroutine with concurrency control.
 
         Args:
-            coro: The coroutine to run
+            coro: The coroutine to run.
 
         Returns:
-            The result of the coroutine
+            T: The result of the coroutine.
         """
         async with self._semaphore:
             return await coro

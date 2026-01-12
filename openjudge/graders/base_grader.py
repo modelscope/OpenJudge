@@ -59,7 +59,10 @@ class BaseGrader(ABC):
                      accessible to subclasses.
 
         Example:
-            >>> grader = BaseGrader(
+            >>> class MyGrader(BaseGrader):
+            ...     async def aevaluate(self, **kwargs):
+            ...         pass
+            >>> grader = MyGrader(
             ...     name="accuracy_grader",
             ...     mode=GraderMode.POINTWISE,
             ...     description="Evaluates answer accuracy"
@@ -188,7 +191,12 @@ class BaseGrader(ABC):
         # Extract standard grader properties from a copy to avoid mutating the input config
         config_copy = dict(config)
         name = config_copy.pop("name", "")
-        mode = config_copy.pop("mode", GraderMode.POINTWISE)
+        mode_value = config_copy.pop("mode", GraderMode.POINTWISE)
+        # Convert string to GraderMode if necessary
+        if isinstance(mode_value, str):
+            mode = GraderMode(mode_value)
+        else:
+            mode = mode_value
         description = config_copy.pop("description", "")
 
         # Create and return new instance with remaining config items as kwargs

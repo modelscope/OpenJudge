@@ -142,9 +142,10 @@ class GraderRank(GraderResult):
 
 
 class GraderRankCallback(BaseModel):
-    """Callback for grader rank result, used for .
+    """Callback schema for LLM structured output in listwise grading.
 
-    Represents a ranking of items assigned by a grader along with a reason.
+    Used as the structured_model parameter in LLMGrader for LISTWISE mode.
+    The LLM returns this schema which is then converted to GraderRank.
 
     Attributes:
         rank (List[int]): The ranking of items.

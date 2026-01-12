@@ -64,7 +64,7 @@ def init_instance_by_config(
         >>> # From config dict
         >>> config = {
         ...     'class_name': 'StringMatchGrader',
-        ...     'module_path': 'openjudge.text.string_match',
+        ...     'module_path': 'openjudge.graders.text.string_match',
         ...     'kwargs': {'ignore_case': True}
         ... }
         >>> # instance = init_instance_by_config(config)
@@ -74,8 +74,8 @@ def init_instance_by_config(
         >>> # instance = init_instance_by_config(existing_instance)
         >>>
         >>> # With type checking
-        >>> # from openjudge.grader.base import Grader
-        >>> # instance = init_instance_by_config(config, accept_type=Grader)
+        >>> # from openjudge.graders.base_grader import BaseGrader
+        >>> # instance = init_instance_by_config(config, accept_type=BaseGrader)
     """
     # If config is already an instance, just check its type
     if not isinstance(config, dict):

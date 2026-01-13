@@ -6,7 +6,7 @@ JSON processing, schema manipulation, and data extraction from LLM responses.
 """
 
 import json
-from typing import Any, Dict, Type
+from typing import Any, Dict, Optional, Type
 
 from json_repair import repair_json
 from loguru import logger
@@ -203,3 +203,42 @@ def trim_and_load_json(response: str, metric: Any = None) -> Dict[str, Any]:
             metric_name = getattr(metric, "name", "unknown_metric")
             logger.error(f"{metric_name}: {error_msg}")
         raise ValueError(error_msg) from e
+
+
+async def parse_structured_chat_response(
+    chat_response: Any,
+    default: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    """Parse structured response from streaming or non-streaming chat response.
+
+    For streaming responses, returns the last chunk's parsed result (complete).
+    For non-streaming responses, returns the parsed result directly.
+
+    Args:
+        chat_response: Chat response object from model.achat() with structured_model.
+            Can be either streaming (async iterator) or non-streaming.
+        default: Default dict to return if parsing fails. Defaults to empty dict.
+
+    Returns:
+        Dict[str, Any]: The parsed structured response containing fields like
+            'score' and 'reason'.
+
+    Example:
+        >>> response = await model.achat(messages, structured_model=GraderScoreCallback)
+        >>> parsed = await parse_structured_chat_response(response)
+        >>> score = parsed.get("score", 5.0)
+        >>> reason = parsed.get("reason", "")
+    """
+    if default is None:
+        default = {}
+
+    if hasattr(chat_response, "__aiter__"):
+        # Streaming response - only the last chunk contains complete result
+        parsed = None
+        async for chunk in chat_response:
+            if chunk.parsed:
+                parsed = chunk.parsed
+        return parsed if parsed is not None else default
+
+    # Non-streaming response
+    return chat_response.parsed if chat_response.parsed else default

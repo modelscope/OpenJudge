@@ -95,6 +95,8 @@ class TestTextToImageGraderUnit:
     @pytest.mark.asyncio
     async def test_error_handling(self):
         """Test graceful error handling"""
+        from openjudge.graders.base_grader import GraderError
+
         # Create mock model that raises exception
         mock_model = AsyncMock(spec=BaseChatModel)
         mock_model.achat = AsyncMock(side_effect=Exception("API Error"))
@@ -109,10 +111,9 @@ class TestTextToImageGraderUnit:
             response=mock_image,
         )
 
-        # Assertions
-        # TextToImageGrader returns 0.5 (default) on error, not 0.0
-        assert result.score == 0.5
-        assert "error" in result.reason.lower()
+        # Assertions - grader returns GraderError on exception
+        assert isinstance(result, GraderError)
+        assert "Evaluation error: API Error" in result.error
 
 
 # ==================== QUALITY TESTS ====================

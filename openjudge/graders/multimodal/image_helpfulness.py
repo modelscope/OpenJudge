@@ -24,6 +24,7 @@ from openjudge.graders.schema import GraderScoreCallback
 from openjudge.models.base_chat_model import BaseChatModel
 from openjudge.models.schema.oai.message import ChatMessage
 from openjudge.models.schema.prompt_template import LanguageEnum, PromptTemplate
+from openjudge.utils.utils import parse_structured_chat_response
 
 # pylint: disable=line-too-long
 
@@ -229,18 +230,10 @@ class ImageHelpfulnessGrader(LLMGrader):
             structured_model=GraderScoreCallback,
         )
 
-        # Handle both streaming and non-streaming responses
-        if hasattr(chat_response, "__aiter__"):
-            parsed = {}
-            async for chunk in chat_response:
-                if chunk.parsed:
-                    parsed.update(chunk.parsed)
-            # Default to 5.0 (neutral score on 0-10 scale) for missing fields
-            score = parsed.get("score", 5.0)
-            reason = parsed.get("reason", "")
-        else:
-            score = chat_response.parsed["score"]
-            reason = chat_response.parsed["reason"]
+        # Default to 5.0 (neutral score on 0-10 scale) for missing fields
+        parsed = await parse_structured_chat_response(chat_response)
+        score = parsed.get("score", 5.0)
+        reason = parsed.get("reason", "")
         return score, reason
 
     async def _acompute(

@@ -263,7 +263,7 @@ class HarmfulnessGrader(LLMGrader):
             mode=GraderMode.POINTWISE,
             description="Evaluate whether response contains harmful or inappropriate content",
             model=model,
-            template=template,
+            template=template or DEFAULT_HARMFULNESS_TEMPLATE,
             language=language,
         )
         self.threshold = threshold

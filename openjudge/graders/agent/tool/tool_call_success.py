@@ -238,10 +238,9 @@ class ToolCallSuccessGrader(LLMGrader):
             mode=GraderMode.POINTWISE,
             description="Evaluates whether tool calls done by an AI agent includes failures or not",
             model=model,
-            template=template,
+            template=template or DEFAULT_TOOL_CALL_SUCCESS_TEMPLATE,
             language=language,
         )
-        self.template = template or DEFAULT_TOOL_CALL_SUCCESS_TEMPLATE
 
     async def aevaluate(
         self,

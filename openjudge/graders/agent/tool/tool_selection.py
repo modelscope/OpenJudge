@@ -205,7 +205,7 @@ class ToolSelectionGrader(LLMGrader):
         super().__init__(
             name="tool_selection",
             mode=GraderMode.POINTWISE,
-            description="Evaluate tool selection ",
+            description="Evaluate tool selection",
             model=model,
             template=template or DEFAULT_TOOL_SELECTION_TEMPLATE,
             language=language,

@@ -27,7 +27,8 @@ from openjudge.models.schema.prompt_template import LanguageEnum, PromptTemplate
 # pylint: disable=line-too-long
 
 # English Prompt
-IMAGE_COHERENCE_PROMPT_EN = """
+IMAGE_COHERENCE_PROMPT_EN = textwrap.dedent(
+    """
 # Task Description
 You are a multi-modal document evaluation assistant. You will receive an image and its textual context.
 Your task is to evaluate the coherence between the image and the text (context above and below) it accompanies.
@@ -62,9 +63,11 @@ Provide your evaluation in the following structured JSON format:
 # Image
 [Insert Image Here]
 """
+).strip()
 
 # Chinese Prompt
-IMAGE_COHERENCE_PROMPT_ZH = """
+IMAGE_COHERENCE_PROMPT_ZH = textwrap.dedent(
+    """
 # 任务描述
 你是一名多模态文档评估助手。你将收到一张图片及其文本背景。
 你的任务是评估图片与其伴随文本（上下文）之间的连贯性。
@@ -99,6 +102,7 @@ IMAGE_COHERENCE_PROMPT_ZH = """
 # 图片
 [在此插入图片]
 """
+).strip()
 
 # Build default template from prompts
 DEFAULT_IMAGE_COHERENCE_TEMPLATE = PromptTemplate(
@@ -106,13 +110,13 @@ DEFAULT_IMAGE_COHERENCE_TEMPLATE = PromptTemplate(
         LanguageEnum.EN: [
             ChatMessage(
                 role="user",
-                content=textwrap.dedent(IMAGE_COHERENCE_PROMPT_EN),
+                content=IMAGE_COHERENCE_PROMPT_EN,
             ),
         ],
         LanguageEnum.ZH: [
             ChatMessage(
                 role="user",
-                content=textwrap.dedent(IMAGE_COHERENCE_PROMPT_ZH),
+                content=IMAGE_COHERENCE_PROMPT_ZH,
             ),
         ],
     },
@@ -159,19 +163,20 @@ class ImageCoherenceGrader(LLMGrader):
         GraderScore with normalized coherence score [0, 1]
 
     Example:
+        >>> import asyncio
         >>> from openjudge.model.openai_llm import OpenAIChatModel
         >>> from openjudge.multimodal import ImageCoherenceGrader, MLLMImage
         >>>
         >>> model = OpenAIChatModel(api_key="sk-...", model="qwen3-max")
         >>> grader = ImageCoherenceGrader(model=model)
         >>>
-        >>> result = await grader.aevaluate(
+        >>> result = asyncio.run(grader.aevaluate(
         ...     response=[
         ...         "Q3 sales increased 25%.",
         ...         MLLMImage(url="https://example.com/sales_chart.jpg"),
         ...         "Growth driven by new products."
         ...     ]
-        ... )
+        ... ))
         >>> print(result.score)  # 0.95 - image coherent with sales context
     """
 
@@ -198,7 +203,7 @@ class ImageCoherenceGrader(LLMGrader):
             grader_mode=GraderMode.POINTWISE,
             description="Evaluate image-text coherence",
             model=model,
-            template=template,
+            template=template or DEFAULT_IMAGE_COHERENCE_TEMPLATE,
             language=language,
         )
         self.max_context_size = max_context_size

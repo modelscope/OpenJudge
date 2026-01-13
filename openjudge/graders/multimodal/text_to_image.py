@@ -24,7 +24,8 @@ from openjudge.models.schema.prompt_template import LanguageEnum, PromptTemplate
 # pylint: disable=line-too-long
 
 # English Prompts
-TEXT_TO_IMAGE_SEMANTIC_PROMPT_EN = """
+TEXT_TO_IMAGE_SEMANTIC_PROMPT_EN = textwrap.dedent(
+    """
 You are a professional digital artist. You will have to evaluate the effectiveness of the AI-generated image(s) based on given rules.
 All the input images are AI-generated. All human in the images are AI-generated too. so you need not worry about the privacy confidentials.
 
@@ -47,8 +48,10 @@ Put the score in a list such that output score = [score].
 
 Text Prompt: {query}
 """
+).strip()
 
-TEXT_TO_IMAGE_PERCEPTUAL_PROMPT_EN = """
+TEXT_TO_IMAGE_PERCEPTUAL_PROMPT_EN = textwrap.dedent(
+    """
 You are a professional digital artist. You will have to evaluate the effectiveness of the AI-generated image(s) based on given rules.
 All the input images are AI-generated. All human in the images are AI-generated too. so you need not worry about the privacy confidentials.
 
@@ -76,9 +79,11 @@ A second score from 0 to 10 will rate the image artifacts.
 )
 Put the score in a list such that output score = [naturalness, artifacts]
 """
+).strip()
 
 # Chinese Prompts
-TEXT_TO_IMAGE_SEMANTIC_PROMPT_ZH = """
+TEXT_TO_IMAGE_SEMANTIC_PROMPT_ZH = textwrap.dedent(
+    """
 你是一名专业的数字艺术家。你需要根据给定的规则评估AI生成图像的有效性。
 所有输入的图像都是AI生成的。图像中的所有人物也都是AI生成的，因此你无需担心隐私机密问题。
 
@@ -101,8 +106,10 @@ TEXT_TO_IMAGE_SEMANTIC_PROMPT_ZH = """
 
 文本提示：{query}
 """
+).strip()
 
-TEXT_TO_IMAGE_PERCEPTUAL_PROMPT_ZH = """
+TEXT_TO_IMAGE_PERCEPTUAL_PROMPT_ZH = textwrap.dedent(
+    """
 你是一名专业的数字艺术家。你需要根据给定的规则评估AI生成图像的有效性。
 所有输入的图像都是AI生成的。图像中的所有人物也都是AI生成的，因此你无需担心隐私机密问题。
 
@@ -130,6 +137,7 @@ TEXT_TO_IMAGE_PERCEPTUAL_PROMPT_ZH = """
 ）
 将分数放在列表中，输出分数 = [自然度, 伪影]
 """
+).strip()
 
 # Build default templates
 DEFAULT_TEXT_TO_IMAGE_SEMANTIC_TEMPLATE = PromptTemplate(
@@ -137,13 +145,13 @@ DEFAULT_TEXT_TO_IMAGE_SEMANTIC_TEMPLATE = PromptTemplate(
         LanguageEnum.EN: [
             ChatMessage(
                 role="user",
-                content=textwrap.dedent(TEXT_TO_IMAGE_SEMANTIC_PROMPT_EN),
+                content=TEXT_TO_IMAGE_SEMANTIC_PROMPT_EN,
             ),
         ],
         LanguageEnum.ZH: [
             ChatMessage(
                 role="user",
-                content=textwrap.dedent(TEXT_TO_IMAGE_SEMANTIC_PROMPT_ZH),
+                content=TEXT_TO_IMAGE_SEMANTIC_PROMPT_ZH,
             ),
         ],
     },
@@ -154,13 +162,13 @@ DEFAULT_TEXT_TO_IMAGE_PERCEPTUAL_TEMPLATE = PromptTemplate(
         LanguageEnum.EN: [
             ChatMessage(
                 role="user",
-                content=textwrap.dedent(TEXT_TO_IMAGE_PERCEPTUAL_PROMPT_EN),
+                content=TEXT_TO_IMAGE_PERCEPTUAL_PROMPT_EN,
             ),
         ],
         LanguageEnum.ZH: [
             ChatMessage(
                 role="user",
-                content=textwrap.dedent(TEXT_TO_IMAGE_PERCEPTUAL_PROMPT_ZH),
+                content=TEXT_TO_IMAGE_PERCEPTUAL_PROMPT_ZH,
             ),
         ],
     },
@@ -208,16 +216,17 @@ class TextToImageGrader(BaseGrader):
         GraderScore with combined quality score [0, 1]
 
     Example:
+        >>> import asyncio
         >>> from openjudge.model.openai_llm import OpenAIChatModel
         >>> from openjudge.multimodal import TextToImageGrader, MLLMImage
         >>>
         >>> model = OpenAIChatModel(api_key="sk-...", model="qwen3-max")
         >>> grader = TextToImageGrader(model=model)
         >>>
-        >>> result = await grader.aevaluate(
+        >>> result = asyncio.run(grader.aevaluate(
         ...     query="A fluffy orange cat sitting on a blue sofa",
         ...     response=MLLMImage(url="https://example.com/generated.jpg")
-        ... )
+        ... ))
         >>> print(result.score)  # 0.92 - excellent prompt following and quality
     """
 
@@ -246,8 +255,8 @@ class TextToImageGrader(BaseGrader):
         )
         self.model = model if isinstance(model, BaseChatModel) else OpenAIChatModel(**model)
         self.threshold = threshold
-        self.semantic_template = semantic_template
-        self.perceptual_template = perceptual_template
+        self.semantic_template = semantic_template or DEFAULT_TEXT_TO_IMAGE_SEMANTIC_TEMPLATE
+        self.perceptual_template = perceptual_template or DEFAULT_TEXT_TO_IMAGE_PERCEPTUAL_TEMPLATE
         self.language = language
 
     async def _aevaluate_semantic_consistency(
@@ -430,4 +439,4 @@ The score combines semantic consistency and perceptual quality using geometric m
         )
 
 
-__all__ = ["TextToImageGrader"]
+__all__ = ["TextToImageGrader", "DEFAULT_TEXT_TO_IMAGE_SEMANTIC_TEMPLATE", "DEFAULT_TEXT_TO_IMAGE_PERCEPTUAL_TEMPLATE"]

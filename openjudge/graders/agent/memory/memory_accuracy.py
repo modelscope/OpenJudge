@@ -180,7 +180,7 @@ class MemoryAccuracyGrader(LLMGrader):
             mode=GraderMode.POINTWISE,
             description="Evaluate memory accuracy",
             model=model,
-            template=template,
+            template=template or DEFAULT_MEMORY_ACCURACY_TEMPLATE,
             language=language,
         )
 

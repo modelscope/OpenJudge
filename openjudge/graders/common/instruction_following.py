@@ -279,7 +279,7 @@ class InstructionFollowingGrader(LLMGrader):
             mode=GraderMode.POINTWISE,
             description="Evaluate whether response follows the given instructions",
             model=model,
-            template=template,
+            template=template or DEFAULT_INSTRUCTION_FOLLOWING_TEMPLATE,
             language=language,
         )
         self.threshold = threshold

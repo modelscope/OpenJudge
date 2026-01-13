@@ -285,7 +285,7 @@ class CorrectnessGrader(LLMGrader):
             mode=GraderMode.POINTWISE,
             description="Evaluate whether response matches the provided reference response",
             model=model,
-            template=template,
+            template=template or DEFAULT_CORRECTNESS_TEMPLATE,
             language=language,
         )
         self.threshold = threshold

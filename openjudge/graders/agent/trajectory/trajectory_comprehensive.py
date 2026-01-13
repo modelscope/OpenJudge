@@ -427,7 +427,7 @@ class TrajectoryComprehensiveGrader(LLMGrader):
             mode=GraderMode.POINTWISE,
             description="Comprehensive evaluation for agent trajectories including step-level and overall problem-solving assessment",
             model=model,
-            template=template,
+            template=template or DEFAULT_TRAJECTORY_COMPREHENSIVE_TEMPLATE,
             language=language,
             structured_model=TrajectoryEvaluationOutput,
             callback=self._create_trajectory_callback(language=language),

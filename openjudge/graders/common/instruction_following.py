@@ -238,7 +238,7 @@ class InstructionFollowingGrader(LLMGrader):
         >>> from openjudge.graders.common.instruction_following import InstructionFollowingGrader
         >>>
         >>> # Initialize grader
-        >>> model = OpenAIChatModel(api_key="sk-...", model="qwen3-max")
+        >>> model = OpenAIChatModel(api_key="sk-...", model="qwen3-32b")
         >>> grader = InstructionFollowingGrader(model=model, threshold=3)
         >>>
         >>> # Good adherence
@@ -262,7 +262,7 @@ class InstructionFollowingGrader(LLMGrader):
         self,
         model: BaseChatModel | dict,
         threshold: float = 3,
-        template: Optional[PromptTemplate] = DEFAULT_INSTRUCTION_FOLLOWING_TEMPLATE,
+        template: Optional[PromptTemplate] = None,
         language: LanguageEnum = LanguageEnum.EN,
     ):
         """
@@ -273,13 +273,19 @@ class InstructionFollowingGrader(LLMGrader):
             threshold: Success threshold [1, 5] (default: 3)
             template: PromptTemplate for evaluation prompts (default: DEFAULT_INSTRUCTION_FOLLOWING_TEMPLATE)
             language: Language for prompts (default: LanguageEnum.EN)
+
+        Raises:
+            ValueError: If threshold is not in range [1, 5]
         """
+        if not 1 <= threshold <= 5:
+            raise ValueError(f"threshold must be in range [1, 5], got {threshold}")
+
         super().__init__(
             name="instruction_following",
             mode=GraderMode.POINTWISE,
             description="Evaluate whether response follows the given instructions",
             model=model,
-            template=template,
+            template=template or DEFAULT_INSTRUCTION_FOLLOWING_TEMPLATE,
             language=language,
         )
         self.threshold = threshold
@@ -318,11 +324,11 @@ class InstructionFollowingGrader(LLMGrader):
                 name=self.name,
                 score=result.score,
                 reason=result.reason,
-                metadata={"threshold": self.threshold},
+                metadata={**result.metadata, "threshold": self.threshold},
             )
 
         except Exception as e:
-            logger.error(f"Error evaluating instruction following: {e}")
+            logger.exception(f"Error evaluating instruction following: {e}")
             return GraderError(
                 name=self.name,
                 error=f"Evaluation error: {str(e)}",

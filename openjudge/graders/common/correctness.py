@@ -244,7 +244,7 @@ class CorrectnessGrader(LLMGrader):
         >>> from openjudge.graders.common.correctness import CorrectnessGrader
         >>>
         >>> # Initialize grader
-        >>> model = OpenAIChatModel(api_key="sk-...", model="qwen3-max")
+        >>> model = OpenAIChatModel(api_key="sk-...", model="qwen3-32b")
         >>> grader = CorrectnessGrader(model=model, threshold=3)
         >>>
         >>> # Good match
@@ -268,7 +268,7 @@ class CorrectnessGrader(LLMGrader):
         self,
         model: BaseChatModel | dict,
         threshold: float = 3,
-        template: Optional[PromptTemplate] = DEFAULT_CORRECTNESS_TEMPLATE,
+        template: Optional[PromptTemplate] = None,
         language: LanguageEnum = LanguageEnum.EN,
     ):
         """
@@ -279,13 +279,19 @@ class CorrectnessGrader(LLMGrader):
             threshold: Success threshold [1, 5] (default: 3)
             template: PromptTemplate for evaluation prompts (default: DEFAULT_CORRECTNESS_TEMPLATE)
             language: Language for prompts (default: LanguageEnum.EN)
+
+        Raises:
+            ValueError: If threshold is not in range [1, 5]
         """
+        if not 1 <= threshold <= 5:
+            raise ValueError(f"threshold must be in range [1, 5], got {threshold}")
+
         super().__init__(
             name="correctness",
             mode=GraderMode.POINTWISE,
             description="Evaluate whether response matches the provided reference response",
             model=model,
-            template=template,
+            template=template or DEFAULT_CORRECTNESS_TEMPLATE,
             language=language,
         )
         self.threshold = threshold
@@ -330,11 +336,11 @@ class CorrectnessGrader(LLMGrader):
                 name=self.name,
                 score=result.score,
                 reason=result.reason,
-                metadata={"threshold": self.threshold},
+                metadata={**result.metadata, "threshold": self.threshold},
             )
 
         except Exception as e:
-            logger.error(f"Error evaluating correctness: {e}")
+            logger.exception(f"Error evaluating correctness: {e}")
             return GraderError(
                 name=self.name,
                 error=f"Evaluation error: {str(e)}",

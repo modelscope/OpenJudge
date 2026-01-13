@@ -62,7 +62,7 @@ class TestImageCoherenceGraderUnit:
         # Create a simple mock response object (not AsyncMock to avoid __aiter__ check)
         class MockResponse:
             def __init__(self):
-                self.metadata = {
+                self.parsed = {
                     "score": 8.0,  # Will be normalized to 0.8 (divided by 10)
                     "reason": "Image is highly coherent with surrounding text",
                 }

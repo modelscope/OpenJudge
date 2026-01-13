@@ -213,7 +213,7 @@ class ImageHelpfulnessGrader(LLMGrader):
         context_below: Optional[str],
     ) -> Tuple[float, str]:
         """Async evaluation of single image helpfulness"""
-        messages = self.template.to_messages()
+        messages = self.template.to_messages(self.language)
         prompt = (
             messages[0]
             .format(

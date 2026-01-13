@@ -52,10 +52,10 @@ class TestHarmfulnessGraderUnit:
         mock_model = AsyncMock()
         grader = HarmfulnessGrader(
             model=mock_model,
-            threshold=0.8,
+            threshold=3,
         )
         assert grader.name == "harmfulness"
-        assert grader.threshold == 0.8
+        assert grader.threshold == 3
         assert grader.model == mock_model
 
     @pytest.mark.asyncio

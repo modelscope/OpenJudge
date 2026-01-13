@@ -73,7 +73,7 @@ class TestCorrectnessGraderUnit:
             mock_model = AsyncMock()
             grader = CorrectnessGrader(
                 model=mock_model,
-                threshold=0.7,
+                threshold=3,
                 language=LanguageEnum.EN,
             )
 
@@ -93,7 +93,7 @@ class TestCorrectnessGraderUnit:
             assert isinstance(result.score, (int, float))
             assert result.score >= 1 and result.score <= 5
             assert "Correctness score" in result.reason
-            assert result.metadata["threshold"] == 0.7
+            assert result.metadata["threshold"] == 3
 
             # Verify model was called correctly
             mock_achat.assert_called_once()
@@ -116,7 +116,7 @@ class TestCorrectnessGraderUnit:
             mock_model = AsyncMock()
             grader = CorrectnessGrader(
                 model=mock_model,
-                threshold=0.7,
+                threshold=3,
                 language=LanguageEnum.EN,
             )
 
@@ -132,7 +132,7 @@ class TestCorrectnessGraderUnit:
             # Verify result structure
             assert result.name == "correctness"
             assert isinstance(result.score, (int, float))
-            assert result.metadata["threshold"] == 0.7
+            assert result.metadata["threshold"] == 3
 
             # Verify model was called correctly
             mock_achat.assert_called_once()

@@ -87,13 +87,13 @@ def validate_and_sort_rubrics(
     # Sort rubrics by start of range
     sorted_rubrics = sorted(rubrics, key=lambda r: r.score_range[0])
 
-    # Full overlap check
+    # Full overlap check (adjacent ranges like (0,5) and (5,7) are allowed)
     for i in range(len(sorted_rubrics)):
         a_start, a_end = sorted_rubrics[i].score_range
         for j in range(i + 1, len(sorted_rubrics)):
             b_start, b_end = sorted_rubrics[j].score_range
-            # Check if ranges overlap
-            if a_end >= b_start:
+            # Check if ranges overlap (> allows adjacent ranges to touch)
+            if a_end > b_start:
                 raise ValueError(
                     f"Overlapping score ranges: {sorted_rubrics[i].score_range} and {sorted_rubrics[j].score_range}",
                 )
@@ -147,7 +147,7 @@ def construct_params_string(
         >>> construct_params_string(params)
         'Input and Actual Output'
     """
-    params = [PARAM_DISPLAY_NAMES[param] for param in evaluation_params]
+    params = [PARAM_DISPLAY_NAMES.get(param, param.replace("_", " ").title()) for param in evaluation_params]
 
     if len(params) == 1:
         params_str = params[0]
@@ -164,7 +164,7 @@ def get_score_range(rubric: Optional[List[Rubric]]) -> Tuple[int, int]:
     Get the overall score range from rubrics
 
     Args:
-        rubric: List of rubric definitions
+        rubric: List of rubric definitions (does not need to be sorted)
 
     Returns:
         Tuple of (min_score, max_score)
@@ -180,7 +180,9 @@ def get_score_range(rubric: Optional[List[Rubric]]) -> Tuple[int, int]:
     if not rubric:
         return (0, 10)
 
-    return rubric[0].score_range[0], rubric[-1].score_range[1]
+    min_score = min(r.score_range[0] for r in rubric)
+    max_score = max(r.score_range[1] for r in rubric)
+    return (min_score, max_score)
 
 
 __all__ = [

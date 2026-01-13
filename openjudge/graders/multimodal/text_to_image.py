@@ -279,6 +279,7 @@ class TextToImageGrader(BaseGrader):
 
                 # Extract score and reason from metadata
                 score = parsed.get("score", 0.0)
+                score = score if isinstance(score, list) else [score]
                 reason = parsed.get("reason", "")
             else:
                 # Non-streaming response
@@ -305,9 +306,24 @@ class TextToImageGrader(BaseGrader):
                 messages=[{"role": "user", "content": content}],
                 structured_model=GraderScoreCallback,
             )
-            score = chat_response.parsed["score"]
-            score = score[:2] if isinstance(score, list) else [score, score]
-            reason = chat_response.parsed["reason"]
+
+            # Handle both streaming and non-streaming responses
+            if hasattr(chat_response, "__aiter__"):
+                collected_content = []
+                parsed = {}
+                async for chunk in chat_response:
+                    if chunk.content:
+                        collected_content.extend(chunk.content)
+                    if chunk.parsed:
+                        parsed.update(chunk.parsed)
+
+                score = parsed.get("score", [5.0, 5.0])
+                score = score[:2] if isinstance(score, list) else [score, score]
+                reason = parsed.get("reason", "")
+            else:
+                score = chat_response.parsed["score"]
+                score = score[:2] if isinstance(score, list) else [score, score]
+                reason = chat_response.parsed["reason"]
             return score, reason
 
         except Exception as e:

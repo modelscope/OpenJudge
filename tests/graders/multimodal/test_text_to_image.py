@@ -64,7 +64,7 @@ class TestTextToImageGraderUnit:
         # Create simple mock response objects (not AsyncMock to avoid __aiter__ check)
         class MockResponse:
             def __init__(self, score, reason):
-                self.metadata = {"score": score, "reason": reason}
+                self.parsed = {"score": score, "reason": reason}
 
         # TextToImageGrader calls model twice (semantic + perceptual)
         mock_semantic = MockResponse(8.0, "Good semantic consistency")

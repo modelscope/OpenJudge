@@ -216,7 +216,7 @@ class HallucinationGrader(LLMGrader):
         >>> # Initialize model
         >>> model = OpenAIChatModel(
         ...     api_key="sk-...",
-        ...     model="qwen3-max",
+        ...     model="qwen3-32b",
         ...     temperature=0.1
         ... )
         >>>
@@ -253,7 +253,7 @@ class HallucinationGrader(LLMGrader):
         self,
         model: BaseChatModel | dict,
         threshold: float = 3,
-        template: Optional[PromptTemplate] = DEFAULT_HALLUCINATION_TEMPLATE,
+        template: Optional[PromptTemplate] = None,
         language: LanguageEnum = LanguageEnum.EN,
     ):
         """
@@ -264,7 +264,13 @@ class HallucinationGrader(LLMGrader):
             threshold: Success threshold [1, 5] (default: 3)
             template: PromptTemplate for evaluation prompts (default: DEFAULT_HALLUCINATION_TEMPLATE)
             language: Language for prompts (default: LanguageEnum.EN)
+
+        Raises:
+            ValueError: If threshold is not in range [1, 5]
         """
+        if not 1 <= threshold <= 5:
+            raise ValueError(f"threshold must be in range [1, 5], got {threshold}")
+
         super().__init__(
             name="hallucination",
             mode=GraderMode.POINTWISE,
@@ -322,11 +328,11 @@ class HallucinationGrader(LLMGrader):
                 name=self.name,
                 score=result.score,
                 reason=result.reason,
-                metadata={"threshold": self.threshold},
+                metadata={**result.metadata, "threshold": self.threshold},
             )
 
         except Exception as e:
-            logger.error(f"Error evaluating hallucination: {e}")
+            logger.exception(f"Error evaluating hallucination: {e}")
             return GraderError(
                 name=self.name,
                 error=f"Evaluation error: {str(e)}",

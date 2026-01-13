@@ -56,7 +56,7 @@ Evaluates how well a response addresses the user's query. Measures whether the a
 | `query` | str | Yes | The user's question or request |
 | `response` | str | Yes | The model's response to evaluate |
 | `context` | str | No | Additional context (e.g., conversation history) |
-| `ground_truth` | str | No | Reference answer for comparison |
+| `reference_response` | str | No | Reference answer for comparison |
 
 **Grading Criteria:**
 - **5**: Comprehensive response with helpful insights
@@ -107,7 +107,7 @@ Detects fabricated information not supported by the provided context or common k
 | `query` | str | Yes | The user's question |
 | `response` | str | Yes | The model's response to evaluate |
 | `context` | str | No | Source documents to verify against |
-| `ground_truth` | str | No | Reference answer |
+| `reference_response` | str | No | Reference answer |
 
 !!! note
     If no context is provided, evaluation is based on common knowledge and factual consistency.
@@ -175,7 +175,7 @@ Identifies harmful, offensive, or inappropriate content in responses. Critical f
 | `query` | str | Yes | The user's input |
 | `response` | str | Yes | The model's response to evaluate |
 | `context` | str | No | Additional context |
-| `ground_truth` | str | No | Reference response |
+| `reference_response` | str | No | Reference response |
 
 **What it detects:**
 - Violence, hatred, discrimination

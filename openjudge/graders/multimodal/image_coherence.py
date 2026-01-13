@@ -217,30 +217,36 @@ class ImageCoherenceGrader(LLMGrader):
             context_below=context_below or "",
         )
 
-        try:
-            # Format image content for OpenAI API
-            content = [{"type": "text", "text": prompt}]
+        # Format image content for OpenAI API
+        content = [{"type": "text", "text": prompt}]
 
-            if image.url:
-                content.append({"type": "image_url", "image_url": {"url": image.url}})
-            elif image.base64:
-                # Format base64 image with data URL scheme
-                image_format = image.format or "jpeg"
-                data_url = f"data:image/{image_format};base64,{image.base64}"
-                content.append({"type": "image_url", "image_url": {"url": data_url}})
+        if image.url:
+            content.append({"type": "image_url", "image_url": {"url": image.url}})
+        elif image.base64:
+            # Format base64 image with data URL scheme
+            image_format = image.format or "jpeg"
+            data_url = f"data:image/{image_format};base64,{image.base64}"
+            content.append({"type": "image_url", "image_url": {"url": data_url}})
 
-            # Call model without structured output
-            chat_response = await self.model.achat(
-                messages=[{"role": "user", "content": content}],
-                structured_model=GraderScoreCallback,
-            )
+        # Call model without structured output
+        chat_response = await self.model.achat(
+            messages=[{"role": "user", "content": content}],
+            structured_model=GraderScoreCallback,
+        )
+
+        # Handle both streaming and non-streaming responses
+        if hasattr(chat_response, "__aiter__"):
+            parsed = {}
+            async for chunk in chat_response:
+                if chunk.parsed:
+                    parsed.update(chunk.parsed)
+            # Default to 5.0 (neutral score on 0-10 scale) for missing fields
+            score = parsed.get("score", 5.0)
+            reason = parsed.get("reason", "")
+        else:
             score = chat_response.parsed["score"]
             reason = chat_response.parsed["reason"]
-            return score, reason
-
-        except Exception as e:
-            logger.error(f"Error evaluating image coherence: {e}")
-            return 0.0, f"Evaluation error: {str(e)}"
+        return score, reason
 
     async def _acompute(
         self,
@@ -326,7 +332,16 @@ class ImageCoherenceGrader(LLMGrader):
             ...     ]
             ... )
         """
-        score, details = await self._acompute(response, **kwargs)
+        try:
+            score, details = await self._acompute(response, **kwargs)
+        except Exception as e:
+            logger.exception(f"Error evaluating image coherence: {e}")
+            from openjudge.graders.base_grader import GraderError
+
+            return GraderError(
+                name=self.name,
+                error=f"Evaluation error: {str(e)}",
+            )
 
         if "error" in details:
             return GraderScore(

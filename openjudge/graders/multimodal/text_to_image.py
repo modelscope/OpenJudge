@@ -259,38 +259,27 @@ class TextToImageGrader(BaseGrader):
         messages = self.semantic_template.to_messages(self.language)
         prompt = messages[0].format(query=query).content
 
-        try:
-            content = format_image_content(prompt, [response])
-            chat_response = await self.model.achat(
-                messages=[{"role": "user", "content": content}],
-                structured_model=GraderScoreCallback,
-            )
+        content = format_image_content(prompt, [response])
+        chat_response = await self.model.achat(
+            messages=[{"role": "user", "content": content}],
+            structured_model=GraderScoreCallback,
+        )
 
-            # Handle both streaming and non-streaming responses
-            if hasattr(chat_response, "__aiter__"):
-                # This is a streaming response, we need to collect it first
-                collected_content = []
-                parsed = {}
-                async for chunk in chat_response:
-                    if chunk.content:
-                        collected_content.extend(chunk.content)
-                    if chunk.parsed:
-                        parsed.update(chunk.parsed)
-
-                # Extract score and reason from metadata
-                score = parsed.get("score", 0.0)
-                score = score if isinstance(score, list) else [score]
-                reason = parsed.get("reason", "")
-            else:
-                # Non-streaming response
-                score = chat_response.parsed["score"]
-                score = score if isinstance(score, list) else [score]
-                reason = chat_response.parsed["reason"]
-            return score, reason
-
-        except Exception as e:
-            logger.error(f"Error evaluating semantic consistency: {e}")
-            return [5.0], f"Error during evaluation: {str(e)}"
+        # Handle both streaming and non-streaming responses
+        if hasattr(chat_response, "__aiter__"):
+            parsed = {}
+            async for chunk in chat_response:
+                if chunk.parsed:
+                    parsed.update(chunk.parsed)
+            # Default to 5.0 (neutral score on 0-10 scale) for missing fields
+            score = parsed.get("score", 5.0)
+            score = score if isinstance(score, list) else [score]
+            reason = parsed.get("reason", "")
+        else:
+            score = chat_response.parsed["score"]
+            score = score if isinstance(score, list) else [score]
+            reason = chat_response.parsed["reason"]
+        return score, reason
 
     async def _aevaluate_perceptual_quality(
         self,
@@ -300,32 +289,27 @@ class TextToImageGrader(BaseGrader):
         messages = self.perceptual_template.to_messages(self.language)
         prompt = messages[0].content
 
-        try:
-            content = format_image_content(prompt, [response])
-            chat_response = await self.model.achat(
-                messages=[{"role": "user", "content": content}],
-                structured_model=GraderScoreCallback,
-            )
+        content = format_image_content(prompt, [response])
+        chat_response = await self.model.achat(
+            messages=[{"role": "user", "content": content}],
+            structured_model=GraderScoreCallback,
+        )
 
-            # Handle both streaming and non-streaming responses
-            parsed_data = {}
-            if hasattr(chat_response, "__aiter__"):
-                parsed = {}
-                async for chunk in chat_response:
-                    if chunk.parsed:
-                        parsed.update(chunk.parsed)
-                parsed_data = parsed
-            else:
-                parsed_data = chat_response.parsed
+        # Handle both streaming and non-streaming responses
+        if hasattr(chat_response, "__aiter__"):
+            parsed = {}
+            async for chunk in chat_response:
+                if chunk.parsed:
+                    parsed.update(chunk.parsed)
+            # Default to 5.0 (neutral score on 0-10 scale) for missing fields
+            score = parsed.get("score", [5.0, 5.0])
+            reason = parsed.get("reason", "")
+        else:
+            score = chat_response.parsed["score"]
+            reason = chat_response.parsed["reason"]
 
-            score = parsed_data.get("score", [5.0, 5.0])
-            score = score[:2] if isinstance(score, list) else [score, score]
-            reason = parsed_data.get("reason", "")
-            return score, reason
-
-        except Exception as e:
-            logger.error(f"Error evaluating perceptual quality: {e}")
-            return [5.0, 5.0], f"Error during evaluation: {str(e)}"
+        score = score[:2] if isinstance(score, list) else [score, score]
+        return score, reason
 
     async def _a_compute(
         self,
@@ -419,7 +403,16 @@ class TextToImageGrader(BaseGrader):
                 metadata={"error": "response must be MLLMImage"},
             )
 
-        score, details = await self._a_compute(query, response, **kwargs)
+        try:
+            score, details = await self._a_compute(query, response, **kwargs)
+        except Exception as e:
+            logger.exception(f"Error evaluating text-to-image: {e}")
+            from openjudge.graders.base_grader import GraderError
+
+            return GraderError(
+                name=self.name,
+                error=f"Evaluation error: {str(e)}",
+            )
 
         # Generate comprehensive reason
         reason = f"""Text-to-Image Quality Score: {score:.4f}

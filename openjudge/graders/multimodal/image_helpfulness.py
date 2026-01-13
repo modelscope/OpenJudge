@@ -202,7 +202,7 @@ class ImageHelpfulnessGrader(LLMGrader):
         """
         super().__init__(
             name="image_helpfulness",
-            grader_mode=GraderMode.POINTWISE,
+            mode=GraderMode.POINTWISE,
             description="Evaluate image helpfulness for understanding text",
             model=model,
             template=template or DEFAULT_IMAGE_HELPFULNESS_TEMPLATE,

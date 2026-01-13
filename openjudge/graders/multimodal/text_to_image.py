@@ -308,22 +308,19 @@ class TextToImageGrader(BaseGrader):
             )
 
             # Handle both streaming and non-streaming responses
+            parsed_data = {}
             if hasattr(chat_response, "__aiter__"):
-                collected_content = []
                 parsed = {}
                 async for chunk in chat_response:
-                    if chunk.content:
-                        collected_content.extend(chunk.content)
                     if chunk.parsed:
                         parsed.update(chunk.parsed)
-
-                score = parsed.get("score", [5.0, 5.0])
-                score = score[:2] if isinstance(score, list) else [score, score]
-                reason = parsed.get("reason", "")
+                parsed_data = parsed
             else:
-                score = chat_response.parsed["score"]
-                score = score[:2] if isinstance(score, list) else [score, score]
-                reason = chat_response.parsed["reason"]
+                parsed_data = chat_response.parsed
+
+            score = parsed_data.get("score", [5.0, 5.0])
+            score = score[:2] if isinstance(score, list) else [score, score]
+            reason = parsed_data.get("reason", "")
             return score, reason
 
         except Exception as e:

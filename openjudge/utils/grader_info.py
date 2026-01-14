@@ -6,7 +6,6 @@ import re
 import time
 from copy import deepcopy
 from pathlib import Path
-from queue import Queue
 from typing import Any, Dict, List
 
 from loguru import logger
@@ -63,18 +62,9 @@ def get_all_grader_info() -> List[Dict[str, Any]]:
     defs_of_classes_having_parent = {}
     grader_root_folder = Path(current_file_abs_path.parent.parent, "graders")
     logger.info(f"grader root folder:{grader_root_folder}")
-    unprocessed_folders = Queue()
-    unprocessed_folders.put(grader_root_folder)
-    while not unprocessed_folders.empty():
-        folder = unprocessed_folders.get()
-        for item in folder.iterdir():
-            if item.is_dir():
-                unprocessed_folders.put(item)
-            elif item.stem == "__init__" or item.suffix != ".py":
-                # use safe heuristics to reduce candidate count
-                continue
-            else:
-                _get_defs_of_classes_having_parent(item, defs_of_classes_having_parent)
+    for f in grader_root_folder.rglob("**/*.py"):
+        if f.stem != "__init__":
+            _get_defs_of_classes_having_parent(f, defs_of_classes_having_parent)
 
     logger.info(f"classes having parent:{len(defs_of_classes_having_parent)}, {(time.time_ns() - t0)/1000000}ms")
 
@@ -165,32 +155,23 @@ def _parse_grader_class_def(class_def: ast.ClassDef, source_code: str) -> _Grade
                 continue
 
             segment = ast.get_source_segment(source_code, sub_node)
-            segment = _NEWLINE_OR_MULTI_SPACE_PATTERN.sub(" ", segment.strip())
-            segment = segment.replace(") :", "):").replace(") ->", ")->").replace(" :", ":")
+            # Find the colon ':' that ends the function signature by tracking parenthesis depth.
+            open_parenthesis_count = 0
+            end_of_func_signature_idx = -1
+            for i, char in enumerate(segment):
+                if char == "(":
+                    open_parenthesis_count += 1
+                elif char == ")":
+                    open_parenthesis_count -= 1
+                elif char == ":" and open_parenthesis_count == 0:
+                    end_of_func_signature_idx = i
+                    break
 
-            # Method head ends in two ways: w/ or w/o return type annocation.
-            # Figure it out.
-            idx0 = segment.find("):")
-            idx1 = segment.find(")->")
-            if idx1 > 0:
-                idx1 = segment.find(":", idx1)
-
-            if idx0 > 0 and idx1 > 0:
-                if idx0 < idx1:
-                    idx = idx0 + 2
-                else:
-                    idx = idx1 + 1
-            elif idx0 > 0:
-                idx = idx0 + 2
-            elif idx1 > 0:
-                idx = idx1 + 1
-            else:
-                idx = -1
-
-            # def foo(...) -> type:
-            # def foo(...):
-            if idx > 0:
-                signature = segment[0:idx]
+            if end_of_func_signature_idx > 0:
+                # def foo(...): or def foo(...) -> bar:
+                signature = segment[: end_of_func_signature_idx + 1]
+                signature = _NEWLINE_OR_MULTI_SPACE_PATTERN.sub(" ", signature.strip())
+                signature = signature.replace(" :", ":")
             else:
                 signature = "SIGNATURE_NOT_FOUND"
 

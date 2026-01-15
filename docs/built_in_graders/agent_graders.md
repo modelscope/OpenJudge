@@ -12,7 +12,8 @@ Evaluate AI agent behavior across actions, tools, memory, planning, reflection, 
 | | `ToolCallAccuracyGrader` | Evaluates tool call accuracy | LLM-Based | 1-5 | API-based assistants |
 | | `ToolCallSuccessGrader` | Checks technical execution success | LLM-Based | {0, 1} | Production agent monitoring |
 | | `ToolParameterCheckGrader` | Validates parameter correctness | LLM-Based | {0, 1} | Slot-filling dialogues |
-| | `ToolCallSequenceMatchGrader` | Compares tool call sequences | Code-Based | [0, 1] | Benchmark evaluation |
+| | `ToolCallSequenceMatchGrader` | Multi-step tool sequence matching with step alignment | Code-Based | [0, 1] | Complex multi-turn agent benchmarks |
+| | `ToolCallSequenceMatchSimpleGrader` | Simple precision/recall for flat tool call lists | Code-Based | [0, 1] | Single-step tool call evaluation |
 | **Memory** | `MemoryAccuracyGrader` | Validates memory factuality | LLM-Based | {0, 1} | Memory-augmented agents |
 | | `MemoryDetailPreservationGrader` | Checks detail retention | LLM-Based | {0, 1} | Long-horizon tasks |
 | | `MemoryRetrievalEffectivenessGrader` | Assesses memory retrieval | LLM-Based | {0, 1} | RAG-based agents |
@@ -446,15 +447,15 @@ Reason: The tool call correctly extracted all required parameters from the user 
 
 ### ToolCallSequenceMatchGrader
 
-Compares agent tool call sequences against reference sequences.
+Evaluates multi-step tool call sequences with step-by-step alignment against reference sequences. Designed for complex multi-turn agent scenarios where tool calls are organized by steps (turns).
 
 **Use this grader for:**
 
-- Benchmark evaluation against ground truth
-- Trajectory comparison and validation
-- A/B testing different agent implementations
+- **Multi-step agent benchmarks** — Evaluate agents that make multiple tool calls across different turns
+- **Step-aligned trajectory comparison** — Compare tool sequences where order and grouping by steps matter
+- **Complex agentic workflows** — Validate multi-turn conversations with tool calls organized by assistant turns
 
-**Evaluation criteria:** Strict mode matches name + parameters; loose mode matches name only.
+**Evaluation criteria:** Supports step-by-step matching or Jaccard similarity. Strict mode matches name + parameters; loose mode matches name only.
 
 **Parameters:**
 
@@ -512,6 +513,93 @@ asyncio.run(main())
 ```
 Score: 1.0
 Reason: Tool call sequence evaluation (strict mode, jaccard): jaccard_similarity=1.000
+```
+
+### ToolCallSequenceMatchSimpleGrader
+
+Computes precision or recall metrics for tool calls against reference.
+
+**Use this grader for:**
+
+- Simple tool call evaluation without step/order consideration
+- Computing precision (correctness of predictions) or recall (coverage of reference)
+- Flexible matching with or without argument comparison
+
+**Evaluation criteria:** Compares predicted tool calls against reference tool calls using set-based matching.
+
+**Parameters:**
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `tool_calls` | List[Dict[str, Any]] | Yes | Predicted tool calls to evaluate |
+| `reference_tool_calls` | List[Dict[str, Any]] | Yes | Ground truth reference tool calls |
+| `metric_type` | str | No | "precision" or "recall" (default: "recall") |
+| `match_arguments` | bool | No | Match name + arguments (True) or name only (False), default: False |
+
+**Scoring:**
+- **Precision**: Correct predictions / Total predictions
+- **Recall**: Correct predictions / Total references
+- Range: 0.0 (no match) to 1.0 (perfect match)
+
+**Example:**
+
+```python
+import asyncio
+from openjudge.graders.agent import ToolCallSequenceMatchSimpleGrader
+
+async def main():
+    # Compute recall with loose matching (name only)
+    grader = ToolCallSequenceMatchSimpleGrader(
+        metric_type="recall",
+        match_arguments=False
+    )
+
+    tool_calls = [
+        {"name": "search", "arguments": {"query": "python"}},
+        {"name": "calculate", "arguments": {"expr": "1+1"}}
+    ]
+
+    reference_tool_calls = [
+        {"name": "search", "arguments": {"query": "test"}},
+        {"name": "calculate", "arguments": {"expr": "2+2"}},
+        {"name": "send_email", "arguments": {"to": "user@example.com"}}
+    ]
+
+    result = await grader.aevaluate(
+        tool_calls=tool_calls,
+        reference_tool_calls=reference_tool_calls
+    )
+
+    print(f"Score: {result.score}")   # 0.667 - 2 out of 3 references matched
+    print(f"Precision: {result.metadata['precision']}")
+    print(f"Recall: {result.metadata['recall']}")
+
+asyncio.run(main())
+```
+
+**Output:**
+
+```
+Score: 0.6666666666666666
+Precision: 1.0
+Recall: 0.6666666666666666
+```
+
+**Strict matching example:**
+
+```python
+# Compute precision with strict matching (name + arguments)
+grader = ToolCallSequenceMatchSimpleGrader(
+    metric_type="precision",
+    match_arguments=True
+)
+
+result = await grader.aevaluate(
+    tool_calls=[{"name": "search", "arguments": {"query": "python"}}],
+    reference_tool_calls=[{"name": "search", "arguments": {"query": "python"}}]
+)
+
+print(f"Score: {result.score}")   # 1.0 - exact match
 ```
 
 

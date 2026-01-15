@@ -26,6 +26,7 @@ from .tool.tool_call_accuracy import ToolCallAccuracyGrader
 
 # Tool graders
 from .tool.tool_call_sequence_match import ToolCallSequenceMatchGrader
+from .tool.tool_call_sequence_match_simple import ToolCallSequenceMatchSimpleGrader
 from .tool.tool_call_success import ToolCallSuccessGrader
 from .tool.tool_parameter_check import ToolParameterCheckGrader
 from .tool.tool_selection import ToolSelectionGrader

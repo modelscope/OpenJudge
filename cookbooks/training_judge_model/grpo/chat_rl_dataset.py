@@ -146,7 +146,7 @@ class BaseChatRLDataset(Dataset):
         # First try new data structure
         if "input" in example and example["input"]:
             for msg in example["input"]:
-                if msg.get("role") == "user" and msg.get("content"):
+                if isinstance(msg, dict) and msg.get("role") == "user" and msg.get("content"):
                     return msg["content"]
 
         # Fallback to old data structure
@@ -253,12 +253,9 @@ class BaseChatRLDataset(Dataset):
 
     def __getstate__(self):
         """Get state for serialization."""
-        if not self.serialize_dataset:
-            state = self.__dict__.copy()
-            if "dataframe" in state:
-                del state["dataframe"]
-            return state
-        return self.__dict__.copy()
+        state = self.__dict__.copy()
+        state.pop("dataframe", None)
+        return state
 
 
 class PairwiseChatRLDataset(BaseChatRLDataset):
@@ -433,8 +430,8 @@ Please consider the following principles in your evaluation."""
 
         # Use string formatting directly
         principles_str = ""
-        for i, principle in enumerate(principles):
-            principles_str += f"{i + 1}. {principle}\n"
+        for i, principle in enumerate(principles, start=1):
+            principles_str += f"{i}. {principle}\n"
 
         prompt = f"""# Task Description
 {task_desc}
@@ -452,6 +449,7 @@ Please consider the following principles in your evaluation."""
     def _extract_ground_truth(self, row_dict):
         """Extract pointwise ground truth label."""
         try:
+            helpfulness = 0
             output_data = row_dict.get("output", [])
             if output_data:
                 output_item = output_data[0] if isinstance(output_data, list) else output_data
@@ -462,11 +460,10 @@ Please consider the following principles in your evaluation."""
                         if isinstance(label_data, dict):
                             # For pointwise, return scoring information
                             helpfulness = label_data.get("helpfulness", 0)
-                            return {"helpfulness": helpfulness, "task_type": "pointwise"}
-
-            return {"helpfulness": 0, "task_type": "pointwise"}
-        except:
-            return {"helpfulness": 0, "task_type": "pointwise"}
+            return {"helpfulness": helpfulness, "task_type": "pointwise"}
+        except Exception as e:
+            print(f"Failed to extract label from {row_dict}: {e}")
+            return {"helpfulness": helpfulness, "task_type": "pointwise"}
 
 
 # Backward compatible aliases

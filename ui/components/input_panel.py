@@ -4,9 +4,10 @@
 from typing import Any
 
 import streamlit as st
-from components.multimodal import render_multimodal_input, render_text_to_image_input
-from components.shared import render_section_header
-from config.constants import EXAMPLE_DATA
+
+from ..config.constants import EXAMPLE_DATA
+from .multimodal import render_multimodal_input, render_text_to_image_input
+from .shared import render_section_header
 
 
 def _get_example_data(category: str) -> dict[str, Any]:
@@ -137,6 +138,30 @@ def _render_agent_input(defaults: dict[str, Any], input_fields: list) -> dict[st
     return input_data
 
 
+def _render_multimodal_inputs(input_fields: list[str]) -> dict[str, Any]:
+    """Render multimodal grader input fields.
+
+    Args:
+        input_fields: List of input fields
+
+    Returns:
+        Input data dictionary
+    """
+    input_data: dict[str, Any] = {}
+
+    if "response_multimodal" in input_fields:
+        content_list, _ = render_multimodal_input()
+        input_data["response"] = content_list
+        input_data["has_content"] = len(content_list) > 0
+    elif "response_image" in input_fields:
+        text_prompt, image = render_text_to_image_input()
+        input_data["query"] = text_prompt
+        input_data["response"] = image
+        input_data["has_content"] = bool(text_prompt and image)
+
+    return input_data
+
+
 def _render_standard_input(
     defaults: dict[str, Any],
     input_fields: list,
@@ -234,18 +259,8 @@ def render_input_panel(sidebar_config: dict[str, Any]) -> dict[str, Any]:
     input_fields = grader_config.get("input_fields", ["query", "response"])
 
     # Multimodal Graders
-    if "response_multimodal" in input_fields:
-        content_list, _ = render_multimodal_input()
-        input_data["response"] = content_list
-        input_data["has_content"] = len(content_list) > 0
-        return input_data
-
-    if "response_image" in input_fields:
-        text_prompt, image = render_text_to_image_input()
-        input_data["query"] = text_prompt
-        input_data["response"] = image
-        input_data["has_content"] = bool(text_prompt and image)
-        return input_data
+    if "response_multimodal" in input_fields or "response_image" in input_fields:
+        return _render_multimodal_inputs(input_fields)
 
     # Agent Graders
     if "tool_definitions" in input_fields:

@@ -2,15 +2,16 @@
 """Grader factory for creating and running OpenJudge graders."""
 
 import importlib
+import inspect
 from typing import Any, Optional
-
-from config.grader_registry import GRADER_REGISTRY
-from utils.helpers import run_async
 
 from openjudge.graders.base_grader import BaseGrader
 from openjudge.graders.schema import GraderError, GraderScore
 from openjudge.models.openai_chat_model import OpenAIChatModel
 from openjudge.models.schema.prompt_template import LanguageEnum
+
+from ..config.grader_registry import GRADER_REGISTRY
+from ..utils.helpers import run_async
 
 
 def _import_grader_class(class_path: str) -> type:
@@ -61,8 +62,8 @@ def create_grader(
 
     # Get the init method's accepted parameters
     try:
-        init_params = set(grader_class.__init__.__code__.co_varnames)
-    except AttributeError:
+        init_params = set(inspect.signature(grader_class).parameters)
+    except (ValueError, TypeError):
         init_params = set()
 
     # Build kwargs based on grader requirements

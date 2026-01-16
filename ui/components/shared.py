@@ -2,7 +2,8 @@
 """Shared UI components for OpenJudge Studio."""
 
 import streamlit as st
-from config.constants import APP_NAME, APP_VERSION
+
+from ..config.constants import APP_NAME, APP_VERSION
 
 
 def render_header() -> None:
@@ -143,38 +144,6 @@ def render_empty_state() -> None:
             <div style="margin-top: 1rem; font-size: 0.875rem; color: #475569;">
                 Tip: Use the "Load Example" button to try with sample data
             </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-
-def render_loading_state(message: str = "Processing...") -> None:
-    """Render loading state.
-
-    Args:
-        message: Loading message to display
-    """
-    st.markdown(
-        f"""
-        <div class="empty-state">
-            <div class="empty-state-icon" style="
-                width: 48px;
-                height: 48px;
-                margin: 0 auto 1rem;
-            ">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="2">
-                    <circle cx="12" cy="12" r="10"/>
-                    <polyline points="12,6 12,12 16,14"/>
-                </svg>
-            </div>
-            <div class="loading-shimmer" style="
-                height: 20px;
-                border-radius: 4px;
-                margin: 1rem auto;
-                max-width: 200px;
-            "></div>
-            <div style="color: #94A3B8;">{message}</div>
         </div>
         """,
         unsafe_allow_html=True,

@@ -5,16 +5,17 @@ from pathlib import Path
 from typing import Any
 
 import streamlit as st
-from config.constants import (
+
+from openjudge.models.schema.prompt_template import LanguageEnum
+
+from ..config.constants import (
     APP_NAME,
     APP_VERSION,
     DEFAULT_API_ENDPOINTS,
     DEFAULT_MODELS,
     GRADER_CATEGORIES,
 )
-from config.grader_registry import GRADER_REGISTRY, get_graders_by_category
-
-from openjudge.models.schema.prompt_template import LanguageEnum
+from ..config.grader_registry import GRADER_REGISTRY, get_graders_by_category
 
 LOGO_PATH = Path(__file__).parent.parent / "assets" / "logo.svg"
 

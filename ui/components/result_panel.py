@@ -1,23 +1,25 @@
 # -*- coding: utf-8 -*-
 """Result panel component for OpenJudge Studio."""
 
+import logging
 import time
 from typing import Any
 
 import streamlit as st
-from components.shared import render_empty_state, render_section_header
-from config.grader_registry import GRADER_REGISTRY
-from services.grader_factory import (
+
+from openjudge.graders.schema import GraderError
+
+from ..config.grader_registry import GRADER_REGISTRY
+from ..services.grader_factory import (
     create_grader,
     run_agent_evaluation,
     run_evaluation,
     run_multimodal_evaluation,
 )
-from services.model_factory import create_model
-from styles.theme import get_score_color
-from utils.helpers import format_elapsed_time, format_score_display, parse_json_safely
-
-from openjudge.graders.schema import GraderError
+from ..services.model_factory import create_model
+from ..styles.theme import get_score_color
+from ..utils.helpers import format_elapsed_time, format_score_display, parse_json_safely
+from .shared import render_empty_state, render_section_header
 
 
 def _render_score_card(
@@ -221,6 +223,7 @@ def _run_evaluation(
                 state="complete",
             )
         except Exception as e:  # pylint: disable=broad-exception-caught
+            logging.exception("Evaluation failed with an unexpected error.")
             status.update(label="Evaluation failed", state="error")
             st.session_state.evaluation_result = GraderError(
                 name=grader_name,

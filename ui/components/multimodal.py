@@ -4,7 +4,8 @@
 from typing import Any, Optional
 
 import streamlit as st
-from utils.helpers import encode_image_to_base64, get_image_format
+
+from ..utils.helpers import encode_image_to_base64, get_image_format
 
 
 def render_image_uploader(
@@ -76,8 +77,8 @@ def render_image_url_input(
         try:
             st.image(url, caption="Image Preview", use_container_width=True)
             return url
-        except Exception:
-            st.warning("Could not load image preview")
+        except Exception as e:
+            st.warning(f"Could not load image preview. Error: {e}")
             return url
 
     return None

@@ -11,6 +11,7 @@ A unified grader for string matching evaluation supporting multiple algorithms:
 
 from typing import Any, Callable, Dict, Union
 
+from openjudge.evaluation_strategy import BaseEvaluationStrategy
 from openjudge.graders.base_grader import BaseGrader, GraderMode, GraderScore
 from openjudge.graders.text._utils.string_match_compute import (
     compute_char_overlap,
@@ -23,7 +24,6 @@ from openjudge.graders.text._utils.string_match_compute import (
     compute_suffix_match,
     compute_word_overlap,
 )
-from openjudge.strategy import BaseStrategy
 
 # Algorithm to compute function mapping
 COMPUTE_FUNCTIONS: Dict[str, Any] = {
@@ -111,7 +111,7 @@ class StringMatchGrader(BaseGrader):
         case_sensitive: bool = False,
         ignore_whitespace: bool = False,
         algorithm: str = "exact_match",
-        strategy: BaseStrategy | None = None,
+        strategy: BaseEvaluationStrategy | None = None,
         mapper: Union[Dict[str, str], Callable, None] = None,
     ):
         """
@@ -123,7 +123,7 @@ class StringMatchGrader(BaseGrader):
             case_sensitive: Default case sensitivity for matching algorithms
             ignore_whitespace: Default whitespace handling for exact match
             algorithm: Algorithm to use (exact_match, substring_match, etc.)
-            strategy: The evaluation strategy to use. Defaults to DirectStrategy.
+            strategy: The evaluation strategy to use. Defaults to LocalEvaluationStrategy.
             mapper: Optional mapper to transform input data before evaluation.
                    Can be a dictionary mapping or a callable.
         """

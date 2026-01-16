@@ -20,8 +20,10 @@ from openjudge.graders.base_grader import BaseGrader
 from openjudge.graders.schema import GraderError, GraderResult
 from openjudge.runner.aggregator.base_aggregator import BaseAggregator
 from openjudge.runner.base_runner import BaseRunner, RunnerResult
-from openjudge.runner.controller.base import BaseController
-from openjudge.runner.controller.local_controller import LocalController
+from openjudge.runner.resource_executor.base_resource_executor import BaseResourceExecutor
+from openjudge.runner.resource_executor.semaphore_resource_executor import (
+    SemaphoreResourceExecutor,
+)
 
 
 class GradingRunner(BaseRunner):
@@ -67,7 +69,7 @@ class GradingRunner(BaseRunner):
         max_concurrency: int = 32,
         aggregators: Union[BaseAggregator, Callable, List[Union[BaseAggregator, Callable]], None] = None,
         show_progress: bool = True,
-        controller: BaseController | None = None,
+        executor: BaseResourceExecutor | None = None,
     ) -> None:
         """Initialize the grading runner.
 
@@ -80,13 +82,13 @@ class GradingRunner(BaseRunner):
             aggregators: Optional aggregator or list of aggregators to combine results
                 from multiple graders.
             show_progress: Whether to display a progress bar during execution. Defaults to True.
-            controller: Optional execution controller to manage task execution.
+            resource: Optional execution resource to manage task execution.
                        Defaults to LocalController if not provided.
         """
         self.graders = graders
         self.max_concurrency = max_concurrency
         self.show_progress = show_progress
-        self.controller = controller or LocalController(max_concurrency)
+        self.executor = executor or SemaphoreResourceExecutor(max_concurrency)
 
         # Handle aggregators
         if not aggregators:
@@ -101,7 +103,7 @@ class GradingRunner(BaseRunner):
         cls,
         data: dict,
         grader: BaseGrader,
-        controller: BaseController,
+        executor: BaseResourceExecutor,
     ) -> GraderResult:
         """Run a single evaluation asynchronously.
 
@@ -113,7 +115,7 @@ class GradingRunner(BaseRunner):
                 the fields needed by the grader (e.g., 'query', 'answer', 'context').
             grader: Grader instance to use for the evaluation. Must be an instance of
                 a class that inherits from BaseGrader.
-            controller: Execution controller to manage the execution of the task
+            resource: Execution resource to manage the execution of the task
 
         Returns:
             GraderResult: The result of the evaluation from the grader. This can be:
@@ -124,13 +126,13 @@ class GradingRunner(BaseRunner):
         Example:
             >>> # With a simple data transformation
             >>> data = {"question": "What is 2+2?", "response": "4"}
-            >>> result = await GradingRunner._arun(data, AccuracyGrader(), controller)
+            >>> result = await GradingRunner._arun(data, AccuracyGrader(), resource)
         """
 
         async def _evaluate(data) -> GraderResult:
             try:
                 # The grader itself handles the mapping internally
-                return await grader.aevaluate(controller=controller, **data)
+                return await grader.aevaluate(executor=executor, **data)
             except Exception as e:
                 error_msg = f"Error in {grader.name} during evaluation: {str(e)}"
                 logger.error(error_msg)
@@ -140,7 +142,7 @@ class GradingRunner(BaseRunner):
                     error=error_msg,
                 )
 
-        # Execute the evaluation using the controller
+        # Execute the evaluation using the resource
         return await _evaluate(data)
 
     async def arun(
@@ -219,17 +221,17 @@ class GradingRunner(BaseRunner):
         all_coroutines = []
         coroutine_info = []  # Track (grader_name, sample_index) for each coroutine
 
-        # Use the controller from self
-        controller = self.controller
+        # Use the executor from self
+        executor = self.executor
 
-        # Execute controller lifecycle
+        # Execute executor lifecycle
         for name, grader in self.graders.items():
             assert grader is not None
 
             # Create coroutines for the current evaluator on all samples
             for i, case in enumerate(dataset):
                 all_coroutines.append(
-                    self._arun(data=case, grader=grader, controller=controller),
+                    self._arun(data=case, grader=grader, executor=executor),
                 )
                 coroutine_info.append(
                     (name, i),

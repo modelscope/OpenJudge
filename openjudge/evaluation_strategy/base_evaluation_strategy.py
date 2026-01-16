@@ -9,7 +9,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Awaitable, Callable
 
 
-class BaseStrategy(ABC):
+class BaseEvaluationStrategy(ABC):
     """Base evaluation strategy class: defines the evaluation workflow.
 
     Strategies determine how many times an evaluation is called, in what order,
@@ -23,7 +23,7 @@ class BaseStrategy(ABC):
     Examples:
         Basic usage:
 
-        >>> class MyStrategy(BaseStrategy):
+        >>> class MyStrategy(BaseEvaluationStrategy):
         ...     async def execute(self, call_fn, **kwargs):
         ...         return await call_fn(**kwargs)
         ...
@@ -36,12 +36,12 @@ class BaseStrategy(ABC):
         """Execute the evaluation strategy.
 
         This abstract method defines how the evaluation strategy executes.
-        The call_fn parameter is a function that submits tasks to a controller,
-        and calling await call_fn(**kwargs) will submit the task to the controller.
+        The call_fn parameter is a function that submits tasks to a resource,
+        and calling await call_fn(**kwargs) will submit the task to the resource.
 
         Args:
-            call_fn: An async function that submits tasks to a controller.
-                     Calling await call_fn(**kwargs) will submit the task to the controller.
+            call_fn: An async function that submits tasks to a resource.
+                     Calling await call_fn(**kwargs) will submit the task to the resource.
             **kwargs: Arguments for the evaluation
 
         Returns:

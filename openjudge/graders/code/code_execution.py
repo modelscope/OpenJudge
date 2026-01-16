@@ -16,9 +16,9 @@ from typing import Any, Callable, Dict, Union
 
 from loguru import logger
 
+from openjudge.evaluation_strategy import BaseEvaluationStrategy
 from openjudge.graders.base_grader import BaseGrader
 from openjudge.graders.schema import GraderMode, GraderScore
-from openjudge.strategy import BaseStrategy
 
 
 class CodeExecutionGrader(BaseGrader):
@@ -35,7 +35,7 @@ class CodeExecutionGrader(BaseGrader):
         timeout: int = 10,
         test_framework_available: bool = True,
         compute_score: Any = None,
-        strategy: BaseStrategy | None = None,
+        strategy: BaseEvaluationStrategy | None = None,
         mapper: Union[Dict[str, str], Callable, None] = None,
         **kwargs: Any,
     ):

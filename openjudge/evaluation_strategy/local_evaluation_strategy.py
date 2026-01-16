@@ -1,9 +1,13 @@
+"""Local evaluation strategy implementation for OpenJudge."""
+
 from typing import Any, Awaitable, Callable
 
-from openjudge.strategy.base import BaseStrategy
+from openjudge.evaluation_strategy.base_evaluation_strategy import (
+    BaseEvaluationStrategy,
+)
 
 
-class DirectStrategy(BaseStrategy):
+class LocalEvaluationStrategy(BaseEvaluationStrategy):
     """Direct execution strategy: executes evaluation once and returns the result.
 
     This strategy performs a single evaluation call and returns its result directly.
@@ -13,7 +17,7 @@ class DirectStrategy(BaseStrategy):
     Examples:
         Basic usage:
 
-        >>> strategy = DirectStrategy()
+        >>> strategy = LocalEvaluationStrategy()
         >>> result = await strategy.execute(call_function, param="value")
     """
 
@@ -23,7 +27,7 @@ class DirectStrategy(BaseStrategy):
         This method calls the provided function once and returns its result.
 
         Args:
-            call_fn: Async function that submits the task to a controller
+            call_fn: Async function that submits the task to a resource
             **kwargs: Arguments for the evaluation
 
         Returns:

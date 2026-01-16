@@ -48,6 +48,7 @@ class OpenAIChatModel(BaseChatModel):
         stream: bool = False,
         reasoning_effort: Literal["low", "medium", "high"] | None = None,
         organization: str | None = None,
+        max_retries: int = 5,
         client_args: Dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> None:
@@ -63,12 +64,14 @@ class OpenAIChatModel(BaseChatModel):
             reasoning_effort: Reasoning effort, supported for o3, o4, etc.
             organization: The organization ID for OpenAI API. If not specified, it will
                 be read from the environment variable `OPENAI_ORGANIZATION`.
+            max_retries: The maximum number of retries for failed requests.
             client_args: The extra keyword arguments to initialize the OpenAI client.
             kwargs: The extra keyword arguments used in OpenAI API generation,
                 e.g. `temperature`, `seed`.
         """
         super().__init__(model=model, stream=stream)
         self.reasoning_effort = reasoning_effort
+        self.max_retries = max_retries
         self.kwargs = kwargs or {}
 
         # Initialize client
@@ -86,7 +89,7 @@ class OpenAIChatModel(BaseChatModel):
         if organization:
             client_args["organization"] = organization
 
-        self.client = AsyncOpenAI(**client_args)
+        self.client = AsyncOpenAI(**client_args, max_retries=self.max_retries)
 
     async def achat(
         self,

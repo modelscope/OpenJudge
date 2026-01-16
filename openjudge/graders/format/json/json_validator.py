@@ -9,9 +9,11 @@ and returns a positive score if parsing succeeds.
 import json
 from typing import Any, Callable, Dict, Union
 
+from openjudge.evaluation_strategy.base_evaluation_strategy import (
+    BaseEvaluationStrategy,
+)
 from openjudge.graders.base_grader import BaseGrader
 from openjudge.graders.schema import GraderMode, GraderScore
-from openjudge.strategy.base import BaseStrategy
 
 
 class JsonValidatorGrader(BaseGrader):
@@ -35,7 +37,7 @@ class JsonValidatorGrader(BaseGrader):
     def __init__(
         self,
         name: str = "json_validator",
-        strategy: BaseStrategy | None = None,
+        strategy: BaseEvaluationStrategy | None = None,
         mapper: Union[Dict[str, str], Callable, None] = None,
         **kwargs: Any,
     ):
@@ -44,7 +46,7 @@ class JsonValidatorGrader(BaseGrader):
 
         Args:
             name (str, optional): The name of the grader. Defaults to "json_validator".
-            strategy (BaseStrategy, optional): Strategy to use for evaluation. Defaults to None.
+            strategy (BaseEvaluationStrategy, optional): Strategy to use for evaluation. Defaults to None.
             mapper (Union[Dict[str, str], Callable, None], optional): Mapper to use for input data. Defaults to None.
             **kwargs: Additional keyword arguments.
         """

@@ -9,9 +9,9 @@ either scores or rankings.
 from abc import ABC, abstractmethod
 from typing import Any, Callable, Dict, Union
 
+from openjudge.evaluation_strategy import BaseEvaluationStrategy
 from openjudge.graders.schema import GraderError, GraderMode, GraderRank, GraderScore
-from openjudge.runner.controller.base import BaseController
-from openjudge.strategy import BaseStrategy
+from openjudge.runner.resource_executor.base_resource_executor import BaseResourceExecutor
 from openjudge.utils.mapping import parse_data_with_mapper
 
 
@@ -25,7 +25,7 @@ class BaseGrader(ABC):
         name (str): The name of the grader.
         mode (GraderMode): The grader mode (pointwise or listwise).
         description (str): Description of what this grader evaluates.
-        strategy (BaseStrategy): The evaluation strategy to use.
+        strategy (BaseEvaluationStrategy): The evaluation strategy to use.
         mapper (Dict[str, str] | Callable | None): Optional mapper to transform
             input data before evaluation. Can be a dictionary mapping or a callable.
         kwargs (Dict[str, Any]): Additional keyword arguments.
@@ -51,7 +51,7 @@ class BaseGrader(ABC):
         name: str = "",
         mode: GraderMode = GraderMode.POINTWISE,
         description: str = "",
-        strategy: BaseStrategy | None = None,
+        strategy: BaseEvaluationStrategy | None = None,
         mapper: Union[Dict[str, str], Callable, None] = None,
         **kwargs: Any,
     ):
@@ -63,7 +63,7 @@ class BaseGrader(ABC):
                   or LISTWISE (joint evaluation of multiple samples).
                   Defaults to POINTWISE.
             description: Human-readable description of what this grader evaluates.
-            strategy: The evaluation strategy to use. Defaults to DirectStrategy.
+            strategy: The evaluation strategy to use. Defaults to LocalEvaluationStrategy.
             mapper: Optional mapper to transform input data before evaluation.
                    Can be a dictionary mapping or a callable.
             **kwargs: Additional keyword arguments that will be stored and
@@ -155,20 +155,20 @@ class BaseGrader(ABC):
         """
 
     # === [Core Interface] ===
-    async def aevaluate(self, controller: BaseController | None = None, **kwargs: Any) -> Any:
+    async def aevaluate(self, executor: BaseResourceExecutor | None = None, **kwargs: Any) -> Any:
         """
-        Called by the Runner to inject the controller.
+        Called by the Runner to inject the resource.
         """
         # 1. Apply mapper if available to transform input data
         data = parse_data_with_mapper(kwargs, self.mapper)
 
-        # 2. Wrap the atomic evaluation task to submit to the controller
+        # 2. Wrap the atomic evaluation task to submit to the resource
         async def managed_fn(**runtime_kwargs):
             # Submit to Controller for execution
-            if controller is None:
+            if executor is None:
                 return await self._aevaluate(**runtime_kwargs)
             else:
-                return await controller.submit(self._aevaluate, **runtime_kwargs)
+                return await executor.submit(self._aevaluate, **runtime_kwargs)
 
         # 3. Execute the strategy
         # The strategy receives a function with resource management capabilities

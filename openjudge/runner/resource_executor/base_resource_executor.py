@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-"""Base class for execution controllers.
+"""Base class for execution resources.
 
-This module defines the abstract base class for execution controllers that manage
+This module defines the abstract base class for execution resources that manage
 how tasks are submitted and executed, providing resource management and concurrency control.
 """
 
@@ -11,20 +11,21 @@ from typing import Any, Awaitable, Callable, TypeVar
 R = TypeVar("R")
 
 
-class BaseController(ABC):
-    """Resource controller base class: defines task submission interface.
+class BaseResourceExecutor(ABC):
+    """Resource executor base class: defines task submission interface.
 
-    Execution controllers manage how tasks are submitted and executed, handling
+    Execution resources manage how tasks are submitted and executed, handling
     resource allocation, concurrency control, and potentially distributed execution.
 
     This is an abstract base class that defines the interface for all execution
-    controllers. Subclasses must implement the submit method to define how tasks
+    resources. Subclasses must implement the submit method to define how tasks
     are executed in their specific environment.
 
     Examples:
         Basic usage with async context manager:
 
-        ... result = await controller.submit(my_async_func, param="value")
+        >>> executor = BaseResourceExecutor(max_concurrency=5)
+        ... result = await executor.submit(my_async_func, param="value")
     """
 
     @abstractmethod

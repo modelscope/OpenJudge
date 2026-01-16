@@ -12,12 +12,12 @@ from typing import Any, Callable, Dict, List, Optional, Union
 
 from loguru import logger
 
+from openjudge.evaluation_strategy import BaseEvaluationStrategy
 from openjudge.graders.base_grader import GraderError, GraderMode, GraderScore
 from openjudge.graders.llm_grader import LLMGrader
 from openjudge.models.base_chat_model import BaseChatModel
 from openjudge.models.schema.oai.message import ChatMessage
 from openjudge.models.schema.prompt_template import LanguageEnum, PromptTemplate
-from openjudge.strategy import BaseStrategy
 
 # pylint: disable=line-too-long
 
@@ -202,7 +202,7 @@ class ToolCallAccuracyGrader(LLMGrader):
         model: BaseChatModel | dict,
         template: Optional[PromptTemplate] = DEFAULT_TOOL_CALL_ACCURACY_TEMPLATE,
         language: LanguageEnum = LanguageEnum.EN,
-        strategy: BaseStrategy | None = None,
+        strategy: BaseEvaluationStrategy | None = None,
         mapper: Optional[Union[Dict[str, str], Callable]] = None,
     ):
         """
@@ -214,7 +214,7 @@ class ToolCallAccuracyGrader(LLMGrader):
                    be used to initialize an OpenAIChatModel.
             template: Evaluation template. Defaults to DEFAULT_TOOL_CALL_ACCURACY_TEMPLATE.
             language: Language for evaluation prompts (default: LanguageEnum.EN).
-            strategy: The evaluation strategy to use. Defaults to DirectStrategy.
+            strategy: The evaluation strategy to use. Defaults to LocalEvaluationStrategy.
             mapper: Optional mapper to transform input data before evaluation.
                    Can be a dictionary mapping or a callable.
         """

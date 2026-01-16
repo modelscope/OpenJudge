@@ -10,13 +10,13 @@ from typing import Any, Callable, Dict, List, Set, Tuple, Union
 
 from loguru import logger
 
+from openjudge.evaluation_strategy import BaseEvaluationStrategy
 from openjudge.graders.base_grader import (
     BaseGrader,
     GraderError,
     GraderMode,
     GraderScore,
 )
-from openjudge.strategy import BaseStrategy
 
 # pylint: disable=line-too-long
 
@@ -45,7 +45,7 @@ class ToolCallSequenceMatchGrader(BaseGrader):
         self,
         strict_mode: bool = True,
         use_jaccard_similarity: bool = True,
-        strategy: BaseStrategy | None = None,
+        strategy: BaseEvaluationStrategy | None = None,
         mapper: Union[Dict[str, str], Callable, None] = None,
         **kwargs,
     ):

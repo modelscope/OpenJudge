@@ -1,32 +1,31 @@
 # -*- coding: utf-8 -*-
-"""Local execution controller implementation.
+"""Local execution resource implementation.
 
-This module provides a local execution controller that manages concurrency
+This module provides a local execution resource that manages concurrency
 using a semaphore to limit the number of simultaneous operations.
 """
 
 import asyncio
 from typing import Any, Awaitable, Callable
 
-from .base import BaseController, R
+from .base_resource_executor import BaseResourceExecutor, R
 
 
-class LocalController(BaseController):
-    """Local controller implementing resource management for local execution.
+class SemaphoreResourceExecutor(BaseResourceExecutor):
+    """Local resource implementing resource management for local execution.
 
-    This controller uses a Semaphore to limit the number of concurrent operations
+    This resource uses a Semaphore to limit the number of concurrent operations
     running locally, preventing resource exhaustion when executing many tasks.
 
     Examples:
         Basic usage:
 
-        >>> controller = LocalController(max_concurrency=5)
-        >>> async with controller:
-        ...     result = await controller.submit(async_function, arg1="value1")
+        >>> executor = SemaphoreResourceExecutor(max_concurrency=5)
+        >>> result = await executor.submit(async_function, arg1="value1")
     """
 
     def __init__(self, max_concurrency: int = 32):
-        """Initialize the local execution controller.
+        """Initialize the local execution resource.
 
         Args:
             max_concurrency: Maximum number of concurrent operations allowed.

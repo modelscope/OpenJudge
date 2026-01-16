@@ -7,12 +7,14 @@ in observation observations.
 import math
 from typing import Any, Callable, Dict, List, Optional, Union
 
+from openjudge.evaluation_strategy.base_evaluation_strategy import (
+    BaseEvaluationStrategy,
+)
 from openjudge.graders.agent.utils import (
     calculate_text_similarity,
     extract_action_observation_pairs,
 )
 from openjudge.graders.base_grader import BaseGrader, GraderMode, GraderScore
-from openjudge.strategy.base import BaseStrategy
 
 
 class ObservationInformationGainGrader(BaseGrader):
@@ -35,7 +37,7 @@ class ObservationInformationGainGrader(BaseGrader):
     def __init__(
         self,
         similarity_threshold: float = 0.5,
-        strategy: BaseStrategy | None = None,
+        strategy: BaseEvaluationStrategy | None = None,
         mapper: Optional[Union[Dict[str, str], Callable]] = None,
         **kwargs: Any,
     ):

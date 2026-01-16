@@ -7,8 +7,10 @@ import re
 from collections import Counter
 from typing import Any, Callable, Dict, List, Literal, Optional, Union
 
+from openjudge.evaluation_strategy.base_evaluation_strategy import (
+    BaseEvaluationStrategy,
+)
 from openjudge.graders.base_grader import BaseGrader, GraderMode, GraderScore
-from openjudge.strategy.base import BaseStrategy
 from openjudge.utils.tokenizer import TokenizerEnum, get_tokenizer
 
 
@@ -29,7 +31,7 @@ class NgramRepetitionPenaltyGrader(BaseGrader):
         encoding_name: str = "cl100k_base",
         chinese_only: bool = False,
         analyze_scope: Literal["thought", "full"] = "full",
-        strategy: BaseStrategy | None = None,
+        strategy: BaseEvaluationStrategy | None = None,
         mapper: Optional[Union[Dict[str, str], Callable]] = None,
     ):
         """

@@ -9,9 +9,11 @@ class which checks for the presence of thinking and answer tags in the response 
 import re
 from typing import Any, Callable, Dict, Union
 
+from openjudge.evaluation_strategy.base_evaluation_strategy import (
+    BaseEvaluationStrategy,
+)
 from openjudge.graders.base_grader import BaseGrader
 from openjudge.graders.schema import GraderMode, GraderScore
-from openjudge.strategy.base import BaseStrategy
 
 
 class ReasoningFormatGrader(BaseGrader):
@@ -26,7 +28,7 @@ class ReasoningFormatGrader(BaseGrader):
         self,
         think_token: str = "think",
         answer_token: str = "answer",
-        strategy: BaseStrategy | None = None,
+        strategy: BaseEvaluationStrategy | None = None,
         mapper: Union[Dict[str, str], Callable, None] = None,
     ):
         """

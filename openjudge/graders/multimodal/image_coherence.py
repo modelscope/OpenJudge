@@ -12,6 +12,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from loguru import logger
 
+from openjudge.evaluation_strategy import BaseEvaluationStrategy
 from openjudge.graders.base_grader import GraderMode, GraderScore
 from openjudge.graders.llm_grader import LLMGrader
 from openjudge.graders.multimodal._internal import (
@@ -23,7 +24,6 @@ from openjudge.graders.schema import GraderScoreCallback
 from openjudge.models.base_chat_model import BaseChatModel
 from openjudge.models.schema.oai.message import ChatMessage
 from openjudge.models.schema.prompt_template import LanguageEnum, PromptTemplate
-from openjudge.strategy import BaseStrategy
 from openjudge.utils.utils import parse_structured_chat_response
 
 # pylint: disable=line-too-long
@@ -189,7 +189,7 @@ class ImageCoherenceGrader(LLMGrader):
         threshold: float = 0.7,
         template: PromptTemplate = DEFAULT_IMAGE_COHERENCE_TEMPLATE,
         language: LanguageEnum = LanguageEnum.EN,
-        strategy: BaseStrategy | None = None,
+        strategy: BaseEvaluationStrategy | None = None,
         mapper: Optional[Union[Dict[str, str], Callable]] = None,
     ):
         """
@@ -201,7 +201,7 @@ class ImageCoherenceGrader(LLMGrader):
             threshold: Success threshold [0, 1] (default: 0.7)
             template: PromptTemplate for evaluation prompts (default: DEFAULT_IMAGE_COHERENCE_TEMPLATE)
             language: Language for prompts (default: LanguageEnum.EN)
-            strategy: The evaluation strategy to use. Defaults to DirectStrategy.
+            strategy: The evaluation strategy to use. Defaults to LocalEvaluationStrategy.
             mapper: Optional mapper to transform input data before evaluation.
                    Can be a dictionary mapping or a callable.
         """

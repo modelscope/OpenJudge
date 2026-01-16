@@ -11,8 +11,8 @@ from typing import Any, Callable, Dict, Union
 from math_verify import parse, verify
 from math_verify.parser import ExprExtractionConfig, LatexExtractionConfig
 
+from openjudge.evaluation_strategy import BaseEvaluationStrategy
 from openjudge.graders.base_grader import BaseGrader, GraderMode, GraderScore
-from openjudge.strategy import BaseStrategy
 
 
 class MathExpressionVerifyGrader(BaseGrader):
@@ -23,7 +23,7 @@ class MathExpressionVerifyGrader(BaseGrader):
     def __init__(
         self,
         timeout_score: float = 1.0,
-        strategy: BaseStrategy | None = None,
+        strategy: BaseEvaluationStrategy | None = None,
         mapper: Union[Dict[str, str], Callable, None] = None,
         **kwargs: Any,
     ):
@@ -32,7 +32,7 @@ class MathExpressionVerifyGrader(BaseGrader):
 
         Args:
             timeout_score: Score to assign on timeout or exception.
-            strategy: The evaluation strategy to use. Defaults to DirectStrategy.
+            strategy: The evaluation strategy to use. Defaults to LocalEvaluationStrategy.
             mapper: Optional mapper to transform input data before evaluation.
                    Can be a dictionary mapping or a callable.
         """

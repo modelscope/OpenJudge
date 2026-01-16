@@ -13,20 +13,22 @@ conventions (snake_case for functions and variables).
 import re
 from typing import Any, Callable, Dict, Union
 
+from openjudge.evaluation_strategy import BaseEvaluationStrategy
 from openjudge.graders.base_grader import BaseGrader
 from openjudge.graders.schema import GraderMode, GraderScore
-from openjudge.strategy import BaseStrategy
 
 
 class CodeStyleGrader(BaseGrader):
     """Basic code style checking including indentation consistency and naming conventions."""
 
-    def __init__(self, strategy: BaseStrategy | None = None, mapper: Union[Dict[str, str], Callable, None] = None):
+    def __init__(
+        self, strategy: BaseEvaluationStrategy | None = None, mapper: Union[Dict[str, str], Callable, None] = None
+    ):
         """
         Initialize a CodeStyleGrader.
 
         Args:
-            strategy: BaseStrategy, optional
+            strategy: BaseEvaluationStrategy, optional
             mapper: Union[Dict[str, str], Callable, None], optional
         """
         super().__init__(

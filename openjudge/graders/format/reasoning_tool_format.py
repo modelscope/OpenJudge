@@ -6,9 +6,11 @@ import json
 import re
 from typing import Any, Callable, Dict, Union
 
+from openjudge.evaluation_strategy.base_evaluation_strategy import (
+    BaseEvaluationStrategy,
+)
 from openjudge.graders.base_grader import BaseGrader
 from openjudge.graders.schema import GraderMode, GraderScore
-from openjudge.strategy.base import BaseStrategy
 
 
 class ReasoningToolCallFormatGrader(BaseGrader):
@@ -22,13 +24,13 @@ class ReasoningToolCallFormatGrader(BaseGrader):
 
     def __init__(
         self,
-        strategy: BaseStrategy | None = None,
+        strategy: BaseEvaluationStrategy | None = None,
         mapper: Union[Dict[str, str], Callable, None] = None,
     ) -> None:
         """
         Initialize the ReasoningToolCallFormatGrader.
         Args:
-            strategy: A BaseStrategy object for custom grading logic.
+            strategy: A BaseEvaluationStrategy object for custom grading logic.
             mapper: A mapping function or dictionary to map the response to a desired format.
         """
         super().__init__(

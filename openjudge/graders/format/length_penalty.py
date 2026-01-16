@@ -7,9 +7,9 @@ that is either too short or too long according to configured thresholds.
 
 from typing import Callable, Dict, Union
 
+from openjudge.evaluation_strategy import BaseEvaluationStrategy
 from openjudge.graders.base_grader import BaseGrader
 from openjudge.graders.schema import GraderMode, GraderScore
-from openjudge.strategy import BaseStrategy
 
 
 class LengthPenaltyGrader(BaseGrader):
@@ -22,7 +22,7 @@ class LengthPenaltyGrader(BaseGrader):
         min_length: int = 10,
         max_length: int = 1000,
         penalty_rate: float = 0.01,
-        strategy: BaseStrategy | None = None,
+        strategy: BaseEvaluationStrategy | None = None,
         mapper: Union[Dict[str, str], Callable, None] = None,
     ):
         """
@@ -31,7 +31,7 @@ class LengthPenaltyGrader(BaseGrader):
             min_length: Minimum length of the content
             max_length: Maximum length of the content
             penalty_rate: Penalty rate for each character beyond the maximum length
-            strategy: The evaluation strategy to use. Defaults to DirectStrategy.
+            strategy: The evaluation strategy to use. Defaults to LocalEvaluationStrategy.
             mapper: Optional mapper to transform input data before evaluation.
                    Can be a dictionary mapping or a callable.
         """

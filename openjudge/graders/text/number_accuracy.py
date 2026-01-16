@@ -12,9 +12,9 @@ them with a configurable tolerance to determine accuracy scores.
 import re
 from typing import Any, Callable, Dict, List, Union
 
+from openjudge.evaluation_strategy import BaseEvaluationStrategy
 from openjudge.graders.base_grader import BaseGrader
 from openjudge.graders.schema import GraderMode, GraderScore
-from openjudge.strategy import BaseStrategy
 
 
 class NumberAccuracyGrader(BaseGrader):
@@ -46,7 +46,7 @@ class NumberAccuracyGrader(BaseGrader):
     def __init__(
         self,
         tolerance: float = 1e-6,
-        strategy: BaseStrategy | None = None,
+        strategy: BaseEvaluationStrategy | None = None,
         mapper: Union[Dict[str, str], Callable, None] = None,
         **kwargs: Any,
     ) -> None:
@@ -55,7 +55,7 @@ class NumberAccuracyGrader(BaseGrader):
 
         Args:
             tolerance: Tolerance for number comparison. Default is 1e-6.
-            strategy: The evaluation strategy to use. Defaults to DirectStrategy.
+            strategy: The evaluation strategy to use. Defaults to LocalEvaluationStrategy.
             mapper: Optional mapper to transform input data before evaluation.
                    Can be a dictionary mapping or a callable.
             **kwargs: Additional keyword arguments passed to BaseGrader.

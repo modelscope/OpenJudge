@@ -13,9 +13,11 @@ to be quantified.
 import difflib
 from typing import Callable, Dict, Union
 
+from openjudge.evaluation_strategy.base_evaluation_strategy import (
+    BaseEvaluationStrategy,
+)
 from openjudge.graders.base_grader import BaseGrader
 from openjudge.graders.schema import GraderMode, GraderScore
-from openjudge.strategy.base import BaseStrategy
 
 
 class PatchSimilarityGrader(BaseGrader):
@@ -28,13 +30,13 @@ class PatchSimilarityGrader(BaseGrader):
 
     def __init__(
         self,
-        strategy: BaseStrategy | None = None,
+        strategy: BaseEvaluationStrategy | None = None,
         mapper: Union[Dict[str, str], Callable, None] = None,
     ):
         """
         Initialize PatchSimilarityGrader.
         Args:
-            strategy (BaseStrategy): The strategy to use for grading.
+            strategy (BaseEvaluationStrategy): The strategy to use for grading.
             mapper (Dict[str, str] | Callable | None): Optional mapper to transform input data
                 before passing it to the grader.
         """

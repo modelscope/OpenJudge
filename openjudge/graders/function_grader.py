@@ -20,9 +20,9 @@ import asyncio
 from functools import partial
 from typing import Any, Callable, Dict, Union
 
+from openjudge.evaluation_strategy import BaseEvaluationStrategy
 from openjudge.graders.base_grader import BaseGrader
 from openjudge.graders.schema import GraderMode, GraderRank, GraderScore
-from openjudge.strategy import BaseStrategy
 
 
 class FunctionGrader(BaseGrader):
@@ -42,7 +42,7 @@ class FunctionGrader(BaseGrader):
         name: str = "",
         mode: GraderMode = GraderMode.POINTWISE,
         description: str = "",
-        strategy: BaseStrategy | None = None,
+        strategy: BaseEvaluationStrategy | None = None,
         mapper: Union[Dict[str, str], Callable, None] = None,
         **kwargs: Any,
     ):
@@ -63,7 +63,7 @@ class FunctionGrader(BaseGrader):
                   or LISTWISE (joint evaluation of multiple samples).
                   Defaults to POINTWISE.
             description: Human-readable description of what this grader evaluates.
-            strategy: The evaluation strategy to use. Defaults to DirectStrategy.
+            strategy: The evaluation strategy to use. Defaults to LocalEvaluationStrategy.
             mapper: Optional mapper to transform input data before evaluation.
                    Can be a dictionary mapping or a callable.
             **kwargs: Additional keyword arguments passed to the parent Grader class.

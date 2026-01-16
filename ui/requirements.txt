@@ -1,0 +1,11 @@
+# OpenJudge Studio Dependencies
+# ==============================
+
+# Core Framework
+streamlit>=1.31.0
+
+# For async support in Streamlit
+nest-asyncio>=1.6.0
+
+# OpenJudge framework (install from parent directory)
+# pip install -e ..

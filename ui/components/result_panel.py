@@ -124,8 +124,11 @@ def _render_error_state(error: GraderError) -> None:
             padding: 1.5rem;
         ">
             <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2">
-                    <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                     stroke="#EF4444" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="15" y1="9" x2="9" y2="15"/>
+                    <line x1="9" y1="9" x2="15" y2="15"/>
                 </svg>
                 <span style="font-size: 1.1rem; font-weight: 600; color: #EF4444;">
                     Evaluation Failed
@@ -164,6 +167,145 @@ def _render_error_state(error: GraderError) -> None:
     )
 
 
+def _run_evaluation(
+    sidebar_config: dict[str, Any],
+    input_data: dict[str, Any],
+    grader_name: str,
+    grader_config: dict[str, Any],
+) -> None:
+    """Run evaluation and save results to session state.
+
+    Args:
+        sidebar_config: Configuration from sidebar
+        input_data: Input data from input panel
+        grader_name: Name of the grader
+        grader_config: Grader configuration
+    """
+    with st.status("Running evaluation...", expanded=True) as status:
+        try:
+            start_time = time.time()
+
+            # Create model if required
+            model = None
+            if grader_config.get("requires_model", False):
+                st.write("Creating model instance...")
+                model = create_model(
+                    api_key=sidebar_config.get("api_key", ""),
+                    base_url=sidebar_config.get("api_endpoint"),
+                    model_name=sidebar_config.get("model_name", ""),
+                )
+
+            # Create grader
+            st.write(f"Initializing {grader_name} grader...")
+            grader = create_grader(
+                grader_name=grader_name,
+                model=model,
+                threshold=sidebar_config.get("threshold", 0.5),
+                language=sidebar_config.get("language"),
+                **sidebar_config.get("extra_params", {}),
+            )
+
+            # Run evaluation
+            st.write("Running evaluation...")
+            result = _execute_evaluation(grader, grader_config, input_data)
+            elapsed = time.time() - start_time
+
+            # Save to session state
+            st.session_state.evaluation_result = result
+            st.session_state.last_grader = grader_name
+            st.session_state.last_threshold = sidebar_config.get("threshold", 0.5)
+            st.session_state.elapsed_time = elapsed
+
+            status.update(
+                label=f"Evaluation complete ({format_elapsed_time(elapsed)})",
+                state="complete",
+            )
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            status.update(label="Evaluation failed", state="error")
+            st.session_state.evaluation_result = GraderError(
+                name=grader_name,
+                error=str(e),
+                reason=f"Exception: {type(e).__name__}: {str(e)}",
+            )
+
+
+def _execute_evaluation(grader, grader_config: dict[str, Any], input_data: dict[str, Any]):
+    """Execute evaluation based on grader type.
+
+    Args:
+        grader: Grader instance
+        grader_config: Grader configuration
+        input_data: Input data
+
+    Returns:
+        Evaluation result
+    """
+    category = grader_config.get("category", "common")
+
+    if category == "multimodal":
+        return run_multimodal_evaluation(
+            grader=grader,
+            response_content=input_data.get("response", []),
+            query=input_data.get("query", ""),
+        )
+
+    if category == "agent":
+        tool_defs = parse_json_safely(input_data.get("tool_definitions", ""), default=[])
+        tool_calls = parse_json_safely(input_data.get("tool_calls", ""), default=[])
+        ref_tool_calls = parse_json_safely(input_data.get("reference_tool_calls", ""), default=None)
+        return run_agent_evaluation(
+            grader=grader,
+            query=input_data.get("query", ""),
+            tool_definitions=tool_defs,
+            tool_calls=tool_calls,
+            reference_tool_calls=ref_tool_calls,
+        )
+
+    return run_evaluation(
+        grader=grader,
+        query=input_data.get("query", ""),
+        response=input_data.get("response", ""),
+        reference_response=input_data.get("reference_response", ""),
+        context=input_data.get("context", ""),
+    )
+
+
+def _display_results(grader_name: str) -> None:
+    """Display evaluation results.
+
+    Args:
+        grader_name: Current grader name
+    """
+    result = st.session_state.evaluation_result
+
+    if not result:
+        render_empty_state()
+        return
+
+    if isinstance(result, GraderError):
+        _render_error_state(result)
+        return
+
+    last_grader = st.session_state.get("last_grader", grader_name)
+    last_config = GRADER_REGISTRY.get(last_grader, {})
+    score_range = last_config.get("score_range", (0, 1))
+
+    _render_score_card(
+        score=result.score,
+        threshold=st.session_state.get("last_threshold", 0.5),
+        grader_name=last_grader,
+        reason=result.reason,
+        score_range=score_range,
+    )
+
+    if result.metadata:
+        with st.expander("View Metadata"):
+            st.json(result.metadata)
+
+    if "elapsed_time" in st.session_state:
+        st.caption(f"Completed in {format_elapsed_time(st.session_state.elapsed_time)}")
+
+
 def render_result_panel(
     sidebar_config: dict[str, Any],
     input_data: dict[str, Any],
@@ -178,138 +320,13 @@ def render_result_panel(
     """
     render_section_header("Evaluation Result")
 
-    # Initialize session state
     if "evaluation_result" not in st.session_state:
         st.session_state.evaluation_result = None
 
     grader_name = sidebar_config.get("grader_name")
     grader_config = sidebar_config.get("grader_config")
 
-    # =========================================================================
-    # Run Evaluation
-    # =========================================================================
     if run_evaluation_flag and grader_name and grader_config:
-        with st.status("Running evaluation...", expanded=True) as status:
-            try:
-                start_time = time.time()
+        _run_evaluation(sidebar_config, input_data, grader_name, grader_config)
 
-                # Create model if required
-                model = None
-                if grader_config.get("requires_model", False):
-                    st.write("Creating model instance...")
-                    model = create_model(
-                        api_key=sidebar_config.get("api_key", ""),
-                        base_url=sidebar_config.get("api_endpoint"),
-                        model_name=sidebar_config.get("model_name", ""),
-                    )
-
-                # Create grader
-                st.write(f"Initializing {grader_name} grader...")
-                extra_params = sidebar_config.get("extra_params", {})
-                grader = create_grader(
-                    grader_name=grader_name,
-                    model=model,
-                    threshold=sidebar_config.get("threshold", 0.5),
-                    language=sidebar_config.get("language"),
-                    **extra_params,
-                )
-
-                # Run evaluation based on grader type
-                st.write("Running evaluation...")
-
-                category = grader_config.get("category", "common")
-
-                if category == "multimodal":
-                    # Multimodal evaluation
-                    result = run_multimodal_evaluation(
-                        grader=grader,
-                        response_content=input_data.get("response", []),
-                        query=input_data.get("query", ""),
-                    )
-                elif category == "agent":
-                    # Agent/Tool evaluation
-                    tool_defs = parse_json_safely(
-                        input_data.get("tool_definitions", ""),
-                        default=[],
-                    )
-                    tool_calls = parse_json_safely(
-                        input_data.get("tool_calls", ""),
-                        default=[],
-                    )
-                    ref_tool_calls = parse_json_safely(
-                        input_data.get("reference_tool_calls", ""),
-                        default=None,
-                    )
-
-                    result = run_agent_evaluation(
-                        grader=grader,
-                        query=input_data.get("query", ""),
-                        tool_definitions=tool_defs,
-                        tool_calls=tool_calls,
-                        reference_tool_calls=ref_tool_calls,
-                    )
-                else:
-                    # Standard evaluation
-                    result = run_evaluation(
-                        grader=grader,
-                        query=input_data.get("query", ""),
-                        response=input_data.get("response", ""),
-                        reference_response=input_data.get("reference_response", ""),
-                        context=input_data.get("context", ""),
-                    )
-
-                elapsed = time.time() - start_time
-
-                # Save result to session state
-                st.session_state.evaluation_result = result
-                st.session_state.last_grader = grader_name
-                st.session_state.last_threshold = sidebar_config.get("threshold", 0.5)
-                st.session_state.elapsed_time = elapsed
-
-                status.update(
-                    label=f"Evaluation complete ({format_elapsed_time(elapsed)})",
-                    state="complete",
-                )
-
-            except Exception as e:
-                status.update(label="Evaluation failed", state="error")
-                st.session_state.evaluation_result = GraderError(
-                    name=grader_name,
-                    error=str(e),
-                    reason=f"Exception: {type(e).__name__}: {str(e)}",
-                )
-
-    # =========================================================================
-    # Display Results
-    # =========================================================================
-    result = st.session_state.evaluation_result
-
-    if result:
-        if isinstance(result, GraderError):
-            _render_error_state(result)
-        else:
-            # Get score range from grader config
-            last_grader = st.session_state.get("last_grader", grader_name)
-            last_config = GRADER_REGISTRY.get(last_grader, {})
-            score_range = last_config.get("score_range", (0, 1))
-
-            _render_score_card(
-                score=result.score,
-                threshold=st.session_state.get("last_threshold", 0.5),
-                grader_name=last_grader,
-                reason=result.reason,
-                score_range=score_range,
-            )
-
-            # Metadata expander
-            if result.metadata:
-                with st.expander("View Metadata"):
-                    st.json(result.metadata)
-
-            # Elapsed time
-            if "elapsed_time" in st.session_state:
-                st.caption(
-                    f"Completed in {format_elapsed_time(st.session_state.elapsed_time)}"
-                )
-    else:
-        render_empty_state()
+    _display_results(grader_name)

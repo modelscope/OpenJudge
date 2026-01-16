@@ -14,6 +14,7 @@ UI_DIR = Path(__file__).parent
 if str(UI_DIR) not in sys.path:
     sys.path.insert(0, str(UI_DIR))
 
+# pylint: disable=wrong-import-position
 import streamlit as st
 from components.input_panel import render_input_panel, render_run_button
 from components.result_panel import render_result_panel
@@ -21,6 +22,8 @@ from components.shared import render_footer, render_header, render_quick_guide
 from components.sidebar import render_sidebar
 from config.constants import APP_NAME
 from styles.theme import inject_css
+
+# pylint: enable=wrong-import-position
 
 # ============================================================================
 # Page Configuration (must be first Streamlit command)

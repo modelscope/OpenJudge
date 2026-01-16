@@ -9,17 +9,15 @@ from components.shared import render_section_header
 from config.constants import EXAMPLE_DATA
 
 
-def _get_example_data(grader_name: str, category: str) -> dict[str, Any]:
-    """Get appropriate example data based on grader type.
+def _get_example_data(category: str) -> dict[str, Any]:
+    """Get appropriate example data based on grader category.
 
     Args:
-        grader_name: Name of the selected grader
         category: Grader category
 
     Returns:
         Example data dictionary
     """
-    # Map categories to example data keys
     category_map = {
         "text": "text_similarity",
         "code": "code_style",
@@ -27,34 +25,25 @@ def _get_example_data(grader_name: str, category: str) -> dict[str, Any]:
         "multimodal": "multimodal",
         "agent": "agent_tool",
     }
-
     example_key = category_map.get(category, "default")
     return EXAMPLE_DATA.get(example_key, EXAMPLE_DATA["default"])
 
 
-def render_input_panel(sidebar_config: dict[str, Any]) -> dict[str, Any]:
-    """Render the input panel and return input data.
+def _render_action_buttons(category: str) -> dict[str, Any]:
+    """Render action buttons and return default values.
 
     Args:
-        sidebar_config: Configuration from sidebar
+        category: Grader category
 
     Returns:
-        Dictionary containing all input data
+        Default values dictionary
     """
-    grader_config = sidebar_config.get("grader_config")
-    grader_name = sidebar_config.get("grader_name", "")
-    category = sidebar_config.get("grader_category", "common")
-
-    render_section_header("Input Data")
-
-    # Action buttons
     col_btn1, col_btn2 = st.columns([1, 1])
     with col_btn1:
         load_example = st.button("Load Example", use_container_width=True)
     with col_btn2:
         clear_all = st.button("Clear All", use_container_width=True)
 
-    # Handle button actions
     if load_example:
         st.session_state.example_loaded = True
         st.session_state.evaluation_result = None
@@ -62,125 +51,111 @@ def render_input_panel(sidebar_config: dict[str, Any]) -> dict[str, Any]:
         st.session_state.example_loaded = False
         st.session_state.evaluation_result = None
 
-    # Get default values
     if st.session_state.get("example_loaded", False):
-        defaults = _get_example_data(grader_name, category)
-    else:
-        defaults = {
-            "query": "",
-            "response": "",
-            "reference_response": "",
-            "context": "",
-            "tool_definitions": "",
-            "tool_calls": "",
-        }
+        return _get_example_data(category)
+    return {
+        "query": "",
+        "response": "",
+        "reference_response": "",
+        "context": "",
+        "tool_definitions": "",
+        "tool_calls": "",
+    }
 
+
+def _render_agent_input(defaults: dict[str, Any], input_fields: list) -> dict[str, Any]:
+    """Render agent grader input fields.
+
+    Args:
+        defaults: Default values
+        input_fields: List of input fields
+
+    Returns:
+        Input data dictionary
+    """
     input_data: dict[str, Any] = {}
+    tab_main, tab_tools, tab_context = st.tabs(["Query", "Tools", "Context"])
 
-    # =========================================================================
-    # Render appropriate input fields based on grader type
-    # =========================================================================
+    with tab_main:
+        query = st.text_area(
+            "Query",
+            value=defaults.get("query", ""),
+            height=100,
+            placeholder="Enter the user's query to the agent...",
+            help="The task or question given to the agent",
+        )
+        input_data["query"] = query
 
-    if not grader_config:
-        st.warning("Please select a grader from the sidebar")
-        return input_data
-
-    input_fields = grader_config.get("input_fields", ["query", "response"])
-
-    # -------------------------------------------------------------------------
-    # Multimodal Graders (Image + Text)
-    # -------------------------------------------------------------------------
-    if "response_multimodal" in input_fields:
-        content_list, context = render_multimodal_input()
-        input_data["response"] = content_list
-        input_data["has_content"] = len(content_list) > 0
-        return input_data
-
-    if "response_image" in input_fields:
-        # Text-to-Image grader
-        text_prompt, image = render_text_to_image_input()
-        input_data["query"] = text_prompt
-        input_data["response"] = image
-        input_data["has_content"] = bool(text_prompt and image)
-        return input_data
-
-    # -------------------------------------------------------------------------
-    # Agent Graders (Tool definitions and calls)
-    # -------------------------------------------------------------------------
-    if "tool_definitions" in input_fields:
-        tab_main, tab_tools, tab_context = st.tabs(["Query", "Tools", "Context"])
-
-        with tab_main:
-            query = st.text_area(
-                "Query",
-                value=defaults.get("query", ""),
-                height=100,
-                placeholder="Enter the user's query to the agent...",
-                help="The task or question given to the agent",
-            )
-            input_data["query"] = query
-
-        with tab_tools:
-            st.markdown(
-                """
-                <div class="info-card">
-                    <div style="font-size: 0.85rem; color: #94A3B8;">
-                        Enter tool definitions and calls in JSON format
-                    </div>
+    with tab_tools:
+        st.markdown(
+            """<div class="info-card">
+                <div style="font-size: 0.85rem; color: #94A3B8;">
+                    Enter tool definitions and calls in JSON format
                 </div>
-                """,
-                unsafe_allow_html=True,
-            )
+            </div>""",
+            unsafe_allow_html=True,
+        )
+        tool_definitions = st.text_area(
+            "Available Tool Definitions (JSON)",
+            value=defaults.get("tool_definitions", ""),
+            height=200,
+            placeholder='[{"name": "get_weather", "description": "...", "parameters": {...}}]',
+            help="JSON array of available tool definitions",
+        )
+        input_data["tool_definitions"] = tool_definitions
 
-            tool_definitions = st.text_area(
-                "Available Tool Definitions (JSON)",
-                value=defaults.get("tool_definitions", ""),
-                height=200,
-                placeholder='[{"name": "get_weather", "description": "...", "parameters": {...}}]',
-                help="JSON array of available tool definitions",
-            )
-            input_data["tool_definitions"] = tool_definitions
+        tool_calls = st.text_area(
+            "Agent's Tool Calls (JSON)",
+            value=defaults.get("tool_calls", ""),
+            height=150,
+            placeholder='[{"name": "get_weather", "arguments": {"location": "Beijing"}}]',
+            help="JSON array of tool calls made by the agent",
+        )
+        input_data["tool_calls"] = tool_calls
 
-            tool_calls = st.text_area(
-                "Agent's Tool Calls (JSON)",
-                value=defaults.get("tool_calls", ""),
+        if "reference_tool_calls" in input_fields:
+            reference_tool_calls = st.text_area(
+                "Expected Tool Calls (JSON)",
+                value="",
                 height=150,
                 placeholder='[{"name": "get_weather", "arguments": {"location": "Beijing"}}]',
-                help="JSON array of tool calls made by the agent",
+                help="JSON array of expected/correct tool calls",
             )
-            input_data["tool_calls"] = tool_calls
+            input_data["reference_tool_calls"] = reference_tool_calls
 
-            # Reference tool calls for accuracy evaluation
-            if "reference_tool_calls" in input_fields:
-                reference_tool_calls = st.text_area(
-                    "Expected Tool Calls (JSON)",
-                    value="",
-                    height=150,
-                    placeholder='[{"name": "get_weather", "arguments": {"location": "Beijing"}}]',
-                    help="JSON array of expected/correct tool calls",
-                )
-                input_data["reference_tool_calls"] = reference_tool_calls
+    with tab_context:
+        context = st.text_area(
+            "Additional Context",
+            value="",
+            height=200,
+            placeholder="Enter any additional context...",
+            help="Optional background information",
+        )
+        input_data["context"] = context
 
-        with tab_context:
-            context = st.text_area(
-                "Additional Context",
-                value="",
-                height=200,
-                placeholder="Enter any additional context...",
-                help="Optional background information",
-            )
-            input_data["context"] = context
+    input_data["has_content"] = bool(query and tool_definitions and tool_calls)
+    return input_data
 
-        input_data["has_content"] = bool(query and tool_definitions and tool_calls)
-        return input_data
 
-    # -------------------------------------------------------------------------
-    # Standard Graders (Query/Response/Reference)
-    # -------------------------------------------------------------------------
+def _render_standard_input(
+    defaults: dict[str, Any],
+    input_fields: list,
+    grader_config: dict[str, Any],
+) -> dict[str, Any]:
+    """Render standard grader input fields.
+
+    Args:
+        defaults: Default values
+        input_fields: List of input fields
+        grader_config: Grader configuration
+
+    Returns:
+        Input data dictionary
+    """
+    input_data: dict[str, Any] = {}
     tab_main, tab_context = st.tabs(["Main Input", "Context"])
 
     with tab_main:
-        # Query field
         if "query" in input_fields:
             query = st.text_area(
                 "Query",
@@ -191,7 +166,6 @@ def render_input_panel(sidebar_config: dict[str, Any]) -> dict[str, Any]:
             )
             input_data["query"] = query
 
-        # Response field (always present for standard graders)
         response = st.text_area(
             "Response to Evaluate",
             value=defaults.get("response", ""),
@@ -201,20 +175,17 @@ def render_input_panel(sidebar_config: dict[str, Any]) -> dict[str, Any]:
         )
         input_data["response"] = response
 
-        # Reference response field
         requires_reference = grader_config.get("requires_reference", False)
         if "reference_response" in input_fields or requires_reference:
             ref_label = (
-                "Reference Response *"
-                if requires_reference
-                else "Reference Response (Optional)"
+                "Reference Response *" if requires_reference else "Reference Response (Optional)"
             )
+            placeholder_suffix = " (Required)" if requires_reference else ""
             reference_response = st.text_area(
                 ref_label,
                 value=defaults.get("reference_response", ""),
                 height=120,
-                placeholder="Enter the reference/golden answer..."
-                + (" (Required)" if requires_reference else ""),
+                placeholder=f"Enter the reference/golden answer...{placeholder_suffix}",
                 help="The expected or ideal response for comparison",
             )
             input_data["reference_response"] = reference_response
@@ -229,16 +200,61 @@ def render_input_panel(sidebar_config: dict[str, Any]) -> dict[str, Any]:
         )
         input_data["context"] = context
 
-    # Determine if we have enough content to run
+    # Determine if we have enough content
     has_content = bool(input_data.get("response", ""))
     if "query" in input_fields:
         has_content = has_content and bool(input_data.get("query", ""))
-    if requires_reference:
+    if grader_config.get("requires_reference", False):
         has_content = has_content and bool(input_data.get("reference_response", ""))
-
     input_data["has_content"] = has_content
 
     return input_data
+
+
+def render_input_panel(sidebar_config: dict[str, Any]) -> dict[str, Any]:
+    """Render the input panel and return input data.
+
+    Args:
+        sidebar_config: Configuration from sidebar
+
+    Returns:
+        Dictionary containing all input data
+    """
+    grader_config = sidebar_config.get("grader_config")
+    category = sidebar_config.get("grader_category", "common")
+
+    render_section_header("Input Data")
+
+    # Action buttons and get defaults
+    defaults = _render_action_buttons(category)
+    input_data: dict[str, Any] = {}
+
+    if not grader_config:
+        st.warning("Please select a grader from the sidebar")
+        return input_data
+
+    input_fields = grader_config.get("input_fields", ["query", "response"])
+
+    # Multimodal Graders
+    if "response_multimodal" in input_fields:
+        content_list, _ = render_multimodal_input()
+        input_data["response"] = content_list
+        input_data["has_content"] = len(content_list) > 0
+        return input_data
+
+    if "response_image" in input_fields:
+        text_prompt, image = render_text_to_image_input()
+        input_data["query"] = text_prompt
+        input_data["response"] = image
+        input_data["has_content"] = bool(text_prompt and image)
+        return input_data
+
+    # Agent Graders
+    if "tool_definitions" in input_fields:
+        return _render_agent_input(defaults, input_fields)
+
+    # Standard Graders
+    return _render_standard_input(defaults, input_fields, grader_config)
 
 
 def render_run_button(

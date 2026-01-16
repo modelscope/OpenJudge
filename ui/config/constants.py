@@ -83,7 +83,10 @@ GRADER_CATEGORIES: dict[str, dict[str, Any]] = {
 EXAMPLE_DATA: dict[str, dict[str, Any]] = {
     "default": {
         "query": "What is the capital of France?",
-        "response": "The capital of France is Paris. It is the largest city in France and serves as the country's major cultural, economic, and political center.",
+        "response": (
+            "The capital of France is Paris. It is the largest city in France "
+            "and serves as the country's major cultural, economic, and political center."
+        ),
         "reference_response": "Paris is the capital of France.",
         "context": "",
     },

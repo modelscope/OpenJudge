@@ -311,11 +311,7 @@ def get_graders_by_category(category: str) -> dict[str, dict[str, Any]]:
     Returns:
         Dictionary of graders in the specified category
     """
-    return {
-        name: config
-        for name, config in GRADER_REGISTRY.items()
-        if config.get("category") == category
-    }
+    return {name: config for name, config in GRADER_REGISTRY.items() if config.get("category") == category}
 
 
 def get_all_grader_names() -> list[str]:

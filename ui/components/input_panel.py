@@ -177,9 +177,7 @@ def _render_standard_input(
 
         requires_reference = grader_config.get("requires_reference", False)
         if "reference_response" in input_fields or requires_reference:
-            ref_label = (
-                "Reference Response *" if requires_reference else "Reference Response (Optional)"
-            )
+            ref_label = "Reference Response *" if requires_reference else "Reference Response (Optional)"
             placeholder_suffix = " (Required)" if requires_reference else ""
             reference_response = st.text_area(
                 ref_label,
@@ -277,9 +275,7 @@ def render_run_button(
     has_content = input_data.get("has_content", False)
 
     # Check if model is required
-    requires_model = (
-        grader_config.get("requires_model", True) if grader_config else True
-    )
+    requires_model = grader_config.get("requires_model", True) if grader_config else True
 
     can_run = bool(grader_name and has_content)
     if requires_model:

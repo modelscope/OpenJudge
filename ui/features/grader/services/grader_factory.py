@@ -5,8 +5,8 @@ import importlib
 import inspect
 from typing import Any, Optional
 
-from config.grader_registry import GRADER_REGISTRY
-from utils.helpers import run_async
+from features.grader.config.grader_registry import GRADER_REGISTRY
+from shared.utils.helpers import run_async
 
 from openjudge.graders.base_grader import BaseGrader
 from openjudge.graders.schema import GraderError, GraderScore

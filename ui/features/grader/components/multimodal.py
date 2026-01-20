@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-"""Multimodal input components for OpenJudge Studio."""
+"""Multimodal input components for Grader feature."""
 
 from typing import Any, Optional
 
 import streamlit as st
-from utils.helpers import encode_image_to_base64, get_image_format
+from shared.utils.helpers import encode_image_to_base64, get_image_format
 
 
 def render_image_uploader(

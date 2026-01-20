@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
-"""Input panel component for OpenJudge Studio."""
+"""Input panel component for Grader feature."""
 
 from typing import Any
 
 import streamlit as st
-from components.multimodal import render_multimodal_input, render_text_to_image_input
-from components.shared import render_section_header
-from config.constants import EXAMPLE_DATA
+from features.grader.components.multimodal import (
+    render_multimodal_input,
+    render_text_to_image_input,
+)
+from features.grader.config.constants import EXAMPLE_DATA
+from shared.components.common import render_section_header
 
 
 def _get_example_data(category: str) -> dict[str, Any]:

@@ -1,46 +1,8 @@
 # -*- coding: utf-8 -*-
-"""Shared UI components for OpenJudge Studio."""
+"""Common shared UI components for OpenJudge Studio."""
 
 import streamlit as st
-from config.constants import APP_VERSION
-
-
-def render_header() -> None:
-    """Render the main header with subtitle only (title is in sidebar)."""
-    st.markdown(
-        '<p class="sub-header" style="margin-top: 0;">Evaluate LLM responses with precision and insight</p>',
-        unsafe_allow_html=True,
-    )
-
-
-def render_quick_guide() -> None:
-    """Render the quick start guide."""
-    st.markdown(
-        """
-        <div class="feature-card">
-            <div style="font-weight: 600; color: #F1F5F9; margin-bottom: 0.75rem;">
-                Quick Start Guide
-            </div>
-            <div class="guide-step">
-                <div class="guide-number">1</div>
-                <div class="guide-text">Configure your API endpoint and key in the sidebar</div>
-            </div>
-            <div class="guide-step">
-                <div class="guide-number">2</div>
-                <div class="guide-text">Select a grader category and specific grader</div>
-            </div>
-            <div class="guide-step">
-                <div class="guide-number">3</div>
-                <div class="guide-text">Enter your evaluation data (query, response, etc.)</div>
-            </div>
-            <div class="guide-step">
-                <div class="guide-number">4</div>
-                <div class="guide-text">Click "Run Evaluation" to see results</div>
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+from shared.constants import APP_VERSION
 
 
 def render_footer() -> None:
@@ -111,10 +73,24 @@ def render_info_card(content: str) -> None:
     )
 
 
-def render_empty_state() -> None:
-    """Render empty state placeholder."""
+def render_empty_state(
+    title: str = "Ready to Evaluate",
+    description: str = "Enter your data and click <strong>Run Evaluation</strong> to see results",
+    tip: str = "",
+) -> None:
+    """Render empty state placeholder.
+
+    Args:
+        title: Main title text
+        description: Description text (HTML supported)
+        tip: Optional tip text
+    """
+    tip_html = ""
+    if tip:
+        tip_html = f'<div style="margin-top: 1rem; font-size: 0.875rem; color: #94A3B8;">{tip}</div>'
+
     st.markdown(
-        """
+        f"""
         <div class="empty-state animate-fade-in">
             <div class="empty-state-icon animate-pulse" style="
                 width: 64px;
@@ -131,15 +107,66 @@ def render_empty_state() -> None:
                 </svg>
             </div>
             <div style="font-size: 1.1rem; font-weight: 500; color: #94A3B8; margin-bottom: 0.5rem;">
-                Ready to Evaluate
+                {title}
             </div>
             <div style="color: #64748B;">
-                Enter your data and click <strong>Run Evaluation</strong> to see results
+                {description}
             </div>
-            <div style="margin-top: 1rem; font-size: 0.875rem; color: #475569;">
-                Tip: Use the "Load Example" button to try with sample data
-            </div>
+            {tip_html}
         </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def render_progress_bar(progress: float, color: str = "#6366F1") -> None:
+    """Render a custom progress bar.
+
+    Args:
+        progress: Progress value between 0 and 1
+        color: Bar color (hex)
+    """
+    pct = min(max(progress * 100, 0), 100)
+    st.markdown(
+        f"""
+        <div class="progress-container">
+            <div class="progress-bar" style="width: {pct}%; background: {color};"></div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def render_metric_card(value: str, label: str, color: str = "#F1F5F9") -> None:
+    """Render a metric card.
+
+    Args:
+        value: Metric value to display
+        label: Metric label
+        color: Value color (hex)
+    """
+    st.markdown(
+        f"""
+        <div class="metric-card">
+            <div class="metric-value" style="color: {color};">{value}</div>
+            <div class="metric-label">{label}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def render_status_badge(status: str, text: str) -> None:
+    """Render a status badge.
+
+    Args:
+        status: Status type ('pass', 'fail', 'warning')
+        text: Badge text
+    """
+    status_class = f"status-{status}" if status in ["pass", "fail", "warning"] else "status-warning"
+    st.markdown(
+        f"""
+        <span class="status-badge {status_class}">{text}</span>
         """,
         unsafe_allow_html=True,
     )

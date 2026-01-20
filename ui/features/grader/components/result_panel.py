@@ -1,22 +1,26 @@
 # -*- coding: utf-8 -*-
-"""Result panel component for OpenJudge Studio."""
+"""Result panel component for Grader feature."""
 
 import logging
 import time
 from typing import Any
 
 import streamlit as st
-from components.shared import render_empty_state, render_section_header
-from config.grader_registry import GRADER_REGISTRY
-from services.grader_factory import (
+from features.grader.config.grader_registry import GRADER_REGISTRY
+from features.grader.services.grader_factory import (
     create_grader,
     run_agent_evaluation,
     run_evaluation,
     run_multimodal_evaluation,
 )
-from services.model_factory import create_model
-from styles.theme import get_score_color
-from utils.helpers import format_elapsed_time, format_score_display, parse_json_safely
+from shared.components.common import render_empty_state, render_section_header
+from shared.services.model_factory import create_model
+from shared.styles.theme import get_score_color
+from shared.utils.helpers import (
+    format_elapsed_time,
+    format_score_display,
+    parse_json_safely,
+)
 
 from openjudge.graders.schema import GraderError
 
@@ -281,7 +285,11 @@ def _display_results(grader_name: str) -> None:
     result = st.session_state.evaluation_result
 
     if not result:
-        render_empty_state()
+        render_empty_state(
+            title="Ready to Evaluate",
+            description="Enter your data and click <strong>Run Evaluation</strong> to see results",
+            tip='Tip: Use the "Load Example" button to try with sample data',
+        )
         return
 
     if isinstance(result, GraderError):

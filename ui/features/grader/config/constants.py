@@ -1,31 +1,16 @@
 # -*- coding: utf-8 -*-
-"""Constants and configuration values for OpenJudge Studio."""
+"""Constants and configuration values for Grader feature."""
 
 from typing import Any
 
-# ============================================================================
-# Default Models
-# ============================================================================
-
-DEFAULT_MODELS: list[str] = [
-    "qwen3-235b-a22b",
-    "qwen3-32b",
-    "qwen-max",
-    "qwen-plus",
-    "qwen-vl-max",  # Vision model
-    "gpt-4o",
-    "gpt-4o-mini",
-    "deepseek-chat",
-]
-
-# Vision-capable models for multimodal graders
-VISION_MODELS: list[str] = [
-    "qwen-vl-max",
-    "qwen-vl-plus",
-    "gpt-4o",
-    "gpt-4o-mini",
-    "gpt-4-vision-preview",
-]
+# Import global constants from shared module
+from shared.constants import (
+    APP_NAME,
+    APP_VERSION,
+    DEFAULT_API_ENDPOINTS,
+    DEFAULT_MODELS,
+    VISION_MODELS,
+)
 
 # ============================================================================
 # Grader Categories
@@ -154,20 +139,13 @@ EXAMPLE_DATA: dict[str, dict[str, Any]] = {
     },
 }
 
-# ============================================================================
-# API Endpoints
-# ============================================================================
-
-DEFAULT_API_ENDPOINTS: dict[str, str] = {
-    "DashScope": "https://dashscope.aliyuncs.com/compatible-mode/v1",
-    "OpenAI": "https://api.openai.com/v1",
-    "DeepSeek": "https://api.deepseek.com/v1",
-    "Custom": "",
-}
-
-# ============================================================================
-# UI Settings
-# ============================================================================
-
-APP_VERSION = "0.3.0"
-APP_NAME = "OpenJudge Studio"
+# Re-export for backward compatibility
+__all__ = [
+    "APP_NAME",
+    "APP_VERSION",
+    "DEFAULT_API_ENDPOINTS",
+    "DEFAULT_MODELS",
+    "EXAMPLE_DATA",
+    "GRADER_CATEGORIES",
+    "VISION_MODELS",
+]

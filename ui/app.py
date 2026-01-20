@@ -3,7 +3,8 @@
 OpenJudge Studio - A modern LLM evaluation interface.
 
 This is the main entry point for the Streamlit application.
-The application uses the OpenJudge framework's built-in Graders and Models.
+The application uses a modular architecture with multiple feature modules
+that can be switched via the navigation system.
 """
 
 import sys
@@ -16,25 +17,35 @@ if str(UI_DIR) not in sys.path:
 
 # pylint: disable=wrong-import-position
 import streamlit as st  # noqa: E402
-from components.input_panel import render_input_panel, render_run_button  # noqa: E402
-from components.result_panel import render_result_panel  # noqa: E402
-from components.shared import (  # noqa: E402
-    render_divider,
-    render_footer,
-    render_header,
-    render_quick_guide,
-)
-from components.sidebar import render_sidebar  # noqa: E402
-from config.constants import APP_NAME  # noqa: E402
-from styles.theme import inject_css  # noqa: E402
+from core.feature_registry import FeatureRegistry  # noqa: E402
+from core.navigation import Navigation  # noqa: E402
+
+# Import feature modules
+from features.grader import GraderFeature  # noqa: E402
+from features.zero_shot import ZeroShotFeature  # noqa: E402
+from shared.components.common import render_footer  # noqa: E402
+from shared.components.logo import render_logo_and_title  # noqa: E402
+from shared.styles.theme import inject_css  # noqa: E402
 
 # pylint: enable=wrong-import-position
+
+# ============================================================================
+# Feature Registration
+# ============================================================================
+
+# Register all available features
+# Add new features here as they are implemented
+FeatureRegistry.register(GraderFeature)
+FeatureRegistry.register(ZeroShotFeature)
+# Future features:
+# from features.autorubric import AutoRubricFeature
+# FeatureRegistry.register(AutoRubricFeature)
 
 # ============================================================================
 # Page Configuration (must be first Streamlit command)
 # ============================================================================
 st.set_page_config(
-    page_title=APP_NAME,
+    page_title="OpenJudge Studio",
     page_icon="⚖️",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -49,36 +60,63 @@ def main() -> None:
     # ========================================================================
     # Sidebar Configuration
     # ========================================================================
-    sidebar_config = render_sidebar()
+    with st.sidebar:
+        # Logo and title
+        render_logo_and_title()
+
+        # Divider
+        st.markdown('<div class="custom-divider" style="margin: 0.75rem 0;"></div>', unsafe_allow_html=True)
+
+        # Feature navigation
+        st.markdown(
+            '<div style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; '
+            'letter-spacing: 0.1em; color: #64748B; margin-bottom: 0.5rem;">功能模块</div>',
+            unsafe_allow_html=True,
+        )
+        selected_feature_id = Navigation.render_feature_selector()
+
+        # Divider before feature-specific config
+        st.markdown('<div class="custom-divider" style="margin: 0.75rem 0;"></div>', unsafe_allow_html=True)
+
+        # Get current feature instance
+        feature = FeatureRegistry.get_instance(selected_feature_id)
+
+        # Render feature-specific sidebar config
+        sidebar_config = {}
+        if feature:
+            sidebar_config = feature.render_sidebar()
+
+    # ========================================================================
+    # Feature Lifecycle Management
+    # ========================================================================
+
+    # Handle feature switching - call on_unmount for previous feature
+    if Navigation.has_feature_changed():
+        previous_feature_id = Navigation.get_previous_feature_id()
+        if previous_feature_id:
+            previous_feature = FeatureRegistry.get_instance(previous_feature_id)
+            if previous_feature:
+                previous_feature.on_unmount()
+        # Clear the change tracking after handling
+        Navigation.clear_feature_change()
 
     # ========================================================================
     # Main Content Area
     # ========================================================================
 
-    # Header
-    render_header()
+    if feature:
+        # Call lifecycle hook for current feature
+        feature.on_mount()
 
-    # Quick start guide (collapsible)
-    with st.expander("Quick Start Guide", expanded=False):
-        render_quick_guide()
+        # Render feature header
+        feature.render_header()
 
-    render_divider()
+        # Render feature main content
+        feature.render_main_content(sidebar_config)
 
-    # Two-column layout
-    col_input, col_result = st.columns([1, 1], gap="large")
-
-    # ========================================================================
-    # Input Column
-    # ========================================================================
-    with col_input:
-        input_data = render_input_panel(sidebar_config)
-        run_flag = render_run_button(sidebar_config, input_data)
-
-    # ========================================================================
-    # Result Column
-    # ========================================================================
-    with col_result:
-        render_result_panel(sidebar_config, input_data, run_flag)
+    else:
+        # No feature selected (shouldn't happen normally)
+        st.warning("No feature module selected. Please select a feature from the sidebar.")
 
     # ========================================================================
     # Footer

@@ -1,57 +1,20 @@
 # -*- coding: utf-8 -*-
-"""Sidebar component for OpenJudge Studio."""
+"""Sidebar component for Grader feature."""
 
-from pathlib import Path
 from typing import Any
 
 import streamlit as st
-from config.constants import (
-    APP_NAME,
-    APP_VERSION,
+from features.grader.config.constants import (
     DEFAULT_API_ENDPOINTS,
     DEFAULT_MODELS,
     GRADER_CATEGORIES,
 )
-from config.grader_registry import GRADER_REGISTRY, get_graders_by_category
+from features.grader.config.grader_registry import (
+    GRADER_REGISTRY,
+    get_graders_by_category,
+)
 
 from openjudge.models.schema.prompt_template import LanguageEnum
-
-LOGO_PATH = Path(__file__).parent.parent / "assets" / "logo.svg"
-
-
-def _render_logo_and_title() -> None:
-    """Render logo and title section (single line compact layout)."""
-    import base64
-
-    # Read logo as base64 for inline embedding
-    logo_data = ""
-    if LOGO_PATH.exists():
-        with open(LOGO_PATH, "rb") as f:
-            logo_data = base64.b64encode(f.read()).decode()
-
-    if logo_data:
-        logo_html = f'<img src="data:image/svg+xml;base64,{logo_data}" style="width: 36px; height: 36px;" />'
-    else:
-        logo_html = """<div style="width: 36px; height: 36px;
-            background: linear-gradient(135deg, #6366F1, #8B5CF6);
-            border-radius: 8px; display: flex; align-items: center;
-            justify-content: center; font-size: 1rem; color: white;
-            font-weight: 700;">OJ</div>"""
-
-    st.markdown(
-        f"""<div class="sidebar-header">
-            {logo_html}
-            <div class="sidebar-header-text">
-                <div style="font-size: 1rem; font-weight: 700; color: #F1F5F9; line-height: 1.2;">
-                    {APP_NAME}
-                </div>
-                <div style="font-size: 0.65rem; color: #64748B;">
-                    v{APP_VERSION}
-                </div>
-            </div>
-        </div>""",
-        unsafe_allow_html=True,
-    )
 
 
 def _render_api_settings(config: dict[str, Any]) -> None:
@@ -241,24 +204,25 @@ def _render_extra_params(config: dict[str, Any]) -> None:
 def _render_vision_warning(config: dict[str, Any]) -> None:
     """Render vision model warning if needed."""
     if config.get("grader_config") and config["grader_config"].get("requires_vision_model"):
-        st.info("This grader requires a vision-capable model (e.g., qwen-vl-max, gpt-4o)")
+        st.info(
+            "This grader requires a vision-capable model (e.g., qwen-vl-max-latest, gpt-4o, gpt-5.2)\n"
+            "此评测器需要视觉模型"
+        )
 
 
-def render_sidebar() -> dict[str, Any]:
-    """Render the sidebar and return configuration.
+def render_grader_sidebar() -> dict[str, Any]:
+    """Render the grader sidebar and return configuration.
 
     Returns:
         Dictionary containing all sidebar configuration values
     """
     config: dict[str, Any] = {}
 
-    with st.sidebar:
-        _render_logo_and_title()
-        _render_api_settings(config)
-        _render_model_settings(config)
-        _render_grader_settings(config)
-        _render_evaluation_settings(config)
-        _render_extra_params(config)
-        _render_vision_warning(config)
+    _render_api_settings(config)
+    _render_model_settings(config)
+    _render_grader_settings(config)
+    _render_evaluation_settings(config)
+    _render_extra_params(config)
+    _render_vision_warning(config)
 
     return config

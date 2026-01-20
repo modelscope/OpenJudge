@@ -20,6 +20,16 @@
 
 </div>
 
+
+
+
+OpenJudge is an **open-source evaluation framework** for **AI applications** (e.g., AI agents or chatbots) designed to **evaluate quality** and  drive **continuous application optimization**.
+
+> In practice, application excellence depends on a trustworthy evaluation workflow: Collect test data → Define graders → Run evaluation at scale → Analyze weaknesses → Iterate quickly.
+
+OpenJudge provides **ready-to-use graders** and supports generating **scenario-specific rubrics (as graders)**, making this workflow **simpler**, **more professional**, and **easy to integrate** into your workflow.
+It can also convert grading results into **reward signals** to help you **fine-tune** and optimize your application.
+
 ---
 
 ## 📑 Table of Contents
@@ -32,13 +42,6 @@
 - [Contributing](#-contributing)
 - [Community](#-community)
 - [Citation](#-citation)
-
-OpenJudge is a unified framework designed to drive **LLM and Agent application excellence** through **Holistic Evaluation** and **Quality Rewards**.
-
-> 💡 Evaluation and reward signals are the cornerstones of application excellence. **Holistic evaluation** enables the systematic analysis of shortcomings to drive rapid iteration, while **high-quality** rewards provide the essential foundation for advanced optimization and fine-tuning.
-
-OpenJudge unifies evaluation metrics and reward signals into a single, standardized **Grader** interface, offering pre-built graders, flexible customization, and seamless framework integration.
-
 ---
 
 ## ✨ Key Features
@@ -130,6 +133,11 @@ pip install py-openjudge
 ---
 
 ## 🚀 Quickstart
+> 📚 Complete Quickstart can be found in the [Quickstart Guide](https://agentscope-ai.github.io/OpenJudge/get_started/quickstart/).
+
+### Simple Example
+
+A simple example to evaluate a single response:
 
 ```python
 import asyncio
@@ -139,27 +147,160 @@ from openjudge.graders.common.relevance import RelevanceGrader
 async def main():
     # 1️⃣ Create model client
     model = OpenAIChatModel(model="qwen3-32b")
-
     # 2️⃣ Initialize grader
     grader = RelevanceGrader(model=model)
-
     # 3️⃣ Prepare data
     data = {
         "query": "What is machine learning?",
         "response": "Machine learning is a subset of AI that enables computers to learn from data.",
     }
-
     # 4️⃣ Evaluate
     result = await grader.aevaluate(**data)
-
-    print(f"Score: {result.score}")   # Score: 5
+    print(f"Score: {result.score}")   # Score: 4
     print(f"Reason: {result.reason}")
 
 if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-> 📚 Complete Quickstart can be found in the [Quickstart Guide](https://agentscope-ai.github.io/OpenJudge/get_started/quickstart/).
+### Evaluate LLM Applications with Built-in Graders
+
+Use multiple built-in graders to comprehensively evaluate your LLM application: 👉  [Explore All built-in graders](https://agentscope-ai.github.io/OpenJudge/built_in_graders/overview/)
+
+> **Business Scenario:** Evaluating an e-commerce customer service agent that handles order inquiries. We assess the agent's performance across three dimensions: **relevance**, **hallucination**, and **tool selection**.
+
+
+
+```python
+import asyncio
+from openjudge.models import OpenAIChatModel
+from openjudge.graders.common import RelevanceGrader, HallucinationGrader
+from openjudge.graders.agent.tool.tool_selection import ToolSelectionGrader
+from openjudge.runner import GradingRunner
+from openjudge.runner.aggregator import WeightedSumAggregator
+from openjudge.analyzer.statistical import DistributionAnalyzer
+
+TOOL_DEFINITIONS = [
+    {"name": "query_order", "description": "Query order status and logistics information", "parameters": {"order_id": "str"}},
+    {"name": "query_logistics", "description": "Query detailed logistics tracking", "parameters": {"order_id": "str"}},
+    {"name": "estimate_delivery", "description": "Estimate delivery time", "parameters": {"order_id": "str"}},
+]
+# Prepare your dataset
+dataset = [{
+    "query": "Where is my order ORD123456?",
+    "response": "Your order ORD123456 has arrived at the Beijing distribution center and is expected to arrive tomorrow.",
+    "context": "Order ORD123456: Arrived at Beijing distribution center, expected to arrive tomorrow.",
+    "tool_definitions": TOOL_DEFINITIONS,
+    "tool_calls": [{"name": "query_order", "arguments": {"order_id": "ORD123456"}}],
+    # ... more test cases
+}]
+async def main():
+    # 1️⃣ Initialize judge model
+    model = OpenAIChatModel(model="qwen3-max")
+    # 2️⃣ Configure multiple graders
+    grader_configs = {
+        "relevance": {"grader": RelevanceGrader(model=model), "mapper": {"query": "query", "response": "response"}},
+        "hallucination": {"grader": HallucinationGrader(model=model), "mapper": {"query": "query", "response": "response", "context": "context"}},
+        "tool_selection": {"grader": ToolSelectionGrader(model=model), "mapper": {"query": "query", "tool_definitions": "tool_definitions", "tool_calls": "tool_calls"}},
+    }
+    # 3️⃣ Set up aggregator for overall score
+    aggregator = WeightedSumAggregator(name="overall_score", weights={"relevance": 0.3, "hallucination": 0.4, "tool_selection": 0.3})
+    # 4️⃣ Run evaluation
+    results = await GradingRunner(grader_configs=grader_configs, aggregators=[aggregator], max_concurrency=5).arun(dataset)
+    # 5️⃣ Generate evaluation report
+    overall_stats = DistributionAnalyzer().analyze(dataset, results["overall_score"])
+    print(f"{'Overall Score':<20} | {overall_stats.mean:>15.2f}")
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+### Build Custom Graders for Your Scenario
+
+#### Zero-shot Rubric Generation
+
+Generate a custom grader from task description without labeled data: 👉 [Zero-shot Rubrics Generation Guide](https://agentscope-ai.github.io/OpenJudge/building_graders/generate_rubrics_as_graders/#simple-rubric-zero-shot-generation)
+
+**When to use:** Quick prototyping when you have no labeled data but can clearly describe your task.
+
+```python
+import asyncio
+from openjudge.generator.simple_rubric import SimpleRubricsGenerator, SimpleRubricsGeneratorConfig
+from openjudge.models import OpenAIChatModel
+
+async def main():
+    # 1️⃣ Configure generator
+    config = SimpleRubricsGeneratorConfig(
+        grader_name="customer_service_grader",
+        model=OpenAIChatModel(model="qwen3-max"),
+        task_description="E-commerce AI customer service primarily handles order inquiry tasks (such as logistics status and ETA) while focusing on managing customer emotions.",
+        min_score=1,
+        max_score=3,
+    )
+    # 2️⃣ Generate grader
+    generator = SimpleRubricsGenerator(config)
+    grader = await generator.generate(dataset=[], sample_queries=[])
+    # 3️⃣ View generated rubrics
+    print("Generated Rubrics:", grader.kwargs.get("rubrics"))
+    # 4️⃣ Use the grader
+    result = await grader.aevaluate(
+        query="My order is delayed, what should I do?",
+        response="I understand your concern. Let me check your order status..."
+    )
+    print(f"\nScore: {result.score}/3\nReason: {result.reason}")
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+#### Data-driven Rubric Generation
+
+Learn evaluation criteria from labeled examples: 👉 [Data-driven Rubrics Generation Guide](https://agentscope-ai.github.io/OpenJudge/building_graders/generate_rubrics_as_graders/#iterative-rubric-data-driven-generation)
+
+**When to use:** You have labeled data and need high-accuracy graders for production use, especially when evaluation criteria are implicit.
+
+```python
+import asyncio
+from openjudge.generator.iterative_rubric.generator import IterativeRubricsGenerator, IterativePointwiseRubricsGeneratorConfig
+from openjudge.models import OpenAIChatModel
+from openjudge.models.schema.prompt_template import LanguageEnum
+
+# Prepare labeled dataset (simplified example, recommend 10+ samples in practice)
+labeled_dataset = [
+    {"query": "My order hasn't arrived after 10 days, I want to complain!", "response": "I sincerely apologize for the delay. I completely understand your frustration! Your order was delayed due to weather conditions, but it has now resumed shipping and is expected to arrive tomorrow. I've marked it for priority delivery.", "label_score": 5},
+    {"query": "Where is my package? I need it urgently!", "response": "I understand your urgency! Your package is currently out for delivery and is expected to arrive before 2 PM today. The delivery driver's contact number is 138xxxx.", "label_score": 5},
+    {"query": "Why hasn't my order arrived yet? I've been waiting for days!", "response": "Your order is expected to arrive the day after tomorrow.", "label_score": 2},
+    {"query": "The logistics hasn't updated in 3 days, is it lost?", "response": "Hello, your package is not lost. It's still in transit, please wait patiently.", "label_score": 3},
+    # ... more labeled examples
+]
+
+async def main():
+    # 1️⃣ Configure generator
+    config = IterativePointwiseRubricsGeneratorConfig(
+        grader_name="customer_service_grader_v2", model=OpenAIChatModel(model="qwen3-max"),
+        min_score=1, max_score=5,
+        enable_categorization=True, categories_number=5,  # Enable categorization, Aggregate into 5 themes
+    )
+    # 2️⃣ Generate grader from labeled data
+    generator = IterativeRubricsGenerator(config)
+    grader = await generator.generate(labeled_dataset)
+    # 3️⃣ View learned rubrics
+    print("\nLearned Rubrics from Labeled Data:\n",grader.kwargs.get("rubrics", "No rubrics generated"))
+    # 4️⃣ Evaluate new samples
+    test_cases = [
+        {"query": "My order hasn't moved in 5 days, can you check? I'm a bit worried", "response": "I understand your concern! Let me check immediately: Your package is currently at XX distribution center. Due to recent high order volume, there's a slight delay, but it's expected to arrive the day after tomorrow. I'll proactively contact you if there are any issues."},
+        {"query": "Why is this delivery so slow? I'm waiting to use it!", "response": "Checking, please wait."},
+    ]
+    print("\n" + "=" * 70, "\nEvaluation Results:\n", "=" * 70)
+    for i, case in enumerate(test_cases):
+        result = await grader.aevaluate(query=case["query"], response=case["response"])
+        print(f"\n[Test {i+1}]\n  Query: {case['query']}\n  Response: {case['response']}\n  Score: {result.score}/5\n  Reason: {result.reason[:200]}...")
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+
 
 ---
 

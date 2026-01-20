@@ -195,14 +195,15 @@ class OpenAIChatModel(BaseChatModel):
             kwargs.pop("tools", None)
             kwargs.pop("tool_choice", None)
 
-            if "qwen" in self.model:
+            # Use simple json_object format for models that don't support complex JSON schema
+            if "qwen" in self.model.lower() or "gemini" in self.model.lower():
                 logger.warning(
                     "Qwen models do not support Pydantic structured output via `response_format`. "
                     "Update the unstructured JSON mode with `response_format={'type': 'json_object'}`."
                 )
                 kwargs["response_format"] = {"type": "json_object"}
-            else:
-                kwargs["response_format"] = structured_model
+
+            kwargs["response_format"] = structured_model
 
             if not self.stream:
                 response = await self.client.chat.completions.parse(**kwargs)

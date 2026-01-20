@@ -1,13 +1,15 @@
 # OpenJudge
 
 ## Why OpenJudge?
-OpenJudge is a unified framework designed to drive **LLM and Agent application excellence** through **Holistic Evaluation** and **Quality Rewards**.
+OpenJudge is an **open-source evaluation framework** for **AI applications** (e.g., AI agents or chatbots) designed to **evaluate quality** and  drive **continuous application optimization**.
 
 <div class="callout-tip" markdown>
-<img src="https://unpkg.com/lucide-static@latest/icons/lightbulb.svg" class="callout-icon"> Evaluation and reward signals are the cornerstones of application excellence. **Holistic evaluation** enables the systematic analysis of shortcomings to drive rapid iteration, while **high-quality** rewards provide the essential foundation for advanced optimization and fine-tuning.
+<img src="https://unpkg.com/lucide-static@latest/icons/lightbulb.svg" class="callout-icon"> In practice, application excellence depends on a trustworthy evaluation workflow: Collect test data → Define graders → Run evaluation at scale → Analyze weaknesses → Iterate quickly.
 </div>
 
-OpenJudge unifies evaluation metrics and reward signals into a single, standardized **Grader** interface, offering pre-built graders, flexible customization, and seamless framework integration.
+OpenJudge provides **ready-to-use graders** and supports generating **scenario-specific rubrics (as graders)**, making this workflow **simpler**, **more professional**, and **easy to integrate** into your workflow.
+
+It can also convert grading results into **reward signals** to help you **fine-tune** and optimize your application.
 
 ### Key Features
 

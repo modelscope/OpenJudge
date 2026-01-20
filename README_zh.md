@@ -20,6 +20,15 @@
 
 </div>
 
+
+
+
+OpenJudge 是一个 **开源评估框架**，用于 **AI 应用**（如智能体或聊天机器人）的**质量评估**，并驱动**持续优化**。
+
+> 在实践中，应用卓越依赖可信的评估流程：收集测试数据 → 定义评分器 → 规模化运行评估 → 分析缺陷 → 快速迭代。
+
+OpenJudge 提供**即用型评分器**，并支持生成**场景特定的评估标准（作为评分器）**，让这一流程更**简单**、更**专业**、更易于集成。它还可将评分结果转换为**奖励信号**，帮助你**微调**并优化应用。
+
 ---
 
 ## 📑 目录
@@ -32,13 +41,6 @@
 - [贡献](#-贡献)
 - [社区](#-社区)
 - [引用](#-引用)
-
-OpenJudge 是一个 **开源评估框架**，用于 **AI 应用**（如智能体或聊天机器人）的**质量评估**，并驱动**持续优化**。
-
-> 在实践中，应用卓越依赖可信的评估流程：收集测试数据 → 定义评分器 → 规模化运行评估 → 分析弱点 → 快速迭代。
-
-OpenJudge 提供**即用型评分器**，并支持生成**场景特定的评估标准（作为评分器）**，让这一流程更**简单**、更**专业**、更易于集成。它还可将评分结果转换为**奖励信号**，帮助你**微调**并优化应用。
-
 ---
 
 ## ✨ 核心特性
@@ -142,21 +144,17 @@ from openjudge.graders.common.relevance import RelevanceGrader
 async def main():
     # 1️⃣ 创建模型客户端
     model = OpenAIChatModel(model="qwen3-32b")
-
     # 2️⃣ 初始化评分器
     grader = RelevanceGrader(model=model)
-
     # 3️⃣ 准备数据
     data = {
-        "query": "什么是机器学习？",
-        "response": "机器学习是人工智能的一个子集，使计算机能够从数据中学习。",
+        "query": "What is machine learning?",
+        "response": "Machine learning is a subset of AI that enables computers to learn from data.",
     }
-
     # 4️⃣ 评估
     result = await grader.aevaluate(**data)
-
-    print(f"分数: {result.score}")   # 分数: 4
-    print(f"原因: {result.reason}")
+    print(f"Score: {result.score}")   # Score: 4
+    print(f"Reason: {result.reason}")
 
 if __name__ == "__main__":
     asyncio.run(main())
@@ -171,94 +169,42 @@ if __name__ == "__main__":
 ```python
 import asyncio
 from openjudge.models import OpenAIChatModel
-from openjudge.graders.common.relevance import RelevanceGrader
-from openjudge.graders.common.hallucination import HallucinationGrader
+from openjudge.graders.common import RelevanceGrader, HallucinationGrader
 from openjudge.graders.agent.tool.tool_selection import ToolSelectionGrader
 from openjudge.runner import GradingRunner
 from openjudge.runner.aggregator import WeightedSumAggregator
 from openjudge.analyzer.statistical import DistributionAnalyzer
 
 TOOL_DEFINITIONS = [
-    {"name": "query_order", "description": "查询订单状态与物流信息", "parameters": {"order_id": "str"}},
-    {"name": "query_logistics", "description": "查询详细物流轨迹", "parameters": {"order_id": "str"}},
-    {"name": "estimate_delivery", "description": "预估送达时间", "parameters": {"order_id": "str"}},
+    {"name": "query_order", "description": "Query order status and logistics information", "parameters": {"order_id": "str"}},
+    {"name": "query_logistics", "description": "Query detailed logistics tracking", "parameters": {"order_id": "str"}},
+    {"name": "estimate_delivery", "description": "Estimate delivery time", "parameters": {"order_id": "str"}},
 ]
-
 # 准备数据集
-dataset = [
-    {
-        "query": "我的订单 ORD123456 在哪里？",
-        "response": "您的订单 ORD123456 已到达北京分拨中心，预计明天送达。",
-        "context": "订单 ORD123456：已到达北京分拨中心，预计明天送达。",
-        "tool_definitions": TOOL_DEFINITIONS,
-        "tool_calls": [{"name": "query_order", "arguments": {"order_id": "ORD123456"}}],
-    },
+dataset = [{
+    "query": "Where is my order ORD123456?",
+    "response": "Your order ORD123456 has arrived at the Beijing distribution center and is expected to arrive tomorrow.",
+    "context": "Order ORD123456: Arrived at Beijing distribution center, expected to arrive tomorrow.",
+    "tool_definitions": TOOL_DEFINITIONS,
+    "tool_calls": [{"name": "query_order", "arguments": {"order_id": "ORD123456"}}],
     # ... 更多测试样例
-]
-
+}]
 async def main():
     # 1️⃣ 初始化判别模型
     model = OpenAIChatModel(model="qwen3-max")
-
     # 2️⃣ 配置多个评分器
     grader_configs = {
-        "relevance": {
-            "grader": RelevanceGrader(model=model),
-            "mapper": {"query": "query", "response": "response"},
-        },
-        "hallucination": {
-            "grader": HallucinationGrader(model=model),
-            "mapper": {"query": "query", "response": "response", "context": "context"},
-        },
-        "tool_selection": {
-            "grader": ToolSelectionGrader(model=model),
-            "mapper": {
-                "query": "query",
-                "tool_definitions": "tool_definitions",
-                "tool_calls": "tool_calls"
-            },
-        },
+        "relevance": {"grader": RelevanceGrader(model=model), "mapper": {"query": "query", "response": "response"}},
+        "hallucination": {"grader": HallucinationGrader(model=model), "mapper": {"query": "query", "response": "response", "context": "context"}},
+        "tool_selection": {"grader": ToolSelectionGrader(model=model), "mapper": {"query": "query", "tool_definitions": "tool_definitions", "tool_calls": "tool_calls"}},
     }
-
-    # 3️⃣ 配置加权聚合器计算综合分
-    aggregator = WeightedSumAggregator(
-        name="overall_score",
-        weights={"relevance": 0.3, "hallucination": 0.4, "tool_selection": 0.3}
-    )
-
+    # 3️⃣ 设置聚合器计算综合分
+    aggregator = WeightedSumAggregator(name="overall_score", weights={"relevance": 0.3, "hallucination": 0.4, "tool_selection": 0.3})
     # 4️⃣ 运行评估
-    runner = GradingRunner(
-        grader_configs=grader_configs,
-        aggregators=[aggregator],
-        max_concurrency=5,
-    )
-    results = await runner.arun(dataset)
-
+    results = await GradingRunner(grader_configs=grader_configs, aggregators=[aggregator], max_concurrency=5).arun(dataset)
     # 5️⃣ 生成评估报告
-    analyzer = DistributionAnalyzer()
-    relevance_stats = analyzer.analyze(dataset, results["relevance"])
-    hallucination_stats = analyzer.analyze(dataset, results["hallucination"])
-    tool_selection_stats = analyzer.analyze(dataset, results["tool_selection"])
-    overall_stats = analyzer.analyze(dataset, results["overall_score"])
-
-    print("\n" + "=" * 50)
-    print("Evaluation Report")
-    print("=" * 50)
-    print(f"{'Dimension':<20} | {'Average Score':>15}")
-    print("-" * 40)
+    overall_stats = DistributionAnalyzer().analyze(dataset, results["overall_score"])
     print(f"{'Overall Score':<20} | {overall_stats.mean:>15.2f}")
-    print(f"{'Relevance':<20} | {relevance_stats.mean:>15.2f}")
-    print(f"{'Hallucination':<20} | {hallucination_stats.mean:>15.2f}")
-    print(f"{'Tool Selection':<20} | {tool_selection_stats.mean:>15.2f}")
-
-    print("\n" + "-" * 50)
-    print("Per-case Scores:")
-    for i, sample in enumerate(dataset):
-        print(f"\n[Case {i+1}] {sample['query']}")
-        print(f"  Relevance: {results['relevance'][i].score}/5")
-        print(f"  Hallucination: {results['hallucination'][i].score}/5")
-        print(f"  Tool Selection: {results['tool_selection'][i].score}/5")
-        print(f"  Overall: {results['overall_score'][i].score:.2f}/5")
 
 if __name__ == "__main__":
     asyncio.run(main())
@@ -276,39 +222,27 @@ if __name__ == "__main__":
 import asyncio
 from openjudge.generator.simple_rubric import SimpleRubricsGenerator, SimpleRubricsGeneratorConfig
 from openjudge.models import OpenAIChatModel
-from openjudge.graders.schema import GraderMode
 
 async def main():
     # 1️⃣ 配置生成器
     config = SimpleRubricsGeneratorConfig(
         grader_name="customer_service_grader",
         model=OpenAIChatModel(model="qwen3-max"),
-        grader_mode=GraderMode.POINTWISE,
-        task_description="""
-        评估电商客服回复。
-        关注同理心、信息准确性与问题解决能力。
-        """,
+        task_description="E-commerce AI customer service primarily handles order inquiry tasks (such as logistics status and ETA) while focusing on managing customer emotions.",
         min_score=1,
         max_score=3,
     )
-
     # 2️⃣ 生成评分器
     generator = SimpleRubricsGenerator(config)
     grader = await generator.generate(dataset=[], sample_queries=[])
-
     # 3️⃣ 查看生成的评估标准
-    print("=" * 70)
-    print("Generated Rubrics:")
-    print("=" * 70)
-    print(grader.kwargs.get("rubrics"))
-
+    print("Generated Rubrics:", grader.kwargs.get("rubrics"))
     # 4️⃣ 使用评分器
     result = await grader.aevaluate(
-        query="我的订单延迟了，该怎么办？",
-        response="理解您的担心，我来帮您查看订单状态……"
+        query="My order is delayed, what should I do?",
+        response="I understand your concern. Let me check your order status..."
     )
-    print(f"\nScore: {result.score}/5")
-    print(f"Reason: {result.reason}")
+    print(f"\nScore: {result.score}/3\nReason: {result.reason}")
 
 if __name__ == "__main__":
     asyncio.run(main())
@@ -322,88 +256,40 @@ if __name__ == "__main__":
 
 ```python
 import asyncio
-from openjudge.generator.iterative_rubric.generator import (
-    IterativeRubricsGenerator,
-    IterativePointwiseRubricsGeneratorConfig
-)
+from openjudge.generator.iterative_rubric.generator import IterativeRubricsGenerator, IterativePointwiseRubricsGeneratorConfig
 from openjudge.models import OpenAIChatModel
 from openjudge.models.schema.prompt_template import LanguageEnum
 
 # 准备标注数据集（简化示例，实际推荐 10+ 条）
 labeled_dataset = [
-    {
-        "query": "我的订单等了 10 天还没到，我要投诉！",
-        "response": "非常抱歉耽误了时间，理解您的不满！订单因天气原因延误，但已恢复运输，预计明天送达，我已为您标记优先配送。",
-        "label_score": 5,
-    },
-    {
-        "query": "我的包裹在哪里？我很着急要用！",
-        "response": "理解您的着急！包裹正在派送中，预计今天下午 2 点前送达。快递员电话是 138xxxx。",
-        "label_score": 5,
-    },
-    {
-        "query": "为什么我的订单还没到？等了好几天了！",
-        "response": "您的订单预计后天送达。",
-        "label_score": 2,
-    },
-    {
-        "query": "物流 3 天没更新了，是不是丢了？",
-        "response": "您好，包裹没有丢失，还在运输途中，请耐心等待。",
-        "label_score": 3,
-    },
+    {"query": "My order hasn't arrived after 10 days, I want to complain!", "response": "I sincerely apologize for the delay. I completely understand your frustration! Your order was delayed due to weather conditions, but it has now resumed shipping and is expected to arrive tomorrow. I've marked it for priority delivery.", "label_score": 5},
+    {"query": "Where is my package? I need it urgently!", "response": "I understand your urgency! Your package is currently out for delivery and is expected to arrive before 2 PM today. The delivery driver's contact number is 138xxxx.", "label_score": 5},
+    {"query": "Why hasn't my order arrived yet? I've been waiting for days!", "response": "Your order is expected to arrive the day after tomorrow.", "label_score": 2},
+    {"query": "The logistics hasn't updated in 3 days, is it lost?", "response": "Hello, your package is not lost. It's still in transit, please wait patiently.", "label_score": 3},
     # ... 更多标注样例
 ]
 
 async def main():
     # 1️⃣ 配置生成器
     config = IterativePointwiseRubricsGeneratorConfig(
-        grader_name="customer_service_grader_v2",
-        model=OpenAIChatModel(model="qwen3-max"),
-        min_score=1,
-        max_score=5,
-        query_specific_generate_number=1,  # 每条样本生成 1 个候选标准
-        enable_categorization=True,        # 启用归类聚合
-        categories_number=5,               # 聚合为 5 个主题
-        language=LanguageEnum.EN,
+        grader_name="customer_service_grader_v2", model=OpenAIChatModel(model="qwen3-max"),
+        min_score=1, max_score=5,
+        enable_categorization=True, categories_number=5,  # 启用归类聚合，聚合为 5 个主题
     )
-
     # 2️⃣ 从标注数据生成评分器
     generator = IterativeRubricsGenerator(config)
     grader = await generator.generate(labeled_dataset)
-
     # 3️⃣ 查看学习到的评估标准
-    print("=" * 70)
-    print("Learned Rubrics from Labeled Data:")
-    print("=" * 70)
-    rubrics = grader.kwargs.get("rubrics", "No rubrics generated")
-    print(rubrics)
-
+    print("\nLearned Rubrics from Labeled Data:\n",grader.kwargs.get("rubrics", "No rubrics generated"))
     # 4️⃣ 评估新样本
     test_cases = [
-        {
-            "query": "我的订单 5 天没动静了，能帮我查下吗？有点担心",
-            "response": "理解您的担心！我马上帮您查看：包裹目前在 XX 分拨中心，最近订单量大略有延迟，预计后天送达。如果有问题我会主动联系您。",
-        },
-        {
-            "query": "为什么这么慢？我等着用呢！",
-            "response": "正在查询，请稍候。",
-        },
+        {"query": "My order hasn't moved in 5 days, can you check? I'm a bit worried", "response": "I understand your concern! Let me check immediately: Your package is currently at XX distribution center. Due to recent high order volume, there's a slight delay, but it's expected to arrive the day after tomorrow. I'll proactively contact you if there are any issues."},
+        {"query": "Why is this delivery so slow? I'm waiting to use it!", "response": "Checking, please wait."},
     ]
-
-    print("\n" + "=" * 70)
-    print("Evaluation Results:")
-    print("=" * 70)
-
+    print("\n" + "=" * 70, "\nEvaluation Results:\n", "=" * 70)
     for i, case in enumerate(test_cases):
-        result = await grader.aevaluate(
-            query=case["query"],
-            response=case["response"]
-        )
-        print(f"\n[Test {i+1}]")
-        print(f"  Query: {case['query']}")
-        print(f"  Response: {case['response']}")
-        print(f"  Score: {result.score}/5")
-        print(f"  Reason: {result.reason[:200]}...")
+        result = await grader.aevaluate(query=case["query"], response=case["response"])
+        print(f"\n[Test {i+1}]\n  Query: {case['query']}\n  Response: {case['response']}\n  Score: {result.score}/5\n  Reason: {result.reason[:200]}...")
 
 if __name__ == "__main__":
     asyncio.run(main())

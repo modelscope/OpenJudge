@@ -107,7 +107,7 @@ OpenJudge 提供**即用型评分器**，并支持生成**场景特定的评估�
 
 ### 🔌 轻松集成
 
-如果您正在使用主流可观测性平台（如 **LangSmith** 或 **Langfuse**），我们提供无缝集成方案，可增强平台的评测器和自动评测能力。我们也正在构建与训练框架（如 **verl**）的集成方案。👉 查看 [集成](#-集成) 了解详情
+如果您正在使用主流可观测性平台（如 **LangSmith** 或 **Langfuse**），我们提供无缝集成方案，可增强平台的评测器和自动评测能力。我们也提供与训练框架（如 **VERL**）的集成方案，用于强化学习训练。👉 查看 [集成](#-集成) 了解详情
 
 ----
 ## 最新动态
@@ -308,7 +308,7 @@ if __name__ == "__main__":
 | **可观测性** | [LangSmith](https://smith.langchain.com/) | ✅ 可用 | 👉 [LangSmith 集成指南](https://agentscope-ai.github.io/OpenJudge/integrations/langsmith/) |
 | | [Langfuse](https://langfuse.com/) | ✅ 可用 | 👉 [Langfuse 集成指南](https://agentscope-ai.github.io/OpenJudge/integrations/langfuse/) |
 | | 其他框架 | 🔵 计划中 | — |
-| **训练** | [verl](https://github.com/volcengine/verl) | 🟡 进行中 | — |
+| **训练** | [verl](https://github.com/volcengine/verl) | ✅ 可用 | 👉 [VERL 集成指南](https://agentscope-ai.github.io/OpenJudge/integrations/verl/) |
 | | [Trinity-RFT](https://github.com/modelscope/Trinity-RFT) | 🔵 计划中 | — |
 
 > 💬 有您希望我们优先支持的框架吗？[提交 Issue](https://github.com/agentscope-ai/OpenJudge/issues)！

@@ -109,7 +109,7 @@ summarize evaluation Rubrics from your annotated data, and generate a llm-based 
 
 ### 🔌 Easy Integration
 
-Using mainstream observability platforms like **LangSmith** or **Langfuse**? We offer seamless integration to enhance their evaluators and automated evaluation capabilities. We're also building integrations with training frameworks like **verl**. 👉 See [Integrations](#-integrations) for details
+Using mainstream observability platforms like **LangSmith** or **Langfuse**? We offer seamless integration to enhance their evaluators and automated evaluation capabilities. We also provide integrations with training frameworks like **VERL** for RL training. 👉 See [Integrations](#-integrations) for details
 
 ----
 ## News
@@ -313,7 +313,7 @@ Seamlessly connect OpenJudge with mainstream observability and training platform
 | **Observability** | [LangSmith](https://smith.langchain.com/) | ✅ Available | 👉 [LangSmith Integration Guide](https://agentscope-ai.github.io/OpenJudge/integrations/langsmith/) |
 | | [Langfuse](https://langfuse.com/) | ✅ Available | 👉 [Langfuse Integration Guide](https://agentscope-ai.github.io/OpenJudge/integrations/langfuse/) |
 | | Other frameworks | 🔵 Planned | — |
-| **Training** | [verl](https://github.com/volcengine/verl) | 🟡 In Progress | — |
+| **Training** | [verl](https://github.com/volcengine/verl) | ✅ Available | 👉 [VERL Integration Guide](https://agentscope-ai.github.io/OpenJudge/integrations/verl/) |
 | | [Trinity-RFT](https://github.com/modelscope/Trinity-RFT) | 🔵 Planned | — |
 
 > 💬 Have a framework you'd like us to prioritize? [Open an Issue](https://github.com/agentscope-ai/OpenJudge/issues)!

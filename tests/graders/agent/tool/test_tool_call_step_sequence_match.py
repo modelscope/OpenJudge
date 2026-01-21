@@ -2,19 +2,19 @@
 """
 Test Tool Call Sequence Match Grader
 
-Tests for the ToolCallSequenceMatchGrader class functionality.
+Tests for the ToolCallStepSequenceMatchGrader class functionality.
 """
 
 import pytest
 
-from openjudge.graders.agent.tool.tool_call_sequence_match import (
-    ToolCallSequenceMatchGrader,
+from openjudge.graders.agent.tool.tool_call_step_sequence_match import (
+    ToolCallStepSequenceMatchGrader,
 )
 
 
 def test_tool_call_sequence_match_grader_creation():
-    """Test creating a ToolCallSequenceMatchGrader instance"""
-    grader = ToolCallSequenceMatchGrader(strict_mode=True)
+    """Test creating a ToolCallStepSequenceMatchGrader instance"""
+    grader = ToolCallStepSequenceMatchGrader(strict_mode=True)
 
     assert grader is not None
     assert hasattr(grader, "name")
@@ -24,7 +24,7 @@ def test_tool_call_sequence_match_grader_creation():
 
 def test_tool_call_sequence_match_grader_loose_mode():
     """Test creating grader in loose mode"""
-    grader = ToolCallSequenceMatchGrader(strict_mode=False)
+    grader = ToolCallStepSequenceMatchGrader(strict_mode=False)
 
     assert grader.strict_mode is False
 
@@ -32,7 +32,7 @@ def test_tool_call_sequence_match_grader_loose_mode():
 @pytest.mark.asyncio
 async def test_tool_call_sequence_match_grader_empty_messages():
     """Test with empty messages"""
-    grader = ToolCallSequenceMatchGrader(strict_mode=True)
+    grader = ToolCallStepSequenceMatchGrader(strict_mode=True)
 
     result = await grader.aevaluate(messages=[], reference_tool_calls=[])
 
@@ -44,7 +44,7 @@ async def test_tool_call_sequence_match_grader_empty_messages():
 @pytest.mark.asyncio
 async def test_tool_call_sequence_match_grader_exact_match():
     """Test with exact matching sequence"""
-    grader = ToolCallSequenceMatchGrader(strict_mode=True)
+    grader = ToolCallStepSequenceMatchGrader(strict_mode=True)
 
     messages = [
         {
@@ -77,7 +77,7 @@ async def test_tool_call_sequence_match_grader_exact_match():
 @pytest.mark.asyncio
 async def test_tool_call_sequence_match_grader_mismatch():
     """Test with mismatched sequence"""
-    grader = ToolCallSequenceMatchGrader(strict_mode=True)
+    grader = ToolCallStepSequenceMatchGrader(strict_mode=True)
 
     messages = [
         {
@@ -111,7 +111,7 @@ async def test_tool_call_sequence_match_grader_mismatch():
 @pytest.mark.asyncio
 async def test_tool_call_sequence_match_grader_loose_mode_matching():
     """Test loose mode (only tool names)"""
-    grader = ToolCallSequenceMatchGrader(strict_mode=False)
+    grader = ToolCallStepSequenceMatchGrader(strict_mode=False)
 
     messages = [
         {
@@ -144,7 +144,7 @@ async def test_tool_call_sequence_match_grader_loose_mode_matching():
 
 def test_tool_call_sequence_match_grader_extract_predicted_tool_sequence():
     """Test extracting predicted tool sequence from messages"""
-    grader = ToolCallSequenceMatchGrader()
+    grader = ToolCallStepSequenceMatchGrader()
 
     messages = [
         {
@@ -182,13 +182,13 @@ def test_tool_call_sequence_match_grader_extract_predicted_tool_sequence():
 
 def test_tool_call_sequence_match_grader_metric_type_default():
     """Test that default metric_type is recall"""
-    grader = ToolCallSequenceMatchGrader(strict_mode=False, use_jaccard_similarity=False)
+    grader = ToolCallStepSequenceMatchGrader(strict_mode=False, use_jaccard_similarity=False)
     assert grader.metric_type == "recall"
 
 
 def test_tool_call_sequence_match_grader_metric_type_precision():
     """Test creating grader with precision metric_type"""
-    grader = ToolCallSequenceMatchGrader(
+    grader = ToolCallStepSequenceMatchGrader(
         strict_mode=False,
         use_jaccard_similarity=False,
         metric_type="precision",
@@ -199,13 +199,13 @@ def test_tool_call_sequence_match_grader_metric_type_precision():
 def test_tool_call_sequence_match_grader_invalid_metric_type():
     """Test that invalid metric_type raises ValueError"""
     with pytest.raises(ValueError, match="metric_type must be 'recall' or 'precision'"):
-        ToolCallSequenceMatchGrader(metric_type="invalid")
+        ToolCallStepSequenceMatchGrader(metric_type="invalid")
 
 
 @pytest.mark.asyncio
 async def test_tool_call_sequence_match_grader_recall_metric():
     """Test loose mode with recall metric (matched / reference)"""
-    grader = ToolCallSequenceMatchGrader(
+    grader = ToolCallStepSequenceMatchGrader(
         strict_mode=False,
         use_jaccard_similarity=False,
         metric_type="recall",
@@ -240,7 +240,7 @@ async def test_tool_call_sequence_match_grader_recall_metric():
 @pytest.mark.asyncio
 async def test_tool_call_sequence_match_grader_precision_metric():
     """Test loose mode with precision metric (matched / predicted)"""
-    grader = ToolCallSequenceMatchGrader(
+    grader = ToolCallStepSequenceMatchGrader(
         strict_mode=False,
         use_jaccard_similarity=False,
         metric_type="precision",
@@ -292,7 +292,7 @@ async def test_tool_call_sequence_match_grader_recall_vs_precision():
     ]
 
     # Recall grader: 1 matched / 1 reference = 1.0
-    recall_grader = ToolCallSequenceMatchGrader(
+    recall_grader = ToolCallStepSequenceMatchGrader(
         strict_mode=False,
         use_jaccard_similarity=False,
         metric_type="recall",
@@ -303,7 +303,7 @@ async def test_tool_call_sequence_match_grader_recall_vs_precision():
     )
 
     # Precision grader: 1 matched / 2 predicted = 0.5
-    precision_grader = ToolCallSequenceMatchGrader(
+    precision_grader = ToolCallStepSequenceMatchGrader(
         strict_mode=False,
         use_jaccard_similarity=False,
         metric_type="precision",

@@ -20,7 +20,7 @@ from openjudge.graders.base_grader import (
 # pylint: disable=line-too-long
 
 
-class ToolCallSequenceMatchGrader(BaseGrader):
+class ToolCallStepSequenceMatchGrader(BaseGrader):
     """
     Tool call sequence reference matching grader.
     This grader evaluates whether the model's tool call sequence matches the reference
@@ -32,7 +32,7 @@ class ToolCallSequenceMatchGrader(BaseGrader):
         use_jaccard_similarity: If True, use Jaccard similarity for loose mode (ignores step order)
     Example:
         >>> import asyncio
-        >>> grader = ToolCallSequenceMatchGrader(strict_mode=True)
+        >>> grader = ToolCallStepSequenceMatchGrader(strict_mode=True)
         >>> result = asyncio.run(grader.aevaluate(
         ...     messages=[...],  # Model's messages with tool calls
         ...     reference_tool_calls=[...]  # Ground truth reference tool calls
@@ -48,7 +48,7 @@ class ToolCallSequenceMatchGrader(BaseGrader):
         **kwargs,
     ):
         """
-        Initialize the ToolCallSequenceMatchGrader.
+        Initialize the ToolCallStepSequenceMatchGrader.
 
         Args:
             strict_mode: If True, matches both tool_call name and arguments; if False, only matches tool_call name

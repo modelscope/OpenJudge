@@ -106,7 +106,7 @@ def _render_score_card(
             padding: 1.25rem;
         ">
             <div style="font-weight: 600; color: #F1F5F9; margin-bottom: 0.75rem; font-size: 0.95rem;">
-                Evaluation Reason
+                {t("grader.result.evaluation_reason")}
             </div>
             <div style="color: #CBD5E1; line-height: 1.7; font-size: 0.9rem; white-space: pre-wrap;">
                 {reason}
@@ -142,7 +142,7 @@ def _render_error_state(error: GraderError) -> None:
                     <line x1="9" y1="9" x2="15" y2="15"/>
                 </svg>
                 <span style="font-size: 1.1rem; font-weight: 600; color: #EF4444;">
-                    Evaluation Failed
+                    {t("grader.result.evaluation_failed")}
                 </span>
             </div>
             <div style="color: #FCA5A5; margin-bottom: 1rem;">
@@ -162,14 +162,14 @@ def _render_error_state(error: GraderError) -> None:
             </div>
             <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(239, 68, 68, 0.2);">
                 <div style="font-weight: 500; color: #F1F5F9; margin-bottom: 0.5rem;">
-                    Troubleshooting Tips
+                    {t("grader.result.troubleshooting")}
                 </div>
                 <ul style="color: #94A3B8; font-size: 0.875rem; margin: 0; padding-left: 1.25rem;">
-                    <li>Check if your API key is valid and has sufficient quota</li>
-                    <li>Verify the API endpoint matches your service provider</li>
-                    <li>Ensure the selected model is available at your endpoint</li>
-                    <li>For multimodal graders, use a vision-capable model</li>
-                    <li>Check that input data is in the correct format</li>
+                    <li>{t("grader.result.tip_api_key")}</li>
+                    <li>{t("grader.result.tip_endpoint")}</li>
+                    <li>{t("grader.result.tip_model")}</li>
+                    <li>{t("grader.result.tip_vision")}</li>
+                    <li>{t("grader.result.tip_format")}</li>
                 </ul>
             </div>
         </div>
@@ -192,14 +192,14 @@ def _run_evaluation(
         grader_name: Name of the grader
         grader_config: Grader configuration
     """
-    with st.status("Running evaluation...", expanded=True) as status:
+    with st.status(t("grader.result.running"), expanded=True) as status:
         try:
             start_time = time.time()
 
             # Create model if required
             model = None
             if grader_config.get("requires_model", False):
-                st.write("Creating model instance...")
+                st.write(t("grader.result.creating_model"))
                 model = create_model(
                     api_key=sidebar_config.get("api_key", ""),
                     base_url=sidebar_config.get("api_endpoint"),
@@ -207,7 +207,7 @@ def _run_evaluation(
                 )
 
             # Create grader
-            st.write(f"Initializing {grader_name} grader...")
+            st.write(t("grader.result.initializing", grader=grader_name))
             grader = create_grader(
                 grader_name=grader_name,
                 model=model,

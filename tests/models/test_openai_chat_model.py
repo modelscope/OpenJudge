@@ -67,9 +67,7 @@ class TestOpenAIChatModel:
         """Test handling of messages missing role or content."""
         with pytest.raises(ValueError) as exc_info:
             asyncio.run(self.model.achat(messages=[{"content": "hello"}]))
-        assert "Each message in the 'messages' list must contain a 'role'" in str(
-            exc_info.value,
-        )
+        assert "Invalid message format" in str(exc_info.value)
 
     @patch("openjudge.models.openai_chat_model.AsyncOpenAI")
     def test_achat_with_valid_messages(self, mock_async_openai):

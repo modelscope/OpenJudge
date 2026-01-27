@@ -7,6 +7,7 @@ Displays real-time progress of the evaluation pipeline stages.
 from typing import Any
 
 import streamlit as st
+from shared.i18n import get_ui_language
 
 # Stage definitions with display info
 EVALUATION_STAGES = [
@@ -16,6 +17,7 @@ EVALUATION_STAGES = [
         "name_zh": "生成测试查询",
         "icon": "📝",
         "description": "Creating diverse test queries based on task description",
+        "description_zh": "根据任务描述创建多样化的测试查询",
     },
     {
         "id": "responses",
@@ -23,6 +25,7 @@ EVALUATION_STAGES = [
         "name_zh": "收集模型响应",
         "icon": "🤖",
         "description": "Getting responses from all target models",
+        "description_zh": "获取所有目标模型的响应",
     },
     {
         "id": "rubrics",
@@ -30,6 +33,7 @@ EVALUATION_STAGES = [
         "name_zh": "生成评估标准",
         "icon": "📋",
         "description": "Creating evaluation criteria",
+        "description_zh": "创建评估标准",
     },
     {
         "id": "evaluation",
@@ -37,6 +41,7 @@ EVALUATION_STAGES = [
         "name_zh": "执行成对评估",
         "icon": "⚖️",
         "description": "Comparing model responses pairwise",
+        "description_zh": "成对比较模型响应",
     },
     {
         "id": "analysis",
@@ -44,6 +49,7 @@ EVALUATION_STAGES = [
         "name_zh": "分析评估结果",
         "icon": "📊",
         "description": "Computing rankings and generating report",
+        "description_zh": "计算排名并生成报告",
     },
 ]
 
@@ -128,17 +134,21 @@ def _render_stage_item(
         border-radius: 0 8px 8px 0;
     """
 
+    # Get localized name and description based on UI language
+    is_chinese = get_ui_language() == "zh"
+    display_name = stage.get("name_zh", stage["name"]) if is_chinese else stage["name"]
+    display_desc = stage.get("description_zh", stage["description"]) if is_chinese else stage["description"]
+
     st.markdown(
         f"""<div style="{container_style}">
             <div style="display: flex; align-items: center; gap: 0.5rem;">
                 <span style="font-size: 1.25rem;">{stage['icon']}</span>
                 <div style="flex: 1;">
                     <div style="font-weight: 600; color: #F1F5F9; font-size: 0.9rem;">
-                        {stage['name']}
-                        <span style="color: #64748B; font-weight: 400;"> / {stage['name_zh']}</span>
+                        {display_name}
                     </div>
                     <div style="font-size: 0.75rem; color: #94A3B8;">
-                        {stage['description']}
+                        {display_desc}
                     </div>
                 </div>
                 <span style="color: {config['color']}; font-size: 1rem; font-weight: 600;">

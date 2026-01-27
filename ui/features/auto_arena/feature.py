@@ -36,10 +36,38 @@ class AutoArenaFeature(BaseFeature):
     """
 
     feature_id = "auto_arena"
-    feature_name = "Auto Arena"
+    feature_name = "Auto Arena"  # Default/fallback name
     feature_icon = "🏟️"
-    feature_description = "Automated model/agent evaluation arena"
+    feature_description = "Automated model/agent evaluation arena"  # Default/fallback
     order = 2
+
+    @property
+    def display_label(self) -> str:
+        """Get the display label for navigation with i18n support."""
+        return f"{self.feature_icon} {t('arena.name')}"
+
+    def render_header(self) -> None:
+        """Render the feature header with i18n support."""
+        st.markdown(
+            f"""<div style="margin-bottom: 1rem;">
+                <h1 style="
+                    font-size: 2rem;
+                    font-weight: 700;
+                    color: #F1F5F9;
+                    margin: 0;
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                ">
+                    <span>{self.feature_icon}</span>
+                    <span>{t('arena.name')}</span>
+                </h1>
+                <p style="color: #94A3B8; margin: 0.25rem 0 0 0; font-size: 0.95rem;">
+                    {t('arena.description')}
+                </p>
+            </div>""",
+            unsafe_allow_html=True,
+        )
 
     # Session state keys
     STATE_PROGRESS = "arena_progress"

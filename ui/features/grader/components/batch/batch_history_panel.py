@@ -12,7 +12,7 @@ from features.grader.services.batch_history_manager import (
     BatchHistoryManager,
     BatchTaskSummary,
 )
-from shared.i18n import t
+from shared.i18n import get_ui_language, t
 
 
 def _format_time_ago(dt: datetime) -> str:
@@ -144,7 +144,7 @@ def _render_task_card(
                         font-size: 0.9rem;
                         margin-bottom: 0.25rem;
                     ">
-                        {task.grader_name} ({task.grader_name_zh})
+                        {task.grader_name_zh if get_ui_language() == "zh" else task.grader_name}
                     </div>
                     <div style="font-size: 0.75rem; color: #94A3B8;">
                         {' • '.join(stats_parts)}
@@ -336,7 +336,11 @@ def render_batch_task_detail(
                 Task: {task_id}
             </div>
             <div style="font-size: 0.85rem; color: #94A3B8;">
-                Grader: {config.get('grader_name', 'Unknown')} ({config.get('grader_name_zh', '')})
+                Grader: {
+                    config.get('grader_name_zh', config.get('grader_name', 'Unknown'))
+                    if get_ui_language() == "zh"
+                    else config.get('grader_name', 'Unknown')
+                }
             </div>
             <div style="font-size: 0.85rem; color: #94A3B8;">
                 Created: {config.get('created_at', 'Unknown')}

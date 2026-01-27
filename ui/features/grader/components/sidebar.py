@@ -13,7 +13,7 @@ from features.grader.config.grader_registry import (
     GRADER_REGISTRY,
     get_graders_by_category,
 )
-from shared.i18n import t
+from shared.i18n import get_ui_language, t
 
 from openjudge.models.schema.prompt_template import LanguageEnum
 
@@ -108,13 +108,22 @@ def _render_grader_settings(config: dict[str, Any]) -> None:
         selected_grader = grader_names[selected_grader_idx]
         grader_config = GRADER_REGISTRY[selected_grader]
 
+        # Get localized name and description based on UI language
+        is_chinese = get_ui_language() == "zh"
+        display_name = grader_config.get("name_zh", selected_grader) if is_chinese else selected_grader
+        display_desc = (
+            grader_config.get("description_zh", grader_config.get("description", ""))
+            if is_chinese
+            else grader_config.get("description", "")
+        )
+
         st.markdown(
             f"""<div class="info-card">
                 <div style="font-weight: 500; color: #F1F5F9; margin-bottom: 0.25rem;">
-                    {grader_config['name_zh']}
+                    {display_name}
                 </div>
                 <div style="font-size: 0.8rem; color: #94A3B8;">
-                    {grader_config['description_zh']}
+                    {display_desc}
                 </div>
             </div>""",
             unsafe_allow_html=True,

@@ -42,10 +42,38 @@ class GraderFeature(BaseFeature):
     """
 
     feature_id = "grader"
-    feature_name = "Grader 评估"
+    feature_name = "Grader Evaluation"  # Default/fallback name
     feature_icon = "⚖️"
-    feature_description = "使用内置 Grader 评估数据（支持单条和批量）"
+    feature_description = "Evaluate data using built-in Graders"  # Default/fallback
     order = 1
+
+    @property
+    def display_label(self) -> str:
+        """Get the display label for navigation with i18n support."""
+        return f"{self.feature_icon} {t('grader.name')}"
+
+    def render_header(self) -> None:
+        """Render the feature header with i18n support."""
+        st.markdown(
+            f"""<div style="margin-bottom: 1rem;">
+                <h1 style="
+                    font-size: 2rem;
+                    font-weight: 700;
+                    color: #F1F5F9;
+                    margin: 0;
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                ">
+                    <span>{self.feature_icon}</span>
+                    <span>{t('grader.name')}</span>
+                </h1>
+                <p style="color: #94A3B8; margin: 0.25rem 0 0 0; font-size: 0.95rem;">
+                    {t('grader.description')}
+                </p>
+            </div>""",
+            unsafe_allow_html=True,
+        )
 
     # Session state keys for batch evaluation
     STATE_BATCH_TASK_ID = "batch_task_id"

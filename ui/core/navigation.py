@@ -9,6 +9,7 @@ from typing import Optional
 import streamlit as st
 from core.base_feature import BaseFeature
 from core.feature_registry import FeatureRegistry
+from shared.i18n import t
 
 # Session state key for current feature
 CURRENT_FEATURE_KEY = "_current_feature_id"
@@ -37,9 +38,9 @@ class Navigation:
             st.warning("No features registered")
             return ""
 
-        # Build options - use class attributes directly (not property)
+        # Build options - use display_label property for i18n support
         feature_ids = [f.feature_id for f in features]
-        feature_labels = {f.feature_id: f"{f.feature_icon} {f.feature_name}" for f in features}
+        feature_labels = {f.feature_id: f.display_label for f in features}
 
         # Get default feature id
         default_id = FeatureRegistry.get_default_feature_id()
@@ -60,7 +61,7 @@ class Navigation:
 
         # Render selectbox (dropdown) for feature selection
         selected_id = st.selectbox(
-            "功能模块",
+            t("app.features"),
             options=feature_ids,
             format_func=lambda x: feature_labels.get(x, x),
             key=widget_key,

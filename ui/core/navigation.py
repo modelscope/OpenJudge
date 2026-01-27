@@ -39,8 +39,9 @@ class Navigation:
             return ""
 
         # Build options - use display_label property for i18n support
+        # Note: get_all() returns classes, but display_label is a property that requires instances
         feature_ids = [f.feature_id for f in features]
-        feature_labels = {f.feature_id: f.display_label for f in features}
+        feature_labels = {f.feature_id: FeatureRegistry.get_instance(f.feature_id).display_label for f in features}
 
         # Get default feature id
         default_id = FeatureRegistry.get_default_feature_id()

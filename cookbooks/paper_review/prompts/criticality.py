@@ -59,6 +59,7 @@ Return your assessment in JSON format:
 
 Include all three categories, using empty arrays [] if no items in that category."""
 
+
 CRITICALITY_USER_PROMPT = """The correctness detector identified the following issues in this paper:
 
 {findings}

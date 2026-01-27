@@ -54,4 +54,5 @@ Return your response in this format:
 
 The score must be 1, 2, or 3. Each key issue should be on its own line starting with a dash."""
 
+
 CORRECTNESS_USER_PROMPT = "Identify any objective, verifiable errors in this paper. Focus only on factual correctness, not subjective quality issues."

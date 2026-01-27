@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Report viewer component for Zero-Shot Evaluation feature.
+"""Report viewer component for Auto Arena feature.
 
 Displays evaluation reports with markdown rendering and export options.
 """
@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any
 
 import streamlit as st
-from features.zero_shot.services.history_manager import HistoryManager
+from features.auto_arena.services.history_manager import HistoryManager
 
 
 def _render_comparison_detail(detail: dict[str, Any], index: int) -> None:

@@ -1,14 +1,14 @@
-# Zero-Shot Evaluation
+# Auto Arena
 
-Automatically evaluate and compare multiple models or AI agents without pre-existing test data. This end-to-end pipeline generates test queries, collects responses, and ranks models through pairwise comparison.
+Automatically evaluate and compare multiple models or AI agents without pre-existing test data. This end-to-end pipeline generates test queries, collects responses, and ranks models/agents through pairwise comparison.
 
 
 ## Overview
 
-Zero-shot evaluation is ideal for **model comparison**, **agent pipeline testing**, **new domain evaluation**, and **rapid prototyping**—all without preparing test data upfront.
+Auto Arena is ideal for **model comparison**, **agent pipeline testing**, **new domain evaluation**, and **rapid prototyping**—all without preparing test data upfront.
 
 !!! tip "No Test Data Required"
-    Unlike traditional evaluation, zero-shot evaluation generates its own test queries from the task description, eliminating the need for pre-existing test datasets.
+    Unlike traditional evaluation, Auto Arena generates its own test queries from the task description, eliminating the need for pre-existing test datasets.
 
 The pipeline automates seven steps: generate test queries → collect responses → create evaluation rubrics → run pairwise comparisons → analyze results → generate report → create visualization.
 
@@ -25,7 +25,7 @@ The pipeline automates seven steps: generate test queries → collect responses 
 
 ## Quick Start
 
-Get started with Zero-Shot Evaluation in just a few lines of code. Choose the approach that best fits your workflow:
+Get started with Auto Arena in just a few lines of code. Choose the approach that best fits your workflow:
 
 === "Python API"
 
@@ -33,10 +33,10 @@ Get started with Zero-Shot Evaluation in just a few lines of code. Choose the ap
 
     ```python
     import asyncio
-    from cookbooks.zero_shot_evaluation.zero_shot_pipeline import ZeroShotPipeline
+    from cookbooks.auto_arena.auto_arena_pipeline import AutoArenaPipeline
 
     async def main():
-        pipeline = ZeroShotPipeline.from_config("config.yaml")
+        pipeline = AutoArenaPipeline.from_config("config.yaml")
         result = await pipeline.evaluate()
 
         print(f"Best Model: {result.best_pipeline}")
@@ -52,16 +52,16 @@ Get started with Zero-Shot Evaluation in just a few lines of code. Choose the ap
 
     ```bash
     # Run evaluation with config file
-    python -m cookbooks.zero_shot_evaluation --config config.yaml --save
+    python -m cookbooks.auto_arena --config config.yaml --save
 
     # Resume from checkpoint (default behavior)
-    python -m cookbooks.zero_shot_evaluation --config config.yaml --save
+    python -m cookbooks.auto_arena --config config.yaml --save
 
     # Start fresh, ignore checkpoint
-    python -m cookbooks.zero_shot_evaluation --config config.yaml --fresh --save
+    python -m cookbooks.auto_arena --config config.yaml --fresh --save
 
     # Use pre-generated queries
-    python -m cookbooks.zero_shot_evaluation --config config.yaml --queries_file queries.json --save
+    python -m cookbooks.auto_arena --config config.yaml --queries_file queries.json --save
     ```
 
 === "Custom Queries"
@@ -84,7 +84,7 @@ Get started with Zero-Shot Evaluation in just a few lines of code. Choose the ap
     Then run the evaluation with your queries:
 
     ```bash
-    python -m cookbooks.zero_shot_evaluation --config config.yaml --queries_file queries.json --save
+    python -m cookbooks.auto_arena --config config.yaml --queries_file queries.json --save
     ```
 
 All methods require a YAML configuration file. Here's a complete example:
@@ -155,13 +155,13 @@ For fine-grained control, use individual pipeline components directly. The workf
 Use `QueryGenerator` to create diverse test queries from your task description. Supports parallel generation, automatic deduplication, and optional Evol-Instruct complexity evolution.</li>
 <li><strong>Collect Responses</strong>
 
-Use `ResponseCollector` to query all target models concurrently and gather their responses for comparison.</li>
+Use `ResponseCollector` to query all target models/agents concurrently and gather their responses for comparison.</li>
 <li><strong>Generate Evaluation Rubrics</strong>
 
 Use `TaskBasedRubricGenerator` to automatically create evaluation criteria (accuracy, completeness, clarity, etc.) tailored to your specific task.</li>
 <li><strong>Run Pairwise Evaluation</strong>
 
-Use `ZeroShotPipeline` to orchestrate the full evaluation, comparing all response pairs and producing final rankings.</li>
+Use `AutoArenaPipeline` to orchestrate the full evaluation, comparing all response pairs and producing final rankings.</li>
 </ol>
 </div>
 </div>
@@ -171,8 +171,8 @@ Use `ZeroShotPipeline` to orchestrate the full evaluation, comparing all respons
     **Step 1: Generate Test Queries**
 
     ```python
-    from cookbooks.zero_shot_evaluation.query_generator import QueryGenerator
-    from cookbooks.zero_shot_evaluation.schema import TaskConfig, QueryGenerationConfig, OpenAIEndpoint
+    from cookbooks.auto_arena.query_generator import QueryGenerator
+    from cookbooks.auto_arena.schema import TaskConfig, QueryGenerationConfig, OpenAIEndpoint
 
     task = TaskConfig(
         description="Code review assistant for Python",
@@ -199,8 +199,8 @@ Use `ZeroShotPipeline` to orchestrate the full evaluation, comparing all respons
     **Step 2: Collect Responses**
 
     ```python
-    from cookbooks.zero_shot_evaluation.response_collector import ResponseCollector
-    from cookbooks.zero_shot_evaluation.schema import EvaluationConfig
+    from cookbooks.auto_arena.response_collector import ResponseCollector
+    from cookbooks.auto_arena.schema import EvaluationConfig
 
     collector = ResponseCollector(
         target_endpoints={"model_a": endpoint_a, "model_b": endpoint_b},
@@ -226,9 +226,9 @@ Use `ZeroShotPipeline` to orchestrate the full evaluation, comparing all respons
     **Step 4: Run Full Evaluation**
 
     ```python
-    from cookbooks.zero_shot_evaluation.zero_shot_pipeline import ZeroShotPipeline
+    from cookbooks.auto_arena.auto_arena_pipeline import AutoArenaPipeline
 
-    pipeline = ZeroShotPipeline(
+    pipeline = AutoArenaPipeline(
         task_description="Code review assistant",
         target_endpoints=target_endpoints,
         judge_endpoint=judge_endpoint,
@@ -256,7 +256,7 @@ Use `ZeroShotPipeline` to orchestrate the full evaluation, comparing all respons
     !!! example "Sample Output"
         ```
         ============================================================
-        ZERO-SHOT EVALUATION RESULTS
+        AUTO ARENA EVALUATION RESULTS
         ============================================================
         Task: English to Chinese translation assistant...
         Queries: 20 | Comparisons: 80
@@ -367,13 +367,13 @@ Use `ZeroShotPipeline` to orchestrate the full evaluation, comparing all respons
 
     ```bash
     # First run (interrupted)
-    python -m cookbooks.zero_shot_evaluation --config config.yaml --save
+    python -m cookbooks.auto_arena --config config.yaml --save
 
     # Resume from checkpoint (automatic)
-    python -m cookbooks.zero_shot_evaluation --config config.yaml --save
+    python -m cookbooks.auto_arena --config config.yaml --save
 
     # Start fresh (ignore checkpoint)
-    python -m cookbooks.zero_shot_evaluation --config config.yaml --fresh --save
+    python -m cookbooks.auto_arena --config config.yaml --fresh --save
     ```
 
     Checkpoint stages: `QUERIES_GENERATED` → `RESPONSES_COLLECTED` → `RUBRICS_GENERATED` → `EVALUATION_COMPLETE`
@@ -396,5 +396,4 @@ Use `ZeroShotPipeline` to orchestrate the full evaluation, comparing all respons
     - Compare models with fundamentally different capabilities (e.g., text vs vision)
 
 **Related Topics:** [Pairwise Evaluation](select_rank.md) · [Refine Data Quality](data_refinement.md) · [Create Custom Graders](../building_graders/create_custom_graders.md) · [Run Grading Tasks](../running_graders/run_tasks.md)
-
 

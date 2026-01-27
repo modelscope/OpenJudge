@@ -1,7 +1,7 @@
 # =============================================================================
-# Zero-Shot Evaluation Configuration
+# Auto Arena Configuration
 # =============================================================================
-# This configuration file defines all settings for the zero-shot evaluation
+# This configuration file defines all settings for the Auto Arena evaluation
 # pipeline, including task definition, query generation, target endpoints,
 # judge endpoint, evaluation parameters, and output settings.
 #

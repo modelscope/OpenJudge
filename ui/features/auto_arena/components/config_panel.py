@@ -1,22 +1,22 @@
 # -*- coding: utf-8 -*-
-"""Configuration panel for Zero-Shot Evaluation feature.
+"""Configuration panel for Auto Arena feature.
 
 Provides UI for configuring:
 - Configuration presets (save/load)
 - Task description and scenario
-- Target endpoints (models to evaluate)
+- Target endpoints (models/agents to evaluate)
 - Query generation settings
 """
 
 from typing import Any
 
 import streamlit as st
-from features.zero_shot.components.preset_panel import render_preset_panel
+from features.auto_arena.components.preset_panel import render_preset_panel
 from shared.constants import DEFAULT_API_ENDPOINTS, DEFAULT_MODELS
 from shared.i18n import t
 
 # Session state keys for preset loading
-STATE_PRESET_LOAD_TRIGGER = "zs_preset_load_trigger"
+STATE_PRESET_LOAD_TRIGGER = "arena_preset_load_trigger"
 
 
 def _apply_preset_to_session_state(ui_state: dict[str, Any]) -> None:
@@ -28,21 +28,21 @@ def _apply_preset_to_session_state(ui_state: dict[str, Any]) -> None:
         ui_state: UI state dictionary from PresetManager.config_to_ui_state()
     """
     # Task configuration
-    st.session_state["zs_task_description"] = ui_state.get("task_description", "")
-    st.session_state["zs_task_scenario"] = ui_state.get("task_scenario", "")
+    st.session_state["arena_task_description"] = ui_state.get("task_description", "")
+    st.session_state["arena_task_scenario"] = ui_state.get("task_scenario", "")
 
     # Query settings
     seed_queries = ui_state.get("seed_queries", [])
-    st.session_state["zs_seed_queries"] = "\n".join(seed_queries) if seed_queries else ""
-    st.session_state["zs_query_temp"] = ui_state.get("query_temperature", 0.9)
-    st.session_state["zs_max_similarity"] = ui_state.get("max_similarity", 0.85)
-    st.session_state["zs_enable_evolution"] = ui_state.get("enable_evolution", False)
+    st.session_state["arena_seed_queries"] = "\n".join(seed_queries) if seed_queries else ""
+    st.session_state["arena_query_temp"] = ui_state.get("query_temperature", 0.9)
+    st.session_state["arena_max_similarity"] = ui_state.get("max_similarity", 0.85)
+    st.session_state["arena_enable_evolution"] = ui_state.get("enable_evolution", False)
 
     # Target endpoints - store in a special key for reconstruction
-    st.session_state["zs_preset_endpoints"] = ui_state.get("target_endpoints", [])
+    st.session_state["arena_preset_endpoints"] = ui_state.get("target_endpoints", [])
 
     # Sidebar settings - store for sidebar to pick up
-    st.session_state["zs_preset_sidebar"] = {
+    st.session_state["arena_preset_sidebar"] = {
         "judge_endpoint": ui_state.get("judge_endpoint", ""),
         "judge_api_key": ui_state.get("judge_api_key", ""),
         "judge_model": ui_state.get("judge_model", ""),
@@ -76,48 +76,51 @@ def _get_current_config() -> tuple[dict[str, Any], dict[str, Any]]:
     """
     # Collect sidebar config from session state
     sidebar_config = {
-        "judge_endpoint": st.session_state.get("zs_judge_custom_endpoint", "")
-        or DEFAULT_API_ENDPOINTS.get(st.session_state.get("zs_judge_provider", "DashScope"), ""),
-        "judge_api_key": st.session_state.get("zs_judge_api_key", ""),
-        "judge_model": st.session_state.get("zs_judge_custom_model", "") or st.session_state.get("zs_judge_model", ""),
-        "num_queries": st.session_state.get("zs_num_queries", 20),
-        "max_concurrency": st.session_state.get("zs_max_concurrency", 10),
-        "save_queries": st.session_state.get("zs_save_queries", True),
-        "save_responses": st.session_state.get("zs_save_responses", True),
-        "save_details": st.session_state.get("zs_save_details", True),
-        "generate_report": st.session_state.get("zs_generate_report", True),
-        "generate_chart": st.session_state.get("zs_generate_chart", True),
+        "judge_endpoint": st.session_state.get("arena_judge_custom_endpoint", "")
+        or DEFAULT_API_ENDPOINTS.get(st.session_state.get("arena_judge_provider", "DashScope"), ""),
+        "judge_api_key": st.session_state.get("arena_judge_api_key", ""),
+        "judge_model": st.session_state.get("arena_judge_custom_model", "")
+        or st.session_state.get("arena_judge_model", ""),
+        "num_queries": st.session_state.get("arena_num_queries", 20),
+        "max_concurrency": st.session_state.get("arena_max_concurrency", 10),
+        "save_queries": st.session_state.get("arena_save_queries", True),
+        "save_responses": st.session_state.get("arena_save_responses", True),
+        "save_details": st.session_state.get("arena_save_details", True),
+        "generate_report": st.session_state.get("arena_generate_report", True),
+        "generate_chart": st.session_state.get("arena_generate_chart", True),
     }
 
     # Collect panel config
     panel_config = {
-        "task_description": st.session_state.get("zs_task_description", ""),
-        "task_scenario": st.session_state.get("zs_task_scenario", ""),
-        "seed_queries": [q.strip() for q in st.session_state.get("zs_seed_queries", "").split("\n") if q.strip()],
-        "query_temperature": st.session_state.get("zs_query_temp", 0.9),
-        "max_similarity": st.session_state.get("zs_max_similarity", 0.85),
-        "enable_evolution": st.session_state.get("zs_enable_evolution", False),
+        "task_description": st.session_state.get("arena_task_description", ""),
+        "task_scenario": st.session_state.get("arena_task_scenario", ""),
+        "seed_queries": [q.strip() for q in st.session_state.get("arena_seed_queries", "").split("\n") if q.strip()],
+        "query_temperature": st.session_state.get("arena_query_temp", 0.9),
+        "max_similarity": st.session_state.get("arena_max_similarity", 0.85),
+        "enable_evolution": st.session_state.get("arena_enable_evolution", False),
         "target_endpoints": {},
     }
 
     # Collect target endpoints from session state
-    endpoint_ids = st.session_state.get("zs_endpoints", ["ep_1", "ep_2"])
+    endpoint_ids = st.session_state.get("arena_endpoints", ["ep_1", "ep_2"])
     for ep_id in endpoint_ids:
-        name = st.session_state.get(f"zs_ep_name_{ep_id}", "")
+        name = st.session_state.get(f"arena_ep_name_{ep_id}", "")
         if not name:
             continue
 
-        provider = st.session_state.get(f"zs_ep_provider_{ep_id}", "DashScope")
-        base_url = st.session_state.get(f"zs_ep_url_{ep_id}", "") or DEFAULT_API_ENDPOINTS.get(provider, "")
+        provider = st.session_state.get(f"arena_ep_provider_{ep_id}", "DashScope")
+        base_url = st.session_state.get(f"arena_ep_url_{ep_id}", "") or DEFAULT_API_ENDPOINTS.get(provider, "")
 
-        model_option = st.session_state.get(f"zs_ep_model_{ep_id}", "")
-        model = st.session_state.get(f"zs_ep_custom_model_{ep_id}", "") if model_option == "Custom..." else model_option
+        model_option = st.session_state.get(f"arena_ep_model_{ep_id}", "")
+        model = (
+            st.session_state.get(f"arena_ep_custom_model_{ep_id}", "") if model_option == "Custom..." else model_option
+        )
 
         panel_config["target_endpoints"][name] = {
             "base_url": base_url,
-            "api_key": st.session_state.get(f"zs_ep_key_{ep_id}", ""),
+            "api_key": st.session_state.get(f"arena_ep_key_{ep_id}", ""),
             "model": model,
-            "system_prompt": st.session_state.get(f"zs_ep_system_{ep_id}", ""),
+            "system_prompt": st.session_state.get(f"arena_ep_system_{ep_id}", ""),
         }
 
     return sidebar_config, panel_config
@@ -127,24 +130,24 @@ def _render_task_config(config: dict[str, Any]) -> None:
     """Render task configuration section."""
     st.markdown(
         f"""<div class="section-header">
-            <span style="margin-right: 0.5rem;">📋</span>{t("zeroshot.config.task")}
+            <span style="margin-right: 0.5rem;">📋</span>{t("arena.config.task")}
         </div>""",
         unsafe_allow_html=True,
     )
 
     task_description = st.text_area(
-        t("zeroshot.config.task_description"),
-        placeholder=t("zeroshot.config.task_description_placeholder"),
+        t("arena.config.task_description"),
+        placeholder=t("arena.config.task_description_placeholder"),
         height=100,
-        key="zs_task_description",
-        help=t("zeroshot.config.task_description_help"),
+        key="arena_task_description",
+        help=t("arena.config.task_description_help"),
     )
 
     task_scenario = st.text_input(
-        t("zeroshot.config.task_scenario"),
-        placeholder=t("zeroshot.config.task_scenario_placeholder"),
-        key="zs_task_scenario",
-        help=t("zeroshot.config.task_scenario_help"),
+        t("arena.config.task_scenario"),
+        placeholder=t("arena.config.task_scenario_placeholder"),
+        key="arena_task_scenario",
+        help=t("arena.config.task_scenario_help"),
     )
 
     config["task_description"] = task_description
@@ -171,12 +174,12 @@ def _render_single_endpoint(
     with col_header:
         st.markdown(
             f'<div style="font-weight: 600; color: #94A3B8; font-size: 0.9rem;">'
-            f'{t("zeroshot.config.target_model")} {endpoint_num}</div>',
+            f'{t("arena.config.target_model")} {endpoint_num}</div>',
             unsafe_allow_html=True,
         )
     with col_remove:
         if endpoint_num > 1:  # Keep at least one endpoint
-            if st.button("✕", key=f"remove_{endpoint_id}", help=t("zeroshot.config.remove_target")):
+            if st.button("✕", key=f"remove_{endpoint_id}", help=t("arena.config.remove_target")):
                 return None
 
     # Row 1: Provider + Model
@@ -185,12 +188,12 @@ def _render_single_endpoint(
         provider = st.selectbox(
             t("api.provider"),
             options=list(DEFAULT_API_ENDPOINTS.keys()),
-            key=f"zs_ep_provider_{endpoint_id}",
+            key=f"arena_ep_provider_{endpoint_id}",
         )
 
     with col2:
         # Check if there's a custom model value already set (e.g., from preset)
-        current_model = st.session_state.get(f"zs_ep_model_{endpoint_id}", "")
+        current_model = st.session_state.get(f"arena_ep_model_{endpoint_id}", "")
 
         # Build options list - include current model if it's custom
         model_options = list(DEFAULT_MODELS)
@@ -202,7 +205,7 @@ def _render_single_endpoint(
         model_option = st.selectbox(
             t("model.select"),
             options=model_options,
-            key=f"zs_ep_model_{endpoint_id}",
+            key=f"arena_ep_model_{endpoint_id}",
         )
 
     # Row 1.5: Custom model input (only if "Custom..." selected)
@@ -210,7 +213,7 @@ def _render_single_endpoint(
         model = st.text_input(
             t("model.custom_input"),
             placeholder=t("model.custom_placeholder"),
-            key=f"zs_ep_custom_model_{endpoint_id}",
+            key=f"arena_ep_custom_model_{endpoint_id}",
         )
     else:
         model = model_option
@@ -220,38 +223,38 @@ def _render_single_endpoint(
         t("api.key"),
         type="password",
         placeholder=t("api.key_placeholder"),
-        key=f"zs_ep_key_{endpoint_id}",
+        key=f"arena_ep_key_{endpoint_id}",
     )
 
     # Advanced settings (collapsed)
-    with st.expander(f"⚙️ {t('zeroshot.config.advanced_settings')}", expanded=False):
+    with st.expander(f"⚙️ {t('arena.config.advanced_settings')}", expanded=False):
         # Display name (alias)
         endpoint_name = st.text_input(
-            t("zeroshot.config.display_name"),
+            t("arena.config.display_name"),
             placeholder=model if model else f"model_{endpoint_num}",
-            key=f"zs_ep_name_{endpoint_id}",
-            help=t("zeroshot.config.display_name_help"),
+            key=f"arena_ep_name_{endpoint_id}",
+            help=t("arena.config.display_name_help"),
         )
 
         # Custom Endpoint URL (only for Custom provider)
         if provider == "Custom":
             st.text_input(
-                t("zeroshot.config.endpoint_url"),
+                t("arena.config.endpoint_url"),
                 placeholder=t("api.custom_endpoint_placeholder"),
-                key=f"zs_ep_url_{endpoint_id}",
+                key=f"arena_ep_url_{endpoint_id}",
             )
 
         # System Prompt
         system_prompt = st.text_area(
-            t("zeroshot.config.system_prompt"),
-            placeholder=t("zeroshot.config.system_prompt_placeholder"),
+            t("arena.config.system_prompt"),
+            placeholder=t("arena.config.system_prompt_placeholder"),
             height=68,
-            key=f"zs_ep_system_{endpoint_id}",
+            key=f"arena_ep_system_{endpoint_id}",
         )
 
     # Determine base_url based on provider
     if provider == "Custom":
-        base_url = st.session_state.get(f"zs_ep_url_{endpoint_id}", "")
+        base_url = st.session_state.get(f"arena_ep_url_{endpoint_id}", "")
     else:
         base_url = DEFAULT_API_ENDPOINTS[provider]
 
@@ -269,7 +272,7 @@ def _render_single_endpoint(
 
 def _init_endpoints_from_preset() -> None:
     """Initialize endpoint widgets from preset data if available."""
-    preset_endpoints = st.session_state.get("zs_preset_endpoints")
+    preset_endpoints = st.session_state.get("arena_preset_endpoints")
     if not preset_endpoints:
         return
 
@@ -280,7 +283,7 @@ def _init_endpoints_from_preset() -> None:
         new_endpoint_ids.append(ep_id)
 
         # Set widget values
-        st.session_state[f"zs_ep_name_{ep_id}"] = ep_data.get("name", f"model_{i+1}")
+        st.session_state[f"arena_ep_name_{ep_id}"] = ep_data.get("name", f"model_{i+1}")
 
         # Determine provider from base_url
         base_url = ep_data.get("base_url", "")
@@ -290,45 +293,45 @@ def _init_endpoints_from_preset() -> None:
                 provider = prov
                 break
 
-        st.session_state[f"zs_ep_provider_{ep_id}"] = provider
+        st.session_state[f"arena_ep_provider_{ep_id}"] = provider
         if provider == "Custom":
-            st.session_state[f"zs_ep_url_{ep_id}"] = base_url
+            st.session_state[f"arena_ep_url_{ep_id}"] = base_url
 
-        st.session_state[f"zs_ep_key_{ep_id}"] = ep_data.get("api_key", "")
+        st.session_state[f"arena_ep_key_{ep_id}"] = ep_data.get("api_key", "")
 
         # Handle model - directly set the model name (will be added to options dynamically)
         model = ep_data.get("model", "")
-        st.session_state[f"zs_ep_model_{ep_id}"] = model if model else DEFAULT_MODELS[0]
+        st.session_state[f"arena_ep_model_{ep_id}"] = model if model else DEFAULT_MODELS[0]
 
-        st.session_state[f"zs_ep_system_{ep_id}"] = ep_data.get("system_prompt", "")
+        st.session_state[f"arena_ep_system_{ep_id}"] = ep_data.get("system_prompt", "")
 
-    st.session_state["zs_endpoints"] = new_endpoint_ids
+    st.session_state["arena_endpoints"] = new_endpoint_ids
 
     # Clear the preset data so it doesn't re-apply
-    del st.session_state["zs_preset_endpoints"]
+    del st.session_state["arena_preset_endpoints"]
 
 
 def _render_target_endpoints(config: dict[str, Any]) -> None:
     """Render target endpoints configuration section."""
     st.markdown(
         f"""<div class="section-header">
-            <span style="margin-right: 0.5rem;">🎯</span>{t("zeroshot.config.targets")}
+            <span style="margin-right: 0.5rem;">🎯</span>{t("arena.config.targets")}
         </div>""",
         unsafe_allow_html=True,
     )
 
     # Check if we need to initialize from preset
-    if "zs_preset_endpoints" in st.session_state:
+    if "arena_preset_endpoints" in st.session_state:
         _init_endpoints_from_preset()
 
     # Initialize endpoint list in session state
-    if "zs_endpoints" not in st.session_state:
-        st.session_state.zs_endpoints = ["ep_1", "ep_2"]  # Start with 2 endpoints
+    if "arena_endpoints" not in st.session_state:
+        st.session_state.arena_endpoints = ["ep_1", "ep_2"]  # Start with 2 endpoints
 
     endpoints_to_remove = []
     endpoints_config = {}
 
-    for i, ep_id in enumerate(st.session_state.zs_endpoints):
+    for i, ep_id in enumerate(st.session_state.arena_endpoints):
         with st.container():
             st.markdown(
                 '<div style="background: rgba(30, 41, 59, 0.5); padding: 1rem; '
@@ -345,13 +348,13 @@ def _render_target_endpoints(config: dict[str, Any]) -> None:
 
     # Remove marked endpoints
     for ep_id in endpoints_to_remove:
-        st.session_state.zs_endpoints.remove(ep_id)
+        st.session_state.arena_endpoints.remove(ep_id)
         st.rerun()
 
     # Add endpoint button
-    if st.button(f"➕ {t('zeroshot.config.add_target')}", key="zs_add_endpoint"):
-        new_id = f"ep_{len(st.session_state.zs_endpoints) + 1}_{id(st.session_state)}"
-        st.session_state.zs_endpoints.append(new_id)
+    if st.button(f"➕ {t('arena.config.add_target')}", key="arena_add_endpoint"):
+        new_id = f"ep_{len(st.session_state.arena_endpoints) + 1}_{id(st.session_state)}"
+        st.session_state.arena_endpoints.append(new_id)
         st.rerun()
 
     config["target_endpoints"] = endpoints_config
@@ -359,48 +362,48 @@ def _render_target_endpoints(config: dict[str, Any]) -> None:
 
 def _render_query_settings(config: dict[str, Any]) -> None:
     """Render query generation settings."""
-    with st.expander(t("zeroshot.config.query_settings"), expanded=False):
+    with st.expander(t("arena.config.query_settings"), expanded=False):
         st.markdown(
             f'<div style="font-size: 0.85rem; color: #94A3B8; margin-bottom: 0.5rem;">'
-            f'{t("zeroshot.config.query_settings_desc")}</div>',
+            f'{t("arena.config.query_settings_desc")}</div>',
             unsafe_allow_html=True,
         )
 
         seed_queries = st.text_area(
-            t("zeroshot.config.seed_queries"),
-            placeholder=t("zeroshot.config.seed_queries_placeholder"),
+            t("arena.config.seed_queries"),
+            placeholder=t("arena.config.seed_queries_placeholder"),
             height=80,
-            key="zs_seed_queries",
+            key="arena_seed_queries",
         )
 
         col1, col2 = st.columns(2)
         with col1:
             temperature = st.slider(
-                t("zeroshot.config.temperature"),
+                t("arena.config.temperature"),
                 min_value=0.0,
                 max_value=1.5,
                 value=0.9,
                 step=0.1,
-                key="zs_query_temp",
-                help=t("zeroshot.config.temperature_help"),
+                key="arena_query_temp",
+                help=t("arena.config.temperature_help"),
             )
 
         with col2:
             max_similarity = st.slider(
-                t("zeroshot.config.dedup_threshold"),
+                t("arena.config.dedup_threshold"),
                 min_value=0.5,
                 max_value=1.0,
                 value=0.85,
                 step=0.05,
-                key="zs_max_similarity",
-                help=t("zeroshot.config.dedup_threshold_help"),
+                key="arena_max_similarity",
+                help=t("arena.config.dedup_threshold_help"),
             )
 
         enable_evolution = st.checkbox(
-            t("zeroshot.config.enable_evolution"),
+            t("arena.config.enable_evolution"),
             value=False,
-            key="zs_enable_evolution",
-            help=t("zeroshot.config.enable_evolution_help"),
+            key="arena_enable_evolution",
+            help=t("arena.config.enable_evolution_help"),
         )
 
         config["seed_queries"] = [q.strip() for q in seed_queries.split("\n") if q.strip()] if seed_queries else []

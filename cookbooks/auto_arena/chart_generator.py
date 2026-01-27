@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-"""Chart generator for zero-shot evaluation results.
+"""Chart generator for Auto Arena evaluation results.
 
 This module provides visualization capabilities for evaluation results,
-generating beautiful bar charts to display model win rates.
+generating beautiful bar charts to display model/agent win rates.
 """
 
 from pathlib import Path
@@ -10,7 +10,7 @@ from typing import List, Optional, Tuple
 
 from loguru import logger
 
-from cookbooks.zero_shot_evaluation.schema import ChartConfig
+from cookbooks.auto_arena.schema import ChartConfig
 
 
 class WinRateChartGenerator:

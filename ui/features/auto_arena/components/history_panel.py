@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""History panel component for Zero-Shot Evaluation feature.
+"""History panel component for Auto Arena feature.
 
 Displays past evaluation tasks with options to view, resume, or delete.
 """
@@ -8,7 +8,7 @@ from datetime import datetime
 from typing import Callable
 
 import streamlit as st
-from features.zero_shot.services.history_manager import HistoryManager, TaskSummary
+from features.auto_arena.services.history_manager import HistoryManager, TaskSummary
 
 
 def _format_time_ago(dt: datetime) -> str:

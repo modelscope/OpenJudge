@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-"""Pipeline runner service for Zero-Shot Evaluation.
+"""Pipeline runner service for Auto Arena.
 
-Wraps the ZeroShotPipeline with progress tracking and UI integration.
+Wraps the AutoArenaPipeline with progress tracking and UI integration.
 """
 
 import asyncio
@@ -108,7 +108,7 @@ class PipelineProgress:
 
 
 class PipelineRunner:
-    """Runner for Zero-Shot Evaluation pipeline with progress tracking.
+    """Runner for Auto Arena evaluation pipeline with progress tracking.
 
     Provides:
     - Async pipeline execution
@@ -229,9 +229,10 @@ class PipelineRunner:
         if self.progress_callback:
             self.progress_callback(self.progress)
 
-    def _build_zero_shot_config(self) -> Any:
-        """Build ZeroShotConfig from UI config dict."""
-        from cookbooks.zero_shot_evaluation.schema import (
+    def _build_arena_config(self) -> Any:
+        """Build AutoArenaConfig from UI config dict."""
+        from cookbooks.auto_arena.schema import (
+            AutoArenaConfig,
             ChartConfig,
             EvaluationConfig,
             OpenAIEndpoint,
@@ -239,7 +240,6 @@ class PipelineRunner:
             QueryGenerationConfig,
             ReportConfig,
             TaskConfig,
-            ZeroShotConfig,
         )
 
         # Task config
@@ -296,7 +296,7 @@ class PipelineRunner:
             chart=ChartConfig(enabled=self.config.get("generate_chart", True)),
         )
 
-        return ZeroShotConfig(
+        return AutoArenaConfig(
             task=task,
             target_endpoints=target_endpoints,
             judge_endpoint=judge_endpoint,
@@ -341,7 +341,7 @@ class PipelineRunner:
         Returns:
             Evaluation result dict or None if failed/cancelled
         """
-        from cookbooks.zero_shot_evaluation.zero_shot_pipeline import ZeroShotPipeline
+        from cookbooks.auto_arena.auto_arena_pipeline import AutoArenaPipeline
 
         self.progress = PipelineProgress()
         self.progress.started_at = datetime.now()
@@ -361,10 +361,10 @@ class PipelineRunner:
             self._notify_progress()
 
             # Build config
-            zs_config = self._build_zero_shot_config()
+            arena_config = self._build_arena_config()
 
             # Create pipeline
-            self._pipeline = ZeroShotPipeline(config=zs_config, resume=True)
+            self._pipeline = AutoArenaPipeline(config=arena_config, resume=True)
 
             # Stage 1: Generate queries
             self.progress.update_stage(PipelineStage.QUERIES, 0.0, "Generating test queries...")

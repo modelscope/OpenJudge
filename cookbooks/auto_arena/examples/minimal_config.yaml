@@ -1,7 +1,7 @@
 # =============================================================================
 # Minimal Configuration Example
 # =============================================================================
-# This is the minimum required configuration for zero-shot evaluation.
+# This is the minimum required configuration for Auto Arena evaluation.
 # Only required fields are specified; all other settings use defaults.
 # =============================================================================
 

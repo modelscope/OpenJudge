@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-"""End-to-end pipeline for zero-shot evaluation.
+"""End-to-end pipeline for Auto Arena evaluation.
 
-This module provides the ZeroShotPipeline class for end-to-end evaluation
-of AI models without labeled data. It integrates with OpenJudge's core
+This module provides the AutoArenaPipeline class for end-to-end evaluation
+of AI models or agents without labeled data. It integrates with OpenJudge's core
 components for grading, analysis, and rubric generation.
 
 Pipeline Steps:
@@ -23,14 +23,14 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from loguru import logger
 from pydantic import BaseModel, Field
 
-from cookbooks.zero_shot_evaluation.chart_generator import WinRateChartGenerator
-from cookbooks.zero_shot_evaluation.query_generator import QueryGenerator
-from cookbooks.zero_shot_evaluation.response_collector import ResponseCollector
-from cookbooks.zero_shot_evaluation.schema import (
+from cookbooks.auto_arena.chart_generator import WinRateChartGenerator
+from cookbooks.auto_arena.query_generator import QueryGenerator
+from cookbooks.auto_arena.response_collector import ResponseCollector
+from cookbooks.auto_arena.schema import (
+    AutoArenaConfig,
     ComparisonDetail,
     GeneratedQuery,
     OpenAIEndpoint,
-    ZeroShotConfig,
     load_config,
 )
 
@@ -281,7 +281,7 @@ class _CheckpointManager:
 
 
 class EvaluationResult(BaseModel):
-    """Result of zero-shot evaluation.
+    """Result of Auto Arena evaluation.
 
     Attributes:
         rankings: List of (model_name, win_rate) tuples sorted by win rate
@@ -321,19 +321,19 @@ class EvaluationResult(BaseModel):
 
 
 # =============================================================================
-# Zero-Shot Pipeline
+# Auto Arena Pipeline
 # =============================================================================
 
 
-class ZeroShotPipeline:
-    """End-to-end zero-shot evaluation pipeline with checkpoint support.
+class AutoArenaPipeline:
+    """End-to-end Auto Arena evaluation pipeline with checkpoint support.
 
     This pipeline automates the complete evaluation process:
     1. Generate diverse test queries based on task description
-    2. Collect responses from multiple target endpoints
+    2. Collect responses from multiple target endpoints (models/agents)
     3. Generate evaluation rubrics using LLM
-    4. Run pairwise comparisons between model responses
-    5. Analyze results and rank models
+    4. Run pairwise comparisons between responses
+    5. Analyze results and rank models/agents
 
     The pipeline integrates with OpenJudge's core components:
     - Uses TaskBasedRubricGenerator from openjudge.generator.simple_rubric for rubric generation
@@ -347,15 +347,15 @@ class ZeroShotPipeline:
         _rubrics: Generated rubrics
 
     Example:
-        >>> from cookbooks.zero_shot_evaluation import ZeroShotPipeline
-        >>> pipeline = ZeroShotPipeline.from_config("config.yaml")
+        >>> from cookbooks.auto_arena import AutoArenaPipeline
+        >>> pipeline = AutoArenaPipeline.from_config("config.yaml")
         >>> result = await pipeline.evaluate()
         >>> print(f"Best model: {result.best_pipeline}")
     """
 
     def __init__(
         self,
-        config: Optional[ZeroShotConfig] = None,
+        config: Optional[AutoArenaConfig] = None,
         *,
         task_description: Optional[str] = None,
         target_endpoints: Optional[Dict[str, OpenAIEndpoint]] = None,
@@ -363,7 +363,7 @@ class ZeroShotPipeline:
         num_queries: int = 20,
         resume: bool = True,
     ):
-        """Initialize ZeroShotPipeline.
+        """Initialize AutoArenaPipeline.
 
         Args:
             config: Complete configuration object
@@ -378,13 +378,13 @@ class ZeroShotPipeline:
         else:
             if not all([task_description, target_endpoints, judge_endpoint]):
                 raise ValueError("Must provide either config or all individual parameters")
-            from cookbooks.zero_shot_evaluation.schema import (
+            from cookbooks.auto_arena.schema import (
                 EvaluationConfig,
                 QueryGenerationConfig,
                 TaskConfig,
             )
 
-            self.config = ZeroShotConfig(
+            self.config = AutoArenaConfig(
                 task=TaskConfig(description=task_description),
                 target_endpoints=target_endpoints,
                 judge_endpoint=judge_endpoint,
@@ -402,14 +402,14 @@ class ZeroShotPipeline:
         self._resume = resume
 
     @classmethod
-    def from_config(cls, config_path: Union[str, Path]) -> "ZeroShotPipeline":
+    def from_config(cls, config_path: Union[str, Path]) -> "AutoArenaPipeline":
         """Create pipeline from configuration file.
 
         Args:
             config_path: Path to YAML configuration file
 
         Returns:
-            ZeroShotPipeline instance
+            AutoArenaPipeline instance
         """
         config = load_config(config_path)
         return cls(config=config)
@@ -739,7 +739,7 @@ class ZeroShotPipeline:
 
     async def _generate_and_save_report(self, result: EvaluationResult) -> None:
         """Generate and save evaluation report."""
-        from cookbooks.zero_shot_evaluation.report_generator import ReportGenerator
+        from cookbooks.auto_arena.report_generator import ReportGenerator
 
         logger.info("Step 6: Generating evaluation report...")
         generator = ReportGenerator(
@@ -782,7 +782,7 @@ class ZeroShotPipeline:
 
         # Header
         logger.info("\n" + "=" * 60)
-        logger.info("ZERO-SHOT EVALUATION RESULTS")
+        logger.info("AUTO ARENA EVALUATION RESULTS")
         logger.info("=" * 60)
 
         # Summary
@@ -859,3 +859,7 @@ class ZeroShotPipeline:
     def clear_checkpoint(self) -> None:
         """Clear all checkpoint data to start fresh."""
         self._checkpoint_mgr.clear()
+
+
+# Backwards compatibility alias
+ZeroShotPipeline = AutoArenaPipeline

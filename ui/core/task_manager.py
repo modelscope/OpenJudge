@@ -2,7 +2,7 @@
 """Task manager for background task management in OpenJudge Studio.
 
 This module provides a TaskManager for managing long-running tasks like
-Zero-Shot Evaluation, AutoRubric generation, etc. It supports:
+Auto Arena evaluation, AutoRubric generation, etc. It supports:
 - Task creation and tracking
 - Progress updates
 - Pause/resume functionality
@@ -34,7 +34,7 @@ class TaskStatus(str, Enum):
 class TaskType(str, Enum):
     """Type of task."""
 
-    ZERO_SHOT = "zero_shot"
+    AUTO_ARENA = "auto_arena"
     AUTORUBRIC = "autorubric"
     PAIRWISE_EVAL = "pairwise_eval"
     BATCH_GRADING = "batch_grading"

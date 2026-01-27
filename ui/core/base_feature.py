@@ -14,11 +14,11 @@ import streamlit as st
 class BaseFeature(ABC):
     """Abstract base class for all feature modules.
 
-    Each feature module (Grader, Zero-Shot, AutoRubric, etc.) must inherit
+    Each feature module (Grader, Auto Arena, AutoRubric, etc.) must inherit
     from this class and implement the required methods.
 
     Class Attributes:
-        feature_id: Unique identifier for the feature (e.g., "grader", "zero_shot")
+        feature_id: Unique identifier for the feature (e.g., "grader", "auto_arena")
         feature_name: Display name for the feature (e.g., "Grader 评估")
         feature_icon: Icon emoji for the feature (e.g., "⚖️")
         feature_description: Brief description of the feature

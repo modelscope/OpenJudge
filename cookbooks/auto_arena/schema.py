@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-"""Data schemas and configuration loading for zero-shot evaluation.
+"""Data schemas and configuration loading for Auto Arena.
 
 This module provides:
-- Data models for configuration (OpenAIEndpoint, ZeroShotConfig, etc.)
+- Data models for configuration (OpenAIEndpoint, AutoArenaConfig, etc.)
 - Configuration loading utilities (load_config, resolve_env_vars)
 """
 
@@ -113,8 +113,8 @@ class ReportConfig(BaseModel):
     chart: ChartConfig = Field(default_factory=ChartConfig, description="Chart configuration")
 
 
-class ZeroShotConfig(BaseModel):
-    """Complete zero-shot evaluation configuration."""
+class AutoArenaConfig(BaseModel):
+    """Complete Auto Arena evaluation configuration."""
 
     task: TaskConfig
     target_endpoints: Dict[str, OpenAIEndpoint]
@@ -123,6 +123,10 @@ class ZeroShotConfig(BaseModel):
     evaluation: EvaluationConfig = Field(default_factory=EvaluationConfig)
     output: OutputConfig = Field(default_factory=OutputConfig)
     report: ReportConfig = Field(default_factory=ReportConfig)
+
+
+# Backwards compatibility alias
+ZeroShotConfig = AutoArenaConfig
 
 
 class GeneratedQuery(BaseModel):
@@ -186,14 +190,14 @@ def resolve_env_vars(value: Any) -> Any:
     return value
 
 
-def load_config(config_path: Union[str, Path]) -> ZeroShotConfig:
+def load_config(config_path: Union[str, Path]) -> AutoArenaConfig:
     """Load and validate configuration from YAML file.
 
     Args:
         config_path: Path to the configuration file
 
     Returns:
-        Validated ZeroShotConfig object
+        Validated AutoArenaConfig object
 
     Raises:
         FileNotFoundError: If config file doesn't exist
@@ -210,7 +214,7 @@ def load_config(config_path: Union[str, Path]) -> ZeroShotConfig:
     resolved_config = resolve_env_vars(raw_config)
 
     # Validate and create config object
-    config = ZeroShotConfig(**resolved_config)
+    config = AutoArenaConfig(**resolved_config)
     logger.info(f"Loaded configuration from {config_path}")
     logger.info(f"Task: {config.task.description}")
     logger.info(f"Target endpoints: {list(config.target_endpoints.keys())}")
@@ -218,11 +222,11 @@ def load_config(config_path: Union[str, Path]) -> ZeroShotConfig:
     return config
 
 
-def config_to_dict(config: ZeroShotConfig) -> Dict[str, Any]:
-    """Convert ZeroShotConfig to dictionary (for serialization).
+def config_to_dict(config: AutoArenaConfig) -> Dict[str, Any]:
+    """Convert AutoArenaConfig to dictionary (for serialization).
 
     Args:
-        config: ZeroShotConfig object
+        config: AutoArenaConfig object
 
     Returns:
         Dictionary representation

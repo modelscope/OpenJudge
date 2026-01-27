@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Result panel for Zero-Shot Evaluation feature.
+"""Result panel for Auto Arena feature.
 
 Displays evaluation results including rankings, win rates, and reports.
 """

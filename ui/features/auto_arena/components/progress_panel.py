@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Progress panel for Zero-Shot Evaluation feature.
+"""Progress panel for Auto Arena feature.
 
 Displays real-time progress of the evaluation pipeline stages.
 """

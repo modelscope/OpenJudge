@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Zero-Shot Evaluation feature implementation for OpenJudge Studio."""
+"""Auto Arena feature implementation for OpenJudge Studio."""
 
 from datetime import datetime
 from pathlib import Path
@@ -7,14 +7,14 @@ from typing import Any
 
 import streamlit as st
 from core.base_feature import BaseFeature
-from features.zero_shot.components.config_panel import render_config_panel
-from features.zero_shot.components.history_panel import render_history_panel
-from features.zero_shot.components.progress_panel import render_progress_panel
-from features.zero_shot.components.report_viewer import render_report_viewer
-from features.zero_shot.components.result_panel import render_result_panel
-from features.zero_shot.components.sidebar import render_zero_shot_sidebar
-from features.zero_shot.services.history_manager import HistoryManager
-from features.zero_shot.services.pipeline_runner import (
+from features.auto_arena.components.config_panel import render_config_panel
+from features.auto_arena.components.history_panel import render_history_panel
+from features.auto_arena.components.progress_panel import render_progress_panel
+from features.auto_arena.components.report_viewer import render_report_viewer
+from features.auto_arena.components.result_panel import render_result_panel
+from features.auto_arena.components.sidebar import render_arena_sidebar
+from features.auto_arena.services.history_manager import HistoryManager
+from features.auto_arena.services.pipeline_runner import (
     PipelineProgress,
     PipelineRunner,
     PipelineStage,
@@ -23,40 +23,40 @@ from shared.i18n import t
 from shared.utils.helpers import run_async
 
 
-class ZeroShotFeature(BaseFeature):
-    """Zero-Shot Evaluation feature.
+class AutoArenaFeature(BaseFeature):
+    """Auto Arena feature.
 
-    Provides UI for running zero-shot evaluations that automatically
-    evaluate AI models without labeled data. The pipeline:
+    Provides UI for running automated model/agent evaluations that automatically
+    evaluate AI models or agents without labeled data. The pipeline:
     1. Generates test queries based on task description
-    2. Collects responses from multiple target models
+    2. Collects responses from multiple target models/agents
     3. Generates evaluation rubrics
     4. Runs pairwise comparisons
-    5. Analyzes and ranks models
+    5. Analyzes and ranks models/agents
     """
 
-    feature_id = "zero_shot"
-    feature_name = "Zero-Shot Evaluation"
-    feature_icon = "🎯"
-    feature_description = "Automatically evaluate AI models without labeled data"
+    feature_id = "auto_arena"
+    feature_name = "Auto Arena"
+    feature_icon = "🏟️"
+    feature_description = "Automated model/agent evaluation arena"
     order = 2
 
     # Session state keys
-    STATE_PROGRESS = "zs_progress"
-    STATE_RESULT = "zs_result"
-    STATE_OUTPUT_DIR = "zs_output_dir"
-    STATE_VIEWING_TASK = "zs_viewing_task"
+    STATE_PROGRESS = "arena_progress"
+    STATE_RESULT = "arena_result"
+    STATE_OUTPUT_DIR = "arena_output_dir"
+    STATE_VIEWING_TASK = "arena_viewing_task"
 
     def render_sidebar(self) -> dict[str, Any]:
-        """Render the zero-shot evaluation sidebar configuration.
+        """Render the Auto Arena sidebar configuration.
 
         Returns:
             Dictionary containing all sidebar configuration values
         """
-        return render_zero_shot_sidebar()
+        return render_arena_sidebar()
 
     def render_main_content(self, sidebar_config: dict[str, Any]) -> None:
-        """Render the main content area for zero-shot evaluation.
+        """Render the main content area for Auto Arena evaluation.
 
         Args:
             sidebar_config: Configuration from the sidebar
@@ -107,9 +107,9 @@ class ZeroShotFeature(BaseFeature):
         # Tab navigation with help as a third tab
         tab_new, tab_history, tab_help = st.tabs(
             [
-                f"🆕 {t('zeroshot.tabs.new')}",
-                f"📜 {t('zeroshot.tabs.history')}",
-                f"❓ {t('zeroshot.tabs.help')}",
+                f"🆕 {t('arena.tabs.new')}",
+                f"📜 {t('arena.tabs.history')}",
+                f"❓ {t('arena.tabs.help')}",
             ]
         )
 
@@ -140,7 +140,7 @@ class ZeroShotFeature(BaseFeature):
                 st.error(validation_msg)
 
             start_clicked = st.button(
-                f"🚀 {t('zeroshot.config.start')}",
+                f"🚀 {t('arena.config.start')}",
                 type="primary",
                 use_container_width=True,
                 disabled=not is_valid,
@@ -205,7 +205,7 @@ class ZeroShotFeature(BaseFeature):
         if details:
             output_dir = details.get("task_dir")
             st.session_state[self.STATE_OUTPUT_DIR] = output_dir
-            st.info(t("zeroshot.history.resuming", task_id=task_id))
+            st.info(t("arena.history.resuming", task_id=task_id))
 
             # Use PipelineRunner.resume to continue from checkpoint
             try:
@@ -213,18 +213,18 @@ class ZeroShotFeature(BaseFeature):
                 result = run_async(runner.run())
                 if result:
                     st.session_state[self.STATE_RESULT] = result
-                    st.success(t("zeroshot.history.resume_complete"))
+                    st.success(t("arena.history.resume_complete"))
             except Exception as e:
-                st.error(t("zeroshot.history.resume_failed", error=str(e)))
+                st.error(t("arena.history.resume_failed", error=str(e)))
 
     def _on_delete_task(self, task_id: str) -> None:
         """Handle delete task button click."""
         history_manager = HistoryManager()
         if history_manager.delete_task(task_id):
-            st.success(t("zeroshot.history.task_deleted", task_id=task_id))
+            st.success(t("arena.history.task_deleted", task_id=task_id))
             st.rerun()
         else:
-            st.error(t("zeroshot.history.delete_failed"))
+            st.error(t("arena.history.delete_failed"))
 
     def _on_back_from_report(self) -> None:
         """Handle back button from report viewer."""
@@ -252,7 +252,7 @@ class ZeroShotFeature(BaseFeature):
             Tuple of (is_valid, error_message)
         """
         if not config.get("task_description"):
-            return False, t("zeroshot.validation.task_required")
+            return False, t("arena.validation.task_required")
 
         endpoints = config.get("target_endpoints", {})
         valid_endpoints = [ep for ep in endpoints.values() if ep.get("api_key") and ep.get("model")]
@@ -261,11 +261,11 @@ class ZeroShotFeature(BaseFeature):
             configured = len(valid_endpoints)
             return (
                 False,
-                t("zeroshot.validation.min_models", configured=configured, total=total),
+                t("arena.validation.min_models", configured=configured, total=total),
             )
 
         if not config.get("judge_api_key"):
-            return False, t("zeroshot.validation.judge_api_required")
+            return False, t("arena.validation.judge_api_required")
 
         return True, ""
 
@@ -295,7 +295,7 @@ class ZeroShotFeature(BaseFeature):
 
         # Use st.status in the right panel for real-time progress display
         with progress_placeholder.container():
-            with st.status(f"🔄 {t('zeroshot.progress.running')}", expanded=True) as status:
+            with st.status(f"🔄 {t('arena.progress.running')}", expanded=True) as status:
                 try:
                     # Build config and create pipeline
                     runner = PipelineRunner(config)
@@ -303,33 +303,33 @@ class ZeroShotFeature(BaseFeature):
                     # Save UI config for resume capability
                     runner.save_config()
 
-                    zs_config = runner._build_zero_shot_config()  # pylint: disable=protected-access
+                    arena_config = runner._build_arena_config()  # pylint: disable=protected-access
 
-                    from cookbooks.zero_shot_evaluation.zero_shot_pipeline import (
-                        ZeroShotPipeline,
+                    from cookbooks.auto_arena.auto_arena_pipeline import (
+                        AutoArenaPipeline,
                     )
 
-                    status.update(label=f"🔄 {t('zeroshot.progress.initializing')}")
-                    st.write(f"**{t('zeroshot.progress.init_desc')}**")
-                    st.write(f"- {t('zeroshot.progress.task')}: {config.get('task_description', '')[:50]}...")
-                    st.write(f"- {t('zeroshot.progress.target_models')}: {len(config.get('target_endpoints', {}))}")
-                    st.write(f"- {t('zeroshot.progress.queries_to_generate')}: {config.get('num_queries', 20)}")
+                    status.update(label=f"🔄 {t('arena.progress.initializing')}")
+                    st.write(f"**{t('arena.progress.init_desc')}**")
+                    st.write(f"- {t('arena.progress.task')}: {config.get('task_description', '')[:50]}...")
+                    st.write(f"- {t('arena.progress.target_models')}: {len(config.get('target_endpoints', {}))}")
+                    st.write(f"- {t('arena.progress.queries_to_generate')}: {config.get('num_queries', 20)}")
 
                     # Create pipeline with resume support
-                    pipeline = ZeroShotPipeline(config=zs_config, resume=True)
+                    pipeline = AutoArenaPipeline(config=arena_config, resume=True)
 
-                    progress.update_stage(PipelineStage.QUERIES, 0.0, t("zeroshot.progress.running"))
+                    progress.update_stage(PipelineStage.QUERIES, 0.0, t("arena.progress.running"))
                     st.session_state[self.STATE_PROGRESS] = progress
 
-                    status.update(label=f"🔄 {t('zeroshot.progress.running_pipeline')}")
+                    status.update(label=f"🔄 {t('arena.progress.running_pipeline')}")
                     st.write("---")
-                    st.write(f"**{t('zeroshot.progress.running_pipeline')}** {t('zeroshot.progress.running_desc')}")
-                    st.write(f"{t('zeroshot.progress.pipeline_steps')}")
-                    st.write(f"1. {t('zeroshot.progress.step1')}")
-                    st.write(f"2. {t('zeroshot.progress.step2')}")
-                    st.write(f"3. {t('zeroshot.progress.step3')}")
-                    st.write(f"4. {t('zeroshot.progress.step4')}")
-                    st.write(f"5. {t('zeroshot.progress.step5')}")
+                    st.write(f"**{t('arena.progress.running_pipeline')}** {t('arena.progress.running_desc')}")
+                    st.write(f"{t('arena.progress.pipeline_steps')}")
+                    st.write(f"1. {t('arena.progress.step1')}")
+                    st.write(f"2. {t('arena.progress.step2')}")
+                    st.write(f"3. {t('arena.progress.step3')}")
+                    st.write(f"4. {t('arena.progress.step4')}")
+                    st.write(f"5. {t('arena.progress.step5')}")
 
                     # Run the complete evaluation pipeline
                     result = run_async(pipeline.evaluate())
@@ -344,16 +344,16 @@ class ZeroShotFeature(BaseFeature):
                     # Save results
                     pipeline.save_results(result)
 
-                    status.update(label=f"✅ {t('zeroshot.progress.complete')}", state="complete")
+                    status.update(label=f"✅ {t('arena.progress.complete')}", state="complete")
                     st.write("---")
-                    st.write(f"✅ **{t('zeroshot.progress.completed_success')}**")
-                    st.write(f"🏆 **{t('zeroshot.progress.best_model')}:** {result.best_pipeline}")
-                    st.write(f"📊 **{t('zeroshot.progress.total_queries')}:** {result.total_queries}")
-                    st.write(f"⚖️ **{t('zeroshot.progress.total_comparisons')}:** {result.total_comparisons}")
+                    st.write(f"✅ **{t('arena.progress.completed_success')}**")
+                    st.write(f"🏆 **{t('arena.progress.best_model')}:** {result.best_pipeline}")
+                    st.write(f"📊 **{t('arena.progress.total_queries')}:** {result.total_queries}")
+                    st.write(f"⚖️ **{t('arena.progress.total_comparisons')}:** {result.total_comparisons}")
 
                     # Show rankings
                     st.write("---")
-                    st.write(f"**{t('zeroshot.progress.rankings')}:**")
+                    st.write(f"**{t('arena.progress.rankings')}:**")
                     for rank, (name, win_rate) in enumerate(result.rankings, 1):
                         medal = "🥇" if rank == 1 else "🥈" if rank == 2 else "🥉" if rank == 3 else f"{rank}."
                         st.write(f"{medal} {name}: {win_rate:.1%}")
@@ -362,10 +362,10 @@ class ZeroShotFeature(BaseFeature):
                     progress.stage = PipelineStage.FAILED
                     progress.error = str(e)
                     st.session_state[self.STATE_PROGRESS] = progress
-                    status.update(label=f"❌ {t('zeroshot.progress.failed')}", state="error")
-                    st.error(t("zeroshot.progress.failed_msg", error=str(e)))
+                    status.update(label=f"❌ {t('arena.progress.failed')}", state="error")
+                    st.error(t("arena.progress.failed_msg", error=str(e)))
                     st.write("---")
-                    st.write(f"💡 **{t('zeroshot.progress.resume_tip')}**")
+                    st.write(f"💡 **{t('arena.progress.resume_tip')}**")
 
     def _render_quick_guide(self) -> None:
         """Render the quick start guide."""
@@ -373,30 +373,30 @@ class ZeroShotFeature(BaseFeature):
             f"""
             <div class="feature-card">
                 <div style="font-weight: 600; color: #F1F5F9; margin-bottom: 0.75rem;">
-                    {t("zeroshot.help.title")}
+                    {t("arena.help.title")}
                 </div>
                 <div class="guide-step">
                     <div class="guide-number">1</div>
                     <div class="guide-text">
-                        <strong>{t("zeroshot.help.step1_title")}:</strong> {t("zeroshot.help.step1_desc")}
+                        <strong>{t("arena.help.step1_title")}:</strong> {t("arena.help.step1_desc")}
                     </div>
                 </div>
                 <div class="guide-step">
                     <div class="guide-number">2</div>
                     <div class="guide-text">
-                        <strong>{t("zeroshot.help.step2_title")}:</strong> {t("zeroshot.help.step2_desc")}
+                        <strong>{t("arena.help.step2_title")}:</strong> {t("arena.help.step2_desc")}
                     </div>
                 </div>
                 <div class="guide-step">
                     <div class="guide-number">3</div>
                     <div class="guide-text">
-                        <strong>{t("zeroshot.help.step3_title")}:</strong> {t("zeroshot.help.step3_desc")}
+                        <strong>{t("arena.help.step3_title")}:</strong> {t("arena.help.step3_desc")}
                     </div>
                 </div>
                 <div class="guide-step">
                     <div class="guide-number">4</div>
                     <div class="guide-text">
-                        <strong>{t("zeroshot.help.step4_title")}:</strong> {t("zeroshot.help.step4_desc")}
+                        <strong>{t("arena.help.step4_title")}:</strong> {t("arena.help.step4_desc")}
                     </div>
                 </div>
             </div>
@@ -405,7 +405,7 @@ class ZeroShotFeature(BaseFeature):
         )
 
     def on_mount(self) -> None:
-        """Initialize zero-shot feature state when mounted."""
+        """Initialize Auto Arena feature state when mounted."""
         self._init_session_state()
 
     def on_unmount(self) -> None:

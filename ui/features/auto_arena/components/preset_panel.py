@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Preset management panel for Zero-Shot Evaluation.
+"""Preset management panel for Auto Arena.
 
 Provides UI for managing configuration presets:
 - Load/Save presets
@@ -10,19 +10,19 @@ Provides UI for managing configuration presets:
 from typing import Any, Callable
 
 import streamlit as st
-from features.zero_shot.services.preset_manager import PresetManager
+from features.auto_arena.services.preset_manager import PresetManager
 
 # Session state keys
-STATE_LOADED_PRESET = "zs_loaded_preset"  # Currently loaded preset name
-STATE_PENDING_DELETE = "zs_pending_delete"  # Preset waiting for delete confirmation
-STATE_SHOW_SAVE_DIALOG = "zs_show_save_dialog"
+STATE_LOADED_PRESET = "arena_loaded_preset"  # Currently loaded preset name
+STATE_PENDING_DELETE = "arena_pending_delete"  # Preset waiting for delete confirmation
+STATE_SHOW_SAVE_DIALOG = "arena_show_save_dialog"
 
 
 def _get_manager() -> PresetManager:
     """Get or create the preset manager instance."""
-    if "zs_preset_manager" not in st.session_state:
-        st.session_state["zs_preset_manager"] = PresetManager()
-    return st.session_state["zs_preset_manager"]
+    if "arena_preset_manager" not in st.session_state:
+        st.session_state["arena_preset_manager"] = PresetManager()
+    return st.session_state["arena_preset_manager"]
 
 
 def _is_builtin(manager: PresetManager, preset_name: str | None) -> bool:
@@ -61,7 +61,7 @@ def _render_preset_selector(
         "Preset",
         options=options,
         index=current_index,
-        key="zs_preset_dropdown",
+        key="arena_preset_dropdown",
         label_visibility="collapsed",
     )
 
@@ -91,7 +91,7 @@ def _render_save_dialog(get_config: Callable[[], tuple[dict, dict]]) -> None:
         "Name",
         placeholder="my_preset",
         help="Letters, numbers, underscores, hyphens only",
-        key="zs_save_name",
+        key="arena_save_name",
     )
 
     col1, col2, _ = st.columns([1, 1, 2])
@@ -215,7 +215,9 @@ def render_preset_panel(
             st.markdown("**Import / Export**")
 
             # Import
-            uploaded = st.file_uploader("Import", type=["yaml", "yml"], key="zs_import", label_visibility="collapsed")
+            uploaded = st.file_uploader(
+                "Import", type=["yaml", "yml"], key="arena_import", label_visibility="collapsed"
+            )
             if uploaded:
                 success, error, config = manager.import_from_file(uploaded.read())
                 if success and config:
@@ -234,7 +236,7 @@ def render_preset_panel(
             st.download_button(
                 "📤 Export YAML",
                 data=yaml_content,
-                file_name="zero_shot_config.yaml",
+                file_name="auto_arena_config.yaml",
                 mime="text/yaml",
                 key="btn_export",
                 use_container_width=True,

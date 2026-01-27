@@ -19,10 +19,10 @@ if str(UI_DIR) not in sys.path:
 import streamlit as st  # noqa: E402
 from core.feature_registry import FeatureRegistry  # noqa: E402
 from core.navigation import Navigation  # noqa: E402
+from features.auto_arena import AutoArenaFeature  # noqa: E402
 
 # Import feature modules
 from features.grader import GraderFeature  # noqa: E402
-from features.zero_shot import ZeroShotFeature  # noqa: E402
 from shared.components.common import render_footer  # noqa: E402
 from shared.components.logo import render_logo_and_title  # noqa: E402
 from shared.i18n import render_language_selector, t  # noqa: E402
@@ -37,7 +37,7 @@ from shared.styles.theme import inject_css  # noqa: E402
 # Register all available features
 # Add new features here as they are implemented
 FeatureRegistry.register(GraderFeature)
-FeatureRegistry.register(ZeroShotFeature)
+FeatureRegistry.register(AutoArenaFeature)
 # Future features:
 # from features.autorubric import AutoRubricFeature
 # FeatureRegistry.register(AutoRubricFeature)

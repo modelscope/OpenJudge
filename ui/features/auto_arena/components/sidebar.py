@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Sidebar component for Zero-Shot Evaluation feature."""
+"""Sidebar component for Auto Arena feature."""
 
 from typing import Any
 
@@ -8,8 +8,8 @@ from shared.constants import DEFAULT_API_ENDPOINTS, DEFAULT_MODELS
 from shared.i18n import t
 
 # Session state key for preset sidebar data
-STATE_PRESET_SIDEBAR = "zs_preset_sidebar"
-STATE_PRESET_LOAD_TRIGGER = "zs_preset_load_trigger"
+STATE_PRESET_SIDEBAR = "arena_preset_sidebar"
+STATE_PRESET_LOAD_TRIGGER = "arena_preset_load_trigger"
 
 
 def _apply_preset_sidebar_data() -> None:
@@ -26,30 +26,30 @@ def _apply_preset_sidebar_data() -> None:
             provider = prov
             break
 
-    st.session_state["zs_judge_provider"] = provider
+    st.session_state["arena_judge_provider"] = provider
     if provider == "Custom":
-        st.session_state["zs_judge_custom_endpoint"] = judge_endpoint
+        st.session_state["arena_judge_custom_endpoint"] = judge_endpoint
 
-    st.session_state["zs_judge_api_key"] = preset_data.get("judge_api_key", "")
+    st.session_state["arena_judge_api_key"] = preset_data.get("judge_api_key", "")
 
     # Judge model
     judge_model = preset_data.get("judge_model", "")
     if judge_model in DEFAULT_MODELS:
-        st.session_state["zs_judge_model"] = judge_model
+        st.session_state["arena_judge_model"] = judge_model
     else:
-        st.session_state["zs_judge_model"] = "Custom..."
-        st.session_state["zs_judge_custom_model"] = judge_model
+        st.session_state["arena_judge_model"] = "Custom..."
+        st.session_state["arena_judge_custom_model"] = judge_model
 
     # Evaluation settings
-    st.session_state["zs_num_queries"] = preset_data.get("num_queries", 20)
-    st.session_state["zs_max_concurrency"] = preset_data.get("max_concurrency", 10)
+    st.session_state["arena_num_queries"] = preset_data.get("num_queries", 20)
+    st.session_state["arena_max_concurrency"] = preset_data.get("max_concurrency", 10)
 
     # Output settings
-    st.session_state["zs_save_queries"] = preset_data.get("save_queries", True)
-    st.session_state["zs_save_responses"] = preset_data.get("save_responses", True)
-    st.session_state["zs_save_details"] = preset_data.get("save_details", True)
-    st.session_state["zs_generate_report"] = preset_data.get("generate_report", True)
-    st.session_state["zs_generate_chart"] = preset_data.get("generate_chart", True)
+    st.session_state["arena_save_queries"] = preset_data.get("save_queries", True)
+    st.session_state["arena_save_responses"] = preset_data.get("save_responses", True)
+    st.session_state["arena_save_details"] = preset_data.get("save_details", True)
+    st.session_state["arena_generate_report"] = preset_data.get("generate_report", True)
+    st.session_state["arena_generate_chart"] = preset_data.get("generate_chart", True)
 
     # Clear the preset data so it doesn't re-apply
     del st.session_state[STATE_PRESET_SIDEBAR]
@@ -57,14 +57,14 @@ def _apply_preset_sidebar_data() -> None:
 
 def _render_judge_settings(config: dict[str, Any]) -> None:
     """Render judge model settings section."""
-    st.markdown(f'<div class="section-header">{t("zeroshot.sidebar.judge_model")}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="section-header">{t("arena.sidebar.judge_model")}</div>', unsafe_allow_html=True)
 
     endpoint_choice = st.selectbox(
         t("api.provider"),
         options=list(DEFAULT_API_ENDPOINTS.keys()),
         index=0,
-        help=t("zeroshot.sidebar.judge_provider_help"),
-        key="zs_judge_provider",
+        help=t("arena.sidebar.judge_provider_help"),
+        key="arena_judge_provider",
     )
 
     if endpoint_choice == "Custom":
@@ -72,7 +72,7 @@ def _render_judge_settings(config: dict[str, Any]) -> None:
             t("api.custom_endpoint"),
             placeholder=t("api.custom_endpoint_placeholder"),
             help=t("api.custom_endpoint_help"),
-            key="zs_judge_custom_endpoint",
+            key="arena_judge_custom_endpoint",
         )
     else:
         api_endpoint = DEFAULT_API_ENDPOINTS[endpoint_choice]
@@ -81,8 +81,8 @@ def _render_judge_settings(config: dict[str, Any]) -> None:
         t("api.key"),
         type="password",
         placeholder=t("api.key_placeholder"),
-        help=t("zeroshot.sidebar.judge_api_key_help"),
-        key="zs_judge_api_key",
+        help=t("arena.sidebar.judge_api_key_help"),
+        key="arena_judge_api_key",
     )
 
     if api_key:
@@ -94,14 +94,14 @@ def _render_judge_settings(config: dict[str, Any]) -> None:
         t("model.select"),
         options=DEFAULT_MODELS + [t("model.custom")],
         index=0,
-        key="zs_judge_model",
+        key="arena_judge_model",
     )
 
     if model_option == t("model.custom"):
         model_name = st.text_input(
             t("model.custom_input"),
             placeholder=t("model.custom_placeholder"),
-            key="zs_judge_custom_model",
+            key="arena_judge_custom_model",
         )
     else:
         model_name = model_option
@@ -113,28 +113,28 @@ def _render_judge_settings(config: dict[str, Any]) -> None:
 
 def _render_evaluation_settings(config: dict[str, Any]) -> None:
     """Render evaluation settings section."""
-    st.markdown(f'<div class="section-header">{t("zeroshot.sidebar.eval_settings")}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="section-header">{t("arena.sidebar.eval_settings")}</div>', unsafe_allow_html=True)
 
     col1, col2 = st.columns(2)
 
     with col1:
         num_queries = st.number_input(
-            t("zeroshot.sidebar.queries"),
+            t("arena.sidebar.queries"),
             min_value=5,
             max_value=100,
             value=20,
             step=5,
-            help=t("zeroshot.sidebar.queries_help"),
-            key="zs_num_queries",
+            help=t("arena.sidebar.queries_help"),
+            key="arena_num_queries",
         )
 
     with col2:
         max_concurrency = st.number_input(
-            t("zeroshot.sidebar.concurrency"),
+            t("arena.sidebar.concurrency"),
             min_value=1,
             value=10,
-            help=t("zeroshot.sidebar.concurrency_help"),
-            key="zs_max_concurrency",
+            help=t("arena.sidebar.concurrency_help"),
+            key="arena_max_concurrency",
         )
 
     config["num_queries"] = num_queries
@@ -143,31 +143,31 @@ def _render_evaluation_settings(config: dict[str, Any]) -> None:
 
 def _render_output_settings(config: dict[str, Any]) -> None:
     """Render output settings section."""
-    with st.expander(t("zeroshot.sidebar.output_settings"), expanded=False):
+    with st.expander(t("arena.sidebar.output_settings"), expanded=False):
         save_queries = st.checkbox(
-            t("zeroshot.sidebar.save_queries"),
+            t("arena.sidebar.save_queries"),
             value=True,
-            key="zs_save_queries",
+            key="arena_save_queries",
         )
         save_responses = st.checkbox(
-            t("zeroshot.sidebar.save_responses"),
+            t("arena.sidebar.save_responses"),
             value=True,
-            key="zs_save_responses",
+            key="arena_save_responses",
         )
         save_details = st.checkbox(
-            t("zeroshot.sidebar.save_details"),
+            t("arena.sidebar.save_details"),
             value=True,
-            key="zs_save_details",
+            key="arena_save_details",
         )
         generate_report = st.checkbox(
-            t("zeroshot.sidebar.generate_report"),
+            t("arena.sidebar.generate_report"),
             value=True,
-            key="zs_generate_report",
+            key="arena_generate_report",
         )
         generate_chart = st.checkbox(
-            t("zeroshot.sidebar.generate_chart"),
+            t("arena.sidebar.generate_chart"),
             value=True,
-            key="zs_generate_chart",
+            key="arena_generate_chart",
         )
 
         config["save_queries"] = save_queries
@@ -177,8 +177,8 @@ def _render_output_settings(config: dict[str, Any]) -> None:
         config["generate_chart"] = generate_chart
 
 
-def render_zero_shot_sidebar() -> dict[str, Any]:
-    """Render the zero-shot evaluation sidebar and return configuration.
+def render_arena_sidebar() -> dict[str, Any]:
+    """Render the Auto Arena sidebar and return configuration.
 
     Returns:
         Dictionary containing all sidebar configuration values

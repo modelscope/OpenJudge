@@ -6,7 +6,7 @@ Features are registered with the FeatureRegistry and can be accessed via the
 navigation system.
 """
 
+from features.auto_arena import AutoArenaFeature
 from features.grader import GraderFeature
-from features.zero_shot import ZeroShotFeature
 
-__all__ = ["GraderFeature", "ZeroShotFeature"]
+__all__ = ["GraderFeature", "AutoArenaFeature"]

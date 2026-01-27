@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""History manager for Zero-Shot Evaluation tasks.
+"""History manager for Auto Arena tasks.
 
 Provides functionality to:
 - List past evaluation tasks

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Query generator for zero-shot evaluation with advanced optimization strategies.
+"""Query generator for Auto Arena evaluation with advanced optimization strategies.
 
 Features:
 - Iterative generation with deduplication
@@ -16,7 +16,7 @@ from typing import Dict, List, Optional, Set, Tuple
 from loguru import logger
 from tenacity import retry, stop_after_attempt, wait_exponential
 
-from cookbooks.zero_shot_evaluation.schema import (
+from cookbooks.auto_arena.schema import (
     GeneratedQuery,
     OpenAIEndpoint,
     QueryGenerationConfig,

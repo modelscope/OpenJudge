@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-"""CLI entry point for zero-shot evaluation.
+"""CLI entry point for Auto Arena evaluation.
 
 Usage:
-    python -m cookbooks.zero_shot_evaluation --config config.yaml
-    python -m cookbooks.zero_shot_evaluation --config config.yaml --save
-    python -m cookbooks.zero_shot_evaluation --config config.yaml --queries_file queries.json --save
+    python -m cookbooks.auto_arena --config config.yaml
+    python -m cookbooks.auto_arena --config config.yaml --save
+    python -m cookbooks.auto_arena --config config.yaml --queries_file queries.json --save
 """
 
 import asyncio
@@ -15,8 +15,8 @@ from typing import List, Optional
 import fire
 from loguru import logger
 
-from cookbooks.zero_shot_evaluation.schema import GeneratedQuery, load_config
-from cookbooks.zero_shot_evaluation.zero_shot_pipeline import ZeroShotPipeline
+from cookbooks.auto_arena.auto_arena_pipeline import AutoArenaPipeline
+from cookbooks.auto_arena.schema import GeneratedQuery, load_config
 
 
 def _load_queries_from_file(queries_file: str) -> List[GeneratedQuery]:
@@ -54,7 +54,7 @@ async def _run_evaluation(
     if queries_file:
         queries = _load_queries_from_file(queries_file)
 
-    pipeline = ZeroShotPipeline(config=config, resume=resume)
+    pipeline = AutoArenaPipeline(config=config, resume=resume)
     result = await pipeline.evaluate(queries=queries)
 
     if save:
@@ -68,7 +68,7 @@ def main(
     save: bool = False,
     fresh: bool = False,
 ) -> None:
-    """Zero-shot evaluation CLI with checkpoint support.
+    """Auto Arena evaluation CLI with checkpoint support.
 
     Args:
         config: Path to YAML configuration file
@@ -79,13 +79,13 @@ def main(
 
     Examples:
         # Normal run (auto-resumes from checkpoint)
-        python -m cookbooks.zero_shot_evaluation --config config.yaml --save
+        python -m cookbooks.auto_arena --config config.yaml --save
 
         # Use pre-generated queries
-        python -m cookbooks.zero_shot_evaluation --config config.yaml --queries_file queries.json --save
+        python -m cookbooks.auto_arena --config config.yaml --queries_file queries.json --save
 
         # Start fresh, ignore checkpoint
-        python -m cookbooks.zero_shot_evaluation --config config.yaml --fresh --save
+        python -m cookbooks.auto_arena --config config.yaml --fresh --save
     """
     config_path = Path(config)
     if not config_path.exists():
@@ -98,7 +98,7 @@ def main(
             logger.error(f"Queries file not found: {queries_file}")
             return
 
-    logger.info(f"Starting zero-shot evaluation with config: {config}")
+    logger.info(f"Starting Auto Arena evaluation with config: {config}")
     if queries_file:
         logger.info(f"Using pre-generated queries from: {queries_file}")
     if fresh:

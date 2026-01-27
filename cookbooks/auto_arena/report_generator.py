@@ -1,15 +1,11 @@
 # -*- coding: utf-8 -*-
-"""Report generator for zero-shot evaluation results."""
+"""Report generator for Auto Arena evaluation results."""
 
 import asyncio
 from typing import List
 
-from cookbooks.zero_shot_evaluation.schema import (
-    ComparisonDetail,
-    OpenAIEndpoint,
-    TaskConfig,
-)
-from cookbooks.zero_shot_evaluation.zero_shot_pipeline import EvaluationResult
+from cookbooks.auto_arena.auto_arena_pipeline import EvaluationResult
+from cookbooks.auto_arena.schema import ComparisonDetail, OpenAIEndpoint, TaskConfig
 from openjudge.models.openai_chat_model import OpenAIChatModel
 
 # Constants for report generation

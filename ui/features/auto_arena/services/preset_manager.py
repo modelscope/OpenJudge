@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-"""Preset manager for Zero-Shot Evaluation configurations.
+"""Preset manager for Auto Arena configurations.
 
 Handles saving, loading, importing, and exporting evaluation presets.
-Configuration format is compatible with cookbooks/zero_shot_evaluation config.yaml.
+Configuration format is compatible with cookbooks/auto_arena config.yaml.
 """
 
 import re
@@ -14,9 +14,9 @@ import yaml
 
 
 class PresetManager:
-    """Manages Zero-Shot Evaluation configuration presets.
+    """Manages Auto Arena configuration presets.
 
-    Presets are stored as YAML files in ~/.openjudge_studio/presets/zero_shot/
+    Presets are stored as YAML files in ~/.openjudge_studio/presets/auto_arena/
     The format is compatible with cookbooks config.yaml for interoperability.
     """
 
@@ -31,12 +31,12 @@ class PresetManager:
         """Initialize the preset manager.
 
         Args:
-            presets_dir: Custom presets directory. Defaults to ~/.openjudge_studio/presets/zero_shot/
+            presets_dir: Custom presets directory. Defaults to ~/.openjudge_studio/presets/auto_arena/
         """
         if presets_dir:
             self.presets_dir = Path(presets_dir)
         else:
-            self.presets_dir = Path.home() / ".openjudge_studio" / "presets" / "zero_shot"
+            self.presets_dir = Path.home() / ".openjudge_studio" / "presets" / "auto_arena"
 
         # Ensure directory exists
         self.presets_dir.mkdir(parents=True, exist_ok=True)

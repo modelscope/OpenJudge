@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Response collector for zero-shot evaluation."""
+"""Response collector for Auto Arena evaluation."""
 
 import asyncio
 from typing import Any, Dict, List, Optional
@@ -7,11 +7,7 @@ from typing import Any, Dict, List, Optional
 from loguru import logger
 from tenacity import retry, stop_after_attempt, wait_exponential
 
-from cookbooks.zero_shot_evaluation.schema import (
-    EvaluationConfig,
-    GeneratedQuery,
-    OpenAIEndpoint,
-)
+from cookbooks.auto_arena.schema import EvaluationConfig, GeneratedQuery, OpenAIEndpoint
 from openjudge.models.openai_chat_model import OpenAIChatModel
 from openjudge.models.schema.oai.message import ChatMessage
 from openjudge.utils.concurrency import ConcurrencyManager

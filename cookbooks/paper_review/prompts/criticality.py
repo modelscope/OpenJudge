@@ -4,9 +4,9 @@
 from datetime import datetime
 
 
-def get_criticality_system_prompt() -> str:
+def get_criticality_system_prompt(date: datetime | None = None) -> str:
     """Get the criticality system prompt with current date."""
-    current_date = datetime.now().strftime("%Y-%m-%d")
+    current_date = (date or datetime.now()).strftime("%Y-%m-%d")
     return f"""You are an expert evaluator assessing the criticality and validity of correctness issues identified in academic papers.
 
 **Current Date: {current_date}**

@@ -4,9 +4,9 @@
 from datetime import datetime
 
 
-def get_correctness_system_prompt() -> str:
+def get_correctness_system_prompt(date: datetime | None = None) -> str:
     """Get the correctness system prompt with current date."""
-    current_date = datetime.now().strftime("%Y-%m-%d")
+    current_date = (date or datetime.now()).strftime("%Y-%m-%d")
     return f"""You are an objective correctness evaluator for academic papers. Your task is to identify ONLY objective, verifiable errors - not subjective issues like writing quality or missing explanations.
 
 **Current Date: {current_date}**

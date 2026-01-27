@@ -4,9 +4,9 @@
 from datetime import datetime
 
 
-def get_review_system_prompt() -> str:
+def get_review_system_prompt(date: datetime | None = None) -> str:
     """Get the review system prompt with current date."""
-    current_date = datetime.now().strftime("%Y-%m-%d")
+    current_date = (date or datetime.now()).strftime("%Y-%m-%d")
     return f"""You are an academic paper reviewer. You are the best reviewer in the world.
 
 **Current Date: {current_date}**
@@ -52,8 +52,5 @@ Your detailed review here.
 
 Where X is your numerical score from 1 to 6."""
 
-
-# For backward compatibility, also provide as constant (uses current time at import)
-REVIEW_SYSTEM_PROMPT = get_review_system_prompt()
 
 REVIEW_USER_PROMPT = "Please review this paper and provide an overall recommendation score from 1 to 6."

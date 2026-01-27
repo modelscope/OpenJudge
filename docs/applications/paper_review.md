@@ -14,7 +14,7 @@ The pipeline automates five evaluation phases:
 
 | Phase | Component | Description |
 |-------|-----------|-------------|
-| 1 | Safety Checks | Detect jailbreaking attempts and format violations |
+| 1 | `Safety Checks` | Detect jailbreaking attempts and format violations |
 | 2 | `CorrectnessGrader` | Identify logical errors, contradictions, and factual issues |
 | 3 | `ReviewGrader` | Generate comprehensive scholarly review |
 | 4 | `CriticalityGrader` | Verify and classify detected issues by severity |
@@ -35,8 +35,8 @@ Get started with Paper Review in just a few lines of code:
     async def main():
         config = PipelineConfig(
             model_name="gemini-3-pro-preview",  # Recommended
-            api_key=os.environ.get("API_KEY", ""),
-            base_url="https://your-openai-proxy.com/v1",  # OpenAI-compatible proxy
+            api_key=os.environ.get("OPENAI_API_KEY", ""),
+            base_url=os.environ.get("OPENAI_BASE_URL", ""),  # OpenAI-compatible proxy
             timeout=1500,
             enable_safety_checks=True,
             enable_correctness=True,
@@ -69,8 +69,8 @@ Get started with Paper Review in just a few lines of code:
     async def main():
         config = PipelineConfig(
             model_name="gemini-3-pro-preview",  # Recommended
-            api_key=os.environ.get("API_KEY", ""),
-            base_url="https://your-openai-proxy.com/v1",  # OpenAI-compatible proxy
+            api_key=os.environ.get("OPENAI_API_KEY", ""),
+            base_url=os.environ.get("OPENAI_BASE_URL", ""),  # OpenAI-compatible proxy
             enable_bib_verification=True,
             crossref_mailto="your-email@example.com",  # For CrossRef API
         )
@@ -106,8 +106,8 @@ Get started with Paper Review in just a few lines of code:
     async def main():
         config = PipelineConfig(
             model_name="gemini-3-pro-preview",  # Recommended
-            api_key=os.environ.get("API_KEY", ""),
-            base_url="https://your-openai-proxy.com/v1",  # OpenAI-compatible proxy
+            api_key=os.environ.get("OPENAI_API_KEY", ""),
+            base_url=os.environ.get("OPENAI_BASE_URL", ""),  # OpenAI-compatible proxy
             enable_bib_verification=True,
             crossref_mailto="your-email@example.com",
         )
@@ -147,44 +147,6 @@ For optimal paper review quality, we recommend using advanced reasoning models:
     - **Cost Optimization**: Many proxy services offer competitive pricing and pay-as-you-go billing
     - **Simplified Integration**: No need to manage multiple API keys and endpoints
     - **Fallback Support**: Easily switch between models without code changes
-
-**Configuration Examples:**
-
-=== "Gemini (via Proxy)"
-
-    ```python
-    config = PipelineConfig(
-        model_name="gemini-3-pro-preview",
-        api_key=os.environ.get("API_KEY", ""),
-        base_url="https://your-openai-proxy.com/v1",  # OpenAI-compatible proxy
-        temperature=0.7,
-        timeout=1500,
-    )
-    ```
-
-=== "GPT-5.2 (via Proxy)"
-
-    ```python
-    config = PipelineConfig(
-        model_name="gpt-5.2",
-        api_key=os.environ.get("API_KEY", ""),
-        base_url="https://your-openai-proxy.com/v1",  # OpenAI-compatible proxy
-        temperature=0.7,
-        timeout=1500,
-    )
-    ```
-
-=== "OpenAI Direct"
-
-    ```python
-    config = PipelineConfig(
-        model_name="gpt-5.2",
-        api_key=os.environ.get("OPENAI_API_KEY", ""),
-        # base_url not needed for direct OpenAI access
-        temperature=0.7,
-        timeout=1500,
-    )
-    ```
 
 
 ## Component Guide
@@ -247,6 +209,15 @@ Generates a comprehensive scholarly review.
 | 2 | Weak Reject |
 | 1 | Reject |
 
+```python
+from cookbooks.paper_review.graders import ReviewGrader
+
+grader = ReviewGrader(model)
+result = await grader.aevaluate(pdf_data=pdf_base64)
+print(f"Score: {result.score}/6")
+print(f"Review: {result.metadata.get('review_text', '')}")
+```
+
 #### CriticalityGrader
 
 Verifies detected issues and classifies them by severity.
@@ -256,6 +227,19 @@ Verifies detected issues and classifies them by severity.
 - **Major**: Critical issues affecting paper validity
 - **Minor**: Issues that don't invalidate core contributions
 - **False Positives**: Initially flagged issues that are actually valid
+
+```python
+from cookbooks.paper_review.graders import CriticalityGrader
+
+grader = CriticalityGrader(model)
+result = await grader.aevaluate(
+    pdf_data=pdf_base64,
+    correctness_result=correctness_result,  # From CorrectnessGrader
+)
+print(f"Major issues: {result.metadata.get('major_issues', [])}")
+print(f"Minor issues: {result.metadata.get('minor_issues', [])}")
+print(f"False positives: {result.metadata.get('false_positives', [])}")
+```
 
 #### BibChecker
 

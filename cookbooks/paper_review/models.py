@@ -27,10 +27,6 @@ class LiteLLMModel:
         self.temperature = temperature
         self.timeout = timeout
 
-        # Set environment for litellm
-        if api_key:
-            os.environ["OPENAI_API_KEY"] = api_key
-
     async def achat(self, messages: List[dict], **kwargs) -> Any:
         """Async chat completion with PDF support."""
         import asyncio

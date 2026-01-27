@@ -133,11 +133,17 @@ class BibChecker:
             # 4. Crossref title search
             return self._verify_crossref_title(ref)
 
-        except Exception as e:
+        except httpx.RequestError as e:
             return VerificationResult(
                 reference=ref,
                 status=VerificationStatus.ERROR,
-                message=f"Error: {str(e)}",
+                message=f"Network error: {str(e)}",
+            )
+        except (KeyError, ValueError, TypeError) as e:
+            return VerificationResult(
+                reference=ref,
+                status=VerificationStatus.ERROR,
+                message=f"Data parsing error: {str(e)}",
             )
 
     def _verify_crossref_doi(self, ref: Reference) -> VerificationResult:
@@ -477,6 +483,17 @@ class BibChecker:
             "results": results,
         }
 
-    def __del__(self):
-        if hasattr(self, "client"):
+    def __enter__(self):
+        """Enter context manager."""
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Exit context manager."""
+        self.close()
+        return False
+
+    def close(self):
+        """Explicitly close the HTTP client."""
+        if hasattr(self, "client") and self.client is not None:
             self.client.close()
+            self.client = None

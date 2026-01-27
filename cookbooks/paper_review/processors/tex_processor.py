@@ -184,7 +184,7 @@ class TexPackageProcessor:
             try:
                 with open(path, "r", encoding="utf-8", errors="ignore") as f:
                     self._file_cache[path] = f.read()
-            except Exception:
+            except (FileNotFoundError, OSError, PermissionError):
                 self._file_cache[path] = ""
         return self._file_cache[path]
 

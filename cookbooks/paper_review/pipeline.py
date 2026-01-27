@@ -122,10 +122,12 @@ class PaperReviewPipeline:
             logger.info("Running criticality verification...")
             findings = self._format_findings(result.correctness)
             criticality = await self.criticality_grader.aevaluate(pdf_data=pdf_data, findings=findings)
+            from cookbooks.paper_review.schema import CriticalityIssues
+
             result.criticality = CriticalityResult(
                 score=criticality.score,
                 reasoning=criticality.reason,
-                issues=criticality.metadata.get("issues", {}),
+                issues=CriticalityIssues(**criticality.metadata.get("issues", {})),
             )
 
         # Phase 4: BibTeX verification

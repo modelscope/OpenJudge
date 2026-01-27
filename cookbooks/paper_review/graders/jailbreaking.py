@@ -8,6 +8,7 @@ from cookbooks.paper_review.prompts.jailbreaking import (
     JAILBREAKING_SYSTEM_PROMPT,
     JAILBREAKING_USER_PROMPT,
 )
+from cookbooks.paper_review.utils import extract_response_content
 from openjudge.graders.base_grader import GraderError, GraderMode, GraderScore
 from openjudge.graders.llm_grader import LLMGrader
 from openjudge.models.base_chat_model import BaseChatModel
@@ -67,12 +68,7 @@ class JailbreakingGrader(LLMGrader):
         try:
             messages = build_jailbreaking_messages(pdf_data)
             response = await self.model.achat(messages=messages)
-
-            if hasattr(response, "__aiter__"):
-                async for chunk in response:
-                    response = chunk
-
-            content = response.content if hasattr(response, "content") else str(response)
+            content = await extract_response_content(response)
             parsed = parse_jailbreaking_response(content)
 
             return GraderScore(

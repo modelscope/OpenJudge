@@ -6,6 +6,7 @@ import re
 from typing import List
 
 from cookbooks.paper_review.prompts.criticality import CRITICALITY_SYSTEM_PROMPT
+from cookbooks.paper_review.utils import extract_response_content
 from openjudge.graders.base_grader import GraderError, GraderMode, GraderScore
 from openjudge.graders.llm_grader import LLMGrader
 from openjudge.models.base_chat_model import BaseChatModel
@@ -83,12 +84,7 @@ class CriticalityGrader(LLMGrader):
         try:
             messages = build_criticality_messages(pdf_data, findings)
             response = await self.model.achat(messages=messages)
-
-            if hasattr(response, "__aiter__"):
-                async for chunk in response:
-                    response = chunk
-
-            content = response.content if hasattr(response, "content") else str(response)
+            content = await extract_response_content(response)
             parsed = parse_criticality_response(content)
 
             return GraderScore(

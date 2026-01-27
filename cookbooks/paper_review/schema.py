@@ -33,9 +33,9 @@ class ReviewResult(BaseModel):
 class CriticalityIssues(BaseModel):
     """Classified issues from criticality verification."""
 
-    major: List[Any] = Field(default_factory=list)  # Can be str or dict
-    minor: List[Any] = Field(default_factory=list)
-    false_positives: List[Any] = Field(default_factory=list)
+    major: List[str] = Field(default_factory=list)
+    minor: List[str] = Field(default_factory=list)
+    false_positives: List[str] = Field(default_factory=list)
 
 
 class CriticalityResult(BaseModel):

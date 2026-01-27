@@ -127,19 +127,19 @@ def generate_report(
         )
         issues = result.criticality.issues
         if issues:
-            if hasattr(issues, "major") and issues.major:
+            if issues.major:
                 lines.append("### Major Issues")
                 lines.append("")
                 for issue in issues.major:
                     lines.append(f"- 🔴 {issue}")
                 lines.append("")
-            if hasattr(issues, "minor") and issues.minor:
+            if issues.minor:
                 lines.append("### Minor Issues")
                 lines.append("")
                 for issue in issues.minor:
                     lines.append(f"- 🟡 {issue}")
                 lines.append("")
-            if hasattr(issues, "false_positives") and issues.false_positives:
+            if issues.false_positives:
                 lines.append("### False Positives")
                 lines.append("")
                 for issue in issues.false_positives:

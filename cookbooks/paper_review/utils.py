@@ -3,7 +3,29 @@
 
 import base64
 from pathlib import Path
-from typing import Union
+from typing import Any, Union
+
+
+async def extract_response_content(response: Any) -> str:
+    """Extract content from a model response, handling streaming responses.
+
+    This helper handles both regular and streaming (async iterator) responses
+    from chat models, providing a unified interface for response content extraction.
+
+    Args:
+        response: The response from model.achat(), which may be a regular
+                  response object or an async iterator for streaming.
+
+    Returns:
+        The extracted content string from the response.
+    """
+    # Handle streaming responses
+    if hasattr(response, "__aiter__"):
+        async for chunk in response:
+            response = chunk
+
+    # Extract content from response
+    return response.content if hasattr(response, "content") else str(response)
 
 
 def load_pdf_bytes(pdf_path: Union[str, Path]) -> bytes:

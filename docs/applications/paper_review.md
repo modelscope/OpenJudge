@@ -137,6 +137,9 @@ For optimal paper review quality, we recommend using advanced reasoning models:
 | `gemini-3-pro-preview` | Google | Comprehensive review with excellent multimodal understanding |
 | `gpt-5.2` | OpenAI | Deep logical analysis and nuanced critique |
 
+!!! note "Model Characteristics"
+    **GPT-5.2 excels at detecting subtle errors and inconsistencies**, making it ideal for rigorous correctness checking. In contrast, **Gemini-3.0-Pro tends to be overly generous with praise and may overlook critical issues** — use it when you need comprehensive coverage but verify findings with a more critical model.
+
 !!! warning "Model Requirements"
     Paper review requires models with strong reasoning capabilities and native PDF/image understanding. Smaller models may miss subtle logical errors or produce superficial reviews.
 

@@ -55,7 +55,8 @@ Comprehensive evaluation for AI agents across the entire lifecycle. [→ Detaile
 |--------|-------------|------|-------------|
 | `ToolSelectionGrader` | Evaluates appropriateness of tool selection | LLM-Based | 1-5 |
 | `ToolCallAccuracyGrader` | Checks tool call correctness | LLM-Based | 1-5 |
-| `ToolCallSequenceMatchGrader` | Validates tool call sequence | Code-Based | {0, 1} |
+| `ToolCallStepSequenceMatchGrader` | Multi-step tool sequence matching with step alignment for complex multi-turn agents | Code-Based | [0, 1] |
+| `ToolCallPrecisionRecallMatchGrader` | Simple precision/recall for flat tool call lists (single-step scenarios) | Code-Based | [0, 1] |
 | `ToolCallSuccessGrader` | Checks if tool calls succeeded | LLM-Based | {0, 1} |
 | `ToolParameterCheckGrader` | Validates tool parameters | LLM-Based | {0, 1} |
 
@@ -141,10 +142,9 @@ Evaluate vision-language tasks and image quality. [→ Detailed Documentation](m
 
 | Grader | Description | Type | Score Range |
 |--------|-------------|------|-------------|
-| `ImageCoherenceGrader` | Evaluates image-text coherence | LLM-Based | {0, 1} |
-| `ImageHelpfulnessGrader` | Assesses if images help understanding | LLM-Based | {0, 1} |
-| `TextToImageGrader` | Evaluates text-to-image generation quality | LLM-Based | {0, 1} |
-| `ImageEditingGrader` | Evaluates image editing quality | LLM-Based | {0, 1} |
+| `ImageCoherenceGrader` | Evaluates image-text coherence | LLM-Based | 1-5 |
+| `ImageHelpfulnessGrader` | Assesses if images help understanding | LLM-Based | 1-5 |
+| `TextToImageGrader` | Evaluates text-to-image generation quality | LLM-Based | 1-5 |
 
 ## Next Steps
 

@@ -5,8 +5,8 @@ import re
 from typing import List
 
 from cookbooks.paper_review.prompts.review import (
-    REVIEW_SYSTEM_PROMPT,
     REVIEW_USER_PROMPT,
+    get_review_system_prompt,
 )
 from cookbooks.paper_review.utils import extract_response_content
 from openjudge.graders.base_grader import GraderError, GraderMode, GraderScore
@@ -28,7 +28,7 @@ def parse_review_response(text: str) -> dict:
 def build_review_messages(pdf_data: str) -> List[dict]:
     """Build messages with PDF data properly injected."""
     return [
-        {"role": "system", "content": REVIEW_SYSTEM_PROMPT},
+        {"role": "system", "content": get_review_system_prompt()},
         {
             "role": "user",
             "content": [
@@ -57,7 +57,7 @@ class ReviewGrader(LLMGrader):
             mode=GraderMode.POINTWISE,
             description="Comprehensive paper review with recommendation score",
             model=model,
-            template=REVIEW_SYSTEM_PROMPT,  # Placeholder, not used
+            template="",  # Placeholder, not used
         )
 
     async def aevaluate(self, pdf_data: str) -> GraderScore:

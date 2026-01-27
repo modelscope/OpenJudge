@@ -1,7 +1,16 @@
 # -*- coding: utf-8 -*-
 """Prompts for criticality verification."""
 
-CRITICALITY_SYSTEM_PROMPT = """You are an expert evaluator assessing the criticality and validity of correctness issues identified in academic papers.
+from datetime import datetime
+
+
+def get_criticality_system_prompt() -> str:
+    """Get the criticality system prompt with current date."""
+    current_date = datetime.now().strftime("%Y-%m-%d")
+    return f"""You are an expert evaluator assessing the criticality and validity of correctness issues identified in academic papers.
+
+**Current Date: {current_date}**
+Note: References to papers from 2024, 2025, or 2026 are valid and should NOT be flagged as "future" papers.
 
 An automated correctness detector has analyzed a paper and identified potential errors. The detector assigned a score:
 1 = No errors, 2 = Minor errors, 3 = Major errors

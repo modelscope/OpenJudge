@@ -5,8 +5,8 @@ import re
 from typing import List
 
 from cookbooks.paper_review.prompts.correctness import (
-    CORRECTNESS_SYSTEM_PROMPT,
     CORRECTNESS_USER_PROMPT,
+    get_correctness_system_prompt,
 )
 from cookbooks.paper_review.utils import extract_response_content
 from openjudge.graders.base_grader import GraderError, GraderMode, GraderScore
@@ -34,7 +34,7 @@ def parse_correctness_response(text: str) -> dict:
 def build_correctness_messages(pdf_data: str) -> List[dict]:
     """Build messages with PDF data properly injected."""
     return [
-        {"role": "system", "content": CORRECTNESS_SYSTEM_PROMPT},
+        {"role": "system", "content": get_correctness_system_prompt()},
         {
             "role": "user",
             "content": [
@@ -60,7 +60,7 @@ class CorrectnessGrader(LLMGrader):
             mode=GraderMode.POINTWISE,
             description="Detect objective errors in academic papers",
             model=model,
-            template=CORRECTNESS_SYSTEM_PROMPT,  # Placeholder, not used
+            template="",  # Placeholder, not used
         )
 
     async def aevaluate(self, pdf_data: str) -> GraderScore:

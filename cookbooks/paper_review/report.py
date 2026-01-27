@@ -72,10 +72,12 @@ def generate_report(
 
     # Correctness Check
     if result.correctness:
+        # Convert to positive scoring: 1->3 (best), 2->2, 3->1 (worst)
+        display_score = 4 - result.correctness.score
         score_labels = {
-            1: "No objective errors detected",
+            3: "No objective errors detected",
             2: "Minor errors present",
-            3: "Major errors detected",
+            1: "Major errors detected",
         }
         lines.extend(
             [
@@ -83,9 +85,9 @@ def generate_report(
                 "",
                 "## 3. Correctness Analysis",
                 "",
-                f"**Score**: {result.correctness.score}/3 - {score_labels.get(result.correctness.score, '')}",
+                f"**Score**: {display_score}/3 - {score_labels.get(display_score, '')}",
                 "",
-                _score_bar(result.correctness.score, 3, reverse=True),
+                _score_bar(display_score, 3),
                 "",
                 "### Reasoning",
                 "",
@@ -106,10 +108,12 @@ def generate_report(
 
     # Criticality Verification
     if result.criticality:
+        # Convert to positive scoring: 1->3 (best), 2->2, 3->1 (worst)
+        display_score = 4 - result.criticality.score
         score_labels = {
-            1: "No genuine errors (false positives)",
+            3: "No genuine errors (false positives)",
             2: "Minor errors, main contributions valid",
-            3: "Major errors compromising validity",
+            1: "Major errors compromising validity",
         }
         lines.extend(
             [
@@ -117,7 +121,9 @@ def generate_report(
                 "",
                 "## 4. Criticality Verification",
                 "",
-                f"**Score**: {result.criticality.score}/3 - {score_labels.get(result.criticality.score, '')}",
+                f"**Score**: {display_score}/3 - {score_labels.get(display_score, '')}",
+                "",
+                _score_bar(display_score, 3),
                 "",
                 "### Reasoning",
                 "",
@@ -215,15 +221,8 @@ def generate_report(
     return report
 
 
-def _score_bar(score: int, max_score: int, reverse: bool = False) -> str:
-    """Generate a visual score bar."""
-    if reverse:
-        # For correctness: lower is better
-        filled = max_score - score + 1
-        empty = score - 1
-        return f"{'🟢' * filled}{'⚪' * empty} ({score}/{max_score})"
-    else:
-        # For review: higher is better
-        filled = score
-        empty = max_score - score
-        return f"{'🟢' * filled}{'⚪' * empty} ({score}/{max_score})"
+def _score_bar(score: int, max_score: int) -> str:
+    """Generate a visual score bar (higher is always better)."""
+    filled = score
+    empty = max_score - score
+    return f"{'🟢' * filled}{'⚪' * empty} ({score}/{max_score})"

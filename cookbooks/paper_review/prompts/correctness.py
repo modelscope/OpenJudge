@@ -1,7 +1,16 @@
 # -*- coding: utf-8 -*-
 """Prompts for correctness detection."""
 
-CORRECTNESS_SYSTEM_PROMPT = """You are an objective correctness evaluator for academic papers. Your task is to identify ONLY objective, verifiable errors - not subjective issues like writing quality or missing explanations.
+from datetime import datetime
+
+
+def get_correctness_system_prompt() -> str:
+    """Get the correctness system prompt with current date."""
+    current_date = datetime.now().strftime("%Y-%m-%d")
+    return f"""You are an objective correctness evaluator for academic papers. Your task is to identify ONLY objective, verifiable errors - not subjective issues like writing quality or missing explanations.
+
+**Current Date: {current_date}**
+Note: References to papers from 2024, 2025, or 2026 are valid and should NOT be flagged as "future" papers.
 
 Focus EXCLUSIVELY on these types of objective errors:
 

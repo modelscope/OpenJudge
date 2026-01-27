@@ -5,7 +5,7 @@ import json
 import re
 from typing import List
 
-from cookbooks.paper_review.prompts.criticality import CRITICALITY_SYSTEM_PROMPT
+from cookbooks.paper_review.prompts.criticality import get_criticality_system_prompt
 from cookbooks.paper_review.utils import extract_response_content
 from openjudge.graders.base_grader import GraderError, GraderMode, GraderScore
 from openjudge.graders.llm_grader import LLMGrader
@@ -42,7 +42,7 @@ def build_criticality_messages(pdf_data: str, findings: str) -> List[dict]:
 Carefully verify each issue against the actual paper content. Classify each issue by severity and assign an overall score from 1 to 3."""
 
     return [
-        {"role": "system", "content": CRITICALITY_SYSTEM_PROMPT},
+        {"role": "system", "content": get_criticality_system_prompt()},
         {
             "role": "user",
             "content": [
@@ -68,7 +68,7 @@ class CriticalityGrader(LLMGrader):
             mode=GraderMode.POINTWISE,
             description="Verify criticality of identified issues",
             model=model,
-            template=CRITICALITY_SYSTEM_PROMPT,  # Placeholder, not used
+            template="",  # Placeholder, not used
         )
 
     async def aevaluate(self, pdf_data: str, findings: str) -> GraderScore:

@@ -35,7 +35,7 @@ class PipelineConfig:
     api_key: str = ""
     base_url: Optional[str] = None
     temperature: float = 0.7
-    timeout: int = 1500
+    timeout: int = 7500  # 扩大5倍：支持更长论文
     enable_safety_checks: bool = True
     enable_correctness: bool = True
     enable_review: bool = True

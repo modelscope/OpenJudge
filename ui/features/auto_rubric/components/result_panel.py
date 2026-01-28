@@ -147,28 +147,32 @@ def render_export_section(config: dict[str, Any]) -> None:
     export_service = ExportService()
     grader_name = config.get("grader_name", "grader")
 
-    # Export format selection
-    export_format = st.selectbox(
+    # Export format selection - use stable values to survive UI language switch
+    format_values = ["python", "yaml", "json"]
+    format_labels = {
+        "python": t("rubric.export.python"),
+        "yaml": t("rubric.export.yaml"),
+        "json": t("rubric.export.json"),
+    }
+
+    if "rubric_export_format" not in st.session_state:
+        st.session_state["rubric_export_format"] = "python"
+
+    format_type = st.selectbox(
         t("rubric.export.format"),
-        options=[
-            t("rubric.export.python"),
-            t("rubric.export.yaml"),
-            t("rubric.export.json"),
-        ],
+        options=format_values,
+        format_func=lambda x: format_labels.get(x, x),
         key="rubric_export_format",
     )
 
-    # Determine format type
-    if export_format == t("rubric.export.python"):
-        format_type = "python"
+    # Determine format type and content
+    if format_type == "python":
         content = export_service.export_python(config)
         language = "python"
-    elif export_format == t("rubric.export.yaml"):
-        format_type = "yaml"
+    elif format_type == "yaml":
         content = export_service.export_yaml(config)
         language = "yaml"
     else:
-        format_type = "json"
         content = export_service.export_json(config)
         language = "json"
 

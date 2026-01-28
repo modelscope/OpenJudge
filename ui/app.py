@@ -26,7 +26,11 @@ from features.auto_rubric import AutoRubricFeature  # noqa: E402
 from features.grader import GraderFeature  # noqa: E402
 from shared.components.common import render_footer  # noqa: E402
 from shared.components.logo import render_logo_and_title  # noqa: E402
-from shared.i18n import render_language_selector, t  # noqa: E402
+from shared.i18n import (  # noqa: E402
+    inject_language_loader,
+    render_language_selector,
+    t,
+)
 from shared.styles.theme import inject_css  # noqa: E402
 
 # pylint: enable=wrong-import-position
@@ -56,6 +60,9 @@ def main() -> None:
     """Main function to run the OpenJudge Studio application."""
     # Inject custom CSS
     inject_css()
+
+    # Load language preference from browser localStorage
+    inject_language_loader()
 
     # ========================================================================
     # Sidebar Configuration

@@ -22,10 +22,13 @@ def _render_llm_config(config: dict[str, Any]) -> None:
     )
 
     # API Provider selection
+    provider_options = list(DEFAULT_API_ENDPOINTS.keys())
+    if "rubric_api_provider" not in st.session_state:
+        st.session_state["rubric_api_provider"] = provider_options[0]
+
     provider = st.selectbox(
         t("api.provider"),
-        options=list(DEFAULT_API_ENDPOINTS.keys()),
-        index=0,
+        options=provider_options,
         help=t("rubric.sidebar.provider_help"),
         key="rubric_api_provider",
     )
@@ -55,16 +58,26 @@ def _render_llm_config(config: dict[str, Any]) -> None:
     else:
         st.warning(t("api.key_required"))
 
-    # Model selection
+    # Model selection - use stable value for custom option to survive UI language switch
+    CUSTOM_VALUE = "_custom_"
+    model_options = DEFAULT_MODELS + [CUSTOM_VALUE]
+
+    def format_model_option(x: str) -> str:
+        return t("model.custom") if x == CUSTOM_VALUE else x
+
+    # Initialize default value in session state if not exists
+    if "rubric_model_value" not in st.session_state:
+        st.session_state["rubric_model_value"] = DEFAULT_MODELS[0] if DEFAULT_MODELS else CUSTOM_VALUE
+
     model_option = st.selectbox(
         t("model.select"),
-        options=DEFAULT_MODELS + [t("model.custom")],
-        index=0,
+        options=model_options,
+        format_func=format_model_option,
         help=t("rubric.sidebar.model_help"),
-        key="rubric_model",
+        key="rubric_model_value",
     )
 
-    if model_option == t("model.custom"):
+    if model_option == CUSTOM_VALUE:
         model_name = st.text_input(
             t("model.custom_input"),
             placeholder=t("model.custom_placeholder"),
@@ -85,30 +98,40 @@ def _render_generation_settings(config: dict[str, Any]) -> None:
         unsafe_allow_html=True,
     )
 
-    # Language selection
-    language_options = {"English": "EN", "中文": "ZH"}
-    language_display = st.selectbox(
-        t("rubric.sidebar.language"),
-        options=list(language_options.keys()),
-        index=0,
-        help=t("rubric.sidebar.language_help"),
-        key="rubric_language",
-    )
-    language = language_options[language_display]
+    # Language selection - use stable keys to survive UI language switch
+    language_values = ["EN", "ZH"]
+    language_labels = {"EN": "English", "ZH": "中文"}
 
-    # Evaluation mode
-    mode_options = {
-        t("rubric.sidebar.pointwise"): "pointwise",
-        t("rubric.sidebar.listwise"): "listwise",
-    }
-    mode_display = st.selectbox(
-        t("rubric.sidebar.eval_mode"),
-        options=list(mode_options.keys()),
-        index=0,
-        help=t("rubric.sidebar.eval_mode_help"),
-        key="rubric_eval_mode",
+    # Initialize default value in session state if not exists
+    if "rubric_language_value" not in st.session_state:
+        st.session_state["rubric_language_value"] = "EN"
+
+    language = st.selectbox(
+        t("rubric.sidebar.language"),
+        options=language_values,
+        format_func=lambda x: language_labels.get(x, x),
+        help=t("rubric.sidebar.language_help"),
+        key="rubric_language_value",
     )
-    grader_mode = mode_options[mode_display]
+
+    # Evaluation mode - use stable values to survive UI language switch
+    mode_values = ["pointwise", "listwise"]
+    mode_labels = {
+        "pointwise": t("rubric.sidebar.pointwise"),
+        "listwise": t("rubric.sidebar.listwise"),
+    }
+
+    # Initialize default value in session state if not exists
+    if "rubric_eval_mode_value" not in st.session_state:
+        st.session_state["rubric_eval_mode_value"] = "pointwise"
+
+    grader_mode = st.selectbox(
+        t("rubric.sidebar.eval_mode"),
+        options=mode_values,
+        format_func=lambda x: mode_labels.get(x, x),
+        help=t("rubric.sidebar.eval_mode_help"),
+        key="rubric_eval_mode_value",
+    )
 
     # Score range (only for pointwise mode)
     if grader_mode == "pointwise":

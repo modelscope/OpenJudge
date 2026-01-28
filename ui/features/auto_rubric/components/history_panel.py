@@ -201,25 +201,31 @@ def _render_export_modal(task_id: str) -> None:
         export_service = ExportService()
         grader_name = grader_config.get("grader_name", "grader")
 
-        export_format = st.selectbox(
+        # Use stable values to survive UI language switch
+        format_values = ["python", "yaml", "json"]
+        format_labels = {
+            "python": t("rubric.export.python"),
+            "yaml": t("rubric.export.yaml"),
+            "json": t("rubric.export.json"),
+        }
+
+        export_key = f"export_format_{task_id}"
+        if export_key not in st.session_state:
+            st.session_state[export_key] = "python"
+
+        format_type = st.selectbox(
             t("rubric.export.format"),
-            options=[
-                t("rubric.export.python"),
-                t("rubric.export.yaml"),
-                t("rubric.export.json"),
-            ],
-            key=f"export_format_{task_id}",
+            options=format_values,
+            format_func=lambda x: format_labels.get(x, x),
+            key=export_key,
         )
 
-        if export_format == t("rubric.export.python"):
+        if format_type == "python":
             content = export_service.export_python(grader_config)
-            format_type = "python"
-        elif export_format == t("rubric.export.yaml"):
+        elif format_type == "yaml":
             content = export_service.export_yaml(grader_config)
-            format_type = "yaml"
         else:
             content = export_service.export_json(grader_config)
-            format_type = "json"
 
         filename = export_service.get_filename(grader_name, format_type)
 
@@ -336,25 +342,31 @@ def render_task_detail(
     export_service = ExportService()
     grader_name = config.get("grader_name", "grader")
 
-    export_format = st.selectbox(
+    # Use stable values to survive UI language switch
+    format_values = ["python", "yaml", "json"]
+    format_labels = {
+        "python": t("rubric.export.python"),
+        "yaml": t("rubric.export.yaml"),
+        "json": t("rubric.export.json"),
+    }
+
+    detail_export_key = f"detail_export_format_{task_id}"
+    if detail_export_key not in st.session_state:
+        st.session_state[detail_export_key] = "python"
+
+    lang = st.selectbox(
         t("rubric.export.format"),
-        options=[
-            t("rubric.export.python"),
-            t("rubric.export.yaml"),
-            t("rubric.export.json"),
-        ],
-        key=f"detail_export_format_{task_id}",
+        options=format_values,
+        format_func=lambda x: format_labels.get(x, x),
+        key=detail_export_key,
     )
 
-    if export_format == t("rubric.export.python"):
+    if lang == "python":
         content = export_service.export_python(grader_config)
-        lang = "python"
-    elif export_format == t("rubric.export.yaml"):
+    elif lang == "yaml":
         content = export_service.export_yaml(grader_config)
-        lang = "yaml"
     else:
         content = export_service.export_json(grader_config)
-        lang = "json"
 
     with st.expander(t("rubric.export.preview"), expanded=False):
         st.code(content, language=lang)

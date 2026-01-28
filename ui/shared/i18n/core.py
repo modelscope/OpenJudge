@@ -11,6 +11,7 @@ from shared.i18n.translations import get_all_translations
 
 # Session state key for UI language
 UI_LANGUAGE_KEY = "_ui_language"
+UI_LANGUAGE_INITIALIZED = "_ui_language_initialized"
 
 # Supported languages
 SUPPORTED_LANGUAGES = {
@@ -31,12 +32,25 @@ def get_available_languages() -> dict[str, str]:
     return SUPPORTED_LANGUAGES.copy()
 
 
+def _init_language_from_storage() -> None:
+    """Initialize language from localStorage on first load."""
+    if UI_LANGUAGE_INITIALIZED not in st.session_state:
+        st.session_state[UI_LANGUAGE_INITIALIZED] = True
+        # Check query params for language (set by JavaScript from localStorage)
+        params = st.query_params
+        if "lang" in params:
+            lang = params.get("lang")
+            if lang in SUPPORTED_LANGUAGES:
+                st.session_state[UI_LANGUAGE_KEY] = lang
+
+
 def get_ui_language() -> str:
     """Get current UI language from session state.
 
     Returns:
         Current language code (e.g., 'zh', 'en')
     """
+    _init_language_from_storage()
     return st.session_state.get(UI_LANGUAGE_KEY, DEFAULT_LANGUAGE)
 
 
@@ -95,6 +109,17 @@ def t(key: str, **kwargs: Any) -> str:
     return text
 
 
+def _save_language_to_storage(lang: str) -> None:
+    """Save language to browser localStorage via JavaScript."""
+    # Use st.markdown with script tag - lighter than components.html
+    js_code = f"""
+    <script>
+        localStorage.setItem('openjudge_ui_language', '{lang}');
+    </script>
+    """
+    st.markdown(js_code, unsafe_allow_html=True)
+
+
 def render_language_selector(position: str = "sidebar") -> None:
     """Render language selector widget.
 
@@ -103,6 +128,10 @@ def render_language_selector(position: str = "sidebar") -> None:
     """
     current = get_ui_language()
     options = list(SUPPORTED_LANGUAGES.keys())
+
+    # Initialize the selector key in session state to match current language
+    if "_ui_lang_selector" not in st.session_state:
+        st.session_state["_ui_lang_selector"] = current
 
     # Custom styling for compact selector
     if position == "sidebar":
@@ -117,7 +146,6 @@ def render_language_selector(position: str = "sidebar") -> None:
                 "Language",
                 options=options,
                 format_func=lambda x: SUPPORTED_LANGUAGES[x],
-                index=options.index(current) if current in options else 0,
                 key="_ui_lang_selector",
                 label_visibility="collapsed",
             )
@@ -126,10 +154,44 @@ def render_language_selector(position: str = "sidebar") -> None:
             "🌐 Language / 语言",
             options=options,
             format_func=lambda x: SUPPORTED_LANGUAGES[x],
-            index=options.index(current) if current in options else 0,
             key="_ui_lang_selector",
         )
 
+    # Handle language change
     if selected != current:
         set_ui_language(selected)
+        # Save to localStorage only when language changes
+        _save_language_to_storage(selected)
         st.rerun()
+
+
+def inject_language_loader() -> None:
+    """Inject JavaScript to load language from localStorage on page load.
+
+    Call this once at the start of the app to restore language preference.
+    """
+    # Only inject once per session to avoid repeated reloads
+    if "_lang_loader_injected" in st.session_state:
+        return
+    st.session_state["_lang_loader_injected"] = True
+
+    js_code = """
+    <script>
+        (function() {
+            const savedLang = localStorage.getItem('openjudge_ui_language');
+            if (savedLang && (savedLang === 'zh' || savedLang === 'en')) {
+                const url = new URL(window.location.href);
+                const currentLang = url.searchParams.get('lang');
+                if (currentLang !== savedLang) {
+                    url.searchParams.set('lang', savedLang);
+                    window.history.replaceState({}, '', url);
+                    // Only reload if this is the first load (no lang param was set)
+                    if (!currentLang) {
+                        window.location.reload();
+                    }
+                }
+            }
+        })();
+    </script>
+    """
+    st.markdown(js_code, unsafe_allow_html=True)

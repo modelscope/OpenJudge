@@ -201,6 +201,7 @@ def _render_score_distribution(results: list[dict[str, Any]], score_range: tuple
 def _render_results_table(
     results: list[dict[str, Any]],
     score_range: tuple[float, float],
+    task_id: str,
     page_size: int = 20,
 ) -> None:
     """Render paginated results table."""
@@ -214,7 +215,7 @@ def _render_results_table(
         filter_option = st.selectbox(
             "Filter / 筛选",
             options=["All", "Passed", "Failed", "Errors"],
-            key="batch_result_filter",
+            key=f"batch_result_filter_{task_id}",
             label_visibility="collapsed",
         )
 
@@ -222,7 +223,7 @@ def _render_results_table(
         sort_option = st.selectbox(
             "Sort / 排序",
             options=["Index ↑", "Index ↓", "Score ↑", "Score ↓"],
-            key="batch_result_sort",
+            key=f"batch_result_sort_{task_id}",
             label_visibility="collapsed",
         )
 
@@ -349,6 +350,7 @@ def _render_export_buttons(task_id: str, history_manager: BatchHistoryManager) -
                 file_name=f"{task_id}_results.json",
                 mime="application/json",
                 use_container_width=True,
+                key=f"download_json_{task_id}",
             )
 
     with col2:
@@ -360,6 +362,7 @@ def _render_export_buttons(task_id: str, history_manager: BatchHistoryManager) -
                 file_name=f"{task_id}_results.csv",
                 mime="text/csv",
                 use_container_width=True,
+                key=f"download_csv_{task_id}",
             )
 
 
@@ -419,7 +422,7 @@ def render_batch_result_panel(
             </div>""",
             unsafe_allow_html=True,
         )
-        _render_results_table(results, score_range)
+        _render_results_table(results, score_range, task_id)
 
 
 def render_empty_result_state() -> None:

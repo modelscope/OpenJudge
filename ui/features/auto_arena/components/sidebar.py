@@ -32,12 +32,13 @@ def _apply_preset_sidebar_data() -> None:
 
     st.session_state["arena_judge_api_key"] = preset_data.get("judge_api_key", "")
 
-    # Judge model
+    # Judge model - use stable value for custom option
+    CUSTOM_VALUE = "_custom_"
     judge_model = preset_data.get("judge_model", "")
     if judge_model in DEFAULT_MODELS:
-        st.session_state["arena_judge_model"] = judge_model
+        st.session_state["arena_judge_model_value"] = judge_model
     else:
-        st.session_state["arena_judge_model"] = "Custom..."
+        st.session_state["arena_judge_model_value"] = CUSTOM_VALUE
         st.session_state["arena_judge_custom_model"] = judge_model
 
     # Evaluation settings
@@ -59,10 +60,13 @@ def _render_judge_settings(config: dict[str, Any]) -> None:
     """Render judge model settings section."""
     st.markdown(f'<div class="section-header">{t("arena.sidebar.judge_model")}</div>', unsafe_allow_html=True)
 
+    provider_options = list(DEFAULT_API_ENDPOINTS.keys())
+    if "arena_judge_provider" not in st.session_state:
+        st.session_state["arena_judge_provider"] = provider_options[0]
+
     endpoint_choice = st.selectbox(
         t("api.provider"),
-        options=list(DEFAULT_API_ENDPOINTS.keys()),
-        index=0,
+        options=provider_options,
         help=t("arena.sidebar.judge_provider_help"),
         key="arena_judge_provider",
     )
@@ -90,14 +94,25 @@ def _render_judge_settings(config: dict[str, Any]) -> None:
     else:
         st.warning(t("api.key_required"))
 
+    # Use stable value for custom option to survive UI language switch
+    CUSTOM_VALUE = "_custom_"
+    model_options = DEFAULT_MODELS + [CUSTOM_VALUE]
+
+    def format_model_option(x: str) -> str:
+        return t("model.custom") if x == CUSTOM_VALUE else x
+
+    # Initialize default value in session state if not exists
+    if "arena_judge_model_value" not in st.session_state:
+        st.session_state["arena_judge_model_value"] = DEFAULT_MODELS[0] if DEFAULT_MODELS else CUSTOM_VALUE
+
     model_option = st.selectbox(
         t("model.select"),
-        options=DEFAULT_MODELS + [t("model.custom")],
-        index=0,
-        key="arena_judge_model",
+        options=model_options,
+        format_func=format_model_option,
+        key="arena_judge_model_value",
     )
 
-    if model_option == t("model.custom"):
+    if model_option == CUSTOM_VALUE:
         model_name = st.text_input(
             t("model.custom_input"),
             placeholder=t("model.custom_placeholder"),

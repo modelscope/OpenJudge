@@ -23,10 +23,10 @@ OpenJudge provides training pipelines for building custom judge models. Each met
     Use the pre-configured training Docker image:
 
     ```bash
-    cd OpenJudge/cookbooks/training_judge_model
+    cd OpenJudge
 
     # Build the training image
-    docker build -f Dockerfile.train -t openjudge-train:latest .
+    docker build -f docker/Dockerfile.train -t openjudge-train:latest .
 
     # Run the container
     docker run --gpus all -it \

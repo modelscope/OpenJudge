@@ -33,7 +33,7 @@ Get started with OpenJudge in 5 minutes. This guide walks you through installati
     cd OpenJudge
 
     # Build the Docker image
-    docker build -t openjudge:latest .
+    docker build -f docker/Dockerfile.base -t openjudge:latest .
 
     # Run the container
     docker run -it \

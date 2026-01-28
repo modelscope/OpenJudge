@@ -552,10 +552,14 @@ class BatchHistoryManager:
             # Standard fields + result fields
             fieldnames = ["index", "status", "score", "passed", "reason"]
 
-            # Add input fields from first result
-            first_result = results[0]
-            input_data = first_result.get("input", {})
-            for key in input_data.keys():
+            # collect all input keys
+            all_input_keys = set()
+            for result in results:
+                input_data = result.get("input", {})
+                if isinstance(input_data, dict):
+                    all_input_keys.update(input_data.keys())
+
+            for key in all_input_keys:
                 if key not in fieldnames:
                     fieldnames.append(f"input_{key}")
 

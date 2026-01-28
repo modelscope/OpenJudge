@@ -20,6 +20,7 @@ import streamlit as st  # noqa: E402
 from core.feature_registry import FeatureRegistry  # noqa: E402
 from core.navigation import Navigation  # noqa: E402
 from features.auto_arena import AutoArenaFeature  # noqa: E402
+from features.auto_rubric import AutoRubricFeature  # noqa: E402
 
 # Import feature modules
 from features.grader import GraderFeature  # noqa: E402
@@ -38,9 +39,7 @@ from shared.styles.theme import inject_css  # noqa: E402
 # Add new features here as they are implemented
 FeatureRegistry.register(GraderFeature)
 FeatureRegistry.register(AutoArenaFeature)
-# Future features:
-# from features.autorubric import AutoRubricFeature
-# FeatureRegistry.register(AutoRubricFeature)
+FeatureRegistry.register(AutoRubricFeature)
 
 # ============================================================================
 # Page Configuration (must be first Streamlit command)

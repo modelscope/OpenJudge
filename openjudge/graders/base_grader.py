@@ -28,8 +28,6 @@ class BaseGrader(ABC):
         mode (GraderMode): The grader mode (pointwise or listwise).
         description (str): Description of what this grader evaluates.
         strategy (BaseEvaluationStrategy): The evaluation strategy to use.
-        mapper (Dict[str, str] | Callable | None): Optional mapper to transform
-            input data before evaluation. Can be a dictionary mapping or a callable.
         kwargs (Dict[str, Any]): Additional keyword arguments.
 
     Example:

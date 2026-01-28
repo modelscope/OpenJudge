@@ -23,6 +23,7 @@ from features.auto_arena import AutoArenaFeature  # noqa: E402
 
 # Import feature modules
 from features.grader import GraderFeature  # noqa: E402
+from features.paper_review import PaperReviewFeature  # noqa: E402
 from shared.components.common import render_footer  # noqa: E402
 from shared.components.logo import render_logo_and_title  # noqa: E402
 from shared.i18n import render_language_selector, t  # noqa: E402
@@ -38,6 +39,7 @@ from shared.styles.theme import inject_css  # noqa: E402
 # Add new features here as they are implemented
 FeatureRegistry.register(GraderFeature)
 FeatureRegistry.register(AutoArenaFeature)
+FeatureRegistry.register(PaperReviewFeature)
 # Future features:
 # from features.autorubric import AutoRubricFeature
 # FeatureRegistry.register(AutoRubricFeature)

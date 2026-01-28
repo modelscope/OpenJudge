@@ -149,7 +149,7 @@ def _render_score_distribution(results: list[dict[str, Any]], score_range: tuple
         height_pct = (count / max_count * 100) if max_count > 0 else 0
         label = f"{bins[i]:.1f}" if max_score <= 1 else f"{int(bins[i])}"
 
-        bars_html += f"""
+        bars_html += f"""<br>
             <div style="
                 display: flex;
                 flex-direction: column;
@@ -176,8 +176,7 @@ def _render_score_distribution(results: list[dict[str, Any]], score_range: tuple
                 <div style="font-size: 0.6rem; color: #94A3B8;">
                     {count}
                 </div>
-            </div>
-        """
+            </div>"""
 
     st.markdown(
         f"""<div style="margin: 1rem 0;">

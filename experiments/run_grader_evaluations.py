@@ -37,7 +37,7 @@ import sys
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 
 @dataclass
@@ -229,64 +229,6 @@ EVAL_CONFIGS = [
 ]
 
 SUB_CATEGORIES = ["memory", "reflection", "tool"]
-
-
-def run_evaluation_subprocess(config: EvalConfig, model: str, base_dir: Path) -> Tuple[str, float, int, int, float]:
-    """
-    Run a single evaluation in a subprocess.
-
-    Returns: (name, accuracy, correct, total, elapsed_time)
-    """
-    import subprocess
-
-    script_path = base_dir / config.script_path
-
-    if not script_path.exists():
-        return (config.name, 0.0, 0, 0, 0.0)
-
-    env = os.environ.copy()
-
-    start_time = time.time()
-
-    try:
-        result = subprocess.run(
-            [sys.executable, str(script_path), "--model", model],
-            capture_output=True,
-            text=True,
-            timeout=600,  # 10 minute timeout per evaluation
-            env=env,
-            cwd=str(script_path.parent),
-            check=False,
-        )
-
-        elapsed = time.time() - start_time
-
-        # Parse output to extract accuracy
-        output = result.stdout + result.stderr
-
-        # Look for "Pairwise Accuracy: XX.XX%"
-        import re
-
-        match = re.search(r"Pairwise Accuracy:\s*([\d.]+)%", output)
-        if match:
-            accuracy = float(match.group(1)) / 100.0
-        else:
-            accuracy = 0.0
-
-        # Look for "Correct: X" and "Samples: Y"
-        correct_match = re.search(r"Correct:\s*(\d+)", output)
-        samples_match = re.search(r"Samples:\s*(\d+)", output)
-
-        correct = int(correct_match.group(1)) if correct_match else 0
-        total = int(samples_match.group(1)) if samples_match else 0
-
-        return (config.name, accuracy, correct, total, elapsed)
-
-    except subprocess.TimeoutExpired:
-        return (config.name, 0.0, 0, 0, 600.0)
-    except Exception as e:
-        print(f"Error running {config.name}: {e}")
-        return (config.name, 0.0, 0, 0, 0.0)
 
 
 async def run_evaluation_async(config: EvalConfig, model: str, base_dir: Path) -> Dict:

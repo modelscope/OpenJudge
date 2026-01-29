@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 # Display help information
 show_help() {
@@ -89,22 +90,22 @@ cp run_grader_evaluations.py agentscope-ai/OpenJudge/
 cd agentscope-ai/OpenJudge
 
 # Build the command
-cmd="python run_grader_evaluations.py"
+cmd_array=("python" "run_grader_evaluations.py")
 
 # Add either --category or --grader (mutually exclusive)
 if [[ -n "$category" ]]; then
-    cmd+=" --category $category"
+    cmd_array+=("--category" "$category")
 elif [[ -n "$grader" ]]; then
-    cmd+=" --grader $grader"
+    cmd_array+=("--grader" "$grader")
 fi
 
 # Append other optional arguments if they are non-empty
-[[ -n "$agent_model" ]] && cmd+=" --agent-model $agent_model"
-[[ -n "$text_model" ]] && cmd+=" --text-model $text_model"
-[[ -n "$multimodal_model" ]] && cmd+=" --multimodal-model $multimodal_model"
-[[ -n "$workers" ]] && cmd+=" --workers $workers"
+[[ -n "$agent_model" ]] && cmd_array+=("--agent-model" "$agent_model")
+[[ -n "$text_model" ]] && cmd_array+=("--text-model" "$text_model")
+[[ -n "$multimodal_model" ]] && cmd_array+=("--multimodal-model" "$multimodal_model")
+[[ -n "$workers" ]] && cmd_array+=("--workers" "$workers")
 
-echo "Executing command: $cmd"
+echo "Executing command: ${cmd_array[*]}"
 
 # Execute the command
-eval $cmd
+"${cmd_array[@]}"

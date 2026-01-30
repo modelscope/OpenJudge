@@ -2,6 +2,8 @@
 """History service for Paper Review feature.
 
 Provides persistent storage for review history using JSON files.
+
+Note: This manager now uses workspace-based paths for multi-user isolation.
 """
 
 import json
@@ -17,8 +19,20 @@ from loguru import logger
 from features.paper_review.services.pipeline_runner import ReviewTaskResult
 
 
-# Default history storage directory
-DEFAULT_HISTORY_DIR = Path.home() / ".openjudge" / "paper_review_history"
+def _get_workspace_history_dir() -> Path:
+    """Get the paper review history directory for the current workspace.
+
+    Returns:
+        Path to workspace-specific paper review history directory
+    """
+    try:
+        from shared.services.workspace_manager import get_current_workspace_path
+
+        workspace_path = get_current_workspace_path()
+        return workspace_path / "paper_review_history"
+    except Exception:
+        # Fallback to default if workspace not available
+        return Path.home() / ".openjudge_studio" / "paper_review_history"
 
 
 @dataclass
@@ -105,15 +119,21 @@ class HistoryEntry:
 
 
 class HistoryService:
-    """Service for managing paper review history."""
+    """Service for managing paper review history.
+
+    Uses workspace-based paths for multi-user isolation.
+    """
 
     def __init__(self, history_dir: Optional[Path] = None):
         """Initialize history service.
 
         Args:
-            history_dir: Directory to store history files (default: ~/.openjudge/paper_review_history)
+            history_dir: Directory to store history files. If None, uses workspace directory.
         """
-        self.history_dir = history_dir or DEFAULT_HISTORY_DIR
+        if history_dir:
+            self.history_dir = history_dir
+        else:
+            self.history_dir = _get_workspace_history_dir()
         self._ensure_directory()
 
     def _ensure_directory(self) -> None:
@@ -318,13 +338,11 @@ class HistoryService:
         }
 
 
-# Global history service instance
-_history_service: Optional[HistoryService] = None
-
-
 def get_history_service() -> HistoryService:
-    """Get the global history service instance."""
-    global _history_service
-    if _history_service is None:
-        _history_service = HistoryService()
-    return _history_service
+    """Get the history service instance for the current workspace.
+
+    Note: This creates a new instance each time to ensure it uses the
+    current workspace path. The workspace manager handles caching of
+    the workspace path itself, so this is still efficient.
+    """
+    return HistoryService()

@@ -193,11 +193,15 @@ class PaperReviewPipeline:
                 self._notify_progress(ReviewStage.CORRECTNESS, completed_stages, total_stages)
                 logger.info("Running correctness detection...")
                 correctness = await self.correctness_grader.aevaluate(pdf_data=pdf_data)
-                result.correctness = CorrectnessResult(
-                    score=correctness.score,
-                    reasoning=correctness.reason,
-                    key_issues=correctness.metadata.get("key_issues", []),
-                )
+                if isinstance(correctness, GraderError):
+                    logger.error(f"Correctness grader error: {correctness.error}")
+                    # Continue with partial results - leave correctness as None
+                else:
+                    result.correctness = CorrectnessResult(
+                        score=correctness.score,
+                        reasoning=correctness.reason,
+                        key_issues=correctness.metadata.get("key_issues", []),
+                    )
                 completed_stages += 1
 
             # Stage: Review
@@ -205,7 +209,11 @@ class PaperReviewPipeline:
                 self._notify_progress(ReviewStage.REVIEW, completed_stages, total_stages)
                 logger.info("Running paper review...")
                 review = await self.review_grader.aevaluate(pdf_data=pdf_data)
-                result.review = ReviewResult(score=review.score, review=review.reason)
+                if isinstance(review, GraderError):
+                    logger.error(f"Review grader error: {review.error}")
+                    # Continue with partial results - leave review as None
+                else:
+                    result.review = ReviewResult(score=review.score, review=review.reason)
                 completed_stages += 1
 
             # Stage: Criticality verification
@@ -215,13 +223,17 @@ class PaperReviewPipeline:
                     logger.info("Running criticality verification...")
                     findings = self._format_findings(result.correctness)
                     criticality = await self.criticality_grader.aevaluate(pdf_data=pdf_data, findings=findings)
-                    from cookbooks.paper_review.schema import CriticalityIssues
+                    if isinstance(criticality, GraderError):
+                        logger.error(f"Criticality grader error: {criticality.error}")
+                        # Continue with partial results - leave criticality as None
+                    else:
+                        from cookbooks.paper_review.schema import CriticalityIssues
 
-                    result.criticality = CriticalityResult(
-                        score=criticality.score,
-                        reasoning=criticality.reason,
-                        issues=CriticalityIssues(**criticality.metadata.get("issues", {})),
-                    )
+                        result.criticality = CriticalityResult(
+                            score=criticality.score,
+                            reasoning=criticality.reason,
+                            issues=CriticalityIssues(**criticality.metadata.get("issues", {})),
+                        )
                 else:
                     logger.info("Skipping criticality verification (no issues found)")
                 completed_stages += 1

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Workspace selector component for multi-user isolation."""
 
+import os
+
 import streamlit as st
 from shared.i18n import t, get_ui_language, set_ui_language, get_available_languages
 from shared.services.workspace_manager import (
@@ -13,6 +15,10 @@ from shared.services.workspace_manager import (
 # Session state keys for workspace UI
 STATE_SHOW_CREATE_DIALOG = "workspace_show_create_dialog"
 STATE_SHOW_DELETE_CONFIRM = "workspace_show_delete_confirm"
+
+# Environment variable to enable shared workspaces (default: disabled for security)
+# Set OPENJUDGE_ENABLE_SHARED_WORKSPACES=true to allow creating named workspaces
+ENABLE_SHARED_WORKSPACES = os.environ.get("OPENJUDGE_ENABLE_SHARED_WORKSPACES", "").lower() in ("true", "1", "yes")
 
 
 def _save_language_to_storage(lang: str) -> None:
@@ -60,23 +66,23 @@ def render_workspace_selector(show_language_selector: bool = False) -> None:
         )
 
     with col_ws:
-        # List available workspaces
-        workspaces = manager.list_workspaces(include_anonymous=False)
-        ws_names = [ws["name"] for ws in workspaces]
-
-        # Build options: current anonymous + named workspaces
+        # Build options based on whether shared workspaces are enabled
         options = []
         option_display = {}
 
-        # Add anonymous option (current user's default)
+        # Add anonymous option (current user's default) - always available
         anon_key = "__anonymous__"
         options.append(anon_key)
         option_display[anon_key] = f"🔒 {t('workspace.anonymous')}"
 
-        # Add named workspaces
-        for ws in workspaces:
-            options.append(ws["name"])
-            option_display[ws["name"]] = f"📁 {ws['display_name']}"
+        # Only list named workspaces if shared workspaces are enabled
+        ws_names = []
+        if ENABLE_SHARED_WORKSPACES:
+            workspaces = manager.list_workspaces(include_anonymous=False)
+            ws_names = [ws["name"] for ws in workspaces]
+            for ws in workspaces:
+                options.append(ws["name"])
+                option_display[ws["name"]] = f"📁 {ws['display_name']}"
 
         # Determine current index
         if current_ws.startswith(manager.ANONYMOUS_PREFIX):
@@ -86,14 +92,24 @@ def render_workspace_selector(show_language_selector: bool = False) -> None:
         else:
             current_index = 0
 
-        selected = st.selectbox(
-            t("workspace.select"),
-            options=options,
-            index=current_index,
-            format_func=lambda x: option_display.get(x, x),
-            key="workspace_selector",
-            label_visibility="collapsed",
-        )
+        # Only show selector if there are multiple options, otherwise just show label
+        if len(options) > 1:
+            selected = st.selectbox(
+                t("workspace.select"),
+                options=options,
+                index=current_index,
+                format_func=lambda x: option_display.get(x, x),
+                key="workspace_selector",
+                label_visibility="collapsed",
+            )
+        else:
+            # Single option - just display it without dropdown
+            st.markdown(
+                f'<div style="padding: 0.5rem 0; color: #F1F5F9; font-size: 0.9rem;">'
+                f'{option_display[anon_key]}</div>',
+                unsafe_allow_html=True,
+            )
+            selected = anon_key
 
         # Handle workspace switch
         if selected == anon_key:
@@ -108,23 +124,28 @@ def render_workspace_selector(show_language_selector: bool = False) -> None:
             st.rerun()
 
     with col_menu:
-        with st.popover("⚙️", use_container_width=True):
-            st.markdown(f"**{t('workspace.manage')}**")
+        # Only show workspace management menu if shared workspaces are enabled
+        if ENABLE_SHARED_WORKSPACES:
+            with st.popover("⚙️", use_container_width=True):
+                st.markdown(f"**{t('workspace.manage')}**")
 
-            # Create new workspace
-            if st.button(f"➕ {t('workspace.create')}", key="ws_create_btn", use_container_width=True):
-                st.session_state[STATE_SHOW_CREATE_DIALOG] = True
+                # Create new workspace
+                if st.button(f"➕ {t('workspace.create')}", key="ws_create_btn", use_container_width=True):
+                    st.session_state[STATE_SHOW_CREATE_DIALOG] = True
 
-            # Delete workspace (only if named workspace is selected)
-            is_named_ws = not current_ws.startswith(manager.ANONYMOUS_PREFIX)
-            if st.button(
-                f"🗑️ {t('workspace.delete')}",
-                key="ws_delete_btn",
-                disabled=not is_named_ws,
-                use_container_width=True,
-                help=t("workspace.delete_help") if not is_named_ws else None,
-            ):
-                st.session_state[STATE_SHOW_DELETE_CONFIRM] = current_ws
+                # Delete workspace (only if named workspace is selected)
+                is_named_ws = not current_ws.startswith(manager.ANONYMOUS_PREFIX)
+                if st.button(
+                    f"🗑️ {t('workspace.delete')}",
+                    key="ws_delete_btn",
+                    disabled=not is_named_ws,
+                    use_container_width=True,
+                    help=t("workspace.delete_help") if not is_named_ws else None,
+                ):
+                    st.session_state[STATE_SHOW_DELETE_CONFIRM] = current_ws
+        else:
+            # Show empty placeholder to maintain layout
+            st.empty()
 
     # Language selector (if enabled)
     if show_language_selector:
@@ -151,9 +172,10 @@ def render_workspace_selector(show_language_selector: bool = False) -> None:
                 _save_language_to_storage(selected_lang)
                 st.rerun()
 
-    # Dialogs
-    _render_create_dialog(manager)
-    _render_delete_confirm(manager)
+    # Dialogs (only if shared workspaces are enabled)
+    if ENABLE_SHARED_WORKSPACES:
+        _render_create_dialog(manager)
+        _render_delete_confirm(manager)
 
 
 def _render_create_dialog(manager: WorkspaceManager) -> None:

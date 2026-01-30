@@ -390,7 +390,7 @@ class StorageManager:
             Dictionary with cleanup statistics
         """
         import shutil
-        from datetime import datetime, timedelta
+        from datetime import timedelta
 
         cutoff_time = datetime.now() - timedelta(days=retention_days)
         stats = {"deleted_dirs": 0, "deleted_files": 0, "freed_bytes": 0}
@@ -471,8 +471,7 @@ class StorageManager:
 
         if usage["total_size_mb"] > max_mb:
             logger.info(
-                f"Workspace storage ({usage['total_size_mb']}MB) exceeds quota ({max_mb}MB), "
-                "performing cleanup..."
+                f"Workspace storage ({usage['total_size_mb']}MB) exceeds quota ({max_mb}MB), " "performing cleanup..."
             )
 
             # Progressively more aggressive cleanup
@@ -511,7 +510,7 @@ def inject_browser_id_loader() -> None:
     <script>
     (function() {
         const STORAGE_KEY = 'openjudge_browser_id';
-        
+
         // Get or generate browser ID
         let browserId = localStorage.getItem(STORAGE_KEY);
         if (!browserId) {
@@ -521,11 +520,11 @@ def inject_browser_id_loader() -> None:
                 .join('');
             localStorage.setItem(STORAGE_KEY, browserId);
         }
-        
+
         // Send to Streamlit via query params (one-time setup)
         const urlParams = new URLSearchParams(window.location.search);
         const currentId = urlParams.get('_bid');
-        
+
         if (currentId !== browserId) {
             urlParams.set('_bid', browserId);
             // Use replaceState to avoid adding to history

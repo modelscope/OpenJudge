@@ -8,8 +8,8 @@ from shared.services.workspace_manager import (
     get_current_workspace,
     get_current_workspace_path,
     get_storage_manager,
-    inject_browser_id_loader,
     initialize_workspace_from_url,
+    inject_browser_id_loader,
     set_current_workspace,
 )
 

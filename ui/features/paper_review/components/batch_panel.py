@@ -7,13 +7,12 @@ Provides UI for batch paper review with progress tracking.
 from typing import Any, Optional
 
 import streamlit as st
-from shared.i18n import t
-
 from features.paper_review.services.batch_runner import (
     BatchProgress,
     BatchResult,
     BatchStatus,
 )
+from shared.i18n import t
 
 
 def render_batch_progress(progress: Optional[BatchProgress]) -> None:
@@ -56,7 +55,7 @@ def render_batch_progress(progress: Optional[BatchProgress]) -> None:
 
     # Progress bar
     pct = progress.progress_percent
-    bar_color = status_config['color']
+    bar_color = status_config["color"]
 
     st.markdown(
         f"""<div style="
@@ -213,7 +212,8 @@ def render_batch_results(batch_result: BatchResult) -> None:
                         Batch Review Complete
                     </div>
                     <div style="color: #94A3B8; font-size: 0.9rem; margin-top: 0.25rem;">
-                        {batch_result.completed}/{batch_result.total} papers reviewed • {batch_result.elapsed_time_display}
+                        {batch_result.completed}/{batch_result.total} papers reviewed
+                        • {batch_result.elapsed_time_display}
                     </div>
                 </div>
                 <div style="
@@ -243,8 +243,9 @@ def _render_result_row(index: int, result: Any) -> None:
     """
     success = result.success
     icon = "✅" if success else "❌"
-    bg_color = "rgba(34, 197, 94, 0.05)" if success else "rgba(239, 68, 68, 0.05)"
-    border_color = "rgba(34, 197, 94, 0.2)" if success else "rgba(239, 68, 68, 0.2)"
+    # Colors kept for potential future use
+    _ = "rgba(34, 197, 94, 0.05)" if success else "rgba(239, 68, 68, 0.05)"  # bg_color
+    _ = "rgba(34, 197, 94, 0.2)" if success else "rgba(239, 68, 68, 0.2)"  # border_color
 
     review_score = "-"
     correctness_score = "-"

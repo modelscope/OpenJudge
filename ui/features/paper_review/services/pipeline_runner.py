@@ -5,7 +5,7 @@ Provides a wrapper around PaperReviewPipeline with progress tracking
 and error handling suitable for UI integration.
 """
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Callable, Optional
 
@@ -16,7 +16,6 @@ from cookbooks.paper_review import (
     PaperReviewResult,
     PipelineConfig,
     ReviewProgress,
-    ReviewStage,
     generate_report,
 )
 
@@ -130,9 +129,7 @@ class PipelineRunner:
 
         try:
             # Create pipeline with progress callback
-            pipeline_config = self.config.to_pipeline_config(
-                progress_callback=self._on_progress
-            )
+            pipeline_config = self.config.to_pipeline_config(progress_callback=self._on_progress)
             pipeline = PaperReviewPipeline(pipeline_config)
 
             # Run review

@@ -14,9 +14,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional
 
-from loguru import logger
-
 from features.paper_review.services.pipeline_runner import ReviewTaskResult
+from loguru import logger
 
 
 def _get_workspace_history_dir() -> Path:
@@ -194,13 +193,16 @@ class HistoryService:
 
         # Update index
         index = self._load_index()
-        index.insert(0, {
-            "task_id": task_id,
-            "paper_name": entry.paper_name,
-            "created_at": entry.created_at,
-            "success": entry.success,
-            "review_score": entry.review_score,
-        })
+        index.insert(
+            0,
+            {
+                "task_id": task_id,
+                "paper_name": entry.paper_name,
+                "created_at": entry.created_at,
+                "success": entry.success,
+                "review_score": entry.review_score,
+            },
+        )
 
         # Keep only last 100 entries in index
         if len(index) > 100:

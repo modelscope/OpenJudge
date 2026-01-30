@@ -163,8 +163,13 @@ def _render_evaluation_settings(config: dict[str, Any]) -> None:
 def _render_output_settings(config: dict[str, Any]) -> None:
     """Render output settings section."""
     # Initialize default values in session state if not exists
-    for key in ["arena_save_queries", "arena_save_responses", "arena_save_details",
-                "arena_generate_report", "arena_generate_chart"]:
+    for key in [
+        "arena_save_queries",
+        "arena_save_responses",
+        "arena_save_details",
+        "arena_generate_report",
+        "arena_generate_chart",
+    ]:
         if key not in st.session_state:
             st.session_state[key] = True
 

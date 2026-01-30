@@ -11,7 +11,6 @@ from shared.i18n import t
 
 from cookbooks.paper_review import ReviewProgress, ReviewStage
 
-
 # Stage icons mapping
 STAGE_ICONS = {
     ReviewStage.NOT_STARTED: "⏸️",
@@ -88,7 +87,9 @@ def _render_stage_item(
             <span style="color: {color}; font-weight: {'600' if is_current else '400'};">
                 {name}
             </span>
-            {f'<span style="margin-left: auto; color: {color};">{"⏳" if is_current else "✓" if is_completed else ""}</span>' if is_current or is_completed else ''}
+            {f'<span style="margin-left: auto; color: {color};">'
+             f'{"⏳" if is_current else "✓" if is_completed else ""}</span>'
+             if is_current or is_completed else ''}
         </div>""",
         unsafe_allow_html=True,
     )
@@ -123,8 +124,10 @@ def render_progress_panel(progress: Optional[ReviewProgress] = None) -> None:
     )
 
     # Progress bar
-    progress_color = "#22C55E" if progress.stage == ReviewStage.COMPLETED else (
-        "#EF4444" if progress.stage == ReviewStage.FAILED else "#6366F1"
+    progress_color = (
+        "#22C55E"
+        if progress.stage == ReviewStage.COMPLETED
+        else ("#EF4444" if progress.stage == ReviewStage.FAILED else "#6366F1")
     )
     st.markdown(
         f"""<div style="

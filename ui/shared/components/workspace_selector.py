@@ -4,9 +4,8 @@
 import os
 
 import streamlit as st
-from shared.i18n import t, get_ui_language, set_ui_language, get_available_languages
+from shared.i18n import get_available_languages, get_ui_language, set_ui_language, t
 from shared.services.workspace_manager import (
-    STATE_CURRENT_WORKSPACE,
     WorkspaceManager,
     get_current_workspace,
     set_current_workspace,
@@ -45,12 +44,6 @@ def render_workspace_selector(show_language_selector: bool = False) -> None:
     """
     manager = WorkspaceManager.get_instance()
     current_ws = get_current_workspace()
-
-    # Determine display name for current workspace
-    if current_ws.startswith(manager.ANONYMOUS_PREFIX):
-        current_display = t("workspace.anonymous")
-    else:
-        current_display = current_ws
 
     # Main selector row - adjust columns based on whether language selector is shown
     if show_language_selector:
@@ -106,7 +99,7 @@ def render_workspace_selector(show_language_selector: bool = False) -> None:
             # Single option - just display it without dropdown
             st.markdown(
                 f'<div style="padding: 0.5rem 0; color: #F1F5F9; font-size: 0.9rem;">'
-                f'{option_display[anon_key]}</div>',
+                f"{option_display[anon_key]}</div>",
                 unsafe_allow_html=True,
             )
             selected = anon_key

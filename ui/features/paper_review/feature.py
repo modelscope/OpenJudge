@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=too-many-lines
 """Paper Review feature implementation for OpenJudge Studio.
 
 Supports PDF paper review and bibliography verification.
@@ -35,7 +36,6 @@ from features.paper_review.services.history_service import (
 )
 from features.paper_review.services.pipeline_runner import (
     PipelineRunner,
-    ReviewTaskConfig,
     ReviewTaskResult,
     create_task_config_from_sidebar,
 )
@@ -411,7 +411,7 @@ class PaperReviewFeature(BaseFeature):
                     original_callback(progress)
                     update_progress_display(progress)
 
-                runner._progress_callback = combined_callback
+                runner._progress_callback = combined_callback  # pylint: disable=protected-access
 
                 # Run the pipeline
                 task_result = runner.run(pdf_bytes, bib_content)
@@ -803,7 +803,7 @@ class PaperReviewFeature(BaseFeature):
 
                 # Export buttons
                 st.markdown("---")
-                col1, col2 = st.columns(2)
+                col1, _ = st.columns(2)
                 with col1:
                     # Download all reports as zip would require zipfile, for now just CSV
                     csv_data = generate_batch_csv_report(batch_result.results)
@@ -849,11 +849,13 @@ class PaperReviewFeature(BaseFeature):
         papers: list[BatchPaperItem] = []
         for f in uploaded_files:
             paper_name = f.name.rsplit(".", 1)[0]  # Remove .pdf extension
-            papers.append(BatchPaperItem(
-                paper_id=str(uuid.uuid4()),
-                paper_name=paper_name,
-                pdf_bytes=f.read(),
-            ))
+            papers.append(
+                BatchPaperItem(
+                    paper_id=str(uuid.uuid4()),
+                    paper_name=paper_name,
+                    pdf_bytes=f.read(),
+                )
+            )
 
         # Create task config
         task_config = create_task_config_from_sidebar(sidebar_config)
@@ -892,7 +894,7 @@ class PaperReviewFeature(BaseFeature):
                     original_callback(progress)
                     update_display(progress)
 
-                runner._progress_callback = combined_callback
+                runner._progress_callback = combined_callback  # pylint: disable=protected-access
 
                 # Run batch
                 batch_result = runner.run(papers, max_concurrency)
@@ -921,13 +923,13 @@ class PaperReviewFeature(BaseFeature):
                     )
                 else:
                     status.update(
-                        label=f"⚠️ Batch Completed with Errors",
+                        label="⚠️ Batch Completed with Errors",
                         state="complete",
                     )
 
             except Exception as e:
                 status.update(
-                    label=f"❌ Batch Failed",
+                    label="❌ Batch Failed",
                     state="error",
                 )
                 st.error(str(e))
@@ -1133,4 +1135,3 @@ class PaperReviewFeature(BaseFeature):
     def on_unmount(self) -> None:
         """Cleanup when feature is unmounted."""
         # Could cancel running pipeline here if needed
-        pass

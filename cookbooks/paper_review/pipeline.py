@@ -3,7 +3,7 @@
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Callable, Dict, Optional, Union
+from typing import Any, Dict, Optional, Union
 
 from loguru import logger
 
@@ -60,7 +60,10 @@ class PaperReviewPipeline:
         ReviewStage.CORRECTNESS: ("paper_review.progress.correctness", "paper_review.progress.correctness_desc"),
         ReviewStage.REVIEW: ("paper_review.progress.review", "paper_review.progress.review_desc"),
         ReviewStage.CRITICALITY: ("paper_review.progress.criticality", "paper_review.progress.criticality_desc"),
-        ReviewStage.BIB_VERIFICATION: ("paper_review.progress.bib_verification", "paper_review.progress.bib_verification_desc"),
+        ReviewStage.BIB_VERIFICATION: (
+            "paper_review.progress.bib_verification",
+            "paper_review.progress.bib_verification_desc",
+        ),
         ReviewStage.COMPLETED: ("paper_review.progress.completed", "paper_review.progress.completed_desc"),
         ReviewStage.FAILED: ("paper_review.progress.failed", "paper_review.progress.failed_desc"),
     }

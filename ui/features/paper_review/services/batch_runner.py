@@ -10,13 +10,12 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Callable, Optional
 
-from loguru import logger
-
 from features.paper_review.services.pipeline_runner import (
     PipelineRunner,
     ReviewTaskConfig,
     ReviewTaskResult,
 )
+from loguru import logger
 
 
 class BatchStatus(str, Enum):
@@ -59,7 +58,7 @@ class BatchProgress:
             return 0.0
         base_progress = (self.completed / self.total) * 100
         if self.current_paper:
-            paper_contribution = (self.current_paper_progress / self.total)
+            paper_contribution = self.current_paper_progress / self.total
             return base_progress + paper_contribution
         return base_progress
 
@@ -286,9 +285,7 @@ def generate_batch_csv_report(results: list[ReviewTaskResult]) -> str:
     Returns:
         CSV formatted string
     """
-    lines = [
-        "Paper Name,Status,Review Score,Correctness Score,Elapsed Time,Error"
-    ]
+    lines = ["Paper Name,Status,Review Score,Correctness Score,Elapsed Time,Error"]
 
     for result in results:
         status = "Success" if result.success else "Failed"
@@ -305,8 +302,6 @@ def generate_batch_csv_report(results: list[ReviewTaskResult]) -> str:
         error = result.error.replace(",", ";") if result.error else ""
         elapsed = result.elapsed_time_display
 
-        lines.append(
-            f'"{result.paper_name}",{status},{review_score},{correctness_score},{elapsed},"{error}"'
-        )
+        lines.append(f'"{result.paper_name}",{status},{review_score},{correctness_score},{elapsed},"{error}"')
 
     return "\n".join(lines)

@@ -7,22 +7,21 @@ Provides UI for viewing and managing review history.
 from typing import Callable, Optional
 
 import streamlit as st
-from shared.i18n import t
-
 from features.paper_review.services.history_service import HistoryEntry
+from shared.i18n import t
 
 
 def render_history_list(
     entries: list[HistoryEntry],
-    on_view: Optional[Callable[[str], None]] = None,
-    on_delete: Optional[Callable[[str], None]] = None,
+    on_view: Optional[Callable[[str], None]] = None,  # pylint: disable=unused-argument
+    on_delete: Optional[Callable[[str], None]] = None,  # pylint: disable=unused-argument
 ) -> Optional[str]:
     """Render the history list.
 
     Args:
         entries: List of history entries
-        on_view: Callback when view button is clicked
-        on_delete: Callback when delete button is clicked
+        on_view: Callback when view button is clicked (reserved for future use)
+        on_delete: Callback when delete button is clicked (reserved for future use)
 
     Returns:
         Task ID if an entry is selected for viewing

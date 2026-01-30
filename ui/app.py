@@ -28,14 +28,11 @@ from features.paper_review import PaperReviewFeature  # noqa: E402
 from shared.components.common import render_footer  # noqa: E402
 from shared.components.logo import render_logo_and_title  # noqa: E402
 from shared.components.workspace_selector import render_workspace_selector  # noqa: E402
-from shared.i18n import (  # noqa: E402
-    inject_language_loader,
-    t,
-)
+from shared.i18n import inject_language_loader, t  # noqa: E402
 from shared.services.workspace_manager import (  # noqa: E402
     get_storage_manager,
-    inject_browser_id_loader,
     initialize_workspace_from_url,
+    inject_browser_id_loader,
 )
 from shared.styles.theme import inject_css  # noqa: E402
 

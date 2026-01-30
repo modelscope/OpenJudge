@@ -167,7 +167,8 @@ EN: dict[str, str] = {
     "paper_review.help.stage_correctness": "Correctness Analysis",
     "paper_review.help.stage_correctness_desc": "Detects objective errors in methodology, math, or claims.",
     "paper_review.help.stage_review": "Paper Review",
-    "paper_review.help.stage_review_desc": "Generates comprehensive review with strengths, weaknesses, and recommendations.",
+    "paper_review.help.stage_review_desc": "Generates comprehensive review with strengths, "
+    "weaknesses, and recommendations.",
     "paper_review.help.stage_criticality": "Criticality Verification",
     "paper_review.help.stage_criticality_desc": "Classifies detected issues by severity (major/minor/false positive).",
     "paper_review.help.stage_bib": "Bibliography Verification",

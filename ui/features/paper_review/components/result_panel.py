@@ -8,10 +8,10 @@ import html
 from typing import Optional
 
 import streamlit as st
+from features.paper_review.services.pipeline_runner import ReviewTaskResult
 from shared.i18n import t
 
 from cookbooks.paper_review import PaperReviewResult
-from features.paper_review.services.pipeline_runner import ReviewTaskResult
 
 
 def _get_score_color(score: int, max_score: int) -> str:
@@ -55,7 +55,11 @@ def _render_score_card(
             <div style="height: 6px; background: #1E293B; border-radius: 3px; overflow: hidden;">
                 <div style="width: {pct}%; height: 100%; background: {color}; border-radius: 3px;"></div>
             </div>
-            {f'<div style="color: #94A3B8; font-size: 0.85rem; margin-top: 0.75rem; line-height: 1.5;">{description[:200]}...</div>' if description and len(description) > 200 else (f'<div style="color: #94A3B8; font-size: 0.85rem; margin-top: 0.75rem; line-height: 1.5;">{description}</div>' if description else '')}
+            {f'<div style="color: #94A3B8; font-size: 0.85rem; margin-top: 0.75rem; '
+             f'line-height: 1.5;">{description[:200]}...</div>'
+             if description and len(description) > 200
+             else (f'<div style="color: #94A3B8; font-size: 0.85rem; margin-top: 0.75rem; '
+                   f'line-height: 1.5;">{description}</div>' if description else '')}
         </div>""",
         unsafe_allow_html=True,
     )
@@ -83,7 +87,10 @@ def _render_safety_result(result: PaperReviewResult) -> None:
                 <span style="font-weight: 600; color: #F1F5F9;">{t("paper_review.result.safety")}</span>
                 <span style="margin-left: auto; color: {color}; font-weight: 600;">{icon} {status}</span>
             </div>
-            {f'<div style="color: #94A3B8; font-size: 0.85rem;">{t("paper_review.result.format_compliant")}: {"✓" if result.format_compliant else "✗"}</div>' if result.format_compliant is not None else ''}
+            {f'<div style="color: #94A3B8; font-size: 0.85rem;">'
+             f'{t("paper_review.result.format_compliant")}: '
+             f'{"✓" if result.format_compliant else "✗"}</div>'
+             if result.format_compliant is not None else ''}
         </div>""",
         unsafe_allow_html=True,
     )
@@ -197,10 +204,11 @@ def _render_bib_verification_result(result: PaperReviewResult) -> None:
         unsafe_allow_html=True,
     )
 
-    for bib_file, summary in result.bib_verification.items():
-        # Verification rate color
+    for _, summary in result.bib_verification.items():
+        # Verification rate
         rate = summary.verification_rate
-        rate_color = "#22C55E" if rate >= 0.8 else ("#F59E0B" if rate >= 0.5 else "#EF4444")
+        # Color kept for potential future use
+        _ = "#22C55E" if rate >= 0.8 else ("#F59E0B" if rate >= 0.5 else "#EF4444")
 
         col1, col2, col3, col4 = st.columns(4)
         with col1:
@@ -275,7 +283,9 @@ def render_result_panel(task_result: ReviewTaskResult) -> None:
                 <span style="font-size: 1.5rem;">✅</span>
                 <div>
                     <div style="font-weight: 600; color: #22C55E;">{t("paper_review.single.completed")}</div>
-                    <div style="color: #94A3B8; font-size: 0.85rem;">{task_result.paper_name} • {task_result.elapsed_time_display}</div>
+                    <div style="color: #94A3B8; font-size: 0.85rem;">
+                        {task_result.paper_name} • {task_result.elapsed_time_display}
+                    </div>
                 </div>
             </div>
         </div>""",

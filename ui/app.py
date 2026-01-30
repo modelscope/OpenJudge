@@ -20,13 +20,18 @@ import streamlit as st  # noqa: E402
 from core.feature_registry import FeatureRegistry  # noqa: E402
 from core.navigation import Navigation  # noqa: E402
 from features.auto_arena import AutoArenaFeature  # noqa: E402
+from features.auto_rubric import AutoRubricFeature  # noqa: E402
 
 # Import feature modules
 from features.grader import GraderFeature  # noqa: E402
 from features.paper_review import PaperReviewFeature  # noqa: E402
 from shared.components.common import render_footer  # noqa: E402
 from shared.components.logo import render_logo_and_title  # noqa: E402
-from shared.i18n import render_language_selector, t  # noqa: E402
+from shared.i18n import (  # noqa: E402
+    inject_language_loader,
+    render_language_selector,
+    t,
+)
 from shared.styles.theme import inject_css  # noqa: E402
 
 # pylint: enable=wrong-import-position
@@ -40,9 +45,7 @@ from shared.styles.theme import inject_css  # noqa: E402
 FeatureRegistry.register(GraderFeature)
 FeatureRegistry.register(AutoArenaFeature)
 FeatureRegistry.register(PaperReviewFeature)
-# Future features:
-# from features.autorubric import AutoRubricFeature
-# FeatureRegistry.register(AutoRubricFeature)
+FeatureRegistry.register(AutoRubricFeature)
 
 # ============================================================================
 # Page Configuration (must be first Streamlit command)
@@ -59,6 +62,9 @@ def main() -> None:
     """Main function to run the OpenJudge Studio application."""
     # Inject custom CSS
     inject_css()
+
+    # Load language preference from browser localStorage
+    inject_language_loader()
 
     # ========================================================================
     # Sidebar Configuration

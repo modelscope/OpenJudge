@@ -28,6 +28,7 @@ from cookbooks.paper_review.schema import (
     TexPackageInfo,
 )
 from cookbooks.paper_review.utils import encode_pdf_base64, load_pdf_bytes
+from openjudge.graders.schema import GraderError
 
 
 @dataclass
@@ -252,12 +253,16 @@ class PaperReviewPipeline:
 
         # Jailbreaking check
         jailbreak_result = await self.jailbreaking_grader.aevaluate(pdf_data=pdf_data)
-        if jailbreak_result.metadata.get("is_abuse"):
+        if isinstance(jailbreak_result, GraderError):
+            logger.error(f"Jailbreaking grader error: {jailbreak_result.error}")
+        elif jailbreak_result.metadata.get("is_abuse"):
             issues.append(f"Jailbreaking detected: {jailbreak_result.reason}")
 
         # Format check
         format_result = await self.format_grader.aevaluate(pdf_data=pdf_data)
-        if format_result.score == 1:
+        if isinstance(format_result, GraderError):
+            logger.error(f"Format grader error: {format_result.error}")
+        elif format_result.score == 1:
             format_ok = False
             violations = format_result.metadata.get("violations", [])
             if violations:

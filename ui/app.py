@@ -30,7 +30,6 @@ from shared.components.logo import render_logo_and_title  # noqa: E402
 from shared.components.workspace_selector import render_workspace_selector  # noqa: E402
 from shared.i18n import (  # noqa: E402
     inject_language_loader,
-    render_language_selector,
     t,
 )
 from shared.services.workspace_manager import (  # noqa: E402
@@ -123,14 +122,8 @@ def main() -> None:
         # Divider
         st.markdown('<div class="custom-divider" style="margin: 0.75rem 0;"></div>', unsafe_allow_html=True)
 
-        # Workspace selector (for multi-user isolation)
-        render_workspace_selector()
-
-        # Divider
-        st.markdown('<div class="custom-divider" style="margin: 0.75rem 0;"></div>', unsafe_allow_html=True)
-
-        # Language selector
-        render_language_selector()
+        # Workspace selector + Language selector in one row
+        render_workspace_selector(show_language_selector=True)
 
         # Divider
         st.markdown('<div class="custom-divider" style="margin: 0.75rem 0;"></div>', unsafe_allow_html=True)

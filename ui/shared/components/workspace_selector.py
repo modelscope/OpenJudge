@@ -2,7 +2,7 @@
 """Workspace selector component for multi-user isolation."""
 
 import streamlit as st
-from shared.i18n import t
+from shared.i18n import t, get_ui_language, set_ui_language, get_available_languages
 from shared.services.workspace_manager import (
     STATE_CURRENT_WORKSPACE,
     WorkspaceManager,
@@ -15,13 +15,27 @@ STATE_SHOW_CREATE_DIALOG = "workspace_show_create_dialog"
 STATE_SHOW_DELETE_CONFIRM = "workspace_show_delete_confirm"
 
 
-def render_workspace_selector() -> None:
+def _save_language_to_storage(lang: str) -> None:
+    """Save language to browser localStorage via JavaScript."""
+    js_code = f"""
+    <script>
+        localStorage.setItem('openjudge_ui_language', '{lang}');
+    </script>
+    """
+    st.markdown(js_code, unsafe_allow_html=True)
+
+
+def render_workspace_selector(show_language_selector: bool = False) -> None:
     """Render the workspace selector in the sidebar.
+
+    Args:
+        show_language_selector: If True, show language selector in the same row
 
     Allows users to:
     - See current workspace
     - Switch to a different workspace
     - Create new named workspaces
+    - Switch language (if show_language_selector=True)
     """
     manager = WorkspaceManager.get_instance()
     current_ws = get_current_workspace()
@@ -32,8 +46,11 @@ def render_workspace_selector() -> None:
     else:
         current_display = current_ws
 
-    # Main selector row
-    col_label, col_ws, col_menu = st.columns([1.2, 3.5, 1.3])
+    # Main selector row - adjust columns based on whether language selector is shown
+    if show_language_selector:
+        col_label, col_ws, col_menu, col_lang = st.columns([1.0, 2.0, 0.8, 1.5])
+    else:
+        col_label, col_ws, col_menu = st.columns([1.2, 3.5, 1.3])
 
     with col_label:
         st.markdown(
@@ -108,6 +125,31 @@ def render_workspace_selector() -> None:
                 help=t("workspace.delete_help") if not is_named_ws else None,
             ):
                 st.session_state[STATE_SHOW_DELETE_CONFIRM] = current_ws
+
+    # Language selector (if enabled)
+    if show_language_selector:
+        with col_lang:
+            current_lang = get_ui_language()
+            languages = get_available_languages()
+            lang_options = list(languages.keys())
+
+            # Initialize the selector key in session state to match current language
+            if "_ui_lang_selector_inline" not in st.session_state:
+                st.session_state["_ui_lang_selector_inline"] = current_lang
+
+            selected_lang = st.selectbox(
+                "Language",
+                options=lang_options,
+                format_func=lambda x: f"🌐 {languages[x]}",
+                key="_ui_lang_selector_inline",
+                label_visibility="collapsed",
+            )
+
+            # Handle language change
+            if selected_lang != current_lang:
+                set_ui_language(selected_lang)
+                _save_language_to_storage(selected_lang)
+                st.rerun()
 
     # Dialogs
     _render_create_dialog(manager)
